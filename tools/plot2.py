@@ -132,6 +132,37 @@ class Grbl:
         print("   !! homing timed out")
         return False
 
+    def stream_lockstep(self, lines):
+        """Send one line, wait for its ok, then the next. No buffering at all.
+
+        Slower and jerkier (GRBL never gets to look ahead), but it isolates the
+        streaming protocol as a variable."""
+        total = len(lines)
+        for i, ln in enumerate(lines, 1):
+            self.write(ln + "\n")
+            end = time.time() + 60.0
+            while True:
+                if time.time() > end:
+                    print("\n   !! no reply to line %d (%s) within 60s" % (i, ln))
+                    return False
+                r = self._readline()
+                if not r:
+                    continue
+                if r == "ok":
+                    break
+                if r.startswith("error") or r.startswith("ALARM"):
+                    print("\n   !! %s  on line %d: %s" % (r, i, ln))
+                    if r.startswith("ALARM"):
+                        return False
+                    break
+                if r.startswith("Grbl ") and "for help" in r:
+                    print("\n   !! GRBL RESET at line %d: %s" % (i, ln))
+                    return False
+            if i % 5 == 0 or i == total:
+                print("   %d/%d" % (i, total), end="\r", flush=True)
+        print()
+        return True
+
     def stream(self, lines):
         """Character-counting flow control: keep GRBL's 128-byte buffer full."""
         pending, idx, acked, errors = [], 0, 0, 0
@@ -195,6 +226,8 @@ def main():
     ap.add_argument("--pen", choices=["up", "down"])
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--force", action="store_true", help="skip the work-zero safety check")
+    ap.add_argument("--lockstep", action="store_true",
+                    help="send one line at a time and wait for each ok (no buffering)")
     ap.add_argument("--unlock", action="store_true", help="send $X")
     args = ap.parse_args()
 
@@ -255,8 +288,12 @@ def main():
                 print("Work zero (G54): X%.1f Y%.1f" % (wco[0], wco[1]))
 
         if ok and lines:
-            print("Streaming %d lines ..." % len(lines))
-            ok = g.stream(lines)
+            if args.lockstep:
+                print("Streaming %d lines, LOCKSTEP (one at a time) ..." % len(lines))
+                ok = g.stream_lockstep(lines)
+            else:
+                print("Streaming %d lines ..." % len(lines))
+                ok = g.stream(lines)
             if ok:
                 print("All lines acknowledged. Waiting for motion to finish ...")
                 g.wait_idle()
