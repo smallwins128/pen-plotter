@@ -444,14 +444,14 @@ Preamble on every generated file:
 G21          ; mm
 G90          ; absolute
 G94          ; units per minute
-M3 S160      ; pen up
+M3 S120      ; pen up
 G4 P0.30     ; let it get there
 ```
 
 Postamble:
 
 ```gcode
-M3 S160      ; pen up
+M3 S120      ; pen up
 G4 P0.30
 G0 X0 Y0     ; back to work zero
 ```
