@@ -139,7 +139,7 @@ class Grbl:
         streaming protocol as a variable."""
         total = len(lines)
         for i, ln in enumerate(lines, 1):
-            self.write(ln + "\n")
+            self._write(ln + "\n")
             end = time.time() + 60.0
             while True:
                 if time.time() > end:
