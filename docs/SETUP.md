@@ -132,9 +132,11 @@ Servo GND    (brown/black, outer wire)   ──►  buck VOUT−  AND a shield G
   9 g servo pulls ~700 mA; the Uno's regulator browns out and the board resets mid-plot.
 - **470–1000 µF electrolytic across the servo's V+ and GND, physically at the servo.**
   Not optional in practice — the lift current spike is what causes random resets.
-- The common ground is real but do not rely on the PSU chassis for it: the explicit
-  brown-wire-to-shield-GND link is the signal return path, and without it the servo sees
-  a floating reference and jitters.
+- **The buck `VOUT-` to shield `GND` wire is mandatory. Never remove it.** It looks
+  redundant — the buck is non-isolated, so its ground is already common with the shield's
+  through the PSU — but it is the servo's actual return path. Removed, a single PWM step
+  of servo movement was enough to reset the board. See
+  [FINDINGS.md](FINDINGS.md) section 2.
 - If the servo jitters even so, check whether your shield has a filter capacitor fitted
   across that endstop pin (some V3.51 clones do). It will round off the servo pulse. Remove it.
 
@@ -236,6 +238,11 @@ $110=2000.000 $111=2000.000 $112=500.000
 $120=200.000  $121=200.000  $122=200.000
 $130=<measured>  $131=<measured>  $132=200.000
 ```
+
+> **Write settings with the 24 V supply switched OFF, on USB power alone.** Settings and
+> the work offset both live in EEPROM, and a reset landing mid-write corrupts it — GRBL
+> then silently falls back to defaults, which undoes `$5`, `$22` and `$23` and makes the
+> next symptom look like a new fault. `$RST=*` restores clean defaults if it happens.
 
 ### Changes from the last-known-good block, and why
 
@@ -410,6 +417,14 @@ serial reconnects**. Homing gives you a repeatable machine origin for it to be m
 from. Together they solve the "opening the port resets the Arduino and I lose my position"
 problem completely:
 
+Prefer **`G10 L2`** over `G10 L20`: `L2` takes absolute machine coordinates, so it needs
+neither homing nor motor power and can be set with the PSU off. `L20` uses the current
+position, so it needs a homed machine and a live supply.
+
+```
+G10 L2 P1 X-303 Y-107     # set G54 origin by coordinates, PSU off, no motion
+```
+
 **First time on a new paper position:**
 ```bash
 python3 plot.py --port <port> --send '$H'                      # establish machine origin
@@ -438,14 +453,22 @@ It does not disturb modal state, it respects soft limits, and it is cancellable
 
 ### 7.2 File conventions
 
-Preamble on every generated file:
+Preamble on every generated file. The servo is limp until the first `M3`, and jumping
+straight to an extreme from that state is the largest current draw it ever makes — so wake
+it near centre and walk it out:
 
 ```gcode
 G21          ; mm
 G90          ; absolute
 G94          ; units per minute
+M3 S90       ; wake the servo at centre
+G4 P0.50
+M3 S100      ; walk it out in stages
+G4 P0.30
+M3 S110
+G4 P0.30
 M3 S120      ; pen up
-G4 P0.30     ; let it get there
+G4 P0.30
 ```
 
 Postamble:
