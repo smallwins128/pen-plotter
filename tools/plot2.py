@@ -100,6 +100,17 @@ class Grbl:
         print("   !! still not Idle after %ss" % timeout)
         return False
 
+    def work_offset(self):
+        """Return the G54 offset as a tuple, or None if it can't be read."""
+        for line in self.command("$#"):
+            if line.startswith("[G54:"):
+                nums = line[5:].rstrip("]").split(",")
+                try:
+                    return tuple(float(n) for n in nums)
+                except ValueError:
+                    return None
+        return None
+
     # ---- high level ------------------------------------------------------
     def home(self):
         print("Homing ($H) -- X first, then Y. This takes a while.")
@@ -183,6 +194,7 @@ def main():
     ap.add_argument("--jog", action="append", default=[], help="relative jog, e.g. X10")
     ap.add_argument("--pen", choices=["up", "down"])
     ap.add_argument("--status", action="store_true")
+    ap.add_argument("--force", action="store_true", help="skip the work-zero safety check")
     ap.add_argument("--unlock", action="store_true", help="send $X")
     args = ap.parse_args()
 
@@ -227,6 +239,20 @@ def main():
             g.command("M3 S%d" % s)
             g.command("G4 P0.3")
             print("pen %s (S%d)" % (args.pen, s))
+
+        if ok and lines and not args.force:
+            wco = g.work_offset()
+            if wco is not None and all(abs(v) < 0.001 for v in wco):
+                print("")
+                print("!! REFUSING TO RUN: work offset (G54) is zero.")
+                print("!! X0 Y0 in your file would mean MACHINE zero -- the home")
+                print("!! corner -- so the gantry would drive into its end stops.")
+                print("!! Set a work zero first, e.g.:")
+                print("!!     python3 plot2.py --no-home --send 'G10 L2 P1 X-303 Y-107'")
+                print("!! Then re-run. (--force overrides this check.)")
+                ok = False
+            elif wco:
+                print("Work zero (G54): X%.1f Y%.1f" % (wco[0], wco[1]))
 
         if ok and lines:
             print("Streaming %d lines ..." % len(lines))
