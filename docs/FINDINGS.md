@@ -89,6 +89,24 @@ its swings, so every jump it measures is from an *already energised* servo. It n
 exercises the first-energisation case, and will happily report "no resets at any swing"
 on a machine that dies on the first `M3` of a real file.
 
+## 6a. The servo is an MG996R, not a 9 g servo — size everything for that
+
+Confirmed from a photo of the carriage. This changes the numbers by an order of magnitude:
+
+| | SG90 / MG90S | **MG996R** |
+|---|---|---|
+| Running current | ~150-250 mA | **~700 mA - 1 A** |
+| Stall current | ~700 mA | **~2.5 A** |
+| Voltage range | 4.8-6 V | **4.8-7.2 V** |
+
+An LM2596 delivering a 2.5 A step down 1.5 m of 26 AWG servo lead explains every
+symptom below. Size for it:
+
+- **2200 uF, 16 V** at the servo, not 470 uF.
+- **Buck at 6.0 V**, not 5.0-5.5 V. The MG996R is rated to 7.2 V and makes more torque
+  at 6; running it at 5.2 V was starving it.
+- **20 AWG or thicker** for the red and brown pair. Signal can stay thin.
+
 ## 7. Open: the servo supply has no margin
 
 **Status: unresolved.** With everything above correct, jobs still reset when the servo

@@ -125,7 +125,7 @@ Servo GND    (brown/black, outer wire)   ──►  buck VOUT−  AND a shield G
 - The middle wire is always power. Get this wrong and the servo dies instantly.
 - **Set the buck output voltage with the servo disconnected**, meter on the output, before
   the servo ever sees it.
-- **Correction to the handoff: 6 V is too high for a 9 g SG90/MG90S.** Those are 4.8–6 V
+- **The servo on this machine is an MG996R** (4.8-7.2 V), so **6.0 V is correct**. The 5.0-5.5 V figure below applies only to 9 g SG90/MG90S-class servos. Those are 4.8–6 V
   parts and run hot and jittery at the top of that range. Set the buck to **5.0–5.5 V**.
   6.0 V is fine only if the servo is an MG996R-class part rated 4.8–7.2 V.
 - **Never** power the servo from the Arduino 5 V pin or the shield's 5 V rail. A stalled
