@@ -59,7 +59,7 @@ Full procedure:
    the tape and the feed rate are right, before you spend over an hour.
 5. Run `field_calm_L1.gcode`. Leave it alone.
 6. When it stops, **do not jog, do not home, do not reconnect anything.** Swap the pen for
-   the second colour in the same holder and run `field_eddy_L2.gcode`.
+   the second colour in the same holder and run `field_calm_L2.gcode`.
 
 ### What will go wrong
 
