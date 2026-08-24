@@ -19,6 +19,60 @@ the files in `gcode/art/` are for.
 
 ---
 
+## How to work with Claude on this
+
+**Claude cannot reach the plotter.** It runs in a cloud container with no access to the
+Mac, the USB port, or the machine. It cannot open the serial port, run a plot, or see what
+happened. Every physical action goes through Allwin. That shapes everything below.
+
+**Claude sends files, you save them.** G-code, tools and firmware arrive as downloadable
+attachments. Save them into the folder you run commands from — `~/Downloads`, alongside
+`plot2.py`. Everything is committed to the repo too, so nothing is lost if a download goes
+astray.
+
+**Claude gives one copy-pasteable command at a time.** Not a procedure to adapt — a literal
+line to paste. Where a command needs a value only the machine can tell you (a measurement,
+a port name), it says so explicitly.
+
+**You never have to edit code.** If a script or a G-code file needs changing, Claude edits
+it and sends a fresh copy. Say what you want different; don't open the file.
+
+### What to send back
+
+Three things, and the third is the one people skip:
+
+1. **The command you ran**, especially if you changed it.
+2. **The complete terminal output, pasted verbatim.** Not a summary. `ALARM:8`, `ALARM:9`
+   and `error:5` mean three unrelated things, and "it failed" cannot be debugged. The
+   status line matters as much as the error: `WCO`, `Pn:` and `MPos` have each turned out
+   to be the whole answer at some point.
+3. **What the machine physically did.** Which way it moved and how far, whether it buzzed,
+   whether the pen touched the paper, whether a line appeared. **The terminal regularly
+   reports success while the gantry is jammed against the frame** — GRBL counts out the
+   moves it was told to make and has no idea the machine didn't follow. That exact
+   situation cost hours on this build.
+
+A photo beats a description whenever something has been drawn.
+
+### Two rules that save time
+
+**Change one thing at a time.** Adjust the acceleration *and* swap the USB cable before the
+next run, and a pass or a fail tells you nothing.
+
+**Say when a number is a guess.** Several long detours came from figures Claude invented —
+`$130=400`, `$131=250` — being treated later as measured fact. If it hasn't been measured,
+say so, and it gets recorded as unknown instead of quietly becoming true.
+
+### Safety
+
+**The PSU switch is the emergency stop.** Not Ctrl-C, not closing the terminal. If the
+machine heads somewhere wrong or makes a bad noise, kill the 24 V first and ask afterwards.
+
+**Claude has no memory between chats.** This file is the memory. If something important is
+learned, it belongs in here or in `FINDINGS.md`, not only in the conversation.
+
+---
+
 ## 1. The machine
 
 | Part | Detail |
