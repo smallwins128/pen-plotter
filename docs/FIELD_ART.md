@@ -19,6 +19,8 @@ plot for an hour and a quarter.
 | `gcode/art/field_calm_L1.gcode` `_L2` | The flagship: two layers, two inks, 144 mm, ~73 min each. One broad dome, a few clean ridges, plenty of open surface. |
 | `gcode/art/field_swell.gcode` | Single layer, a rolling swell rather than a dome. |
 | `gcode/art/field_calm_proof.gcode` | 100 mm, coarse, **9 min** — run this first. |
+| `gcode/art/field_18cm_blue.gcode` `_red` | The same field sized to **180 × 180 mm**, blue then red, ~108 min a layer. |
+| `gcode/art/field_18cm_proof.gcode` | Coarse pass over the **full 180 mm extent**, 13 min. Run this before the 18 cm pair — see the note below. |
 | `gcode/art/*.svg` | Previews. Open them before committing an hour to a plot. |
 
 ---
@@ -61,6 +63,17 @@ Full procedure:
 6. When it stops, **do not jog, do not home, do not reconnect anything.** Swap the pen for
    the second colour in the same holder and run `field_calm_L2.gcode`.
 
+### Going past 150 mm
+
+The machine's travel (`$130=400`, `$131=250`) has room for 180 mm in both axes, but
+HANDOFF calls **~150 × 150 mm** the comfortable area and nothing larger has been plotted
+yet. Nothing in the G-code can check that for you — these files are relative, so GRBL has
+no idea where the paper is.
+
+**Run `field_18cm_proof.gcode` first.** It is the same field at a coarse spacing and covers
+the full 180 mm extent in 13 minutes, so a belt that binds, a carriage that fouls, or paper
+that turns out to be too small shows up then rather than 90 minutes into the real plot.
+
 ### What will go wrong
 
 - **A reset mid-plot loses the job.** The file is relative, so there is no resuming it —
@@ -94,7 +107,9 @@ python3 tools/fieldart.py --name mine --seed 42 --layers 2       # then commit t
 | `--sources` / `--waves` | Radial wave sources and plane waves. More sources → more separate hills fighting each other, which reads as turbulence even at a low `--fold`. Three or four is plenty. |
 | `--layers` | Colour passes. Each gets a phase offset (`--layer-phase`) and half a row of vertical shift, which is what makes them interfere rather than overprint. |
 | `--split` | Cut a layer into N consecutive files — ink refills, overnight stops, smaller blast radius on a reset. |
-| `--size` | Square side. Keep the *drawn* bbox (printed by the tool) inside 150 × 150 mm. |
+| `--size` | Square side, and the row length. |
+| `--height` | Stack height, when it should differ from `--size`. The waves overshoot the stack by about `--amp` at each end, so a 180 mm square wants `--size 180 --height 174`. The tool prints the drawn bbox — size the paper from that, not from `--size`. |
+| `--inks` | Names the layers after the pen you will actually load: `--inks blue,red` writes `field_<name>_blue.gcode` and `_red.gcode` and colours the previews to match. Implies `--layers`. |
 
 ### Turning the turbulence down
 

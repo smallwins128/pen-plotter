@@ -74,24 +74,25 @@ def displacement(x, y, sources, waves, amp, phase, fold=1.0):
 
 # ----------------------------------------------------------------- the path
 
-def build_path(size, spacing, step, amp, sources, waves, phase, row_shift, fold=1.0):
+def build_path(width, height, spacing, step, amp, sources, waves, phase, row_shift,
+               fold=1.0):
     """Serpentine up the square, then serpentine back down between the rows.
 
     The return sweep sits half a row-space off the outward one, so it doubles
     the density AND brings the pen back to where it started - which is what
     makes multi-colour registration possible.
     """
-    n = max(2, int(round(size / spacing)))
+    n = max(2, int(round(height / spacing)))
     ys = [i * spacing + row_shift for i in range(n)]                    # going up
     ys += [(n - 1 - j) * spacing + spacing / 2.0 + row_shift for j in range(n)]
 
     pts = [(0.0, 0.0)]
     for k, y in enumerate(ys):
         left_to_right = (k % 2 == 0)
-        m = max(2, int(round(size / step)))
+        m = max(2, int(round(width / step)))
         for i in range(m + 1):
             t = i / float(m)
-            x = t * size if left_to_right else (1.0 - t) * size
+            x = t * width if left_to_right else (1.0 - t) * width
             pts.append((x, y + displacement(x, y, sources, waves, amp, phase, fold)))
     pts.append((0.0, 0.0))          # close the loop, exactly
     return pts
@@ -146,12 +147,24 @@ def write_svg(path, pts, stroke="#1f4fd8"):
 
 INKS = ["#1f4fd8", "#c2308c", "#111111", "#0e9b8a"]
 
+# Named inks, so a layer can be called what you will actually load into the pen
+# holder. The name lands in the filename and the header; the colour is only ever
+# used for the SVG preview.
+INK_COLOURS = {
+    "blue": "#1f4fd8", "red": "#d81f2a", "black": "#111111", "green": "#0e9b8a",
+    "magenta": "#c2308c", "purple": "#6b3fd8", "orange": "#e2681c", "teal": "#0e9b8a",
+}
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--name", default="field", help="output name stem")
     ap.add_argument("--size", type=float, default=150.0, help="square side, mm")
+    ap.add_argument("--height", type=float, default=None,
+                    help="stack height, mm, if it should differ from --size. The waves "
+                         "overshoot the stack by about --amp at each end, so to land on "
+                         "an exact paper size set --height a little under it.")
     ap.add_argument("--spacing", type=float, default=1.2,
                     help="row spacing of the outward sweep, mm (the return sweep "
                          "halves it). 1.0-1.5 gives the dense look; 2.5 is a quick test.")
@@ -170,6 +183,10 @@ def main():
                     help="how many times the field folds back on itself - the number of "
                          "contour bands. 0.4-0.6 is a calm surface, 1.0 is turbulent.")
     ap.add_argument("--layers", type=int, default=1, help="colour passes (one file each)")
+    ap.add_argument("--inks", default=None,
+                    help="comma-separated ink names, e.g. 'blue,red'. Names the layer "
+                         "files after the pen you load rather than L1/L2, and colours "
+                         "the SVG previews to match. Sets --layers if not given.")
     ap.add_argument("--layer-phase", type=float, default=0.45,
                     help="radians of field phase between layers - how far the "
                          "colours drift apart")
@@ -181,6 +198,13 @@ def main():
     ap.add_argument("--preview-only", action="store_true", help="write the SVG, skip the G-code")
     args = ap.parse_args()
 
+    inks = [i.strip().lower() for i in args.inks.split(",")] if args.inks else []
+    for name in inks:
+        if name not in INK_COLOURS:
+            sys.exit("unknown ink %r. Known: %s" % (name, ", ".join(sorted(INK_COLOURS))))
+    if inks:
+        args.layers = len(inks)
+
     if args.amp <= args.spacing / 2.0:
         print("note: amp %.1f is small next to spacing %.1f - expect gentle waves, "
               "not crossings." % (args.amp, args.spacing))
@@ -189,13 +213,15 @@ def main():
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "gcode", "art")
     os.makedirs(outdir, exist_ok=True)
 
-    sources, waves = make_field(args.seed, args.sources, args.waves, args.size, args.scale)
+    height = args.height if args.height else args.size
+    sources, waves = make_field(args.seed, args.sources, args.waves,
+                                max(args.size, height), args.scale)
     total_minutes = 0.0
 
     for k in range(args.layers):
         phase = k * args.layer_phase
         shift = (k * args.spacing / args.layers) if args.layers > 1 else 0.0
-        pts = build_path(args.size, args.spacing, args.step, args.amp,
+        pts = build_path(args.size, height, args.spacing, args.step, args.amp,
                          sources, waves, phase, shift, args.fold)
         length = path_length(pts)
         minutes = length / args.feed
@@ -203,24 +229,30 @@ def main():
         x0, y0, x1, y1 = bbox(pts)
         sx = 0.0 if abs(x0) < 0.05 else -x0          # avoid printing "-0.0"
         sy = 0.0 if abs(y0) < 0.05 else -y0
-        stem = "field_%s" % args.name + ("_L%d" % (k + 1) if args.layers > 1 else "")
+        if inks:
+            stem = "field_%s_%s" % (args.name, inks[k])
+        else:
+            stem = "field_%s" % args.name + ("_L%d" % (k + 1) if args.layers > 1 else "")
 
         svg = os.path.join(outdir, stem + ".svg")
-        write_svg(svg, pts, INKS[k % len(INKS)])
+        write_svg(svg, pts, INK_COLOURS[inks[k]] if inks else INKS[k % len(INKS)])
 
         if args.preview_only:
-            print("%-28s preview only   %.1f m, ~%d min" % (stem, length / 1000.0, minutes))
+            print("%-28s preview only   %.1f m, ~%3d min  bbox %.1f x %.1f mm" % (
+                stem, length / 1000.0, minutes, x1 - x0, y1 - y0))
             continue
 
         header = [
             " Interference field - dense serpentine scan warped by a wave field.",
             " ONE continuous stroke. NO pen lifts, NO Z words, NO M2/M5.",
             "",
-            " Layer %d of %d.  seed=%d spacing=%.2f amp=%.2f scale=%.2f fold=%.2f"
-            " step=%.2f F%d" % (k + 1, args.layers, args.seed, args.spacing, args.amp,
+            " Layer %d of %d%s.  seed=%d spacing=%.2f amp=%.2f scale=%.2f fold=%.2f"
+            " step=%.2f F%d" % (k + 1, args.layers,
+                                " - %s ink" % inks[k].upper() if inks else "",
+                                args.seed, args.spacing, args.amp,
                                 args.scale, args.fold, args.step, args.feed),
             " %d rows over %.0f mm, effective line pitch %.2f mm." % (
-                2 * max(2, int(round(args.size / args.spacing))), args.size,
+                2 * max(2, int(round(height / args.spacing))), height,
                 args.spacing / 2.0),
             " Path length %.1f m, about %d minutes at F%d." % (
                 length / 1000.0, round(minutes), args.feed),
