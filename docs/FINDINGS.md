@@ -149,11 +149,27 @@ Two candidates, not yet separated:
    the gantry is pressed against the frame.
 2. A genuine supply sag at the direction reversal, independent of travel.
 
-**Unresolved.** The measurement that settles it is the free X travel from the drawing's
-start point, by hand, with the power off — which is also the number `$130` was supposed to
-hold and never did.
+A second reset followed, at line 1116. Both sit within ~50 moves of a **180 degree row-end
+reversal**, and `ok` runs about 20 moves ahead of the machine (15 planner blocks plus the
+128-byte serial buffer), so the carriage was physically *in* the turnaround each time.
 
-**Until it is settled, keep pieces inside the ~150 x 150 mm that is known to work.**
+That reframes it. Row 0 of the 18 cm proof ran **180 mm dead straight with no trouble** — so
+travel is not the whole story, and long traverses are not what hurts. What the machine
+cannot survive is reversing.
+
+**Mechanism, most likely:** a serpentine turn reverses **both X motors at once** on the dual-X
+gantry. Reversing an A4988 swings the coil current full-scale, which is the largest dI/dt the
+24 V rail ever sees, and the clone shield ships with almost no bulk capacitance — queued fix
+**#2 in section 7**, now the top priority rather than the servo cap, since the servo is not
+even connected.
+
+**Isolating it:** `gcode/tests/T14_reversal_sharp.gcode` does 20 sharp reversals in 40 mm of
+travel, pen out, no servo. `T15_reversal_rounded.gcode` does the same 20 turns but loops each
+one round instead of cusping. T14 resetting and T15 surviving confirms the reversal is the
+trigger and makes rounded turns a real software mitigation.
+
+**Until it is settled, keep pieces inside the ~150 x 150 mm that is known to work** — though
+note that size was never the thing that failed here.
 
 ## 8. Working right now, without the servo
 
