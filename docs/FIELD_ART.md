@@ -65,10 +65,15 @@ Full procedure:
 
 ### Going past 150 mm
 
-The machine's travel (`$130=400`, `$131=250`) has room for 180 mm in both axes, but
-HANDOFF calls **~150 × 150 mm** the comfortable area and nothing larger has been plotted
-yet. Nothing in the G-code can check that for you — these files are relative, so GRBL has
-no idea where the paper is.
+**Nothing here establishes that the machine can draw 180 mm.** `$130`/`$131` are not
+measured travel — they are placeholder numbers, flagged as such in HANDOFF, so quoting them
+as headroom proves nothing. What is known is that HANDOFF calls **~150 × 150 mm** the
+comfortable area and nothing larger has been plotted on this machine. Nothing in the G-code
+can check it either: these files are relative, so GRBL has no idea where the paper is or
+where the frame is.
+
+Measure the free travel by hand before you commit to 18 cm — with `$20=0` there are no soft
+limits to stop a run at the frame.
 
 **Run `field_18cm_proof.gcode` first.** It is the same field at a coarse spacing and covers
 the full 180 mm extent in 13 minutes, so a belt that binds, a carriage that fouls, or paper
