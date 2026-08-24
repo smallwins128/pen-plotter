@@ -133,6 +133,28 @@ cannot supply a current step. Next steps, in order:
 3. **220–470 µF, 50 V** across the shield's 24 V terminals. A4988s require local bulk
    capacitance; the clone shield ships with very little.
 
+## 7a. A motion-only reset at 180 mm — the servo was not involved
+
+Running an 18 cm piece (`field_18cm_proof.gcode`, servo disconnected, pen taped) the board
+reset mid-stream. The sender reported `GRBL RESET mid-stream at line 284 (brownout)`.
+
+Line 284 is 52 moves past the first row's turnaround, so the stream had been driven out to
+**X = +180 mm** and back some 42 mm. Section 7 says motion alone is fine — but that was
+established with **T7, a 50 mm square**. Nothing had ever traversed 180 mm.
+
+Two candidates, not yet separated:
+
+1. **X travel ran out** and the carriage jammed against the frame — §4 all over again. `ok`
+   means buffered, not executed, so GRBL counts out moves to 180 and "turns around" while
+   the gantry is pressed against the frame.
+2. A genuine supply sag at the direction reversal, independent of travel.
+
+**Unresolved.** The measurement that settles it is the free X travel from the drawing's
+start point, by hand, with the power off — which is also the number `$130` was supposed to
+hold and never did.
+
+**Until it is settled, keep pieces inside the ~150 x 150 mm that is known to work.**
+
 ## 8. Working right now, without the servo
 
 Motion is in better shape than it has ever been: homing repeatable, work zero persistent,
