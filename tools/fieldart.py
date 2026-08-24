@@ -31,15 +31,18 @@ TAU = 2.0 * math.pi
 
 # ---------------------------------------------------------------- the field
 
-def make_field(seed, n_sources, n_waves, size):
-    """Build a deterministic wave field: radial sources plus plane waves."""
+def make_field(seed, n_sources, n_waves, size, scale=1.0):
+    """Build a deterministic wave field: radial sources plus plane waves.
+
+    `scale` stretches every wavelength: bigger scale, bigger and calmer features.
+    """
     rng = random.Random(seed)
     sources, waves = [], []
     for _ in range(n_sources):
         sources.append((
             rng.uniform(-0.25, 1.25) * size,      # centre x, may sit off-sheet
             rng.uniform(-0.25, 1.25) * size,      # centre y
-            rng.uniform(0.10, 0.35) * size,       # wavelength
+            rng.uniform(0.10, 0.35) * size * scale,   # wavelength
             rng.uniform(0.6, 1.2),                # weight
             rng.uniform(0.6, 1.6) * size,         # decay distance
             rng.uniform(0, TAU),                  # phase
@@ -47,14 +50,14 @@ def make_field(seed, n_sources, n_waves, size):
     for _ in range(n_waves):
         waves.append((
             rng.uniform(0, math.pi),              # direction
-            rng.uniform(0.25, 0.9) * size,        # wavelength
+            rng.uniform(0.25, 0.9) * size * scale,    # wavelength
             rng.uniform(0.3, 0.7),                # weight
             rng.uniform(0, TAU),                  # phase
         ))
     return sources, waves
 
 
-def displacement(x, y, sources, waves, amp, phase):
+def displacement(x, y, sources, waves, amp, phase, fold=1.0):
     """Perpendicular offset of the scan line at (x, y), in mm.
 
     The inner sum is folded through a sine so the field wraps: that fold is
@@ -66,12 +69,12 @@ def displacement(x, y, sources, waves, amp, phase):
         u += w * math.sin(TAU * r / lam + ph) * math.exp(-r / rho)
     for ang, lam, w, ph in waves:
         u += w * math.sin(TAU * (x * math.cos(ang) + y * math.sin(ang)) / lam + ph)
-    return amp * math.sin(math.pi * u + phase)
+    return amp * math.sin(math.pi * fold * u + phase)
 
 
 # ----------------------------------------------------------------- the path
 
-def build_path(size, spacing, step, amp, sources, waves, phase, row_shift):
+def build_path(size, spacing, step, amp, sources, waves, phase, row_shift, fold=1.0):
     """Serpentine up the square, then serpentine back down between the rows.
 
     The return sweep sits half a row-space off the outward one, so it doubles
@@ -89,7 +92,7 @@ def build_path(size, spacing, step, amp, sources, waves, phase, row_shift):
         for i in range(m + 1):
             t = i / float(m)
             x = t * size if left_to_right else (1.0 - t) * size
-            pts.append((x, y + displacement(x, y, sources, waves, amp, phase)))
+            pts.append((x, y + displacement(x, y, sources, waves, amp, phase, fold)))
     pts.append((0.0, 0.0))          # close the loop, exactly
     return pts
 
@@ -160,6 +163,12 @@ def main():
     ap.add_argument("--seed", type=int, default=3, help="field seed - change for a new design")
     ap.add_argument("--sources", type=int, default=3, help="radial wave sources")
     ap.add_argument("--waves", type=int, default=2, help="plane waves")
+    ap.add_argument("--scale", type=float, default=1.0,
+                    help="stretch every wavelength. >1 gives bigger, calmer features; "
+                         "<1 packs more incident into the same square.")
+    ap.add_argument("--fold", type=float, default=1.0,
+                    help="how many times the field folds back on itself - the number of "
+                         "contour bands. 0.4-0.6 is a calm surface, 1.0 is turbulent.")
     ap.add_argument("--layers", type=int, default=1, help="colour passes (one file each)")
     ap.add_argument("--layer-phase", type=float, default=0.45,
                     help="radians of field phase between layers - how far the "
@@ -180,14 +189,14 @@ def main():
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "gcode", "art")
     os.makedirs(outdir, exist_ok=True)
 
-    sources, waves = make_field(args.seed, args.sources, args.waves, args.size)
+    sources, waves = make_field(args.seed, args.sources, args.waves, args.size, args.scale)
     total_minutes = 0.0
 
     for k in range(args.layers):
         phase = k * args.layer_phase
         shift = (k * args.spacing / args.layers) if args.layers > 1 else 0.0
         pts = build_path(args.size, args.spacing, args.step, args.amp,
-                         sources, waves, phase, shift)
+                         sources, waves, phase, shift, args.fold)
         length = path_length(pts)
         minutes = length / args.feed
         total_minutes += minutes
@@ -207,8 +216,9 @@ def main():
             " Interference field - dense serpentine scan warped by a wave field.",
             " ONE continuous stroke. NO pen lifts, NO Z words, NO M2/M5.",
             "",
-            " Layer %d of %d.  seed=%d spacing=%.2f amp=%.2f step=%.2f F%d" % (
-                k + 1, args.layers, args.seed, args.spacing, args.amp, args.step, args.feed),
+            " Layer %d of %d.  seed=%d spacing=%.2f amp=%.2f scale=%.2f fold=%.2f"
+            " step=%.2f F%d" % (k + 1, args.layers, args.seed, args.spacing, args.amp,
+                                args.scale, args.fold, args.step, args.feed),
             " %d rows over %.0f mm, effective line pitch %.2f mm." % (
                 2 * max(2, int(round(args.size / args.spacing))), args.size,
                 args.spacing / 2.0),

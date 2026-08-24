@@ -16,9 +16,9 @@ plot for an hour and a half.
 | File | |
 |---|---|
 | `tools/fieldart.py` | The generator. Writes G-code **and** an SVG preview. |
-| `gcode/art/field_eddy_L1.gcode` `_L2` | The flagship: two layers, two inks, 144 mm, ~94 min each. |
-| `gcode/art/field_drift.gcode` | A single-layer variant on a different seed. |
-| `gcode/art/field_eddy_proof.gcode` | 100 mm, coarse, **13 min** — run this first. |
+| `gcode/art/field_calm_L1.gcode` `_L2` | The flagship: two layers, two inks, 144 mm, ~73 min each. One broad dome, a few clean ridges, plenty of open surface. |
+| `gcode/art/field_swell.gcode` | Single layer, a rolling swell rather than a dome. |
+| `gcode/art/field_calm_proof.gcode` | 100 mm, coarse, **9 min** — run this first. |
 | `gcode/art/*.svg` | Previews. Open them before committing an hour to a plot. |
 
 ---
@@ -45,7 +45,7 @@ does not return to its origin.
 Relative art needs no homing and no work zero, exactly like the existing pieces:
 
 ```bash
-python3 tools/plot2.py --no-home --unlock gcode/art/field_eddy_proof.gcode
+python3 tools/plot2.py --no-home --unlock gcode/art/field_calm_proof.gcode
 ```
 
 Full procedure:
@@ -55,9 +55,9 @@ Full procedure:
 3. Jog the carriage to the start point. The file header names it, e.g. *0.0 mm right of,
    3.4 mm up from the bottom-left corner of the drawn area* — the pattern overshoots the
    nominal square by the wave amplitude, which is why the start is not the corner itself.
-4. Run `field_eddy_proof.gcode` first. Thirteen minutes tells you whether the pen, the
-   paper, the tape and the feed rate are right, before you spend an hour and a half.
-5. Run `field_eddy_L1.gcode`. Leave it alone.
+4. Run `field_calm_proof.gcode` first. Nine minutes tells you whether the pen, the paper,
+   the tape and the feed rate are right, before you spend over an hour.
+5. Run `field_calm_L1.gcode`. Leave it alone.
 6. When it stops, **do not jog, do not home, do not reconnect anything.** Swap the pen for
    the second colour in the same holder and run `field_eddy_L2.gcode`.
 
@@ -66,7 +66,7 @@ Full procedure:
 - **A reset mid-plot loses the job.** The file is relative, so there is no resuming it —
   position is gone. Generate with `--split 3` if you would rather risk 30 minutes than 94.
   Split parts chain back to back with the carriage untouched, same as layers do.
-- **The pen will run dry.** 47 metres of continuous line is far more than a fineliner
+- **The pen will run dry.** 36 metres of continuous line is far more than a fineliner
   holds. Use a gel or rollerball pen with real ink capacity, and prefer a 0.5 mm tip —
   the effective line pitch is 0.6 mm, so anything broader closes the gaps and the bands
   turn into solid ink.
@@ -89,10 +89,22 @@ python3 tools/fieldart.py --name mine --seed 42 --layers 2       # then commit t
 | `--seed` | The whole design. Cycle it with `--preview-only` until an SVG looks right. |
 | `--spacing` | Row spacing of the outward sweep; the return sweep halves it. 1.2 → 0.6 mm pitch. |
 | `--amp` | Peak displacement. **Must exceed the spacing** or the lines never cross and the three-dimensional illusion never appears. 2–3× spacing is the sweet spot. |
-| `--sources` / `--waves` | Radial wave sources and plane waves. More sources → more closed loops, the "eyes" in the bands. |
+| `--fold` | **The turbulence dial**, and the first one to reach for. It is how many times the field folds back on itself, so it sets the number of dark ridges. `1.0` is churning and busy; `0.7` is a calm surface with a handful of clean ridges; below `0.5` the drawing flattens out and the three-dimensional read goes with it. The shipped pieces use `0.70`–`0.75`. |
+| `--scale` | Feature size. Stretches every wavelength, so `1.6` gives one broad dome across the sheet where `1.0` gives several competing hills. Raise it alongside lowering `--fold`. |
+| `--sources` / `--waves` | Radial wave sources and plane waves. More sources → more separate hills fighting each other, which reads as turbulence even at a low `--fold`. Three or four is plenty. |
 | `--layers` | Colour passes. Each gets a phase offset (`--layer-phase`) and half a row of vertical shift, which is what makes them interfere rather than overprint. |
 | `--split` | Cut a layer into N consecutive files — ink refills, overnight stops, smaller blast radius on a reset. |
 | `--size` | Square side. Keep the *drawn* bbox (printed by the tool) inside 150 × 150 mm. |
+
+### Turning the turbulence down
+
+Busy is the default and it is easy to overshoot in either direction. In order:
+
+1. Drop `--fold` to `0.7`. This alone removes most of the churn.
+2. Raise `--scale` to `1.5`–`1.8` so the surviving features are big.
+3. Keep `--sources` at 3–4. Cutting to 2 with a low fold gives an almost flat drawing.
+4. Leave `--amp` at 2–3× `--spacing`. Amplitude is what makes the ridges dark; lowering it
+   to calm the piece down just removes the effect instead.
 
 Plotting time scales as `size² / spacing`, and the tool prints the estimate before you
 commit to it. Halving `--spacing` doubles both the density and the hours.
