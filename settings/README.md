@@ -10,20 +10,29 @@ while read -r l; do python3 plot.py --port <port> --send "$l"; done < settings/p
 Re-flashing the firmware wipes EEPROM, so this file plus your `G10 L20 P1` work zero are
 what you restore afterwards.
 
-## Deliberately shipped in the "off" state
+## These are the values actually on the machine
+
+Not defaults, not aspirations — this is what `$$` returns after commissioning.
 
 ```
-$20=0    soft limits off
-$21=0    hard limits off   <- leave this off permanently, see SETUP.md phase 5
-$22=0    homing off
+$22=1    homing ON. GRBL boots into Alarm and refuses everything until $H or $X.
+         That is by design and it is confusing if you forget.
+$20=0    soft limits still OFF
+$21=0    hard limits off  <- leave this off permanently, see SETUP.md phase 5
 ```
 
-`$22=1` makes GRBL boot into Alarm and refuse everything until `$H` or `$X`, so the file
-ships with homing off to keep first-power-up harmless. Turn `$22=1` on at the end of the
-bring-up ladder (SETUP.md phase 6.8), and `$20=1` only **after** `$130`/`$131` have been
-set to your real measured travel — soft limits protect nothing if the numbers are made up.
+`$20=1` only **after** `$130`/`$131` are set to your real measured travel. They currently
+read 400 and 250, which are generous guesses rather than measurements — soft limits
+protect nothing if the numbers are invented.
 
-`$130`/`$131` ship at 200.000 as a placeholder. Measure and replace.
+`$110`/`$111` are at **500** and `$120`/`$121` at **50** — deliberately conservative while
+the resets described in [FINDINGS.md](../docs/FINDINGS.md) are unresolved. Ramp them with
+`gcode/tests/T13_speed_ramp.gcode` once the machine is stable.
+
+## Write these with the PSU switched OFF
+
+EEPROM writes with motor power live is how the settings got corrupted twice. USB power
+alone, 24 V off. See [FINDINGS.md](../docs/FINDINGS.md) section 5.
 
 ## Rationale for every value
 
