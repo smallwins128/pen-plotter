@@ -7,7 +7,7 @@ each other. Flat scan, reads as a three-dimensional surface.
 **It needs no pen lift.** That is the whole reason it is the right thing to plot next on
 this machine: the servo is still unreliable while moving (`FINDINGS.md` §7), and this
 artwork never asks the pen to leave the paper. Tape the pen down, disconnect the servo,
-plot for an hour and a half.
+plot for an hour and a quarter.
 
 ---
 
@@ -51,7 +51,7 @@ python3 tools/plot2.py --no-home --unlock gcode/art/field_calm_proof.gcode
 Full procedure:
 
 1. **Disconnect the servo** (both wires) and tape the pen at drawing height.
-2. Tape the paper down. Really tape it — 94 minutes of dragging a pen across it.
+2. Tape the paper down. Really tape it — 73 minutes of dragging a pen across it.
 3. Jog the carriage to the start point. The file header names it, e.g. *0.0 mm right of,
    3.4 mm up from the bottom-left corner of the drawn area* — the pattern overshoots the
    nominal square by the wave amplitude, which is why the start is not the corner itself.
@@ -64,7 +64,7 @@ Full procedure:
 ### What will go wrong
 
 - **A reset mid-plot loses the job.** The file is relative, so there is no resuming it —
-  position is gone. Generate with `--split 3` if you would rather risk 30 minutes than 94.
+  position is gone. Generate with `--split 3` if you would rather risk 25 minutes than 73.
   Split parts chain back to back with the carriage untouched, same as layers do.
 - **The pen will run dry.** 36 metres of continuous line is far more than a fineliner
   holds. Use a gel or rollerball pen with real ink capacity, and prefer a 0.5 mm tip —
