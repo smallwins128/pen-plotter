@@ -138,38 +138,38 @@ cannot supply a current step. Next steps, in order:
 Running an 18 cm piece (`field_18cm_proof.gcode`, servo disconnected, pen taped) the board
 reset mid-stream. The sender reported `GRBL RESET mid-stream at line 284 (brownout)`.
 
-Line 284 is 52 moves past the first row's turnaround, so the stream had been driven out to
-**X = +180 mm** and back some 42 mm. Section 7 says motion alone is fine — but that was
-established with **T7, a 50 mm square**. Nothing had ever traversed 180 mm.
+Section 7 says motion alone is fine — but that was established with **T7, a 50 mm square**,
+and nothing had ever run for minutes at a stretch.
 
-Two candidates, not yet separated:
+Two more followed: line 1116, then line 3014. Their positions relative to the row-end
+turnarounds are 52, 20 and 70 moves — with rows 181–226 moves long, a random point averages
+~45 moves from a turn, so that is scatter, not clustering. **An earlier draft of this
+section called the reversal the trigger on the strength of the first two points. Three
+points do not support it.**
 
-1. **X travel ran out** and the carriage jammed against the frame — §4 all over again. `ok`
-   means buffered, not executed, so GRBL counts out moves to 180 and "turns around" while
-   the gantry is pressed against the frame.
-2. A genuine supply sag at the direction reversal, independent of travel.
+What the three do show is **duration**: at F500 with 0.8 mm moves the machine runs about
+10 moves a second, so the runs lasted roughly **27 s, 107 s and 290 s**. Random position,
+increasing survival — the signature of an intermittent fault, not of any particular move.
 
-A second reset followed, at line 1116. Both sit within ~50 moves of a **180 degree row-end
-reversal**, and `ok` runs about 20 moves ahead of the machine (15 planner blocks plus the
-128-byte serial buffer), so the carriage was physically *in* the turnaround each time.
+**The detail that reframes it:** the Arduino is **USB-powered** and the shield never feeds
+`VIN` (section 1 of HANDOFF, verified — the power LED is off with the PSU on and USB out).
+A sag on the 24 V motor rail therefore cannot brown out the Arduino directly. For motor
+current to reset it, the disturbance has to arrive through ground or as radiated noise.
+Which leaves a candidate never yet tested: **the USB connection itself** — a marginal cable,
+port or hub causing the Mac to re-enumerate, which resets the board exactly as opening the
+serial port does.
 
-That reframes it. Row 0 of the 18 cm proof ran **180 mm dead straight with no trouble** — so
-travel is not the whole story, and long traverses are not what hurts. What the machine
-cannot survive is reversing.
+**The decisive test costs nothing and moves nothing:**
 
-**Mechanism, most likely:** a serpentine turn reverses **both X motors at once** on the dual-X
-gantry. Reversing an A4988 swings the coil current full-scale, which is the largest dI/dt the
-24 V rail ever sees, and the clone shield ships with almost no bulk capacitance — queued fix
-**#2 in section 7**, now the top priority rather than the servo cap, since the servo is not
-even connected.
+> Switch the **24 V PSU off** and stream a full art file on USB power alone. GRBL executes
+> the entire motion profile in software with identical timing; the steppers have no current
+> so nothing moves. If it still resets, the motors are not involved at all and the fault is
+> in the USB/serial path. If it runs to completion, motor current is implicated and the
+> hunt moves to grounding and bulk capacitance.
 
-**Isolating it:** `gcode/tests/T14_reversal_sharp.gcode` does 20 sharp reversals in 40 mm of
-travel, pen out, no servo. `T15_reversal_rounded.gcode` does the same 20 turns but loops each
-one round instead of cusping. T14 resetting and T15 surviving confirms the reversal is the
-trigger and makes rounded turns a real software mitigation.
-
-**Until it is settled, keep pieces inside the ~150 x 150 mm that is known to work** — though
-note that size was never the thing that failed here.
+Run it before buying any capacitors. `T14_reversal_sharp.gcode` and `T15_reversal_rounded.gcode`
+remain useful for separating cusped from looped turns, but only once the PSU-off test has
+said whether motion matters at all.
 
 ## 8. Working right now, without the servo
 
