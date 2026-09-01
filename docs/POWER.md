@@ -38,16 +38,22 @@ pen branch (UBEC 6 V × 2.5 A stall ÷ 24 V ÷ η) ~0.7 A
                                               ~2.0 A
 ```
 
-**Mean Well LRS-100-24** — 24 V, 4.5 A, flat enclosed brick, ~130 × 100 × 30 mm. Roughly
-2× headroom. The LRS-350-24 you already own works identically at 6 % load; it is 215 mm
-long, so the box grows to about 400 mm. Free, but bigger.
+**Use the Ender's own supply.** The stock Ender-3 Pro / V2 PSU *is* a genuine Mean Well
+**LRS-350-24**, 24 V 14.6 A, **215 × 115 × 30 mm**. Vastly oversized for a 2.0 A load,
+which costs nothing but volume — it will loaf at 14 % and run cold. Reusing it sets the box
+at 350 × 220 mm rather than about 260 × 200.
+
+*Read the label before you cut metal.* The original 2018 Ender-3 shipped with more than one
+supply, and 215 × 115 × 30 is a datasheet figure, not a measured one. An **LRS-100-24**
+(24 V 4.5 A, ~130 × 100 × 30) drops onto the same base grid if you would rather have the
+smaller box.
 
 ---
 
 ## 2. Power topology
 
 ```
-  230 V ─► IEC C14 inlet ─► LRS-100-24 ─► +24 V BLOCK ─┬─ F1 3 A ──► shield V+
+  230 V ─► IEC C14 inlet ─► LRS-350-24 ─► +24 V BLOCK ─┬─ F1 3 A ──► shield V+
            fused T2 A                                  ├─ F2 1.5 A ► PEN pin 1
            switched                                    └─ F3 0.5 A ► fan
               │                                             (returns)
@@ -70,9 +76,9 @@ is grounding, that is not a risk worth taking. The PSUs are isolated; leave DC f
 
 | | Rating | Protects |
 |---|---|---|
-| Inlet | T2 A slow-blow | ~0.5 A at 230 V for a 100 W supply; slow-blow rides the inrush |
+| Inlet | T2 A slow-blow | ~0.3 A at 230 V for the real load; slow-blow rides the PSU inrush |
 | F1 | 3 A | stepper branch (~1.2 A) |
-| F2 | 1.5 A | pen branch (~0.7 A), sized above UBEC inrush |
+| F2 | 1.5 A | pen branch (~0.7 A), sized above the converter's inrush |
 | F3 | 0.5 A | fan |
 
 ---
@@ -82,12 +88,14 @@ is grounding, that is not a risk worth taking. The PSUs are isolated; leave DC f
 12 stepper + 4 endstop + 3 pen = 19 conductors, on six ports.
 
 ```
-   left end          ┌─────────────── 300 mm front face ───────────────┐
-   ┌──────┐          │                                                 │
-   │ IEC  │  keep    │   (X)      (A)      (Y)     (LIM)  (PEN)  [USB] │   right end
-   │ C14  │  clear   │  GX16-4   GX16-4   GX16-4   GX12-4 GX12-3   B   │   ┌──────┐
-   └──────┘  PSU     │   16mm     16mm     16mm     12mm   12mm        │   │ fan  │
-             behind  └─────────────────────────────────────────────────┘   └──────┘
+   left end          ┌──────────────── 350 mm front face ────────────────┐
+   ┌──────┐          │                                                   │
+   │ IEC  │  keep    │   (X)      (A)      (Y)     (LIM)   (PEN)   [USB] │  right end
+   │ C14  │  clear   │  GX16-4   GX16-4   GX16-4   GX12-4  GX12-3    B   │  ┌──────┐
+   └──────┘  PSU     │   16mm     16mm     16mm     12mm    12mm         │  │ fan  │
+             behind  └───────────────────────────────────────────────────┘  └──────┘
+   u  =                55       100       145      200     245      300
+   all round ports on one centreline, v = 37.5 mm above the floor
 ```
 
 **Steppers get GX16 (16 mm hole), endstops and pen get GX12 (12 mm).** Different shell
@@ -142,7 +150,7 @@ Plan view, lid off, front face at the bottom:
  ┌──────┬───────────────────────────┬──────────────────────────────┐
  │VENTS │                           │   DIN mini-rail (~90 mm)     │
  │      │                           │  ┌──┬──┬──┬───┬────┐         │
- │ IEC  │      LRS-100-24           │  │PE│F1│F2│+24│0V ★│         │
+ │ IEC  │      LRS-350-24           │  │PE│F1│F2│+24│0V ★│         │
  │ C14  │   (base-mounted brick)    │  └──┴──┴──┴───┴────┘         │
  │      │                           │                              │
  ├──────┴─ mains barrier ───────────┤                              │
@@ -155,11 +163,12 @@ Plan view, lid off, front face at the bottom:
  └───(X)───(A)───(Y)────(LIM)─(PEN)─[USB]───────────────────────────┘
 ```
 
-**Why the PSU sits along the back:** it frees the whole 300 mm front face. Put the supply
-along the left end instead and six ports have to crowd into 170 mm — under 30 mm centres,
-closer than a GX16 backshell lets you tighten.
+**Why the PSU sits along the back:** it frees the whole front face for connectors. Put the
+supply along the left end instead and six ports have to crowd into what is left — under
+30 mm centres, closer than a GX16 backshell lets you tighten.
 
-Enclosure: **≥ 300 × 200 × 80 mm internal.** ABS, or diecast aluminium bonded to PE.
+Enclosure: **350 × 220 × 75 mm internal**, which leaves 45 mm spare along the back
+(215 PSU + 90 DIN rail of 350) and 52 mm across (115 PSU + 53 board of 220).
 
 ---
 
@@ -204,6 +213,25 @@ Two more things this buys:
   omit — it is a conductor in the umbilical, not an extra wire someone can tidy away.
 - The LM2596 goes. It is a ~2 A part being asked for 2.5 A. A 6 V-selectable UBEC rated
   ≥ 5 A is built for exactly this current profile.
+
+### 5 V or 6 V?
+
+Either. The MG996R's range is 4.8-7.2 V, and **a 5 V rail is arguably the better choice
+here**: stall current scales with supply voltage over winding resistance, so the ~2.5 A
+quoted at 6 V becomes roughly **2.1 A at 5 V**. That is a smaller transient in the exact
+wire that has been resetting the board. The cost is torque - about 9.4 kg-cm instead of
+11 - against a requirement of 1.2 kg-cm for a 30 mm crank, or 0.10 kg-cm for the 2.5 mm
+cam in HANDOFF section 7. There is an order of magnitude in hand either way.
+
+So a fixed 5 V 3 A module is fine, and 3 A against a 2.1 A stall is adequate headroom. Two
+conditions:
+
+- **The 2200 uF still goes at the servo.** A potted module's internal output capacitance is
+  small, and it is the bulk cap, not the converter, that supplies the lift transient. This
+  is not optional with any regulator.
+- **Do not let the servo stall in normal use.** SETUP section 4.4 already requires this -
+  the pen floats on its spring and the servo only lifts it. Some potted modules fold back
+  on over-current and stay folded back, which reads as a limp servo rather than an error.
 
 Still three wires. If you later want the last few dB, run a 4-core and give the PWM its own
 return to a shield GND pin. At 0.7 A the shared-return offset is tens of millivolts against
@@ -274,14 +302,14 @@ stopped listening (HANDOFF, Safety).
 
 | Qty | Part | Note |
 |---|---|---|
-| 1 | Enclosure ≥ 300 × 200 × 80 mm internal | ABS or diecast ally; if metal, bond to PE |
+| 1 | Folded steel enclosure, 350 × 220 × 75 mm internal | section 10; `tools/enclosure_dxf.py` cuts the flat patterns |
 | 1 | IEC C14 inlet, fused + switched | T2 A slow-blow; UK lead plugs straight in |
-| 1 | Mean Well LRS-100-24 | 24 V 4.5 A. Or reuse the LRS-350-24 in a longer box |
+| — | Mean Well LRS-350-24 | you already have it — the Ender's own supply. MEASURE the label |
 | 3 | GX16-4 panel socket + plug | ~5 A/pin, far above the 0.84 A the motors draw |
 | 1 | GX12-4 panel socket + plug | endstops |
 | 1 | GX12-3 panel socket + plug | pen — different shell size on purpose |
 | 1 | Panel USB-B ↔ USB-B pass-through | so the lid never comes off to re-flash |
-| 1 | UBEC, 6 V selectable, ≥ 5 A | lives on the carriage, replaces the LM2596 |
+| 1 | 5 V or 6 V DC-DC, ≥ 3 A | lives on the carriage, replaces the LM2596. A fixed 5 V 3 A module is fine - see section 6 |
 | 1 | 2200 µF 16 V electrolytic | at the servo |
 | 1 | 220–470 µF 50 V electrolytic | at the shield's 24 V terminals |
 | 1 | 60 mm 24 V fan + finger guard | blowing in over the drivers |
@@ -290,7 +318,104 @@ stopped listening (HANDOFF, Safety).
 
 ---
 
-## 10. What this box does not do
+
+## 10. Fabrication
+
+Laser-cut and folded: **one blank for the floor and all four walls, plus a separate lid.**
+`tools/enclosure_dxf.py` generates both flat patterns, the adapter plates and an SVG
+preview. Every dimension it uses is at the top of the file.
+
+```
+python3 tools/enclosure_dxf.py --report      # just the numbers
+python3 tools/enclosure_dxf.py               # writes enclosure/*.dxf and *.svg
+```
+
+It self-checks after every run: no two holes leaving less than 1.5 mm of web, nothing
+sitting within 3 mm of a bend line. Change a dimension, re-run, read the check.
+
+### What is known, and what you must measure
+
+| | Figure | Where it comes from |
+|---|---|---|
+| **Mean Well LRS-350-24** | 215 × 115 × 30 mm | Datasheet. Confirmed as the stock Ender-3 Pro / V2 supply. **MEASURE** — read the label; the 2018 Ender-3 had variants |
+| **Arduino Uno R3 outline** | 68.6 × 53.4 mm | Published, reliable |
+| **Uno mounting holes** | (13.97, 2.54) (15.24, 50.80) (66.04, 35.56) (66.04, 7.62), Ø3.2 | Published, but **the four holes are not on any grid and none of the spacings is round.** Trace them off your board |
+| Uno + shield stack height | ~50 mm | **MEASURE** — depends on your standoffs, drivers and heatsinks |
+| GX16 panel hole | Ø16 mm | The number in the name |
+| GX12 panel hole | Ø12 mm | Same |
+| TS35 DIN rail | 35 mm wide, 25 mm slot pitch | Standard |
+| 60 mm fan | Ø57 air hole, 4 × M4 on 50 × 50 | Standard |
+| **IEC fused/switched inlet** | ~47 × 27 mm cutout | **MEASURE** — snap-in power entry modules vary between vendors |
+| **USB-B panel coupler** | 27.5 × 15.5 + 2 × M3 at 30 | **MEASURE** — also sold as a D-hole part |
+
+Everything marked MEASURE is a number that would cost you a sheet of steel if it were
+wrong. None of them gates the cut, because of the next section.
+
+### The perforated base does the work
+
+The base is a **field of Ø3.5 holes on a 25 mm square grid**, 104 of them, and nothing
+else. No component-specific mounting holes at all.
+
+25 mm is the slot pitch of TS35 DIN rail, so the rail bolts down anywhere. The PSU, the
+board and anything bought later mount through whichever holes land — and where a hole
+pattern does not land on the grid, which for the Uno it never will, it gets a small flat
+**adapter plate**: the awkward pattern on one side, four grid holes on the other, cut from
+the offcut. `adapters.dxf` has one for the Uno and one blank.
+
+This is the whole reason the unknowns above are survivable. **Being wrong about a
+component costs you an adapter plate, not a box.**
+
+### Material and construction
+
+| | |
+|---|---|
+| Sheet | **1.5 mm CR steel**, powder coated. Or 2 mm 5052 aluminium |
+| Inner bend radius | 1.5 mm (1 × t) |
+| Corners | Full-height tabs on the end walls, lapping inside the front and rear walls, 2 × M3 each |
+| Corner relief | Ø3 mm at each point where two bend lines meet — without it the corner tears |
+| Lid | Shallow pan, 15 mm skirt, telescopes **over** the base with 0.4 mm clearance per side. Open butt corners — a tab there would foul the base wall |
+| Lid fixing | 6 × M3 into **self-clinching nuts** (PEM S-M3) pressed into the base walls. 1.5 mm sheet is too thin to tap |
+| Earth | One dedicated M6 stud in the base, in the mains corner, **shared with no other fastener** |
+
+### Flat pattern
+
+```
+folded interior     350 × 220 × 75 mm
+folded exterior     353.0 × 223.0 × 76.5 mm
+base blank          500.69 × 370.69 mm
+lid blank           384.49 × 254.49 mm
+bend deduction      2.654 mm per 90° bend
+```
+
+That deduction comes from R = 1.5, t = 1.5, K = 0.42:
+
+```
+BA = (π/180) × 90 × (R + K·t)   = 3.346 mm     arc at the neutral axis
+BD = 2 × (R + t) − BA           = 2.654 mm
+```
+
+**The shop's bend deduction wins.** K depends on their tooling, and every hole in a wall
+shifts in the flat if their number differs from ours. Hand them the *folded* dimensions and
+let them do their own unfold; use these DXFs for the cutouts and hole positions, or as a
+cross-check. If they want the flat as-is, tell them the deduction it assumes.
+
+### Layers in the DXF
+
+| Layer | |
+|---|---|
+| `CUT` | everything the laser cuts, corner reliefs included |
+| `BEND` | fold lines. Not cut — reference for the brake |
+| `ETCH` | port labels, if you want them marked |
+
+### Ventilation
+
+Fan blows **in** through the right end wall, air leaves through a Ø5 perf field in the rear
+wall over the PSU — 128 holes, 2513 mm², against the fan's 2827 mm² of swept area. Ø5 keeps
+a finger out. Nothing vents through the left end wall, which is where mains lives.
+
+---
+
+## 11. What this box does not do
 
 **It does not fix the servo reset.** See the note at the top. The fixes queued in
 HANDOFF §7 are mechanical and electrical at the servo end; none of them is an enclosure.
