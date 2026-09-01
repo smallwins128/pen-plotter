@@ -41,15 +41,32 @@ T = 1.5                 # sheet thickness, mm.  1.5 CR steel or 2.0 5052 ally
 R_BEND = 1.5            # inner bend radius, mm.  1 x T is the usual default
 K = 0.42                # K-factor.  0.42 suits a 1 x T radius in mild steel
 
-# --- enclosure, interior --------------------------------------------------
-LI = 350.0              # length, front wall to... along the front wall
-WI = 220.0              # depth, front wall to rear wall
-HI = 75.0               # height, floor to top edge
+# --- which supply, and therefore how big the box is ------------------------
+# Pick with --psu.  Both are Mean Well enclosed bricks, 30 mm tall, mounted
+# flat on the base.  The load is ~2.0 A (see POWER.md); the difference is
+# margin and volume, not capability.
+PRESETS = {
+    # The Ender-3 Pro / V2 stock supply, reused.  Free, and 7x oversized.
+    # MEASURE: read the label - the 2018 Ender-3 shipped more than one part.
+    "lrs350": dict(PSU=(215.0, 115.0, 30.0), LI=350.0, WI=220.0, IEC_U=150.0,
+                   FRONT_U=[55.0, 100.0, 145.0, 200.0, 245.0],
+                   USB_WALL="front", USB_U=300.0),
+    # Bought new: 24 V 4.5 A, 129 x 97 x 30 mm, Mean Well case 238A.
+    # Same load, 2.2x margin, and a box 85 mm shorter and 20 mm shallower.
+    # The USB moves to the right end wall - six ports will not sit on a
+    # 265 mm face without the USB cutout fouling the corner tab.
+    "lrs100": dict(PSU=(129.0, 97.0, 30.0), LI=265.0, WI=200.0, IEC_U=130.0,
+                   FRONT_U=[45.0, 90.0, 135.0, 185.0, 225.0],
+                   USB_WALL="right", USB_U=140.0),
+}
+DEFAULT_PSU = "lrs100"
 
-# --- what goes inside -----------------------------------------------------
+LI = WI = 0.0           # set from the preset in main()
+HI = 75.0               # height, floor to top edge
+PSU = (0.0, 0.0, 0.0)
+
+# --- what else goes inside ------------------------------------------------
 # Envelopes only.  None of these drives a hole in the base - the grid does.
-PSU = (215.0, 115.0, 30.0)      # Mean Well LRS-350-24.  MEASURE: read the
-                                # label, the original Ender-3 had variants
 BOARD = (68.6, 53.4)            # Arduino Uno R3 outline
 BOARD_STACK_H = 50.0            # MEASURE: Uno + shield + A4988 + heatsink,
                                 # from the base of the standoffs
@@ -67,24 +84,29 @@ GX16_DIA = 16.0
 GX12_DIA = 12.0
 PORT_V = 37.5           # one centreline for every round port
 
-FRONT_PORTS = [         # (u, diameter, label)
-    (55.0,  GX16_DIA, "X"),
-    (100.0, GX16_DIA, "A"),
-    (145.0, GX16_DIA, "Y"),
-    (200.0, GX12_DIA, "LIM"),
-    (245.0, GX12_DIA, "PEN"),
-]
+FRONT_U = []            # port positions, set from the preset
+PORT_KIND = [(GX16_DIA, "X"), (GX16_DIA, "A"), (GX16_DIA, "Y"),
+             (GX12_DIA, "LIM"), (GX12_DIA, "PEN")]
 # MEASURE: USB-B panel couplers come as rectangular-with-two-screws and as
 # D-hole.  This is the common rectangular one.  Confirm against your part.
-USB_U, USB_W, USB_H = 300.0, 27.5, 15.5
+USB_WALL, USB_U = "right", 140.0    # set from the preset
+USB_W, USB_H = 27.5, 15.5
 USB_SCREW_PITCH, USB_SCREW_DIA = 30.0, 3.4
 
 # MEASURE: snap-in power entry modules vary.  ~47 x 27 is the common size.
-IEC_U, IEC_W, IEC_H = 150.0, 47.0, 27.0     # left end wall, u from the front
+IEC_U = 130.0           # left end wall, u from the front; set from the preset
+IEC_W, IEC_H = 47.0, 27.0
 
 FAN_U = 60.0            # right end wall, u from the front
 FAN_HOLE_DIA = 57.0
 FAN_SCREW_PITCH, FAN_SCREW_DIA = 50.0, 4.5
+
+# Outside diameter of what sits AROUND each cutout - the flange or nut, not
+# the hole.  This is what actually decides whether a row of ports fits, and
+# the hole-to-hole check cannot see it.  MEASURE against the parts you buy.
+FLANGE = {16.0: 22.0, 12.0: 18.0}       # keyed by cutout diameter
+USB_FOOTPRINT = 44.0                    # coupler body + its two screws
+PORT_EDGE_CLEAR = 4.0                   # flange to the corner tab, or to a neighbour
 
 VENT_DIA = 5.0          # rear wall perf field.  5 mm keeps fingers out
 VENT_PITCH = 10.0
@@ -293,16 +315,22 @@ def build_base():
     w = f["wall"]
 
     # --- front wall: the machine ports ------------------------------------
-    for u, dia, label in FRONT_PORTS:
+    for u, (dia, label) in zip(FRONT_U, PORT_KIND):
         x, y = w("front", u, PORT_V)
         p.circle(x, y, dia)
         tx, ty = w("front", u, PORT_V + dia / 2.0 + 6.0)
         p.text(tx - 4, ty, label, 4.0)
 
-    x, y = w("front", USB_U, PORT_V)
-    p.rect_centred(x, y, USB_W, USB_H)
-    for s in (-1, 1):
-        sx, sy = w("front", USB_U + s * USB_SCREW_PITCH / 2.0, PORT_V)
+    # On the small box the USB goes on the right end wall: six ports will not
+    # fit a 265 mm front face without the USB cutout fouling the corner tab,
+    # and the end wall is right beside the Uno anyway.
+    x, y = w(USB_WALL, USB_U, PORT_V)
+    if USB_WALL in ("front", "rear"):
+        p.rect_centred(x, y, USB_W, USB_H)
+    else:
+        p.rect_centred(x, y, USB_H, USB_W)      # u runs along y on an end wall
+    for sgn in (-1, 1):
+        sx, sy = w(USB_WALL, USB_U + sgn * USB_SCREW_PITCH / 2.0, PORT_V)
         p.circle(sx, sy, USB_SCREW_DIA)
 
     # --- left end wall: mains inlet ---------------------------------------
@@ -446,6 +474,43 @@ def _seg_dist(px, py, x1, y1, x2, y2):
     l2 = dx * dx + dy * dy
     t = 0.0 if l2 == 0 else max(0.0, min(1.0, ((px - x1) * dx + (py - y1) * dy) / l2))
     return math.hypot(px - (x1 + t * dx), py - (y1 + t * dy))
+
+
+def check_panel():
+    """Do the connectors physically fit the walls they are cut into?
+
+    Ports are checked flange to flange, and against the corner tabs, which
+    lap TAB_LEN inside each end of every wall.  A cutout can clear its
+    neighbour by millimetres and still be unfittable because the backshell
+    will not pass the tab.
+    """
+    warn = []
+    walls = {"front": (LI, []), "rear": (LI, []), "left": (WI, []), "right": (WI, [])}
+
+    for u, (dia, label) in zip(FRONT_U, PORT_KIND):
+        walls["front"][1].append((u, FLANGE[dia] / 2.0, label))
+    walls[USB_WALL][1].append((USB_U, USB_FOOTPRINT / 2.0, "USB"))
+    walls["left"][1].append((IEC_U, IEC_W / 2.0 + 4.0, "IEC"))
+    walls["right"][1].append((FAN_U, FAN_SCREW_PITCH / 2.0 + 6.0, "FAN"))
+
+    for name, (span, ports) in walls.items():
+        ports.sort()
+        for (u, r, lab) in ports:
+            if u - r < TAB_LEN + PORT_EDGE_CLEAR:
+                warn.append("%s wall: %s at u=%.0f fouls the corner tab "
+                            "(%.1f mm to the tab, want %.1f)"
+                            % (name, lab, u, u - r - TAB_LEN, PORT_EDGE_CLEAR))
+            if u + r > span - TAB_LEN - PORT_EDGE_CLEAR:
+                warn.append("%s wall: %s at u=%.0f fouls the far corner tab "
+                            "(%.1f mm to the tab, want %.1f)"
+                            % (name, lab, u, span - TAB_LEN - u - r, PORT_EDGE_CLEAR))
+        for i in range(len(ports) - 1):
+            (u1, r1, l1), (u2, r2, l2) = ports[i], ports[i + 1]
+            gap = (u2 - r2) - (u1 + r1)
+            if gap < PORT_EDGE_CLEAR:
+                warn.append("%s wall: %s and %s flanges %.1f mm apart, want %.1f"
+                            % (name, l1, l2, gap, PORT_EDGE_CLEAR))
+    return warn
 
 
 def check(part):
@@ -598,7 +663,13 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default="enclosure", help="output directory")
     ap.add_argument("--report", action="store_true", help="print numbers only")
+    ap.add_argument("--psu", choices=sorted(PRESETS), default=DEFAULT_PSU,
+                    help="which supply the box is sized for (default: %s)" % DEFAULT_PSU)
     args = ap.parse_args()
+
+    g = globals()
+    g.update(PRESETS[args.psu])
+    print("preset: %s\n" % args.psu)
 
     base, fbase, counts = build_base()
     lid, flid = build_lid()
@@ -606,7 +677,7 @@ def main():
 
     report(fbase, flid, counts)
 
-    warn = []
+    warn = check_panel()
     for part in (base, lid, adapters):
         warn += check(part)
     print()

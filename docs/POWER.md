@@ -38,22 +38,31 @@ pen branch (UBEC 6 V × 2.5 A stall ÷ 24 V ÷ η) ~0.7 A
                                               ~2.0 A
 ```
 
-**Use the Ender's own supply.** The stock Ender-3 Pro / V2 PSU *is* a genuine Mean Well
-**LRS-350-24**, 24 V 14.6 A, **215 × 115 × 30 mm**. Vastly oversized for a 2.0 A load,
-which costs nothing but volume — it will loaf at 14 % and run cold. Reusing it sets the box
-at 350 × 220 mm rather than about 260 × 200.
+### Which supply
 
-*Read the label before you cut metal.* The original 2018 Ender-3 shipped with more than one
-supply, and 215 × 115 × 30 is a datasheet figure, not a measured one. An **LRS-100-24**
-(24 V 4.5 A, ~130 × 100 × 30) drops onto the same base grid if you would rather have the
-smaller box.
+Two work. `tools/enclosure_dxf.py --psu {lrs100,lrs350}` re-lays the whole box for either.
+
+| Supply | Rating | Case | Box interior | Trade |
+|---|---|---|---|---|
+| **LRS-100-24** (buy) | 24 V 4.5 A | 129 × 97 × 30 | 265 × 200 × 75 | 2.2× margin. **You know which part you have.** ~£18 |
+| LRS-350-24 (reuse) | 24 V 14.6 A | 215 × 115 × 30 | 350 × 220 × 75 | Free, 7× oversized, box 85 mm longer |
+
+**LRS-100-24 is the default.** Mean Well case 238A. Note carefully *why* it is the safer
+number: not because its datasheet is better than the LRS-350's — both are equally good — but
+because buying a specific part new removes the open question, which is *which unit is
+actually in your printer*. The stock Ender-3 Pro / V2 supply is a genuine LRS-350-24, but
+the 2018 Ender-3 shipped more than one part. If you reuse it, read the label first.
+
+Rejected: **LRS-50-24** (24 V 2.2 A, 99 × 82 × 30) — 2.2 A against a 2.0 A load is no margin
+at all. **LRS-75-24** (24 V 3.2 A, 99 × 97 × 30) — enough current, but only 30 mm shorter
+than the LRS-100 and the box it produces crowds the port row for nothing.
 
 ---
 
 ## 2. Power topology
 
 ```
-  230 V ─► IEC C14 inlet ─► LRS-350-24 ─► +24 V BLOCK ─┬─ F1 3 A ──► shield V+
+  230 V ─► IEC C14 inlet ─► LRS-100-24 ─► +24 V BLOCK ─┬─ F1 3 A ──► shield V+
            fused T2 A                                  ├─ F2 1.5 A ► PEN pin 1
            switched                                    └─ F3 0.5 A ► fan
               │                                             (returns)
@@ -88,13 +97,13 @@ is grounding, that is not a risk worth taking. The PSUs are isolated; leave DC f
 12 stepper + 4 endstop + 3 pen = 19 conductors, on six ports.
 
 ```
-   left end          ┌──────────────── 350 mm front face ────────────────┐
-   ┌──────┐          │                                                   │
-   │ IEC  │  keep    │   (X)      (A)      (Y)     (LIM)   (PEN)   [USB] │  right end
-   │ C14  │  clear   │  GX16-4   GX16-4   GX16-4   GX12-4  GX12-3    B   │  ┌──────┐
-   └──────┘  PSU     │   16mm     16mm     16mm     12mm    12mm         │  │ fan  │
-             behind  └───────────────────────────────────────────────────┘  └──────┘
-   u  =                55       100       145      200     245      300
+   left end          ┌─────────── 265 mm front face ───────────┐      right end
+   ┌──────┐          │                                          │      ┌──────────┐
+   │ IEC  │          │   (X)      (A)      (Y)    (LIM)  (PEN)  │      │  (FAN)   │
+   │ C14  │          │  GX16-4   GX16-4   GX16-4  GX12-4 GX12-3 │      │   [USB]  │
+   └──────┘          │   16mm     16mm     16mm    12mm   12mm  │      └──────────┘
+                     └──────────────────────────────────────────┘
+   u  =                 45        90       135     185    225           60 / 140
    all round ports on one centreline, v = 37.5 mm above the floor
 ```
 
@@ -102,8 +111,8 @@ is grounding, that is not a risk worth taking. The PSUs are isolated; leave DC f
 diameters, so a stepper lead physically cannot be pushed into the pen port. That matters
 more than a label, because **PEN pin 1 is 24 V** and a servo plugged into it dies instantly.
 
-Mains enters the **left end panel** and never crosses the front face. Fan on the opposite
-end. The left quarter of the front face stays clear because the PSU sits behind it.
+Mains enters the **left end panel** and never crosses the front face. The fan and the USB
+share the opposite end.
 
 ### Pin schedule
 
@@ -167,8 +176,14 @@ Plan view, lid off, front face at the bottom:
 supply along the left end instead and six ports have to crowd into what is left — under
 30 mm centres, closer than a GX16 backshell lets you tighten.
 
-Enclosure: **350 × 220 × 75 mm internal**, which leaves 45 mm spare along the back
-(215 PSU + 90 DIN rail of 350) and 52 mm across (115 PSU + 53 board of 220).
+Enclosure: **265 × 200 × 75 mm internal** with the LRS-100-24 — 219 mm used of 265 along
+the back (25 mains + 129 PSU + 15 gap + 90 rail), 150 of 200 across. The larger LRS-350 box
+is 350 × 220 with the identical arrangement.
+
+**On the small box the USB moves to the right end wall**, beside the fan. Six connector
+flanges will not fit a 265 mm front face: the tool's fit check puts the USB cutout 2 mm
+*into* the corner tab. It is the better place for it anyway — the Uno is right there, so
+the internal lead is 60 mm instead of 200.
 
 ---
 
@@ -330,14 +345,23 @@ python3 tools/enclosure_dxf.py --report      # just the numbers
 python3 tools/enclosure_dxf.py               # writes enclosure/*.dxf and *.svg
 ```
 
-It self-checks after every run: no two holes leaving less than 1.5 mm of web, nothing
-sitting within 3 mm of a bend line. Change a dimension, re-run, read the check.
+It self-checks after every run:
+
+- **Holes** — no two leaving less than 1.5 mm of web, nothing within 3 mm of a bend line.
+  Corner reliefs are exempt; straddling the bend is their job.
+- **Connectors** — flange to flange, and flange to corner tab. This is the check that
+  decides whether a row of ports actually fits, and the hole-to-hole check cannot see it: a
+  cutout can clear its neighbour by millimetres and still be unfittable because the
+  backshell will not pass the tab. Flange diameters are marked MEASURE like everything else.
+
+Change a dimension, re-run, read the check.
 
 ### What is known, and what you must measure
 
 | | Figure | Where it comes from |
 |---|---|---|
-| **Mean Well LRS-350-24** | 215 × 115 × 30 mm | Datasheet. Confirmed as the stock Ender-3 Pro / V2 supply. **MEASURE** — read the label; the 2018 Ender-3 had variants |
+| **Mean Well LRS-100-24** | 129 × 97 × 30 mm | Datasheet, case 238A. Safe because you buy it new and therefore know which part you have |
+| **Mean Well LRS-350-24** | 215 × 115 × 30 mm | Same datasheet confidence. **MEASURE** — read the label; the open question is which unit is in your printer, not whether the datasheet is right |
 | **Arduino Uno R3 outline** | 68.6 × 53.4 mm | Published, reliable |
 | **Uno mounting holes** | (13.97, 2.54) (15.24, 50.80) (66.04, 35.56) (66.04, 7.62), Ø3.2 | Published, but **the four holes are not on any grid and none of the spacings is round.** Trace them off your board |
 | Uno + shield stack height | ~50 mm | **MEASURE** — depends on your standoffs, drivers and heatsinks |
@@ -379,13 +403,15 @@ component costs you an adapter plate, not a box.**
 
 ### Flat pattern
 
-```
-folded interior     350 × 220 × 75 mm
-folded exterior     353.0 × 223.0 × 76.5 mm
-base blank          500.69 × 370.69 mm
-lid blank           384.49 × 254.49 mm
-bend deduction      2.654 mm per 90° bend
-```
+| | `--psu lrs100` | `--psu lrs350` |
+|---|---|---|
+| Folded interior | 265 × 200 × 75 | 350 × 220 × 75 |
+| Folded exterior | 268.0 × 203.0 × 76.5 | 353.0 × 223.0 × 76.5 |
+| Base blank | 415.69 × 350.69 | 500.69 × 370.69 |
+| Lid blank | 299.49 × 234.49 | 384.49 × 254.49 |
+| Base grid | 70 holes | 104 holes |
+| Rear vents | 92 holes | 128 holes |
+| Bend deduction | 2.654 mm per 90° bend | same |
 
 That deduction comes from R = 1.5, t = 1.5, K = 0.42:
 
