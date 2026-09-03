@@ -32,11 +32,18 @@ On connect you should see:
 
 ```
 Grbl 1.1h ['$' for help]
-ALARM:9
+[MSG:'$H'|'$X' to unlock]
 ```
 
-`ALARM:9` on boot is correct. `$22=1` means homing is enabled, so GRBL boots into Alarm and
-refuses everything — jogging included — until you home or unlock.
+**UGS will show the machine state as `Alarm`, and that is correct on boot.** `$22=1` means
+homing is enabled, so GRBL starts in the Alarm *state* and refuses everything — jogging
+included — until `$H` or `$X`. It is a state, not a fault, and it carries no number.
+
+**A numbered `ALARM:n` message is different — that is a fault, and the number is the whole
+diagnosis.** See [section 7](#7-alarms-what-the-number-means) before clearing it. Never
+reflexively `$X` a numbered alarm: unlocking discards the reason without fixing anything,
+and on this machine `ALARM:3` in particular means the controller lost its position and
+must be re-homed, not unlocked.
 
 Then check the firmware is still the patched build:
 
@@ -142,3 +149,42 @@ Re-home before continuing. The single-stroke pieces in `gcode/art/` are the way 
 tape the pen down and never actuate the servo during the plot.
 
 **The PSU switch is the emergency stop.** Not the UGS stop button, not disconnecting.
+
+---
+
+## 7. Alarms — what the number means
+
+`Alarm` as the **state** in the UGS status field, straight after connecting, is normal —
+that is `$22=1`, clear it with `$H` or `$X`.
+
+A numbered **`ALARM:n` in the console** is a fault. Read the number before you clear it.
+
+| | Means | On this machine |
+|---|---|---|
+| `ALARM:1` | Hard limit triggered | Should not happen — `$21=0`, hard limits are off permanently. If you see it, `$21` got turned back on |
+| `ALARM:2` | Target exceeds machine travel (soft limit) | Should not happen — `$20=0`. If you see it, either `$20` got turned on, or a `Z` word reached the controller (UGS's **Return to Zero** sends one) |
+| `ALARM:3` | Reset while in motion — **position is lost** | The known pen-lift fault: actuating the servo after the machine has moved resets the controller. `$X` is *not* the fix; you must `$H` before trusting any coordinate again |
+| `ALARM:6` | Homing failed — reset during homing | Something reset the board mid-`$H` |
+| `ALARM:8` | Homing failed — could not clear the switch after pull-off | `$27=3` pull-off too small, or a switch stuck closed |
+| `ALARM:9` | Homing failed — **could not find the limit switch** within the search distance | The common one. Ladder below |
+
+### `ALARM:9` — the ladder
+
+The axis was told to seek a switch and never found one within `$25`/`$130`–`$131`. Four
+causes, in the order worth checking. **Change one thing at a time.**
+
+1. **Did the axis move the wrong way?** `$H` must drive **+X and −Y** (home corner is
+   front-right). If an axis ran away from its switch, that is `$23` — the homing direction
+   mask — not a wiring fault.
+2. **Did the axis move at all?** If the motor buzzed, or the belt slipped, or the gantry was
+   already jammed, GRBL is seeking with nothing happening. **The console reports the same
+   `ALARM:9` either way** — watch the machine, not the log.
+3. **Is the switch actually making?** Both are **NC** with `$5=1`. Type `?` and read the
+   `Pn:` field: it appears **only** when something is triggered. Press each switch by hand
+   and re-send `?` — you should see `Pn:X` / `Pn:Y` appear and vanish. A broken NC wire
+   reads as permanently triggered; a disconnected one as never triggered.
+4. **Was it already sitting on the switch?** Jog off it by 5–10 mm and re-home.
+
+`$130=400` / `$131=250` are **guesses, not measurements** — see `settings/README.md`. They
+are generous, so they are an unlikely cause of `ALARM:9`, but they are not evidence of
+anything either.
