@@ -77,6 +77,10 @@ not work no matter what you send. See [FIRMWARE_SERVO.md](FIRMWARE_SERVO.md).
    draw it ever makes — always wake at S90 first.
 6. **Send one short file:** `gcode/tests/U1_ugs_smoke_20mm.gcode`. Pen-free, relative, back
    to its start point, about twenty seconds.
+7. **Then soak it:** `gcode/tests/T14_square_soak_10min.gcode` — the same 20 mm square 58
+   times, about ten minutes. U1 proves the machine moves; T14 proves it keeps moving, and
+   it is the one that catches lost steps, belt slip and drivers going thermal. Mark the
+   start point first so you can see whether it walked.
 
 ## 3. Macros
 

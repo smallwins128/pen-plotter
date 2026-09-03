@@ -251,7 +251,8 @@ firmware/     patched GRBL 1.1h source + flashable zip
 docs/         SETUP.md (8-phase build), FIRMWARE_SERVO.md, FINDINGS.md, this file
 settings/     plotter.grbl.txt — live values, restore after any re-flash
 tools/        plot2.py (sender), pentest.py (servo swing sweep), servo_sweep.py
-gcode/tests/  T0-T13, in bring-up order
+gcode/tests/  T0-T14, in bring-up order; T14 is the 10-minute soak.
+              U1 is the pen-free smoke test to send from UGS.
 gcode/art/    single-stroke pieces: Hilbert, rosette, ripples, Gosper, dragon,
               Sierpinski, one-line labyrinth
 ```
