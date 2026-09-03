@@ -275,4 +275,6 @@ missing ground wire.
   for seconds afterwards.
 - The servo **twitches on every Arduino reset**, and opening the serial port *is* a reset.
 - UGS proved unreliable here: desyncs, silent mid-job cancels, and iCloud placeholder files
-  streamed as truncated jobs then reported as "done".
+  streamed as truncated jobs then reported as "done". It is still the quickest way to jog,
+  work the pen and run a short test file by hand — [`UGS.md`](UGS.md) sets it up for that,
+  with macros and the buttons to avoid. `plot2.py` remains the sender for real plots.
