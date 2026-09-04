@@ -167,6 +167,38 @@ transient. That is enough on its own to collapse the rail, which means:
 **Open:** the minimum S that lifts the pen clear, and whether holding *that* value is
 stable. Until it is measured, treat any S above ~S150 as a stall risk.
 
+## 7b. A repeatable cycle-count to failure — the number to test fixes against
+
+_Observed 2026-09-04 on the machine, first run of `gcode/tests/T15_pen_cycle_grid.gcode`,
+new arm alignment (S90 down / S140 up)._
+
+```
+Streaming 994 lines ...
+   75/994
+   !! GRBL RESET mid-stream at line 91 (brownout)
+Position: <Alarm|MPos:0.000,0.000,0.000|Bf:15,128|FS:0,0|WCO:-303.000,-107.000,0.000>
+```
+
+Stream line 91 is `M3 S90` — pen **down** — and line 90 is `G0 X-5.0`. **The board reset on
+a pen actuation immediately following a move**, which is section 7's signature exactly. The
+re-aligned arm and the new S values changed nothing about it.
+
+**11 pen cycles completed before the reset**, roughly 30 seconds in.
+
+What is new is not the fault but the measurement. Every previous reproduction was "somewhere
+in a long job". T15 fails **in about half a minute, at a countable cycle number**, which
+turns the open problem into something with a metric:
+
+- **Before any fix: dies at cycle ~12 of 140.**
+- A fix that gets it to 40 is progress even if it still fails. A fix that completes all 140
+  is the answer. Previously there was no way to tell a partial improvement from noise.
+- It also means each hardware change can be evaluated in a minute rather than a long plot,
+  so **change one thing at a time** is finally cheap to obey.
+
+Read the cycle count **off the paper**, not the console: `plot2.py` reports lines accepted
+into GRBL's buffer, which runs seconds ahead of the pen, and a reset discards whatever was
+still in flight. Expect the paper to show slightly fewer ticks than the line number implies.
+
 ## 8. Working right now, without the servo
 
 Motion is in better shape than it has ever been: homing repeatable, work zero persistent,
