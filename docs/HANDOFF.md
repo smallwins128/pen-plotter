@@ -204,9 +204,14 @@ buffer is full.
   throws `error:22`
 - **No mid-file `M5`** — it disconnects the PWM pin and the servo goes slack
 - **Soft-start the servo.** It is limp until the first `M3`, and jumping straight to an
-  extreme is the largest current draw it ever makes. Wake it at S90 and walk it out.
-- Pen values before the arm was shortened: **S120 up, S60 down**. Re-tune after any
-  mechanical change with `tools/pentest.py` or `tools/servo_sweep.py`.
+  extreme is the largest current draw it ever makes. Wake it at S120 and walk it out.
+  **Not S90** — on the current geometry S90 is below pen down and drives the pen into
+  the bed.
+- Pen values, **measured 2026-09-04** with `tools/servo_sweep.py`: **S160 up, S120 down**.
+  S155 is where the pen first lifts; S160 leaves margin. The old S120/S60 pair predates the
+  arm change and is gone from the repo. **Never park at S180** — that is the end of the
+  horn's travel and holding there resets the board (FINDINGS.md 7a). Re-tune after any
+  mechanical change.
 - Art files are `G91` relative so they need no work zero — **each one's header says which
   corner to start the pen from, and they do not all grow the same way.**
 

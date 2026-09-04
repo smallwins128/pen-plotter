@@ -188,7 +188,7 @@ Three consequences worth internalising:
    pulses and goes slack — the pen falls. Use `M3 S<up>` for up and `M3 S<down>` for
    down, and never `M5` mid-job.
 3. **0.5 ms and 2.5 ms are past the mechanical stops of many servos.** Start sweeping at
-   `S90` (centre) and walk outward. If the servo buzzes and gets hot at an endpoint, it
+   `S120` (pen down on this build) and walk outward. If the servo buzzes and gets hot at an endpoint, it
    is stalled against its own stop — back off immediately.
 
 ## 7. What we are deliberately not doing

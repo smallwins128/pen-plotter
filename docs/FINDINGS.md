@@ -66,19 +66,19 @@ Plotting can survive a reset; writing EEPROM cannot.
 ## 6. The servo's first energisation is its largest current draw
 
 Until the first `M3`, the PWM pin is disconnected and the servo is limp — no holding
-torque. Asking it to jump straight to an extreme (`M3 S120`) from that state is the
+torque. Asking it to jump straight to an extreme (`M3 S160`) from that state is the
 biggest current step it ever makes.
 
-**Soft-start it.** Wake it near centre and walk it out in stages:
+**Soft-start it.** Wake it at pen down and walk it out in stages:
 
 ```gcode
-M3 S90
-G4 P0.50
-M3 S100
-G4 P0.30
-M3 S110
-G4 P0.30
 M3 S120
+G4 P0.50
+M3 S133
+G4 P0.30
+M3 S146
+G4 P0.30
+M3 S160
 G4 P0.30
 ```
 

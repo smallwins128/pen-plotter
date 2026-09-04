@@ -5,7 +5,7 @@ Paste into UGS Platform: Settings -> Macros.  UGS Classic: the Macros tab under
 the console.  Commands inside one macro are separated by ';'.
 
 Do NOT put comments inside a macro.  In a UGS macro ';' is the command separator,
-not a comment character, so "M3 S120 ; pen up" is sent as a command GRBL rejects.
+not a comment character, so "M3 S160 ; pen up" is sent as a command GRBL rejects.
 
 Name              Macro
 ----------------  ------------------------------------------------------------
@@ -15,9 +15,9 @@ Work zero         G10 L2 P1 X-303 Y-107
 Where am I        ?
 Settings          $$
 Version           $I
-Servo wake        M3 S90;G4 P0.5;M3 S100;G4 P0.3;M3 S110;G4 P0.3;M3 S120
-Pen up            M3 S120;G4 P0.3
-Pen down          M3 S60;G4 P0.3
+Servo wake        M3 S120;G4 P0.5;M3 S133;G4 P0.3;M3 S146;G4 P0.3;M3 S160
+Pen up            M3 S160;G4 P0.3
+Pen down          M3 S120;G4 P0.3
 Go to work zero   G90 G0 X0 Y0
 Park              G90 G0 X0 Y150
 
@@ -30,9 +30,15 @@ nor motor power.  Run it every session before jogging to X0 Y0 or sending a
 file: with G54 at zero, X0 Y0 is the homed corner and the gantry drives into the
 frame.  Confirm with "Where am I" and read WCO.
 
-S120 up / S60 down are the values from before the servo arm was shortened.
-Re-tune with tools/servo_sweep.py or tools/pentest.py after any mechanical
-change and edit Pen up / Pen down / Servo wake to match.
+S160 up / S120 down, measured on the machine 2026-09-04 with servo_sweep.py.
+S155 is where the pen first lifts clear; S160 leaves a little margin.
+
+Do NOT raise pen-up towards S180.  S180 is the end of the horn's mechanical
+travel, and holding there stalls the servo and resets the board - with the
+gantry stationary.  See FINDINGS.md section 7a.
+
+Servo wake starts at S120 rather than S90.  S90 is now BELOW pen down, so
+waking there drives the pen into the bed.
 
 Servo wake exists because the servo is limp until the first M3, and jumping
 straight to an extreme is the largest current draw it ever makes.  Run it once
