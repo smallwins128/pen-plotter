@@ -74,7 +74,7 @@ not work no matter what you send. See [FIRMWARE_SERVO.md](FIRMWARE_SERVO.md).
    G-code (see conventions below).
 5. **Wake the pen** with the `Servo wake` macro, then `Pen up` / `Pen down`. The servo is
    limp until the first `M3`, and jumping straight to an extreme is the largest current
-   draw it ever makes — always wake at S120 first.
+   draw it ever makes — always wake at S90 first.
 6. **Send one short file:** `gcode/tests/U1_ugs_smoke_20mm.gcode`. Pen-free, relative, back
    to its start point, about twenty seconds.
 7. **Then soak it:** `gcode/tests/T14_square_soak_10min.gcode` — the same 20 mm square 58
@@ -96,22 +96,21 @@ separator there, not a comment character, and a `; note` becomes a command GRBL 
 | `Where am I` | `?` | Status line: state, `MPos`, `WCO`, `Pn` |
 | `Settings` | `$$` | Dump settings; compare against `settings/plotter.grbl.txt` |
 | `Version` | `$I` | Confirm the servo patch is still flashed |
-| `Servo wake` | `M3 S120;G4 P0.5;M3 S133;G4 P0.3;M3 S146;G4 P0.3;M3 S160` | Soft-start from pen down. Run once per connection, before any other pen command |
-| `Pen up` | `M3 S160;G4 P0.3` | |
-| `Pen down` | `M3 S120;G4 P0.3` | |
+| `Servo wake` | `M3 S90;G4 P0.5;M3 S107;G4 P0.3;M3 S123;G4 P0.3;M3 S140` | Soft-start from pen down. Run once per connection, before any other pen command |
+| `Pen up` | `M3 S140;G4 P0.3` | |
+| `Pen down` | `M3 S90;G4 P0.3` | |
 | `Go to work zero` | `G90 G0 X0 Y0` | Only after `Work zero` — read step 2 |
 | `Park` | `G90 G0 X0 Y150` | Pen up first; gets the carriage off the paper |
 
-`S160` up / `S120` down were **measured on the machine on 2026-09-04** with
-`tools/servo_sweep.py`. `S155` is where the pen first lifts clear; `S160` leaves margin.
+`S140` up / `S90` down, set on the machine on **2026-09-04, after the servo arm was
+re-aligned on its spline**. The ladder wakes at `S90` because that is pen down, and pen
+down is the gentlest place to energise a limp servo.
 
-**Do not raise pen-up towards `S180`.** That is the end of the horn's mechanical travel,
-and simply *holding* it there stalls the servo and resets the board — with the gantry
-stationary and no move sent. See [FINDINGS.md](FINDINGS.md) section 7a.
+**Do not raise pen-up towards `S180`.** On the alignment before this one, that was the end
+of the horn's mechanical travel, and simply *holding* it there stalled the servo and reset
+the board — gantry stationary, no move sent. See [FINDINGS.md](FINDINGS.md) section 7a.
 
-The wake ladder starts at `S120`, not `S90`: on the current geometry `S90` is **below**
-pen down, so waking there drives the pen into the bed. Re-tune after any mechanical change
-and edit all three macros together.
+Re-tune after any mechanical change and edit all three macros together.
 
 Copy-paste list: [`../settings/ugs-macros.txt`](../settings/ugs-macros.txt).
 

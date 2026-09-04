@@ -56,8 +56,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", help="serial port; omit to list what is available")
     ap.add_argument("--baud", type=int, default=115200)
-    ap.add_argument("--start", type=int, default=120,
-                help="starting S value (default 120 = pen down, the safe resting end)")
+    ap.add_argument("--start", type=int, default=90,
+                help="starting S value (default 90 = pen down, the safe resting end)")
     args = ap.parse_args()
 
     if not args.port:

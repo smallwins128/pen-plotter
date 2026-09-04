@@ -27,7 +27,7 @@ except ImportError:
 PORT = "/dev/cu.usbserial-A5069RR4"
 BAUD = 115200
 RX_BUF = 128          # GRBL's serial receive buffer
-PEN_UP, PEN_DOWN = 160, 120
+PEN_UP, PEN_DOWN = 140, 90
 
 STATE_RE = re.compile(r"<([A-Za-z]+)[|>]")
 

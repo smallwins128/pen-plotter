@@ -216,7 +216,7 @@ The single biggest determinant of line quality, and it is mechanical, not electr
 - Aim for **25–40° of servo travel** between up and down. Much less and the ~6-units-of-S
   resolution becomes visible; much more and the lift is slow.
 - Set the horn on the spline at mid-travel before tightening. On the current build the
-  useful band came out as `S120` pen down to `S160` pen up — see FINDINGS.md 7a for why
+  useful band came out as `S90` pen down to `S140` pen up — see FINDINGS.md 7a for why
   the top of the range (`S180`) must be left alone.
 
 ---
@@ -463,20 +463,20 @@ it near centre and walk it out:
 G21          ; mm
 G90          ; absolute
 G94          ; units per minute
-M3 S120      ; wake the servo at pen down
+M3 S90       ; wake the servo at pen down
 G4 P0.50
-M3 S133      ; walk it out in stages
+M3 S107      ; walk it out in stages
 G4 P0.30
-M3 S146
+M3 S123
 G4 P0.30
-M3 S160      ; pen up
+M3 S140      ; pen up
 G4 P0.30
 ```
 
 Postamble:
 
 ```gcode
-M3 S160      ; pen up
+M3 S140      ; pen up
 G4 P0.30
 G0 X0 Y0     ; back to work zero
 ```

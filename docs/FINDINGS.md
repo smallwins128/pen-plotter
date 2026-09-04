@@ -66,19 +66,19 @@ Plotting can survive a reset; writing EEPROM cannot.
 ## 6. The servo's first energisation is its largest current draw
 
 Until the first `M3`, the PWM pin is disconnected and the servo is limp — no holding
-torque. Asking it to jump straight to an extreme (`M3 S160`) from that state is the
+torque. Asking it to jump straight to an extreme (`M3 S140`) from that state is the
 biggest current step it ever makes.
 
 **Soft-start it.** Wake it at pen down and walk it out in stages:
 
 ```gcode
-M3 S120
+M3 S90
 G4 P0.50
-M3 S133
+M3 S107
 G4 P0.30
-M3 S146
+M3 S123
 G4 P0.30
-M3 S160
+M3 S140
 G4 P0.30
 ```
 
@@ -137,9 +137,15 @@ cannot supply a current step. Next steps, in order:
 
 _Observed 2026-09-04, on the machine, during a `servo_sweep.py` session._
 
-**New geometry after the arm change:** `S90` = pen **down**, arm pointing straight down.
-`S180` = pen **up**, arm pointing right. That is a 90° swing, where the old values
+**Geometry at the time of this observation:** `S90` = pen **down**, arm pointing straight
+down. `S180` = pen **up**, arm pointing right — a 90° swing, where the old values
 (`S120`/`S60`) were 60 units apart.
+
+**The horn was re-aligned on its spline later the same day**, and the working pair is now
+`S90` down / `S140` up. The reset below was seen on the *earlier* alignment, so the exact
+number `S180` is specific to that setup. What carries over is the mechanism, not the value:
+driving the horn into its mechanical stop stalls the servo, and a stalled MG996R will reset
+this board whether or not the gantry is moving.
 
 **S180 held the board for a few seconds and then reset it.** The gantry was stationary and
 no motion command had been sent in that connection.
