@@ -133,6 +133,34 @@ cannot supply a current step. Next steps, in order:
 3. **220–470 µF, 50 V** across the shield's 24 V terminals. A4988s require local bulk
    capacitance; the clone shield ships with very little.
 
+## 7a. A static hold at S180 resets the board — no motion involved
+
+_Observed 2026-09-04, on the machine, during a `servo_sweep.py` session._
+
+**New geometry after the arm change:** `S90` = pen **down**, arm pointing straight down.
+`S180` = pen **up**, arm pointing right. That is a 90° swing, where the old values
+(`S120`/`S60`) were 60 units apart.
+
+**S180 held the board for a few seconds and then reset it.** The gantry was stationary and
+no motion command had been sent in that connection.
+
+This is the first reset observed **without a preceding move**, and it narrows section 7
+rather than repeating it. `S180` is the top of GRBL's S range and, on this linkage, the end
+of the servo's mechanical travel — so the horn is stalled against its stop, and an MG996R
+stalled draws its full ~2.5 A for as long as the signal holds it there. A hold, not a
+transient. That is enough on its own to collapse the rail, which means:
+
+- The buck's **transient** response is not the only problem; its **sustained** capability
+  matters too, and section 7's fix list should be read with that in mind.
+- **Never park the pen at an extreme.** Pen-up wants the smallest S that clears the paper,
+  not the biggest S the servo accepts. A pen lift needs a few millimetres; 90° of horn
+  travel is many times more than that, and every degree past contact is stall current.
+- A reset while idle is no longer evidence of the motion-coupled fault. Check where the
+  servo is parked first.
+
+**Open:** the minimum S that lifts the pen clear, and whether holding *that* value is
+stable. Until it is measured, treat any S above ~S150 as a stall risk.
+
 ## 8. Working right now, without the servo
 
 Motion is in better shape than it has ever been: homing repeatable, work zero persistent,
