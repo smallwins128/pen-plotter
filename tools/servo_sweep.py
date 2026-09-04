@@ -70,6 +70,10 @@ def main():
     ser.reset_input_buffer()
 
     send(ser, "$I")
+    # GRBL boots into the Alarm state whenever $22=1 (homing enabled), and in Alarm
+    # it refuses G-code with error:9 -- M3 included. Without this $X the sweep runs
+    # happily, prints every S value, and never moves the servo at all.
+    send(ser, "$X")
     send(ser, "G21")
     send(ser, "G90")
 
@@ -77,8 +81,14 @@ def main():
     print("\nStarting at S%d.  u/d = +/-%d, a number jumps, q quits.\n" % (s, STEP))
 
     while True:
-        send(ser, "M3 S%d" % s, quiet=True)
+        replies = send(ser, "M3 S%d" % s, quiet=True)
         send(ser, "G4 P%.2f" % DWELL, quiet=True)
+        bad = [r for r in replies if r.startswith(("error", "ALARM"))]
+        if bad:
+            print("  !! %s -- the servo command was REFUSED. The pen has not moved." % bad[0])
+            if bad[0].startswith("error:9"):
+                print("  !! error:9 is GRBL's 'locked out during alarm'. The $X on connect")
+                print("  !! did not take. Quit with q and check $22 / the alarm state.")
         pwm = min(39, int(s * 31 / 180) + 8) if s > 0 else 0
         print("S%-4d  pwm=%-3s pulse=%s"
               % (s, pwm if pwm else "off", ("%d us" % (pwm * 64)) if pwm else "NO SIGNAL (servo limp)"))
