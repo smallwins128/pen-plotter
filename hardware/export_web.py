@@ -53,10 +53,15 @@ def _simplify(pts, tol=1e-4):
 
 def build_data():
     import cross_bar
+    import deck as deck_mod
     import frame
     from profiles import section_moments, section_polylines
     from params import (
         CROSS_BAR_H,
+        DECK_HOLE_D,
+        DECK_T,
+        DECK_X,
+        DECK_Y,
         CROSS_BAR_LEN,
         CROSS_BAR_W,
         FRAME_OUTER_X,
@@ -71,6 +76,7 @@ def build_data():
     # with its geometry centred on the bar so the viewer can translate it in X.
     frame_part = frame.build()
     bar_part = cross_bar.build()
+    deck_part = deck_mod.build()
 
     sections = {}
     for label, (w, h) in {"2020": (20, 20), "2040": (20, 40)}.items():
@@ -85,6 +91,7 @@ def build_data():
 
     return {
         "parts": {
+            "deck": {"geom": _positions_b64(deck_part, "deck"), "moves": False},
             "frame": {"geom": _positions_b64(frame_part, "frame"), "moves": False},
             "cross_bar": {"geom": _positions_b64(bar_part, "cross_bar"), "moves": True},
         },
@@ -109,6 +116,15 @@ def build_data():
             "sag_load": round(d["payload"], 3),
             "sag_total": round(d["total"], 3),
             "ix": round(d["ix"]),
+        },
+        "deck": {
+            "t": DECK_T,
+            "x": DECK_X,
+            "y": DECK_Y,
+            "holes": len(deck_mod.hole_positions()),
+            "hole_d": DECK_HOLE_D,
+            "mass": round(deck_mod.mass(), 2),
+            "sag": {str(t): round(deck_mod.plate_sag(t), 1) for t in (1.0, 1.5, 2.0, 3.0)},
         },
         "cut_list": [
             {"qty": q, "len": l, "label": lb}

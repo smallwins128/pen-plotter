@@ -42,6 +42,7 @@ Each part exports:
 |---|---|
 | **`params.py`** | Every shared dimension. Change a number here, not in a part. Values mirroring the root README's machine table are marked `[README]`. |
 | **`profiles.py`** | The 20-series T-slot extrusion. `tslot_bar(length, w, h, axis)` is the building block for anything made of extrusion. |
+| **`parts/deck.py`** | The steel base sheet, plus the plate-deflection maths behind it. |
 | **`parts/frame.py`** | The outer 2040 frame. |
 | **`parts/cross_bar.py`** | The moving 2020 gantry beam, plus its span/travel/deflection maths. |
 | **`parts/assembly.py`** | Frame + cross bar in one coordinate system. |
@@ -56,8 +57,10 @@ Each part exports:
 **Orientation** matches the root README: standing in front of the table, **+X
 right, +Y away from you**, +Z up.
 
-**Datum** for the frame is the centre of its outer envelope in X and Y, with
-**Z = 0 at the tabletop surface** (the underside of the rails). Parts that
+**Datum** is the centre of the frame's outer envelope in X and Y, with
+**Z = 0 at the tabletop surface**. The frame no longer sits at Z = 0 — it
+stands on the base deck, at `FRAME_BASE_Z` (= `DECK_T`). The writing surface,
+the top of the deck, is at Z = `DECK_T`. Parts that
 mount to the frame should be modelled in the same coordinate system so an
 assembly is just a union.
 
@@ -109,6 +112,27 @@ dimension above the frame depends on the first of them:
 |---|---|
 | `GANTRY_RISE` | Height from the top of the frame rails to the underside of the cross bar — i.e. the gantry plate and wheel stack. |
 | `GANTRY_PLATE_LEN` | Plate footprint along X. Sets how much of the 1000 mm rail is lost to the plate, and therefore the X travel. |
+
+## The base deck is not a flatness device
+
+`parts/deck.py` models a steel sheet across the frame footprint, with the frame
+bolted down on top of it. It must be **continuously supported by the tabletop**.
+It cannot span the frame opening: `plate_sag()` puts a 1.5 mm sheet at ~13 mm of
+sag over the 960 x 560 mm opening under nothing but its own weight, and holding
+half a millimetre across that span would take roughly 8 mm of plate — 33 kg.
+
+So the sheet inherits the tabletop's flatness rather than improving on it. What
+it does buy is a hard, uniform, non-absorbent surface that will not dent under a
+pen nor swell with humidity, protection for the tabletop, and — **only if the
+steel is ferritic** — magnetic paper hold-down. 304 and 316 stainless are
+austenitic and not meaningfully magnetic; 430 stainless or zinc-plated mild
+steel is.
+
+One assembly snag the model does not solve: with the sheet under the frame, the
+screw heads land between sheet and tabletop and the machine rocks on them. An
+M5 countersink wants ~2.5 mm of depth and a 1.5 mm sheet cannot give it. Either
+relieve the tabletop under each head, or drop an opening-sized sheet into the
+frame well instead and let the rails retain it.
 
 ## V-slot vs T-slot
 

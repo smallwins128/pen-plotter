@@ -58,6 +58,29 @@ FRAME_JOINT = "butt"
 FRAME_LONG_RAILS_ALONG_X = True
 
 # ---------------------------------------------------------------------------
+# Base deck (the sheet the paper sits on)
+# ---------------------------------------------------------------------------
+
+# A steel sheet across the whole frame footprint, laid on the tabletop with the
+# frame bolted down on top of it. It is NOT a spanning panel -- see deck.py for
+# why. The tabletop carries it; the sheet just gives a hard, uniform surface.
+DECK_T = 1.5
+DECK_X = 1000.0       # full frame footprint, so the frame sits on it
+DECK_Y = 600.0
+
+DECK_HOLE_D = 5.5     # M5 clearance, into drop-in T-nuts in the rails' bottom slot
+DECK_HOLE_PITCH = 160.0   # target spacing; actual is evened out to fit
+DECK_EDGE_MARGIN = 70.0   # keep the end holes clear of the corner joints
+
+# Everything above the deck is lifted by its thickness, so the frame sits on
+# the sheet rather than intersecting it.
+FRAME_BASE_Z = DECK_T
+
+STEEL_DENSITY = 7.85e-3   # g/mm^3
+STEEL_E = 200000.0        # N/mm^2
+STEEL_NU = 0.30
+
+# ---------------------------------------------------------------------------
 # Cross bar (the moving gantry beam)
 # ---------------------------------------------------------------------------
 

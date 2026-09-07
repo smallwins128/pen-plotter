@@ -9,7 +9,7 @@
   --paper:#e9edf1; --surface:#ffffff; --surface-2:#f3f6f8;
   --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a;
   --line:#ccd6de; --line-2:#dde4ea;
-  --alu:#8f9daa; --accent:#c2622c; --accent-soft:#f0dccd;
+  --alu:#8f9daa; --steel:#b6c0c8; --accent:#c2622c; --accent-soft:#f0dccd;
   --blue:#37718f; --blue-soft:#dde9ef;
   --stage-top:#dfe6ec; --stage-bot:#c8d3db;
   --shadow:0 1px 2px rgba(19,27,34,.06),0 8px 24px -12px rgba(19,27,34,.18);
@@ -19,7 +19,7 @@
     --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
     --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
     --line:#26333d; --line-2:#1e2a33;
-    --alu:#98a6b3; --accent:#e08a52; --accent-soft:#3a2417;
+    --alu:#98a6b3; --steel:#7c8994; --accent:#e08a52; --accent-soft:#3a2417;
     --blue:#6aa8c6; --blue-soft:#162a35;
     --stage-top:#151f27; --stage-bot:#0a1015;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -29,7 +29,7 @@
   --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
   --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
   --line:#26333d; --line-2:#1e2a33;
-  --alu:#98a6b3; --accent:#e08a52; --accent-soft:#3a2417;
+  --alu:#98a6b3; --steel:#7c8994; --accent:#e08a52; --accent-soft:#3a2417;
   --blue:#6aa8c6; --blue-soft:#162a35;
   --stage-top:#151f27; --stage-bot:#0a1015;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -145,12 +145,20 @@ tr:last-child td{border-bottom:none}
 .row .n{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
 .ok{color:var(--blue); font-weight:500}
 
+.deck-panel{margin-top:16px}
+.deck-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px 28px}
+@media (max-width:900px){.deck-grid{grid-template-columns:1fr}}
+.bad{color:var(--accent); font-weight:500}
 .note{
   margin-top:16px; padding:12px 14px; font-size:13px; color:var(--ink-2);
   background:var(--accent-soft); border-left:2px solid var(--accent); border-radius:0 3px 3px 0;
 }
 .note b{color:var(--ink); font-weight:600}
-.note + .note{margin-top:8px}
+.note + .deck-panel{margin-top:16px}
+.deck-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px 28px}
+@media (max-width:900px){.deck-grid{grid-template-columns:1fr}}
+.bad{color:var(--accent); font-weight:500}
+.note{margin-top:8px}
 footer{
   margin-top:22px; padding-top:14px; border-top:1px solid var(--line);
   font-size:12px; color:var(--ink-3); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
@@ -191,6 +199,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
 
       <div class="panel">
         <h2>Show</h2>
+        <label class="toggle"><input type="checkbox" id="t-deck" checked><span class="sw" style="background:var(--steel)"></span>Base deck &mdash; steel sheet</label>
         <label class="toggle"><input type="checkbox" id="t-frame" checked><span class="sw" style="background:var(--alu)"></span>Frame &mdash; 2040</label>
         <label class="toggle"><input type="checkbox" id="t-bar" checked><span class="sw" style="background:var(--accent)"></span>Cross bar &mdash; 2020</label>
         <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--blue)"></span>Tabletop outline</label>
@@ -228,6 +237,21 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     </div>
   </div>
 
+  <div class="panel deck-panel">
+    <h2>Base deck &mdash; why it must sit on the tabletop</h2>
+    <div class="deck-grid">
+      <div class="rows" id="deck-rows"></div>
+      <div>
+        <table>
+          <thead><tr><th>If it spanned the opening</th><th class="num">Sag, own weight</th></tr></thead>
+          <tbody id="deck-sag"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" id="note-deck"></div>
+  <div class="note" id="note-heads"></div>
   <div class="note" id="note-overhang"></div>
   <div class="note" id="note-vslot"></div>
 
@@ -278,6 +302,37 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   document.getElementById("xmax").textContent = "+"+mm(B.travel_half);
   var slider = document.getElementById("xpos");
   slider.min = -B.travel_half; slider.max = B.travel_half;
+
+  var K = D.deck;
+  document.getElementById("deck-rows").innerHTML = [
+    ["Sheet", K.x + " x " + K.y + " x " + K.t + " mm"],
+    ["Mass", K.mass + " kg"],
+    ["Clearance holes", K.holes + " x " + K.hole_d + " mm"],
+    ["Writing surface at Z", K.t + " mm"],
+    ["Supported by", "the tabletop, everywhere"]
+  ].map(function(r){
+    return '<div class="row"><span>'+r[0]+'</span><span class="n">'+r[1]+'</span></div>';
+  }).join("");
+
+  document.getElementById("deck-sag").innerHTML = Object.keys(K.sag).map(function(t){
+    var v = K.sag[t];
+    return '<tr><td>'+t+' mm sheet</td><td class="num bad">'+v.toFixed(1)+' mm</td></tr>';
+  }).join("");
+
+  document.getElementById("note-deck").innerHTML =
+    "<b>The sheet does not create flatness &mdash; it inherits it.</b> Spanning the " +
+    F.opening_x + " x " + F.opening_y + " mm opening unsupported, " + K.t +
+    " mm of steel sags " + K.sag[String(K.t)] + " mm under nothing but its own weight, and it would take " +
+    "roughly 8 mm of plate (33 kg) to hold half a millimetre across that span. Laid flat on the " +
+    "tabletop it is fine &mdash; but it will follow the tabletop, bow and all. What it actually buys " +
+    "you is a hard, uniform surface that will not dent under a pen or swell with humidity.";
+
+  document.getElementById("note-heads").innerHTML =
+    "<b>Watch the screw heads.</b> With the sheet under the frame, the heads end up between the sheet " +
+    "and the tabletop, and the machine rocks on them. An M5 countersink needs ~2.5 mm of depth and " +
+    "you only have " + K.t + " mm, so it cannot sit flush. Easiest fix: drill shallow relief holes in " +
+    "the tabletop where each head lands. Or skip the holes entirely and drop a " + F.opening_x + " x " +
+    F.opening_y + " mm sheet into the frame opening, where the rails retain it on all four sides.";
 
   document.getElementById("note-overhang").innerHTML =
     "<b>The bar overhangs the table.</b> At " + B.len + " mm it reaches " +
@@ -340,9 +395,11 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   var matFrame = new THREE.MeshStandardMaterial({roughness:.55, metalness:.35, flatShading:true});
   var matBar   = new THREE.MeshStandardMaterial({roughness:.5,  metalness:.3,  flatShading:true});
 
+  var matDeck  = new THREE.MeshStandardMaterial({roughness:.35, metalness:.6, flatShading:true});
+  var deckMesh = new THREE.Mesh(geomFrom(D.parts.deck.geom.b64), matDeck);
   var frameMesh = new THREE.Mesh(geomFrom(D.parts.frame.geom.b64), matFrame);
   var barMesh   = new THREE.Mesh(geomFrom(D.parts.cross_bar.geom.b64), matBar);
-  scene.add(frameMesh, barMesh);
+  scene.add(deckMesh, frameMesh, barMesh);
 
   // Tabletop outline: the bar visibly runs past it.
   var lineMat  = new THREE.LineBasicMaterial({});
@@ -373,6 +430,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
 
   function applyTheme(){
     matFrame.color = new THREE.Color(css("--alu"));
+    matDeck.color  = new THREE.Color(css("--steel"));
     matBar.color   = new THREE.Color(css("--accent"));
     lineMat.color  = new THREE.Color(css("--blue"));
     lineMat2.color = new THREE.Color(css("--blue"));
@@ -462,7 +520,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     readout(); draw();
   });
 
-  var toggles = {"t-frame":frameMesh, "t-bar":barMesh, "t-table":table, "t-travel":travel};
+  var toggles = {"t-deck":deckMesh, "t-frame":frameMesh, "t-bar":barMesh, "t-table":table, "t-travel":travel};
   Object.keys(toggles).forEach(function(id){
     document.getElementById(id).addEventListener("change", function(e){
       toggles[id].visible = e.target.checked; draw();

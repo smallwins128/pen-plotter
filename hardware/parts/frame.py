@@ -5,8 +5,9 @@ A rectangle of 2040 sitting on the LINNMON tabletop, sized to the tabletop's
 off, so it is the first thing modelled.
 
 Datum: origin at the centre of the outer envelope in X and Y, with Z = 0 at the
-underside of the rails (i.e. the tabletop surface). Orientation matches the
-README -- +X right, +Y away from you, standing in front of the table.
+tabletop surface. The rails sit at FRAME_BASE_Z, which is the thickness of the
+base deck they stand on. Orientation matches the README -- +X right, +Y away
+from you, standing in front of the table.
 
 Joinery: butt joints. The rails running along the long axis are full length and
 the other pair fits between them, which is what corner brackets or end-tapped
@@ -21,6 +22,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from build123d import Compound, Pos
 
 from params import (
+    FRAME_BASE_Z,
     FRAME_JOINT,
     FRAME_LONG_RAILS_ALONG_X,
     FRAME_OUTER_X,
@@ -58,7 +60,7 @@ def build():
     # lift so the underside sits on Z = 0.
     y_off = FRAME_OUTER_Y / 2 - PROFILE_W / 2
     x_off = FRAME_OUTER_X / 2 - PROFILE_W / 2
-    z_off = PROFILE_H / 2
+    z_off = FRAME_BASE_Z + PROFILE_H / 2
 
     rails = []
     for name, length, axis, pos in (

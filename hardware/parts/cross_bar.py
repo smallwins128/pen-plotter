@@ -21,6 +21,7 @@ from build123d import Pos
 
 from params import (
     ALUMINIUM_DENSITY,
+    FRAME_BASE_Z,
     CROSS_BAR_H,
     CROSS_BAR_LEN,
     CROSS_BAR_W,
@@ -41,7 +42,7 @@ G = 9.81
 
 def underside_z():
     """Z of the bottom face of the cross bar."""
-    return PROFILE_H + GANTRY_RISE
+    return FRAME_BASE_Z + PROFILE_H + GANTRY_RISE
 
 
 def support_span():

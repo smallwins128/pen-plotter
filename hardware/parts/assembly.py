@@ -12,19 +12,34 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from build123d import Compound
 
+from params import ALUMINIUM_DENSITY
+
 import cross_bar
+import deck
 import frame
 
 
 def build():
-    parts = list(frame.build().children) + [cross_bar.build()]
+    parts = [deck.build()] + list(frame.build().children) + [cross_bar.build()]
     asm = Compound(children=parts)
     asm.label = "assembly"
     return asm
 
 
 def cut_list():
-    return frame.cut_list() + cross_bar.cut_list()
+    return deck.cut_list() + frame.cut_list() + cross_bar.cut_list()
+
+
+# The assembly is steel and aluminium together, so no single density applies --
+# add the parts up instead. The cut list mixes sheet and bar, so it carries no
+# meaningful "metres of stock" total either.
+LINEAR_STOCK = False
+
+
+def mass():
+    """Total mass, kg."""
+    alu = sum(c.volume for c in frame.build().children) + cross_bar.build().volume
+    return deck.mass() + alu * ALUMINIUM_DENSITY / 1000.0
 
 
 if __name__ == "__main__":
