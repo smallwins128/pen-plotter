@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# Generated CAD output. The .py files under hardware/ are the source of truth;
+# run `python3 hardware/make.py` to regenerate. Commit a STEP deliberately if
+# you need to hand a frozen one to a fabricator.
+hardware/out/

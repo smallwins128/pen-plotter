@@ -13,6 +13,7 @@ positional servo pen lift on D11.
 | **[docs/HANDOFF.md](docs/HANDOFF.md)** | **Start a new chat with this.** Current verified state of the machine: what works, what doesn't, the three workflow rules, and the open problem. |
 | **[docs/FINDINGS.md](docs/FINDINGS.md)** | What commissioning actually taught us — the servo ground wire, the zero-work-offset crash, the EEPROM rule, servo soft-start, and what is still open. Read this before re-debugging anything. |
 | **[settings/plotter.grbl.txt](settings/plotter.grbl.txt)** | Restore block for after a re-flash (which wipes EEPROM). |
+| **[hardware/](hardware)** | Parametric CAD for the physical parts, as Python (build123d). The 2040 frame is modelled; enclosures and the pen lifter to follow. |
 | **[gcode/tests/](gcode/tests)** | T0–T6 bring-up tests, in the order you should run them. |
 | **[tools/plot2.py](tools/plot2.py)** | The sender. Homes in the same connection it streams in, refuses to run without a work offset, `--lockstep` for one-line-at-a-time. |
 | **[tools/servo_sweep.py](tools/servo_sweep.py)** | Interactive finder for the pen-up / pen-down S values. |
