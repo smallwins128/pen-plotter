@@ -1,0 +1,477 @@
+<title>Plotter Gantry Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+:root{
+  --paper:#e9edf1; --surface:#ffffff; --surface-2:#f3f6f8;
+  --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a;
+  --line:#ccd6de; --line-2:#dde4ea;
+  --alu:#8f9daa; --accent:#c2622c; --accent-soft:#f0dccd;
+  --blue:#37718f; --blue-soft:#dde9ef;
+  --stage-top:#dfe6ec; --stage-bot:#c8d3db;
+  --shadow:0 1px 2px rgba(19,27,34,.06),0 8px 24px -12px rgba(19,27,34,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
+    --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
+    --line:#26333d; --line-2:#1e2a33;
+    --alu:#98a6b3; --accent:#e08a52; --accent-soft:#3a2417;
+    --blue:#6aa8c6; --blue-soft:#162a35;
+    --stage-top:#151f27; --stage-bot:#0a1015;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
+  --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
+  --line:#26333d; --line-2:#1e2a33;
+  --alu:#98a6b3; --accent:#e08a52; --accent-soft:#3a2417;
+  --blue:#6aa8c6; --blue-soft:#162a35;
+  --stage-top:#151f27; --stage-bot:#0a1015;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px; margin:0 auto; padding:28px 22px 56px}
+
+/* ---- header ---- */
+header{display:flex; flex-wrap:wrap; align-items:flex-end; gap:18px 32px; margin-bottom:20px}
+.title h1{
+  margin:0; font-size:27px; font-weight:600; letter-spacing:-.02em; text-wrap:balance;
+}
+.title p{margin:4px 0 0; color:var(--ink-2); font-size:14px; max-width:60ch}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-left:auto}
+.chip{
+  display:flex; flex-direction:column; gap:1px;
+  padding:7px 12px; background:var(--surface); border:1px solid var(--line);
+  border-radius:3px;
+}
+.chip .k{font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--ink-3)}
+.chip .v{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:14px; font-weight:500; font-variant-numeric:tabular-nums}
+
+/* ---- stage + rail ---- */
+.stage-row{display:grid; grid-template-columns:1fr 258px; gap:16px; align-items:start}
+@media (max-width:900px){.stage-row{grid-template-columns:1fr}}
+
+.stage{
+  position:relative; height:min(62vh,540px); min-height:380px;
+  border:1px solid var(--line); border-radius:4px; overflow:hidden;
+  background:linear-gradient(170deg,var(--stage-top),var(--stage-bot));
+  cursor:grab; touch-action:none;
+}
+.stage:active{cursor:grabbing}
+.stage canvas{display:block; width:100%; height:100%}
+.hint{
+  position:absolute; left:12px; bottom:10px; pointer-events:none;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3);
+}
+.readout{
+  position:absolute; right:12px; top:11px; pointer-events:none; text-align:right;
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-2);
+  font-variant-numeric:tabular-nums; line-height:1.7;
+}
+.readout b{color:var(--accent); font-weight:600}
+.fallback{
+  position:absolute; inset:0; display:none; place-items:center; padding:24px; text-align:center;
+  color:var(--ink-2); font-size:14px;
+}
+
+.rail{display:flex; flex-direction:column; gap:14px}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:14px}
+.panel h2{
+  margin:0 0 10px; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.1em; color:var(--ink-3);
+}
+.views{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+button{
+  font:inherit; font-size:13px; color:var(--ink); cursor:pointer;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:3px;
+  padding:7px 4px; transition:background .12s,border-color .12s;
+}
+button:hover{background:var(--blue-soft); border-color:var(--blue)}
+button:focus-visible{outline:2px solid var(--blue); outline-offset:1px}
+
+.toggle{display:flex; align-items:center; gap:9px; padding:5px 0; cursor:pointer; font-size:13.5px}
+.toggle input{accent-color:var(--blue); width:15px; height:15px; cursor:pointer; margin:0}
+.sw{width:11px; height:11px; border-radius:2px; flex:none}
+
+.slider-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px}
+.slider-head .val{
+  font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600;
+  color:var(--accent); font-variant-numeric:tabular-nums;
+}
+input[type=range]{width:100%; accent-color:var(--accent); margin:0; cursor:pointer}
+.ends{
+  display:flex; justify-content:space-between; margin-top:3px;
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3);
+}
+
+/* ---- lower panels ---- */
+.grid3{display:grid; grid-template-columns:1.15fr .85fr 1fr; gap:16px; margin-top:16px}
+@media (max-width:900px){.grid3{grid-template-columns:1fr}}
+
+table{width:100%; border-collapse:collapse; font-size:13.5px}
+th{
+  text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--ink-3); font-weight:600; padding:0 0 6px; border-bottom:1px solid var(--line);
+}
+td{padding:7px 0; border-bottom:1px solid var(--line-2)}
+tr:last-child td{border-bottom:none}
+.num{
+  font-family:"IBM Plex Mono",monospace; text-align:right;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.total td{font-weight:600; border-top:1px solid var(--line); padding-top:9px}
+
+.sect{display:flex; gap:16px; align-items:center}
+.sect svg{flex:none}
+.sect dl{margin:0; display:grid; grid-template-columns:auto auto; gap:4px 12px; font-size:12.5px; align-content:center}
+.sect dt{color:var(--ink-3)}
+.sect dd{margin:0; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+
+.rows{display:flex; flex-direction:column; gap:0}
+.row{display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid var(--line-2); font-size:13.5px}
+.row:last-child{border-bottom:none}
+.row .n{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+.ok{color:var(--blue); font-weight:500}
+
+.note{
+  margin-top:16px; padding:12px 14px; font-size:13px; color:var(--ink-2);
+  background:var(--accent-soft); border-left:2px solid var(--accent); border-radius:0 3px 3px 0;
+}
+.note b{color:var(--ink); font-weight:600}
+.note + .note{margin-top:8px}
+footer{
+  margin-top:22px; padding-top:14px; border-top:1px solid var(--line);
+  font-size:12px; color:var(--ink-3); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+}
+code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1>Pen plotter &mdash; frame and gantry</h1>
+      <p>Generated from <code>hardware/</code>. Drag to orbit, scroll to zoom, shift-drag to pan. The amber beam is the moving axis &mdash; drive it with the travel slider.</p>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <div class="stage-row">
+    <div class="stage" id="stage">
+      <div class="readout" id="readout"></div>
+      <div class="hint">drag orbit &middot; scroll zoom &middot; shift-drag pan</div>
+      <div class="fallback" id="fallback">
+        The 3D library could not be loaded, so the model can&rsquo;t be drawn.
+        Every dimension below is still exact.
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="panel">
+        <h2>View</h2>
+        <div class="views">
+          <button type="button" data-view="iso">Isometric</button>
+          <button type="button" data-view="top">Top</button>
+          <button type="button" data-view="front">Front</button>
+          <button type="button" data-view="right">Right</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Show</h2>
+        <label class="toggle"><input type="checkbox" id="t-frame" checked><span class="sw" style="background:var(--alu)"></span>Frame &mdash; 2040</label>
+        <label class="toggle"><input type="checkbox" id="t-bar" checked><span class="sw" style="background:var(--accent)"></span>Cross bar &mdash; 2020</label>
+        <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--blue)"></span>Tabletop outline</label>
+        <label class="toggle"><input type="checkbox" id="t-travel" checked><span class="sw" style="background:var(--blue)"></span>Travel limits</label>
+      </div>
+
+      <div class="panel">
+        <h2>X travel</h2>
+        <div class="slider-head">
+          <span>Bar position</span><span class="val" id="xval">0 mm</span>
+        </div>
+        <input type="range" id="xpos" min="-460" max="460" value="0" step="1">
+        <div class="ends"><span id="xmin"></span><span>centre</span><span id="xmax"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h2>Cut list</h2>
+      <table>
+        <thead><tr><th>Part</th><th class="num">Qty</th><th class="num">Length</th></tr></thead>
+        <tbody id="cuts"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Cross bar section &mdash; 2020</h2>
+      <div class="sect" id="sect2020"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Gantry beam &mdash; will it sag?</h2>
+      <div class="rows" id="sag"></div>
+    </div>
+  </div>
+
+  <div class="note" id="note-overhang"></div>
+  <div class="note" id="note-vslot"></div>
+
+  <footer>
+    <span>Datum: origin at frame centre, Z&nbsp;=&nbsp;0 at the tabletop. +X right, +Y away from you.</span>
+    <span>Regenerate: <code>python3 hardware/viewer.py</code></span>
+  </footer>
+</div>
+
+<script id="model-data" type="application/json">__VIEWER_DATA__</script>
+<script>
+(function(){
+  "use strict";
+  var D = JSON.parse(document.getElementById("model-data").textContent);
+  var css = function(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
+  var mm = function(v,d){ return Number(v).toFixed(d===undefined?0:d); };
+
+  /* ---------- static content ---------- */
+  var F = D.frame, B = D.bar;
+
+  document.getElementById("chips").innerHTML = [
+    ["Frame", F.outer_x + " x " + F.outer_y + " mm"],
+    ["Cross bar", B.len + " mm " + B.profile],
+    ["X travel", mm(B.travel) + " mm"],
+    ["Drawable", F.opening_x + " x " + F.opening_y + " mm"]
+  ].map(function(c){
+    return '<div class="chip"><span class="k">'+c[0]+'</span><span class="v">'+c[1]+'</span></div>';
+  }).join("");
+
+  var total = 0;
+  document.getElementById("cuts").innerHTML = D.cut_list.map(function(r){
+    total += r.qty * r.len;
+    return '<tr><td>'+r.label+'</td><td class="num">'+r.qty+'</td><td class="num">'+mm(r.len)+' mm</td></tr>';
+  }).join("") +
+  '<tr class="total"><td>Stock total</td><td class="num"></td><td class="num">'+(total/1000).toFixed(2)+' m</td></tr>';
+
+  document.getElementById("sag").innerHTML = [
+    ["Supported span", mm(B.span)+" mm"],
+    ["Section I<sub>x</sub>", mm(B.ix)+" mm⁴"],
+    ["Sag, self weight", mm(B.sag_self,3)+" mm"],
+    ["Sag, +0.4 kg carriage", mm(B.sag_load,3)+" mm"],
+    ["Sag, total", '<span class="ok">'+mm(B.sag_total,3)+" mm</span>"]
+  ].map(function(r){
+    return '<div class="row"><span>'+r[0]+'</span><span class="n">'+r[1]+'</span></div>';
+  }).join("");
+
+  document.getElementById("xmin").textContent = "-"+mm(B.travel_half);
+  document.getElementById("xmax").textContent = "+"+mm(B.travel_half);
+  var slider = document.getElementById("xpos");
+  slider.min = -B.travel_half; slider.max = B.travel_half;
+
+  document.getElementById("note-overhang").innerHTML =
+    "<b>The bar overhangs the table.</b> At " + B.len + " mm it reaches " +
+    mm((B.len - F.outer_y)/2) + " mm past each long edge of the " + F.outer_x + " x " + F.outer_y +
+    " mm LINNMON top, and " + mm(B.overhang) + " mm past each gantry plate. That buys no drawing width &mdash; " +
+    "the frame opening caps it at " + F.opening_y + " mm &mdash; so the overhang only earns its keep if the Y motor " +
+    "and idler mount on the ends.";
+
+  document.getElementById("note-vslot").innerHTML =
+    "<b>V-slot, not T-slot.</b> OpenBuilds gantry wheels run in a 45&deg; V groove. The section modelled here is " +
+    "plain T-slot, so the wheels would have nothing to grip. The dimensions and the fit are right either way, " +
+    "but the frame rails and the cross bar both need to be V-slot for this to roll.";
+
+  /* ---------- section drawing, to scale ---------- */
+  (function(){
+    var S = D.sections["2020"], px = 5.2, pad = 9;
+    var w = 20*px + pad*2, h = 20*px + pad*2;
+    var path = function(pts){
+      return pts.map(function(p,i){
+        return (i?"L":"M") + (p[0]*px + w/2).toFixed(2) + " " + (h/2 - p[1]*px).toFixed(2);
+      }).join(" ") + "Z";
+    };
+    var d = path(S.outline) + " " + S.holes.map(path).join(" ");
+    document.getElementById("sect2020").innerHTML =
+      '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="2020 T-slot cross-section, drawn to scale">' +
+        '<path d="'+d+'" fill="var(--alu)" fill-rule="evenodd" stroke="var(--ink)" stroke-width="0.8"/>' +
+      '</svg>' +
+      '<dl>' +
+        '<dt>Area</dt><dd>'+mm(S.area,1)+' mm²</dd>' +
+        '<dt>Mass</dt><dd>'+(S.area*2.7e-3).toFixed(2)+' kg/m</dd>' +
+        '<dt>I<sub>x</sub></dt><dd>'+mm(S.ix)+' mm⁴</dd>' +
+        '<dt>Scale</dt><dd>'+px.toFixed(1)+':1</dd>' +
+      '</dl>';
+  })();
+
+  /* ---------- 3D ---------- */
+  var stage = document.getElementById("stage");
+  if (typeof THREE === "undefined") {
+    document.getElementById("fallback").style.display = "grid";
+    return;
+  }
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(38, 1, 5, 12000);
+  camera.up.set(0, 0, 1);
+
+  var renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  stage.appendChild(renderer.domElement);
+
+  function geomFrom(b64){
+    var bin = atob(b64), buf = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    var g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(buf.buffer), 3));
+    g.computeVertexNormals();   // non-indexed, so these come out flat per face
+    return g;
+  }
+
+  var matFrame = new THREE.MeshStandardMaterial({roughness:.55, metalness:.35, flatShading:true});
+  var matBar   = new THREE.MeshStandardMaterial({roughness:.5,  metalness:.3,  flatShading:true});
+
+  var frameMesh = new THREE.Mesh(geomFrom(D.parts.frame.geom.b64), matFrame);
+  var barMesh   = new THREE.Mesh(geomFrom(D.parts.cross_bar.geom.b64), matBar);
+  scene.add(frameMesh, barMesh);
+
+  // Tabletop outline: the bar visibly runs past it.
+  var lineMat  = new THREE.LineBasicMaterial({});
+  var lineMat2 = new THREE.LineDashedMaterial({dashSize:14, gapSize:9});
+  function rectAt(x0,x1,y0,y1,z,mat){
+    var g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x0,y0,z), new THREE.Vector3(x1,y0,z),
+      new THREE.Vector3(x1,y1,z), new THREE.Vector3(x0,y1,z), new THREE.Vector3(x0,y0,z)
+    ]);
+    var l = new THREE.Line(g, mat); l.computeLineDistances(); return l;
+  }
+  var table = rectAt(-F.outer_x/2, F.outer_x/2, -F.outer_y/2, F.outer_y/2, 0.4, lineMat);
+  scene.add(table);
+
+  // Where the bar's centreline can reach.
+  var travel = new THREE.Group();
+  [-B.travel_half, B.travel_half].forEach(function(x){
+    var g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, -B.len/2, 0.6), new THREE.Vector3(x, B.len/2, 0.6)
+    ]);
+    var l = new THREE.Line(g, lineMat2); l.computeLineDistances(); travel.add(l);
+  });
+  scene.add(travel);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x404850, 0.85));
+  var key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(600, -900, 1100); scene.add(key);
+  var fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(-800, 500, 300); scene.add(fill);
+
+  function applyTheme(){
+    matFrame.color = new THREE.Color(css("--alu"));
+    matBar.color   = new THREE.Color(css("--accent"));
+    lineMat.color  = new THREE.Color(css("--blue"));
+    lineMat2.color = new THREE.Color(css("--blue"));
+    draw();
+  }
+
+  /* orbit: spherical about a target, Z up */
+  var target = new THREE.Vector3(0, 0, 30);
+  var cam = {theta:-0.95, phi:1.02, radius:1750};
+  function place(){
+    var sp = Math.sin(cam.phi);
+    camera.position.set(
+      target.x + cam.radius * sp * Math.cos(cam.theta),
+      target.y + cam.radius * sp * Math.sin(cam.theta),
+      target.z + cam.radius * Math.cos(cam.phi)
+    );
+    camera.lookAt(target);
+  }
+  function draw(){ place(); renderer.render(scene, camera); }
+
+  function resize(){
+    var w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    draw();
+  }
+  addEventListener("resize", resize);
+
+  var drag = null;
+  stage.addEventListener("pointerdown", function(e){
+    if (e.target.closest(".readout,.hint")) return;
+    drag = {x:e.clientX, y:e.clientY, pan:e.shiftKey || e.button === 2};
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", function(e){
+    if (!drag) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag.x = e.clientX; drag.y = e.clientY;
+    if (drag.pan){
+      var right = new THREE.Vector3().crossVectors(
+        new THREE.Vector3().subVectors(camera.position, target).normalize(), camera.up).normalize();
+      var up = new THREE.Vector3().crossVectors(right,
+        new THREE.Vector3().subVectors(camera.position, target).normalize()).normalize();
+      var k = cam.radius * 0.0013;
+      target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+    } else {
+      cam.theta -= dx * 0.006;
+      cam.phi = Math.max(0.06, Math.min(Math.PI - 0.06, cam.phi - dy * 0.006));
+    }
+    draw();
+  });
+  ["pointerup","pointercancel"].forEach(function(ev){
+    stage.addEventListener(ev, function(){ drag = null; });
+  });
+  stage.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  stage.addEventListener("wheel", function(e){
+    e.preventDefault();
+    cam.radius = Math.max(320, Math.min(6000, cam.radius * Math.exp(e.deltaY * 0.0012)));
+    draw();
+  }, {passive:false});
+
+  var views = {
+    iso:   {theta:-0.95, phi:1.02, radius:1750},
+    top:   {theta:-Math.PI/2, phi:0.07, radius:1500},
+    front: {theta:-Math.PI/2, phi:Math.PI/2 - 0.02, radius:1700},
+    right: {theta:0.001, phi:Math.PI/2 - 0.02, radius:1700}
+  };
+  document.querySelectorAll("[data-view]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var v = views[btn.dataset.view];
+      cam.theta = v.theta; cam.phi = v.phi; cam.radius = v.radius;
+      target.set(0, 0, 30);
+      draw();
+    });
+  });
+
+  function readout(){
+    var x = Number(slider.value);
+    document.getElementById("xval").textContent = (x > 0 ? "+" : "") + mm(x) + " mm";
+    document.getElementById("readout").innerHTML =
+      "bar X <b>" + (x > 0 ? "+" : "") + mm(x) + "</b> mm<br>" +
+      "span " + mm(B.span) + " &middot; overhang " + mm(B.overhang) + "<br>" +
+      "underside Z " + mm(B.underside_z) + " mm";
+  }
+  slider.addEventListener("input", function(){
+    barMesh.position.x = Number(slider.value);
+    readout(); draw();
+  });
+
+  var toggles = {"t-frame":frameMesh, "t-bar":barMesh, "t-table":table, "t-travel":travel};
+  Object.keys(toggles).forEach(function(id){
+    document.getElementById(id).addEventListener("change", function(e){
+      toggles[id].visible = e.target.checked; draw();
+    });
+  });
+
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+
+  readout(); applyTheme(); resize();
+})();
+</script>

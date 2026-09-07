@@ -222,3 +222,39 @@ if __name__ == "__main__":
     png = out / f"profile_{PROFILE_W:g}x{PROFILE_H:g}.png"
     fig.savefig(png, facecolor="white")
     print(f"  wrote       {png.relative_to(out.parent.parent)}")
+
+
+def _polygon_moments(pts):
+    """Signed area and second moments about the origin for a closed polyline.
+
+    Standard shoelace formulas. Returns (area, Ix, Iy), all signed by the
+    winding direction, so a hole subtracts naturally if it winds the other way.
+    """
+    area = ix = iy = 0.0
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]):
+        cross = x0 * y1 - x1 * y0
+        area += cross
+        ix += (y0 * y0 + y0 * y1 + y1 * y1) * cross
+        iy += (x0 * x0 + x0 * x1 + x1 * x1) * cross
+    return area / 2.0, ix / 12.0, iy / 12.0
+
+
+def section_moments(w, h):
+    """Area and second moments of area of the profile section, about its centroid.
+
+    Returns a dict with area (mm^2), ix and iy (mm^4). `ix` resists bending
+    about the section's horizontal axis -- that is the one that matters for a
+    horizontal beam carrying a vertical load.
+    """
+    lines = section_polylines(w, h)
+
+    area, ix, iy = _polygon_moments(lines[0])
+    for hole in lines[1:]:
+        h_area, h_ix, h_iy = _polygon_moments(hole)
+        # Holes are sampled with the same winding as the outer boundary, so
+        # subtract them explicitly rather than relying on orientation.
+        area -= abs(h_area)
+        ix -= abs(h_ix)
+        iy -= abs(h_iy)
+
+    return {"area": abs(area), "ix": abs(ix), "iy": abs(iy)}

@@ -28,10 +28,14 @@ OUT = HERE / "out"
 
 def _parts():
     """name -> (build callable, optional cut-list callable)."""
+    import assembly
+    import cross_bar
     import frame
 
     return {
         "frame": (frame.build, frame.cut_list),
+        "cross_bar": (cross_bar.build, cross_bar.cut_list),
+        "assembly": (assembly.build, assembly.cut_list),
     }
 
 

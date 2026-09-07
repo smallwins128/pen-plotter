@@ -58,6 +58,31 @@ FRAME_JOINT = "butt"
 FRAME_LONG_RAILS_ALONG_X = True
 
 # ---------------------------------------------------------------------------
+# Cross bar (the moving gantry beam)
+# ---------------------------------------------------------------------------
+
+# The bar spans Y and travels along X, riding the two 1000 mm frame rails on
+# OpenBuilds gantry plates.
+CROSS_BAR_LEN = 700.0
+CROSS_BAR_W = 20.0    # 2020
+CROSS_BAR_H = 20.0
+
+# Height of the underside of the cross bar above the top of the frame rails --
+# i.e. the gantry plate + wheel stack.
+#
+# TO CONFIRM: this is a placeholder. Measure the real stack once the gantry
+# plates are in hand; every Z dimension downstream of here depends on it.
+GANTRY_RISE = 6.0
+
+# Length of a gantry plate along the direction of travel (X). Sets how much of
+# the 1000 mm rail is lost to the plate footprint.
+# TO CONFIRM: placeholder, measure the actual plate.
+GANTRY_PLATE_LEN = 80.0
+
+# Where to park the bar when rendering. 0 = mid-travel.
+CROSS_BAR_X = 0.0
+
+# ---------------------------------------------------------------------------
 # Machine envelope (from the README, for parts still to come)
 # ---------------------------------------------------------------------------
 

@@ -17,8 +17,14 @@ pip install -r hardware/requirements.txt
 python3 hardware/make.py            # build every part -> hardware/out/
 python3 hardware/make.py frame      # just one
 python3 hardware/preview.py         # render PNGs to eyeball the result
-python3 hardware/profiles.py        # print + plot the 2040 cross-section
+python3 hardware/profiles.py        # print + plot the frame cross-section
+python3 hardware/viewer.py          # build the interactive 3D viewer
 ```
+
+`hardware/out/viewer.html` is a self-contained page — open it in a browser to
+orbit the model, toggle parts, and drive the cross bar through its X travel.
+It carries no hard-coded dimensions; re-run `viewer.py` after changing
+`params.py` and the numbers follow.
 
 `hardware/out/` is generated and git-ignored.
 
@@ -37,8 +43,11 @@ Each part exports:
 | **`params.py`** | Every shared dimension. Change a number here, not in a part. Values mirroring the root README's machine table are marked `[README]`. |
 | **`profiles.py`** | The 20-series T-slot extrusion. `tslot_bar(length, w, h, axis)` is the building block for anything made of extrusion. |
 | **`parts/frame.py`** | The outer 2040 frame. |
+| **`parts/cross_bar.py`** | The moving 2020 gantry beam, plus its span/travel/deflection maths. |
+| **`parts/assembly.py`** | Frame + cross bar in one coordinate system. |
 | **`make.py`** | Builds and exports everything. Add new parts to `_parts()`. |
 | **`preview.py`** | PNG renders. Sanity check, not a beauty shot. |
+| **`viewer.py`** + **`web/`** | The interactive 3D viewer. `export_web.py` packs the geometry. |
 
 ## Conventions
 
@@ -90,3 +99,23 @@ on every build, so this cannot come back quietly.
 3. Register it in `make.py`'s `_parts()`.
 4. `python3 hardware/make.py <name> && python3 hardware/preview.py <name>`, and
    look at the render.
+
+## Placeholders that must be measured
+
+Two numbers in `params.py` are guesses and are marked `TO CONFIRM`. Every Z
+dimension above the frame depends on the first of them:
+
+| | |
+|---|---|
+| `GANTRY_RISE` | Height from the top of the frame rails to the underside of the cross bar — i.e. the gantry plate and wheel stack. |
+| `GANTRY_PLATE_LEN` | Plate footprint along X. Sets how much of the 1000 mm rail is lost to the plate, and therefore the X travel. |
+
+## V-slot vs T-slot
+
+`profiles.py` models a **T-slot** section. OpenBuilds gantry wheels need a
+**V-slot** — a 45° groove the wheels run in. If the machine uses OpenBuilds
+plates, the rails and the cross bar must both be V-slot extrusion; the wheels
+have nothing to grip on the profile modelled here.
+
+Envelope, slot positions, bore centres and fit are the same either way, so the
+layout and cut lists hold. Only the wheel running surface is missing.
