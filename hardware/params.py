@@ -123,6 +123,28 @@ GANTRY_PLATE_LEN = 65.5
 CROSS_BAR_X = 0.0
 
 # ---------------------------------------------------------------------------
+# Electronics enclosure
+# ---------------------------------------------------------------------------
+
+# A separate extrusion box bolted alongside the machine (option B), not sharing
+# a rail with it -- so either can be moved without dismantling the other.
+#
+# Stainless covers are not modelled yet. Neither is any wiring. Contents are
+# stand-in blocks at their real outside dimensions, so the volumes and the
+# clearances between them are honest even though the parts are not detailed.
+ENC_X = 450.0
+ENC_Y = 320.0
+ENC_Z = 200.0
+ENC_PROFILE = 20.0        # 2020 throughout
+
+# Gap between the machine's right-hand rail and the enclosure's left face.
+# They bolt together across this with plates, which are not modelled yet.
+ENC_GAP = 10.0
+
+# Components sit on the top face of the bottom frame rails.
+ENC_FLOOR_Z = ENC_PROFILE
+
+# ---------------------------------------------------------------------------
 # Machine envelope (from the README, for parts still to come)
 # ---------------------------------------------------------------------------
 

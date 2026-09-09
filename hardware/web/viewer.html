@@ -9,7 +9,7 @@
   --paper:#e9edf1; --surface:#ffffff; --surface-2:#f3f6f8;
   --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a;
   --line:#ccd6de; --line-2:#dde4ea;
-  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --accent:#c2622c; --accent-soft:#f0dccd;
+  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --part:#7e8ea3; --accent:#c2622c; --accent-soft:#f0dccd;
   --blue:#37718f; --blue-soft:#dde9ef;
   --stage-top:#dfe6ec; --stage-bot:#c8d3db;
   --shadow:0 1px 2px rgba(19,27,34,.06),0 8px 24px -12px rgba(19,27,34,.18);
@@ -19,7 +19,7 @@
     --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
     --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
     --line:#26333d; --line-2:#1e2a33;
-    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --accent:#e08a52; --accent-soft:#3a2417;
+    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --part:#5d6b7d; --accent:#e08a52; --accent-soft:#3a2417;
     --blue:#6aa8c6; --blue-soft:#162a35;
     --stage-top:#151f27; --stage-bot:#0a1015;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -29,7 +29,7 @@
   --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
   --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
   --line:#26333d; --line-2:#1e2a33;
-  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --accent:#e08a52; --accent-soft:#3a2417;
+  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --part:#5d6b7d; --accent:#e08a52; --accent-soft:#3a2417;
   --blue:#6aa8c6; --blue-soft:#162a35;
   --stage-top:#151f27; --stage-bot:#0a1015;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -203,6 +203,8 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
         <label class="toggle"><input type="checkbox" id="t-frame" checked><span class="sw" style="background:var(--alu)"></span>Frame &mdash; 2040</label>
         <label class="toggle"><input type="checkbox" id="t-bar" checked><span class="sw" style="background:var(--accent)"></span>Cross bar &mdash; 2020</label>
         <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--wood)"></span>Table &mdash; 5 ft bench</label>
+        <label class="toggle"><input type="checkbox" id="t-encframe" checked><span class="sw" style="background:var(--alu)"></span>Enclosure frame &mdash; 2020</label>
+        <label class="toggle"><input type="checkbox" id="t-encparts" checked><span class="sw" style="background:var(--part)"></span>Enclosure contents</label>
         <label class="toggle"><input type="checkbox" id="t-travel" checked><span class="sw" style="background:var(--blue)"></span>Travel limits</label>
       </div>
 
@@ -235,6 +237,14 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
       <h2>Gantry beam &mdash; will it sag?</h2>
       <div class="rows" id="sag"></div>
     </div>
+  </div>
+
+  <div class="panel deck-panel">
+    <h2>Enclosure contents &mdash; stand-in blocks, real sizes</h2>
+    <table>
+      <thead><tr><th>Item</th><th class="num">Size</th><th>Note</th></tr></thead>
+      <tbody id="enc-parts"></tbody>
+    </table>
   </div>
 
   <div class="panel deck-panel">
@@ -303,6 +313,13 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   document.getElementById("xmax").textContent = "+"+mm(B.travel_half);
   var slider = document.getElementById("xpos");
   slider.min = -B.travel_half; slider.max = B.travel_half;
+
+  document.getElementById("enc-parts").innerHTML = D.enclosure.components.map(function(c){
+    return '<tr><td>'+c.name.replace(/_/g," ")+'</td><td class="num">'+c.size.join(" x ")+
+           ' mm</td><td>'+c.note+'</td></tr>';
+  }).join("") +
+  '<tr class="total"><td>Enclosure</td><td class="num">'+D.enclosure.x+' x '+D.enclosure.y+
+  ' x '+D.enclosure.z+' mm</td><td>2020 frame, no covers modelled yet</td></tr>';
 
   var K = D.deck;
   document.getElementById("deck-rows").innerHTML = [
@@ -406,6 +423,13 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   var table = new THREE.Mesh(geomFrom(D.parts.table.geom.b64), matTable);
   scene.add(table);
 
+  var matEnc  = new THREE.MeshStandardMaterial({roughness:.55, metalness:.35, flatShading:true});
+  var matPart = new THREE.MeshStandardMaterial({roughness:.7, metalness:.1, flatShading:true,
+                                                transparent:true, opacity:.9});
+  var encFrame = new THREE.Mesh(geomFrom(D.parts.enc_frame.geom.b64), matEnc);
+  var encParts = new THREE.Mesh(geomFrom(D.parts.enc_parts.geom.b64), matPart);
+  scene.add(encFrame, encParts);
+
   var lineMat  = new THREE.LineBasicMaterial({});
   var lineMat2 = new THREE.LineDashedMaterial({dashSize:14, gapSize:9});
   function rectAt(x0,x1,y0,y1,z,mat){
@@ -433,6 +457,8 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     matFrame.color = new THREE.Color(css("--alu"));
     matDeck.color  = new THREE.Color(css("--steel"));
     matTable.color = new THREE.Color(css("--wood"));
+    matEnc.color   = new THREE.Color(css("--alu"));
+    matPart.color  = new THREE.Color(css("--part"));
     matBar.color   = new THREE.Color(css("--accent"));
     lineMat.color  = new THREE.Color(css("--blue"));
     lineMat2.color = new THREE.Color(css("--blue"));
@@ -441,7 +467,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
 
   /* orbit: spherical about a target, Z up */
   var target = new THREE.Vector3((D.table.free[1] - F.outer_x / 2) / 2, 0, 30);
-  var cam = {theta:-0.95, phi:1.02, radius:2250};
+  var cam = {theta:-0.95, phi:1.02, radius:2600};
   function place(){
     var sp = Math.sin(cam.phi);
     camera.position.set(
@@ -495,10 +521,10 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   }, {passive:false});
 
   var views = {
-    iso:   {theta:-0.95, phi:1.02, radius:2250},
-    top:   {theta:-Math.PI/2, phi:0.07, radius:1950},
+    iso:   {theta:-0.95, phi:1.02, radius:2600},
+    top:   {theta:-Math.PI/2, phi:0.07, radius:2200},
     front: {theta:-Math.PI/2, phi:Math.PI/2 - 0.02, radius:2200},
-    right: {theta:0.001, phi:Math.PI/2 - 0.02, radius:2200}
+    right: {theta:0.001, phi:Math.PI/2 - 0.02, radius:2500}
   };
   document.querySelectorAll("[data-view]").forEach(function(btn){
     btn.addEventListener("click", function(){
@@ -522,7 +548,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     readout(); draw();
   });
 
-  var toggles = {"t-deck":deckMesh, "t-frame":frameMesh, "t-bar":barMesh, "t-table":table, "t-travel":travel};
+  var toggles = {"t-encframe":encFrame, "t-encparts":encParts, "t-deck":deckMesh, "t-frame":frameMesh, "t-bar":barMesh, "t-table":table, "t-travel":travel};
   Object.keys(toggles).forEach(function(id){
     document.getElementById(id).addEventListener("change", function(e){
       toggles[id].visible = e.target.checked; draw();

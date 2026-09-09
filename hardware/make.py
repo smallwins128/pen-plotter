@@ -37,11 +37,13 @@ def _parts():
     import assembly
     import cross_bar
     import deck
+    import enclosure
     import frame
     import table
 
     return {
         "table": table,
+        "enclosure": enclosure,
         "deck": deck,
         "frame": frame,
         "cross_bar": cross_bar,

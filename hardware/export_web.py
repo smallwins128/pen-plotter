@@ -54,6 +54,7 @@ def _simplify(pts, tol=1e-4):
 def build_data():
     import cross_bar
     import deck as deck_mod
+    import enclosure as enc
     import frame
     import table as table_mod
     from profiles import section_moments, section_polylines
@@ -79,6 +80,8 @@ def build_data():
     bar_part = cross_bar.build()
     deck_part = deck_mod.build()
     table_part = table_mod.build()
+    enc_frame = enc.build_frame_positioned()
+    enc_parts = enc.build_components_positioned()
 
     sections = {}
     for label, (w, h) in {"2020": (20, 20), "2040": (20, 40)}.items():
@@ -97,6 +100,8 @@ def build_data():
             "deck": {"geom": _positions_b64(deck_part, "deck"), "moves": False},
             "frame": {"geom": _positions_b64(frame_part, "frame"), "moves": False},
             "cross_bar": {"geom": _positions_b64(bar_part, "cross_bar"), "moves": True},
+            "enc_frame": {"geom": _positions_b64(enc_frame, "enc_frame"), "moves": False},
+            "enc_parts": {"geom": _positions_b64(enc_parts, "enc_parts"), "moves": False},
         },
         "frame": {
             "outer_x": FRAME_OUTER_X,
@@ -134,6 +139,14 @@ def build_data():
             "y": table_mod.TABLE_Y,
             "t": table_mod.TABLE_T,
             "free": [round(v) for v in table_mod.free_zone()],
+        },
+        "enclosure": {
+            "x": enc.ENC_X, "y": enc.ENC_Y, "z": enc.ENC_Z,
+            "at": [round(enc.origin_x() - enc.ENC_X / 2), round(enc.origin_x() + enc.ENC_X / 2)],
+            "components": [
+                {"name": n, "size": list(sz), "note": note}
+                for n, sz, _, note in enc.COMPONENTS
+            ],
         },
         "cut_list": [
             {"qty": q, "len": l, "label": lb}

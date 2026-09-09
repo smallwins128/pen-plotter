@@ -16,19 +16,21 @@ from params import ALUMINIUM_DENSITY
 
 import cross_bar
 import deck
+import enclosure
 import frame
 import table
 
 
 def build():
-    parts = [table.build(), deck.build()] + list(frame.build().children) + [cross_bar.build()]
+    parts = [table.build(), deck.build()] + list(frame.build().children) + [cross_bar.build(), enclosure.build()]
     asm = Compound(children=parts)
     asm.label = "assembly"
     return asm
 
 
 def cut_list():
-    return deck.cut_list() + frame.cut_list() + cross_bar.cut_list()
+    return (deck.cut_list() + frame.cut_list() + cross_bar.cut_list()
+            + enclosure.cut_list())
 
 
 # The assembly is steel and aluminium together, so no single density applies --
