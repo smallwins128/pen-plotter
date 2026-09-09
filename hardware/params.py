@@ -93,14 +93,16 @@ CROSS_BAR_H = 20.0
 # Height of the underside of the cross bar above the top of the frame rails --
 # i.e. the gantry plate + wheel stack.
 #
-# TO CONFIRM: this is a placeholder. Measure the real stack once the gantry
-# plates are in hand; every Z dimension downstream of here depends on it.
-GANTRY_RISE = 6.0
+# APPROXIMATE: eyeballed at 1-2 cm, taken as the midpoint. Good enough to lay
+# the machine out; not good enough to drill against. Every Z dimension above
+# the frame scales with it, so re-measure before committing to any part whose
+# height has to be right (the pen carriage and pen tip most of all).
+GANTRY_RISE = 15.0
 
-# Length of a gantry plate along the direction of travel (X). Sets how much of
-# the 1000 mm rail is lost to the plate footprint.
-# TO CONFIRM: placeholder, measure the actual plate.
-GANTRY_PLATE_LEN = 80.0
+# Gantry plate footprint along the direction of travel (X). Sets how much of
+# the 1000 mm rail is lost to the plate. From the plate drawing: 65.5 mm square,
+# 3 mm thick, R3 corners, 12x 5.10 and 3x 7.20 holes.
+GANTRY_PLATE_LEN = 65.5
 
 # Where to park the bar when rendering. 0 = mid-travel.
 CROSS_BAR_X = 0.0
