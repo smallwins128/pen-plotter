@@ -9,7 +9,7 @@
   --paper:#e9edf1; --surface:#ffffff; --surface-2:#f3f6f8;
   --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a;
   --line:#ccd6de; --line-2:#dde4ea;
-  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --part:#7e8ea3; --accent:#c2622c; --accent-soft:#f0dccd;
+  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --pcb:#1b6b41; --abs:#eef0f2; --accent:#c2622c; --accent-soft:#f0dccd;
   --blue:#37718f; --blue-soft:#dde9ef;
   --stage-top:#dfe6ec; --stage-bot:#c8d3db;
   --shadow:0 1px 2px rgba(19,27,34,.06),0 8px 24px -12px rgba(19,27,34,.18);
@@ -19,7 +19,7 @@
     --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
     --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
     --line:#26333d; --line-2:#1e2a33;
-    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --part:#5d6b7d; --accent:#e08a52; --accent-soft:#3a2417;
+    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --accent:#e08a52; --accent-soft:#3a2417;
     --blue:#6aa8c6; --blue-soft:#162a35;
     --stage-top:#151f27; --stage-bot:#0a1015;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -29,7 +29,7 @@
   --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
   --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
   --line:#26333d; --line-2:#1e2a33;
-  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --part:#5d6b7d; --accent:#e08a52; --accent-soft:#3a2417;
+  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --accent:#e08a52; --accent-soft:#3a2417;
   --blue:#6aa8c6; --blue-soft:#162a35;
   --stage-top:#151f27; --stage-bot:#0a1015;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -204,7 +204,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
         <label class="toggle"><input type="checkbox" id="t-bar" checked><span class="sw" style="background:var(--accent)"></span>Cross bar &mdash; 2020</label>
         <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--wood)"></span>Table &mdash; 5 ft bench</label>
         <label class="toggle"><input type="checkbox" id="t-encframe" checked><span class="sw" style="background:var(--alu)"></span>Enclosure frame &mdash; 2020</label>
-        <label class="toggle"><input type="checkbox" id="t-encparts" checked><span class="sw" style="background:var(--part)"></span>Enclosure contents</label>
+        <label class="toggle"><input type="checkbox" id="t-encparts" checked><span class="sw" style="background:var(--steel)"></span><span class="sw" style="background:var(--pcb);margin-left:-5px"></span><span class="sw" style="background:var(--abs);margin-left:-5px"></span>Enclosure contents</label>
         <label class="toggle"><input type="checkbox" id="t-travel" checked><span class="sw" style="background:var(--blue)"></span>Travel limits</label>
       </div>
 
@@ -242,7 +242,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   <div class="panel deck-panel">
     <h2>Enclosure contents &mdash; stand-in blocks, real sizes</h2>
     <table>
-      <thead><tr><th>Item</th><th class="num">Size</th><th>Note</th></tr></thead>
+      <thead><tr><th>Item</th><th class="num">Size</th><th>Shown as</th><th>Note</th></tr></thead>
       <tbody id="enc-parts"></tbody>
     </table>
   </div>
@@ -315,11 +315,13 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   slider.min = -B.travel_half; slider.max = B.travel_half;
 
   document.getElementById("enc-parts").innerHTML = D.enclosure.components.map(function(c){
+    var sw = '<span class="sw" style="display:inline-block;vertical-align:-1px;margin-right:6px;'+
+             'background:var(--'+c.material+')"></span>';
     return '<tr><td>'+c.name.replace(/_/g," ")+'</td><td class="num">'+c.size.join(" x ")+
-           ' mm</td><td>'+c.note+'</td></tr>';
+           ' mm</td><td>'+sw+c.material+'</td><td>'+c.note+'</td></tr>';
   }).join("") +
   '<tr class="total"><td>Enclosure</td><td class="num">'+D.enclosure.x+' x '+D.enclosure.y+
-  ' x '+D.enclosure.z+' mm</td><td>2020 frame, no covers modelled yet</td></tr>';
+  ' x '+D.enclosure.z+' mm</td><td></td><td>2020 frame, no covers modelled yet</td></tr>';
 
   var K = D.deck;
   document.getElementById("deck-rows").innerHTML = [
@@ -424,11 +426,21 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   scene.add(table);
 
   var matEnc  = new THREE.MeshStandardMaterial({roughness:.55, metalness:.35, flatShading:true});
-  var matPart = new THREE.MeshStandardMaterial({roughness:.7, metalness:.1, flatShading:true,
-                                                transparent:true, opacity:.9});
   var encFrame = new THREE.Mesh(geomFrom(D.parts.enc_frame.geom.b64), matEnc);
-  var encParts = new THREE.Mesh(geomFrom(D.parts.enc_parts.geom.b64), matPart);
-  scene.add(encFrame, encParts);
+  scene.add(encFrame);
+
+  // One mesh per material, grouped so a single toggle still covers them all.
+  var partMats = {
+    steel: new THREE.MeshStandardMaterial({roughness:.4, metalness:.55, flatShading:true}),
+    pcb:   new THREE.MeshStandardMaterial({roughness:.65, metalness:.05, flatShading:true}),
+    abs:   new THREE.MeshStandardMaterial({roughness:.8, metalness:.0,  flatShading:true})
+  };
+  var encParts = new THREE.Group();
+  D.enclosure.materials.forEach(function(m){
+    var slot = D.parts["enc_" + m];
+    if (slot) encParts.add(new THREE.Mesh(geomFrom(slot.geom.b64), partMats[m]));
+  });
+  scene.add(encParts);
 
   var lineMat  = new THREE.LineBasicMaterial({});
   var lineMat2 = new THREE.LineDashedMaterial({dashSize:14, gapSize:9});
@@ -458,7 +470,9 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     matDeck.color  = new THREE.Color(css("--steel"));
     matTable.color = new THREE.Color(css("--wood"));
     matEnc.color   = new THREE.Color(css("--alu"));
-    matPart.color  = new THREE.Color(css("--part"));
+    partMats.steel.color = new THREE.Color(css("--steel"));
+    partMats.pcb.color   = new THREE.Color(css("--pcb"));
+    partMats.abs.color   = new THREE.Color(css("--abs"));
     matBar.color   = new THREE.Color(css("--accent"));
     lineMat.color  = new THREE.Color(css("--blue"));
     lineMat2.color = new THREE.Color(css("--blue"));

@@ -31,17 +31,21 @@ from params import (
 )
 from profiles import tslot_bar
 
-# name, (w, d, h), (x, y) centre in enclosure-local coords, zone
+# name, (w, d, h), (x, y) centre, material, note
 # Local origin is the centre of the enclosure footprint; z is measured from
-# ENC_FLOOR_Z upwards.
+# ENC_FLOOR_Z upwards. `material` only drives the viewer's colouring -- the
+# blocks are stand-ins, so it is there to make the box readable at a glance
+# rather than to describe the part.
+MATERIALS = ("steel", "pcb", "abs")
+
 COMPONENTS = [
-    ("psu_24v_main",  (215, 115, 30), (-80,   75), "the Ender 3 supply, LRS-350-24 class"),
-    ("psu_24v_servo", ( 51,  78, 28), ( 80,   95), "RS-25-24, feeds the buck only"),
-    ("uno_cnc_shield", (110,  85, 45), (-140, -80), "Uno + CNC Shield V3 + 3x A4988"),
-    ("lm2596_buck",   ( 65,  45, 25), (-50, -105), "servo 6.0 V -- keep, do not run servo off 5 V"),
-    ("rail_12way_a",  (150,  45, 30), ( 90,  -40), "12-port lever rail"),
-    ("rail_12way_b",  (150,  45, 30), ( 90,  -95), "12-port lever rail"),
-    ("iec_and_split", ( 90,  60, 40), (155,   30), "panel-mount IEC inlet + mains splitters"),
+    ("psu_24v_main",   (215, 115, 30), (-80,   75), "steel", "the Ender 3 supply, LRS-350-24 class"),
+    ("psu_24v_servo",  ( 51,  78, 28), ( 80,   95), "steel", "RS-25-24, feeds the buck only"),
+    ("uno_cnc_shield", (110,  85, 45), (-140, -80), "pcb",   "Uno + CNC Shield V3 + 3x A4988"),
+    ("lm2596_buck",    ( 65,  45, 25), (-50, -105), "pcb",   "servo 6.0 V -- keep, do not run servo off 5 V"),
+    ("rail_12way_a",   (150,  45, 30), ( 90,  -40), "abs",   "12-port lever rail"),
+    ("rail_12way_b",   (150,  45, 30), ( 90,  -95), "abs",   "12-port lever rail"),
+    ("iec_and_split",  ( 90,  60, 40), (155,   30), "abs",   "panel-mount IEC inlet + mains splitters"),
 ]
 
 
@@ -64,12 +68,12 @@ def check_layout():
     hx, hy = _inner()
     problems = []
 
-    for name, (w, d, _), (x, y), _ in COMPONENTS:
+    for name, (w, d, _), (x, y), _, _ in COMPONENTS:
         if abs(x) + w / 2 > hx + 1e-9 or abs(y) + d / 2 > hy + 1e-9:
             problems.append(f"{name} pokes outside the frame")
 
-    for i, (n1, (w1, d1, _), (x1, y1), _) in enumerate(COMPONENTS):
-        for n2, (w2, d2, _), (x2, y2), _ in COMPONENTS[i + 1:]:
+    for i, (n1, (w1, d1, _), (x1, y1), _, _) in enumerate(COMPONENTS):
+        for n2, (w2, d2, _), (x2, y2), _, _ in COMPONENTS[i + 1:]:
             if (abs(x1 - x2) < (w1 + w2) / 2 - 1e-9
                     and abs(y1 - y2) < (d1 + d2) / 2 - 1e-9):
                 problems.append(f"{n1} overlaps {n2}")
@@ -106,9 +110,12 @@ def build_frame():
     return out
 
 
-def build_components():
+def build_components(material=None):
+    """Component blocks, optionally just those of one material."""
     blocks = []
-    for name, (w, d, h), (x, y), _ in COMPONENTS:
+    for name, (w, d, h), (x, y), mat, _ in COMPONENTS:
+        if material is not None and mat != material:
+            continue
         b = Pos(x, y, ENC_FLOOR_Z + h / 2) * Box(w, d, h)
         b.label = name
         blocks.append(b)
@@ -134,7 +141,7 @@ def cut_list():
 
 def report():
     hx, hy = _inner()
-    used = sum(w * d for _, (w, d, _), _, _ in COMPONENTS)
+    used = sum(w * d for _, (w, d, _), _, _, _ in COMPONENTS)
     lines = [
         f"enclosure        {ENC_X:.0f} x {ENC_Y:.0f} x {ENC_Z:.0f} mm outer",
         f"usable floor     {2*hx:.0f} x {2*hy:.0f} mm",
@@ -143,8 +150,8 @@ def report():
         "",
         "contents:",
     ]
-    for name, (w, d, h), (x, y), note in COMPONENTS:
-        lines.append(f"  {name:16s} {w:3.0f} x {d:3.0f} x {h:3.0f}  at ({x:+4.0f}, {y:+4.0f})  {note}")
+    for name, (w, d, h), (x, y), mat, note in COMPONENTS:
+        lines.append(f"  {name:16s} {w:3.0f} x {d:3.0f} x {h:3.0f}  at ({x:+4.0f}, {y:+4.0f})  {mat:5s}  {note}")
     return lines
 
 
@@ -161,9 +168,12 @@ def build_frame_positioned():
     return Pos(origin_x(), 0, 0) * c
 
 
-def build_components_positioned():
-    """Just the component blocks, in machine coordinates."""
+def build_components_positioned(material=None):
+    """Component blocks in machine coordinates, optionally one material only."""
     check_layout()
-    c = Compound(children=build_components())
-    c.label = "enclosure_components"
+    blocks = build_components(material)
+    if not blocks:
+        return None
+    c = Compound(children=blocks)
+    c.label = f"enclosure_{material or 'components'}"
     return Pos(origin_x(), 0, 0) * c
