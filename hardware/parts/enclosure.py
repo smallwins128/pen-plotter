@@ -26,6 +26,7 @@ from params import (
     ENC_LONG,
     ENC_PROFILE,
     ENC_SHORT,
+    ENC_UPRIGHT,
     ENC_X,
     ENC_Y,
     ENC_Z,
@@ -94,7 +95,6 @@ def build_frame():
     machine's end. The short rails fit between them along X.
     """
     p = ENC_PROFILE
-    post_len = ENC_Z - 2 * p
 
     x_off = ENC_X / 2 - p / 2
     y_off = ENC_Y / 2 - p / 2
@@ -108,7 +108,7 @@ def build_frame():
 
     for x in (-x_off, x_off):
         for y in (-y_off, y_off):
-            bars.append(("post", Pos(x, y, ENC_Z / 2) * tslot_bar(post_len, p, p, axis="Z")))
+            bars.append(("post", Pos(x, y, ENC_Z / 2) * tslot_bar(ENC_UPRIGHT, p, p, axis="Z")))
 
     out = []
     for i, (kind, bar) in enumerate(bars):
@@ -143,7 +143,7 @@ def cut_list():
     return [
         (4, ENC_LONG, "enclosure long rail (along Y)", profile),
         (4, ENC_SHORT, "enclosure short rail (along X)", profile),
-        (4, ENC_Z - 2 * p, "enclosure upright", profile),
+        (4, ENC_UPRIGHT, "enclosure upright", profile),
     ]
 
 

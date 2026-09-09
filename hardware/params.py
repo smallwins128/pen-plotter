@@ -140,14 +140,15 @@ CROSS_BAR_X = 0.0
 # comes out as (ENC_SHORT + 2 x profile) x ENC_LONG.
 ENC_LONG = 500.0          # 4 off, run along Y
 ENC_SHORT = 300.0         # 4 off, fit between them along X
+ENC_UPRIGHT = 200.0       # 4 off, vertical between the two rectangles
 ENC_PROFILE = 20.0        # 2020 throughout
 
+# All three numbers above are what you cut. The envelope falls out of them: the
+# long rails run full length, the short ones fit between, and the uprights
+# stand between the bottom and top rectangles.
 ENC_X = ENC_SHORT + 2 * ENC_PROFILE
 ENC_Y = ENC_LONG
-
-# BLOCKED: 20 mm uprights would give a 60 mm tall box and the Uno + shield is
-# 45 mm before any wire above it. Held at the previous 200 until confirmed.
-ENC_Z = 200.0
+ENC_Z = ENC_UPRIGHT + 2 * ENC_PROFILE
 
 # Gap between the machine's right-hand rail and the enclosure's left face.
 # They bolt together across this with plates, which are not modelled yet.
