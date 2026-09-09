@@ -23,7 +23,9 @@ from build123d import Box, Compound, Pos
 from params import (
     ENC_FLOOR_Z,
     ENC_GAP,
+    ENC_LONG,
     ENC_PROFILE,
+    ENC_SHORT,
     ENC_X,
     ENC_Y,
     ENC_Z,
@@ -38,14 +40,17 @@ from profiles import tslot_bar
 # rather than to describe the part.
 MATERIALS = ("steel", "pcb", "abs")
 
+# Sizes are as the block sits, so a part turned to suit the box has its width
+# and depth already swapped here. Signal lives on the -X side (nearest the
+# machine, where the drag chains arrive), mains on +X.
 COMPONENTS = [
-    ("psu_24v_main",   (215, 115, 30), (-80,   75), "steel", "the Ender 3 supply, LRS-350-24 class"),
-    ("psu_24v_servo",  ( 51,  78, 28), ( 80,   95), "steel", "RS-25-24, feeds the buck only"),
-    ("uno_cnc_shield", (110,  85, 45), (-140, -80), "pcb",   "Uno + CNC Shield V3 + 3x A4988"),
-    ("lm2596_buck",    ( 65,  45, 25), (-50, -105), "pcb",   "servo 6.0 V -- keep, do not run servo off 5 V"),
-    ("rail_12way_a",   (150,  45, 30), ( 90,  -40), "abs",   "12-port lever rail"),
-    ("rail_12way_b",   (150,  45, 30), ( 90,  -95), "abs",   "12-port lever rail"),
-    ("iec_and_split",  ( 90,  60, 40), (155,   30), "abs",   "panel-mount IEC inlet + mains splitters"),
+    ("uno_cnc_shield", ( 85, 110, 45), ( -95, -140), "pcb",   "Uno + CNC Shield V3 + 3x A4988"),
+    ("lm2596_buck",    ( 45,  65, 25), (-115,  -20), "pcb",   "servo 6.0 V -- keep, do not run servo off 5 V"),
+    ("rail_12way_a",   ( 45, 150, 30), (-120,  130), "abs",   "12-port lever rail"),
+    ("rail_12way_b",   ( 45, 150, 30), ( -60,  130), "abs",   "12-port lever rail"),
+    ("psu_24v_main",   (115, 215, 30), (  80, -110), "steel", "the Ender 3 supply, LRS-350-24 class"),
+    ("psu_24v_servo",  ( 78,  51, 28), (  95,   50), "steel", "RS-25-24, feeds the buck only"),
+    ("iec_and_split",  ( 60,  90, 40), ( 105,  160), "abs",   "panel-mount IEC inlet + mains splitters"),
 ]
 
 
@@ -83,10 +88,12 @@ def check_layout():
 
 
 def build_frame():
-    """The twelve lengths of 2020: a bottom rectangle, a top one, four uprights."""
+    """The twelve lengths of 2020: a bottom rectangle, a top one, four uprights.
+
+    The long rails run along Y, full length, so they sit parallel to the
+    machine's end. The short rails fit between them along X.
+    """
     p = ENC_PROFILE
-    long_len = ENC_X
-    short_len = ENC_Y - 2 * p
     post_len = ENC_Z - 2 * p
 
     x_off = ENC_X / 2 - p / 2
@@ -94,10 +101,10 @@ def build_frame():
 
     bars = []
     for z in (p / 2, ENC_Z - p / 2):
-        for y in (-y_off, y_off):
-            bars.append(("rail_x", Pos(0, y, z) * tslot_bar(long_len, p, p, axis="X")))
         for x in (-x_off, x_off):
-            bars.append(("rail_y", Pos(x, 0, z) * tslot_bar(short_len, p, p, axis="Y")))
+            bars.append(("rail_long", Pos(x, 0, z) * tslot_bar(ENC_LONG, p, p, axis="Y")))
+        for y in (-y_off, y_off):
+            bars.append(("rail_short", Pos(0, y, z) * tslot_bar(ENC_SHORT, p, p, axis="X")))
 
     for x in (-x_off, x_off):
         for y in (-y_off, y_off):
@@ -134,8 +141,8 @@ def cut_list():
     p = ENC_PROFILE
     profile = f"{p:g}x{p:g}"
     return [
-        (4, ENC_X, "enclosure long rail", profile),
-        (4, ENC_Y - 2 * p, "enclosure short rail", profile),
+        (4, ENC_LONG, "enclosure long rail (along Y)", profile),
+        (4, ENC_SHORT, "enclosure short rail (along X)", profile),
         (4, ENC_Z - 2 * p, "enclosure upright", profile),
     ]
 

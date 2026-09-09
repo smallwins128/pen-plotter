@@ -52,6 +52,7 @@ def _simplify(pts, tol=1e-4):
 
 
 def build_data():
+    import assembly
     import cross_bar
     import deck as deck_mod
     import enclosure as enc
@@ -152,9 +153,12 @@ def build_data():
                 for n, sz, _, mat, note in enc.COMPONENTS
             ],
         },
+        # The assembly's list covers every part, so the viewer no longer shows a
+        # partial one when a new part is added.
         "cut_list": [
-            {"qty": q, "len": l, "label": lb}
-            for q, l, lb in (frame.cut_list() + cross_bar.cut_list())
+            {"qty": r[0], "len": r[1], "label": r[2],
+             "profile": r[3] if len(r) > 3 else ""}
+            for r in assembly.cut_list()
         ],
         "sections": sections,
     }

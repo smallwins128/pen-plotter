@@ -132,10 +132,22 @@ CROSS_BAR_X = 0.0
 # Stainless covers are not modelled yet. Neither is any wiring. Contents are
 # stand-in blocks at their real outside dimensions, so the volumes and the
 # clearances between them are honest even though the parts are not detailed.
-ENC_X = 450.0
-ENC_Y = 320.0
-ENC_Z = 200.0
+# Turned 90 degrees from the first pass: the long rails now run along Y, so
+# they sit parallel to the machine's end rather than across it.
+#
+# The two numbers below are CUT LENGTHS, not the outer envelope. The long rails
+# run full length and the short ones fit between them, so the outer footprint
+# comes out as (ENC_SHORT + 2 x profile) x ENC_LONG.
+ENC_LONG = 500.0          # 4 off, run along Y
+ENC_SHORT = 300.0         # 4 off, fit between them along X
 ENC_PROFILE = 20.0        # 2020 throughout
+
+ENC_X = ENC_SHORT + 2 * ENC_PROFILE
+ENC_Y = ENC_LONG
+
+# BLOCKED: 20 mm uprights would give a 60 mm tall box and the Uno + shield is
+# 45 mm before any wire above it. Held at the previous 200 until confirmed.
+ENC_Z = 200.0
 
 # Gap between the machine's right-hand rail and the enclosure's left face.
 # They bolt together across this with plates, which are not modelled yet.

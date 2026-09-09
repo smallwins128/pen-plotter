@@ -223,7 +223,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     <div class="panel">
       <h2>Cut list</h2>
       <table>
-        <thead><tr><th>Part</th><th class="num">Qty</th><th class="num">Length</th></tr></thead>
+        <thead><tr><th>Part</th><th>Stock</th><th class="num">Qty</th><th class="num">Length</th></tr></thead>
         <tbody id="cuts"></tbody>
       </table>
     </div>
@@ -294,10 +294,11 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
 
   var total = 0;
   document.getElementById("cuts").innerHTML = D.cut_list.map(function(r){
-    total += r.qty * r.len;
-    return '<tr><td>'+r.label+'</td><td class="num">'+r.qty+'</td><td class="num">'+mm(r.len)+' mm</td></tr>';
+    if (r.profile) total += r.qty * r.len;
+    return '<tr><td>'+r.label+'</td><td>'+(r.profile||'&mdash;')+'</td><td class="num">'+r.qty+
+             '</td><td class="num">'+mm(r.len)+' mm</td></tr>';
   }).join("") +
-  '<tr class="total"><td>Stock total</td><td class="num"></td><td class="num">'+(total/1000).toFixed(2)+' m</td></tr>';
+  '<tr class="total"><td>Linear stock</td><td></td><td class="num"></td><td class="num">'+(total/1000).toFixed(2)+' m</td></tr>';
 
   document.getElementById("sag").innerHTML = [
     ["Supported span", mm(B.span)+" mm"],
