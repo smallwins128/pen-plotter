@@ -58,6 +58,21 @@ FRAME_JOINT = "butt"
 FRAME_LONG_RAILS_ALONG_X = True
 
 # ---------------------------------------------------------------------------
+# Table (the bench the whole machine stands on)
+# ---------------------------------------------------------------------------
+
+# 5 ft along its length. The depth is taken as a round 600 mm to match the
+# machine; a true 2 ft is 609.6 mm, which would leave ~5 mm each side.
+TABLE_X = 1524.0
+TABLE_Y = 600.0
+TABLE_T = 18.0
+
+# The machine sits hard against the left end, leaving the rest of the top clear
+# for the electronics. Only the top is modelled -- legs are not, since nothing
+# is mounted to them.
+TABLE_MACHINE_AT_LEFT = True
+
+# ---------------------------------------------------------------------------
 # Base deck (the sheet the paper sits on)
 # ---------------------------------------------------------------------------
 

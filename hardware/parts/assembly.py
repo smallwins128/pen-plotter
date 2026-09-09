@@ -17,10 +17,11 @@ from params import ALUMINIUM_DENSITY
 import cross_bar
 import deck
 import frame
+import table
 
 
 def build():
-    parts = [deck.build()] + list(frame.build().children) + [cross_bar.build()]
+    parts = [table.build(), deck.build()] + list(frame.build().children) + [cross_bar.build()]
     asm = Compound(children=parts)
     asm.label = "assembly"
     return asm

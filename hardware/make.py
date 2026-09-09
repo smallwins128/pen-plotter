@@ -38,8 +38,10 @@ def _parts():
     import cross_bar
     import deck
     import frame
+    import table
 
     return {
+        "table": table,
         "deck": deck,
         "frame": frame,
         "cross_bar": cross_bar,

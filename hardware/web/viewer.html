@@ -9,7 +9,7 @@
   --paper:#e9edf1; --surface:#ffffff; --surface-2:#f3f6f8;
   --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a;
   --line:#ccd6de; --line-2:#dde4ea;
-  --alu:#8f9daa; --steel:#b6c0c8; --accent:#c2622c; --accent-soft:#f0dccd;
+  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --accent:#c2622c; --accent-soft:#f0dccd;
   --blue:#37718f; --blue-soft:#dde9ef;
   --stage-top:#dfe6ec; --stage-bot:#c8d3db;
   --shadow:0 1px 2px rgba(19,27,34,.06),0 8px 24px -12px rgba(19,27,34,.18);
@@ -19,7 +19,7 @@
     --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
     --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
     --line:#26333d; --line-2:#1e2a33;
-    --alu:#98a6b3; --steel:#7c8994; --accent:#e08a52; --accent-soft:#3a2417;
+    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --accent:#e08a52; --accent-soft:#3a2417;
     --blue:#6aa8c6; --blue-soft:#162a35;
     --stage-top:#151f27; --stage-bot:#0a1015;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -29,7 +29,7 @@
   --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
   --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
   --line:#26333d; --line-2:#1e2a33;
-  --alu:#98a6b3; --steel:#7c8994; --accent:#e08a52; --accent-soft:#3a2417;
+  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --accent:#e08a52; --accent-soft:#3a2417;
   --blue:#6aa8c6; --blue-soft:#162a35;
   --stage-top:#151f27; --stage-bot:#0a1015;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -202,7 +202,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
         <label class="toggle"><input type="checkbox" id="t-deck" checked><span class="sw" style="background:var(--steel)"></span>Base deck &mdash; steel sheet</label>
         <label class="toggle"><input type="checkbox" id="t-frame" checked><span class="sw" style="background:var(--alu)"></span>Frame &mdash; 2040</label>
         <label class="toggle"><input type="checkbox" id="t-bar" checked><span class="sw" style="background:var(--accent)"></span>Cross bar &mdash; 2020</label>
-        <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--blue)"></span>Tabletop outline</label>
+        <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--wood)"></span>Table &mdash; 5 ft bench</label>
         <label class="toggle"><input type="checkbox" id="t-travel" checked><span class="sw" style="background:var(--blue)"></span>Travel limits</label>
       </div>
 
@@ -276,7 +276,8 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     ["Frame", F.outer_x + " x " + F.outer_y + " mm"],
     ["Cross bar", B.len + " mm " + B.profile],
     ["X travel", mm(B.travel) + " mm"],
-    ["Drawable", F.opening_x + " x " + F.opening_y + " mm"]
+    ["Drawable", F.opening_x + " x " + F.opening_y + " mm"],
+    ["Free for electronics", D.table.free[2] + " x " + D.table.free[3] + " mm"]
   ].map(function(c){
     return '<div class="chip"><span class="k">'+c[0]+'</span><span class="v">'+c[1]+'</span></div>';
   }).join("");
@@ -335,11 +336,11 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     F.opening_y + " mm sheet into the frame opening, where the rails retain it on all four sides.";
 
   document.getElementById("note-overhang").innerHTML =
-    "<b>The bar overhangs the table.</b> At " + B.len + " mm it reaches " +
-    mm((B.len - F.outer_y)/2) + " mm past each long edge of the " + F.outer_x + " x " + F.outer_y +
-    " mm LINNMON top, and " + mm(B.overhang) + " mm past each gantry plate. That buys no drawing width &mdash; " +
-    "the frame opening caps it at " + F.opening_y + " mm &mdash; so the overhang only earns its keep if the Y motor " +
-    "and idler mount on the ends.";
+    "<b>The bar overhangs on purpose.</b> At " + B.len + " mm it reaches " +
+    mm((B.len - D.table.y)/2) + " mm past each long edge of the " + D.table.x + " x " + D.table.y +
+    " mm bench, and " + mm(B.overhang) + " mm past each gantry plate. That is where the two X motors " +
+    "mount, so the overhang is carrying something rather than just sticking out. It buys no drawing " +
+    "width though &mdash; the frame opening caps that at " + F.opening_y + " mm.";
 
   document.getElementById("note-vslot").innerHTML =
     "<b>V-slot, not T-slot.</b> OpenBuilds gantry wheels run in a 45&deg; V groove. The section modelled here is " +
@@ -401,7 +402,10 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   var barMesh   = new THREE.Mesh(geomFrom(D.parts.cross_bar.geom.b64), matBar);
   scene.add(deckMesh, frameMesh, barMesh);
 
-  // Tabletop outline: the bar visibly runs past it.
+  var matTable = new THREE.MeshStandardMaterial({roughness:.85, metalness:.05, flatShading:true});
+  var table = new THREE.Mesh(geomFrom(D.parts.table.geom.b64), matTable);
+  scene.add(table);
+
   var lineMat  = new THREE.LineBasicMaterial({});
   var lineMat2 = new THREE.LineDashedMaterial({dashSize:14, gapSize:9});
   function rectAt(x0,x1,y0,y1,z,mat){
@@ -411,9 +415,6 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     ]);
     var l = new THREE.Line(g, mat); l.computeLineDistances(); return l;
   }
-  var table = rectAt(-F.outer_x/2, F.outer_x/2, -F.outer_y/2, F.outer_y/2, 0.4, lineMat);
-  scene.add(table);
-
   // Where the bar's centreline can reach.
   var travel = new THREE.Group();
   [-B.travel_half, B.travel_half].forEach(function(x){
@@ -431,6 +432,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   function applyTheme(){
     matFrame.color = new THREE.Color(css("--alu"));
     matDeck.color  = new THREE.Color(css("--steel"));
+    matTable.color = new THREE.Color(css("--wood"));
     matBar.color   = new THREE.Color(css("--accent"));
     lineMat.color  = new THREE.Color(css("--blue"));
     lineMat2.color = new THREE.Color(css("--blue"));
@@ -438,8 +440,8 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   }
 
   /* orbit: spherical about a target, Z up */
-  var target = new THREE.Vector3(0, 0, 30);
-  var cam = {theta:-0.95, phi:1.02, radius:1750};
+  var target = new THREE.Vector3((D.table.free[1] - F.outer_x / 2) / 2, 0, 30);
+  var cam = {theta:-0.95, phi:1.02, radius:2250};
   function place(){
     var sp = Math.sin(cam.phi);
     camera.position.set(
@@ -493,16 +495,16 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   }, {passive:false});
 
   var views = {
-    iso:   {theta:-0.95, phi:1.02, radius:1750},
-    top:   {theta:-Math.PI/2, phi:0.07, radius:1500},
-    front: {theta:-Math.PI/2, phi:Math.PI/2 - 0.02, radius:1700},
-    right: {theta:0.001, phi:Math.PI/2 - 0.02, radius:1700}
+    iso:   {theta:-0.95, phi:1.02, radius:2250},
+    top:   {theta:-Math.PI/2, phi:0.07, radius:1950},
+    front: {theta:-Math.PI/2, phi:Math.PI/2 - 0.02, radius:2200},
+    right: {theta:0.001, phi:Math.PI/2 - 0.02, radius:2200}
   };
   document.querySelectorAll("[data-view]").forEach(function(btn){
     btn.addEventListener("click", function(){
       var v = views[btn.dataset.view];
       cam.theta = v.theta; cam.phi = v.phi; cam.radius = v.radius;
-      target.set(0, 0, 30);
+      target.set((D.table.free[1] - F.outer_x / 2) / 2, 0, 30);
       draw();
     });
   });
