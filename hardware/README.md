@@ -19,6 +19,8 @@ python3 hardware/make.py frame      # just one
 python3 hardware/preview.py         # render PNGs to eyeball the result
 python3 hardware/profiles.py        # print + plot the frame cross-section
 python3 hardware/viewer.py          # build the interactive 3D viewer
+python3 hardware/stock.py           # what to buy, and how to cut it
+python3 hardware/stock.py 20x20     # just one profile
 ```
 
 `hardware/out/viewer.html` is a self-contained page — open it in a browser to
@@ -49,6 +51,7 @@ Each part exports:
 | **`make.py`** | Builds and exports everything. Add new parts to `_parts()`. |
 | **`preview.py`** | PNG renders. Sanity check, not a beauty shot. |
 | **`viewer.py`** + **`web/`** | The interactive 3D viewer. `export_web.py` packs the geometry. |
+| **`stock.py`** | Groups every cut list by profile and packs the pieces onto stock bars, kerf included. |
 
 ## Conventions
 

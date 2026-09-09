@@ -46,9 +46,10 @@ def rail_lengths():
 def cut_list():
     """What to actually cut, as (quantity, length_mm, label) rows."""
     x_len, y_len = rail_lengths()
+    profile = f"{PROFILE_W:g}x{PROFILE_H:g}"
     return [
-        (2, x_len, "front / back rail (runs along X)"),
-        (2, y_len, "left / right rail (runs along Y)"),
+        (2, x_len, "front / back rail (runs along X)", profile),
+        (2, y_len, "left / right rail (runs along Y)", profile),
     ]
 
 

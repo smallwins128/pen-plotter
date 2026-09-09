@@ -121,7 +121,8 @@ def build():
 
 
 def cut_list():
-    return [(1, DECK_X, f"base deck, {DECK_T:g} mm steel sheet ({DECK_X:g} x {DECK_Y:g})")]
+    return [(1, DECK_X, f"base deck, {DECK_T:g} mm steel sheet ({DECK_X:g} x {DECK_Y:g})",
+             "sheet")]
 
 
 def mass():

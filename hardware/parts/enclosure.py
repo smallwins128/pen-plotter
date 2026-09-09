@@ -132,10 +132,11 @@ def build():
 
 def cut_list():
     p = ENC_PROFILE
+    profile = f"{p:g}x{p:g}"
     return [
-        (4, ENC_X, f"enclosure long rail ({p:g}x{p:g})"),
-        (4, ENC_Y - 2 * p, f"enclosure short rail ({p:g}x{p:g})"),
-        (4, ENC_Z - 2 * p, f"enclosure upright ({p:g}x{p:g})"),
+        (4, ENC_X, "enclosure long rail", profile),
+        (4, ENC_Y - 2 * p, "enclosure short rail", profile),
+        (4, ENC_Z - 2 * p, "enclosure upright", profile),
     ]
 
 

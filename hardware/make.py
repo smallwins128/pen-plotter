@@ -76,10 +76,13 @@ def build_part(name, module):
     if cut_list is not None:
         print("  cut list")
         total = 0.0
-        for qty, length, label in cut_list():
+        for row in cut_list():
+            qty, length, label = row[0], row[1], row[2]
+            profile = row[3] if len(row) > 3 else ""
             if linear:
                 total += qty * length
-            print(f"    {qty} x {length:7.1f} mm   {label}")
+            tag = f"  [{profile}]" if profile else ""
+            print(f"    {qty} x {length:7.1f} mm   {label}{tag}")
         if linear and total:
             print(f"    ------ {total:.0f} mm total ({total / 1000:.2f} m of stock)")
 

@@ -93,7 +93,8 @@ def build():
 
 
 def cut_list():
-    return [(1, CROSS_BAR_LEN, f"cross bar ({CROSS_BAR_W:g}x{CROSS_BAR_H:g}, spans Y)")]
+    return [(1, CROSS_BAR_LEN, "cross bar (spans Y)",
+             f"{CROSS_BAR_W:g}x{CROSS_BAR_H:g}")]
 
 
 def report():
