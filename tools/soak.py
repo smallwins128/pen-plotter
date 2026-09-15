@@ -138,13 +138,14 @@ def preflight(g, args):
     """Read the machine's own account of itself into the log, and refuse to run
     into a configuration that will just alarm instantly."""
     print("")
-    for q in ("$I", "$$"):
-        print("%s ->" % q)
-        for line in g.command(q):
-            print("   %s" % line)
+    print("$I ->")
+    for line in g.command("$I"):
+        print("   %s" % line)
 
+    print("$$ ->")
     settings = {}
     for line in g.command("$$"):
+        print("   %s" % line)
         m = re.match(r"\$(\d+)=([\d.]+)", line)
         if m:
             settings[int(m.group(1))] = float(m.group(2))
@@ -187,7 +188,10 @@ def main():
     ap.add_argument("--baud", type=int, default=BAUD)
     ap.add_argument("--list", action="store_true", help="list serial ports and exit")
     ap.add_argument("--mode", choices=["both", "motion", "servo"], default="both")
-    ap.add_argument("--dist", type=float, default=40.0, help="Y move, mm (default 40)")
+    ap.add_argument("--axis", choices=["X", "Y"], default="Y",
+                    help="which axis to move (default Y). Only this axis is ever "
+                         "commanded - if another one turns, that is a wiring fault.")
+    ap.add_argument("--dist", type=float, default=40.0, help="move distance, mm (default 40)")
     ap.add_argument("--up", type=int, default=PEN_UP)
     ap.add_argument("--down", type=int, default=PEN_DOWN)
     ap.add_argument("--dwell", type=float, default=0.30, help="pause after each pen command")
@@ -208,8 +212,8 @@ def main():
     stamp = time.strftime("%Y%m%d-%H%M%S")
     logname = "soak-%s-%s.log" % (args.mode, stamp)
     log = open(logname, "w", buffering=1)
-    log.write("soak.py %s  mode=%s dist=%s up=%s down=%s settle=%s softstart=%s\n\n"
-              % (stamp, args.mode, args.dist, args.up, args.down,
+    log.write("soak.py %s  mode=%s axis=%s dist=%s up=%s down=%s settle=%s softstart=%s\n\n"
+              % (stamp, args.mode, args.axis, args.dist, args.up, args.down,
                  not args.no_settle, not args.no_softstart))
 
     print("=" * 68)
@@ -217,9 +221,10 @@ def main():
     print("=" * 68)
     print("  No endstops needed: this never homes and moves RELATIVE only.")
     print("  Before you start:")
-    print("    - park the gantry near the MIDDLE of its Y travel by hand")
+    print("    - park the gantry near the MIDDLE of its %s travel by hand" % args.axis)
     print("    - keep a hand on the mains switch")
-    print("    - %.0f mm of Y clearance is needed in each direction" % args.dist)
+    print("    - %.0f mm of %s clearance is needed in each direction"
+          % (args.dist, args.axis))
     print("  Ctrl-C stops it and still prints the summary.")
     print("  Log: %s" % logname)
     print("=" * 68)
@@ -254,18 +259,18 @@ def main():
             log.write("\n--- cycle %d  t=%s ---\n" % (cycles + 1, hms(time.time() - t0)))
 
             if args.mode in ("both", "motion"):
-                g.command("G0 Y-%.3f" % args.dist)
+                g.command("G0 %s-%.3f" % (args.axis, args.dist))
                 if not args.no_settle:
-                    g.wait_idle(during="Y-%.3f" % args.dist)
+                    g.wait_idle(during="%s-%.3f" % (args.axis, args.dist))
 
             if args.mode in ("both", "servo"):
                 g.command("M3 S%d" % args.down)
                 g.command("G4 P%.2f" % args.dwell)
 
             if args.mode in ("both", "motion"):
-                g.command("G0 Y%.3f" % args.dist)
+                g.command("G0 %s%.3f" % (args.axis, args.dist))
                 if not args.no_settle:
-                    g.wait_idle(during="Y+%.3f" % args.dist)
+                    g.wait_idle(during="%s+%.3f" % (args.axis, args.dist))
 
             if args.mode in ("both", "servo"):
                 g.command("M3 S%d" % args.up)
@@ -306,8 +311,8 @@ def main():
         summary.append("  cycles done   : %d" % cycles)
     if cycles:
         summary.append("  per cycle     : %.1f s" % (elapsed / cycles))
-    summary.append("  mode          : %s   dist %.0f mm   S%d/%d"
-                   % (args.mode, args.dist, args.up, args.down))
+    summary.append("  mode          : %s   axis %s   dist %.0f mm   S%d/%d"
+                   % (args.mode, args.axis, args.dist, args.up, args.down))
     summary.append("")
     summary.append("  last 20 lines from the controller:")
     for line in g.rx_tail:
