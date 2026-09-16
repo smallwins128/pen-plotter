@@ -258,23 +258,22 @@ def main():
 
             log.write("\n--- cycle %d  t=%s ---\n" % (cycles + 1, hms(time.time() - t0)))
 
-            if args.mode in ("both", "motion"):
-                g.command("G0 %s-%.3f" % (args.axis, args.dist))
-                if not args.no_settle:
-                    g.wait_idle(during="%s-%.3f" % (args.axis, args.dist))
+            # Out and back. Each leg travels PEN UP, then puts the pen down and
+            # lifts it again once stopped - so the servo always actuates just
+            # after a move, which is the failure being hunted, and the pen is
+            # never dragged across the paper mid-travel.
+            for sign in (-1.0, 1.0):
+                if args.mode in ("both", "motion"):
+                    leg = "%s%.3f" % (args.axis, sign * args.dist)
+                    g.command("G0 " + leg)
+                    if not args.no_settle:
+                        g.wait_idle(during=leg)
 
-            if args.mode in ("both", "servo"):
-                g.command("M3 S%d" % args.down)
-                g.command("G4 P%.2f" % args.dwell)
-
-            if args.mode in ("both", "motion"):
-                g.command("G0 %s%.3f" % (args.axis, args.dist))
-                if not args.no_settle:
-                    g.wait_idle(during="%s+%.3f" % (args.axis, args.dist))
-
-            if args.mode in ("both", "servo"):
-                g.command("M3 S%d" % args.up)
-                g.command("G4 P%.2f" % args.dwell)
+                if args.mode in ("both", "servo"):
+                    g.command("M3 S%d" % args.down)
+                    g.command("G4 P%.2f" % args.dwell)
+                    g.command("M3 S%d" % args.up)
+                    g.command("G4 P%.2f" % args.dwell)
 
             cycles += 1
             print("  cycle %-5d  elapsed %-10s  (%.1f s/cycle)"
