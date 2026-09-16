@@ -101,7 +101,33 @@ class Grbl:
             if line.startswith("error"):
                 raise Died("ERROR", line, cmd)
             replies.append(line)
-        raise Died("TIMEOUT", "no reply within %.0fs" % timeout, cmd)
+        raise Died("TIMEOUT", "no reply within %.0fs%s" % (timeout, self._probe()), cmd)
+
+    def _probe(self):
+        """A timeout with no banner is ambiguous: the board may have reset and we
+        missed the banner, it may be alive with a lost 'ok', or it may be hung.
+        Poke it with ? and report which."""
+        seen = []
+        for _ in range(3):
+            try:
+                self._write("?")
+            except Exception as e:
+                return " | port is gone: %r" % e
+            end = time.time() + 1.0
+            while time.time() < end:
+                line = self._readline()
+                if line:
+                    seen.append(line)
+        if not seen:
+            return " | probed with ? three times: SILENT. Board is hung or dead, not reset."
+        for line in seen:
+            if line.startswith("Grbl ") and "for help" in line:
+                return " | probe found the boot banner: it DID reset, we just missed it."
+        for line in seen:
+            if line.startswith("<"):
+                return (" | probe got %s - board is ALIVE, so an 'ok' was lost: serial desync,"
+                        " not a reset." % line)
+        return " | probe returned: %s" % "; ".join(seen[:3])
 
     def status(self, timeout=3.0):
         self._write("?")
