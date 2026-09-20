@@ -44,6 +44,7 @@ Each part exports:
 |---|---|
 | **`params.py`** | Every shared dimension. Change a number here, not in a part. Values mirroring the root README's machine table are marked `[README]`. |
 | **`profiles.py`** | The 20-series T-slot extrusion. `tslot_bar(length, w, h, axis)` is the building block for anything made of extrusion. |
+| **`parts/case.py`** | The UN4020 electronics case, its contents, fans and panel connectors. |
 | **`parts/deck.py`** | The steel base sheet, plus the plate-deflection maths behind it. |
 | **`parts/frame.py`** | The outer 2040 frame. |
 | **`parts/cross_bar.py`** | The moving 2020 gantry beam, plus its span/travel/deflection maths. |
@@ -136,6 +137,23 @@ screw heads land between sheet and tabletop and the machine rocks on them. An
 M5 countersink wants ~2.5 mm of depth and a 1.5 mm sheet cannot give it. Either
 relieve the tabletop under each head, or drop an opening-sized sheet into the
 frame well instead and let the rails retain it.
+
+## The electronics case
+
+`parts/case.py` models a UN4020 hard carry case standing beside the machine.
+It replaced an extrusion box when the plan changed; that part is gone rather
+than left sitting around looking current.
+
+It runs **closed**, which is why the two 80 mm fans are not optional. Three
+TB6600 heatsinks hang fin-down in still air otherwise, and polypropylene
+conducts about a thousandth of what aluminium does, so the shell will not help
+them. Airflow needed is small — roughly 22–30 CFM of fan rating covers 50 W at
+a 10 °C rise once derated for grille and filter — so 24 V axials off the
+existing bus do the job and keep more mains out of the box.
+
+Contents are stand-in blocks at real outside sizes. Only the control board is a
+guess; everything else is measured. Not modelled: wiring, the sub-plate the lid
+parts want to mount to, the switches, and the shell's moulded detail.
 
 ## V-slot vs T-slot
 

@@ -55,7 +55,7 @@ def build_data():
     import assembly
     import cross_bar
     import deck as deck_mod
-    import enclosure as enc
+    import case as case_mod
     import frame
     import table as table_mod
     from profiles import section_moments, section_polylines
@@ -81,8 +81,9 @@ def build_data():
     bar_part = cross_bar.build()
     deck_part = deck_mod.build()
     table_part = table_mod.build()
-    enc_frame = enc.build_frame_positioned()
-    enc_by_mat = {m: enc.build_components_positioned(m) for m in enc.MATERIALS}
+    case_shell = case_mod.shell_positioned()
+    case_extra = {"fans": case_mod.fans_positioned(), "panel": case_mod.panel_positioned()}
+    case_by_mat = {m: case_mod.parts_positioned(m) for m in ("steel", "pcb", "abs")}
 
     sections = {}
     for label, (w, h) in {"2020": (20, 20), "2040": (20, 40)}.items():
@@ -101,11 +102,14 @@ def build_data():
             "deck": {"geom": _positions_b64(deck_part, "deck"), "moves": False},
             "frame": {"geom": _positions_b64(frame_part, "frame"), "moves": False},
             "cross_bar": {"geom": _positions_b64(bar_part, "cross_bar"), "moves": True},
-            "enc_frame": {"geom": _positions_b64(enc_frame, "enc_frame"), "moves": False},
+            "case_shell": {"geom": _positions_b64(case_shell, "case_shell"), "moves": False},
+        } | {
+            f"case_{k}": {"geom": _positions_b64(v, f"case_{k}"), "moves": False}
+            for k, v in case_extra.items() if v is not None
         } | {
             # One mesh per material so the viewer can colour them separately.
-            f"enc_{m}": {"geom": _positions_b64(part, f"enc_{m}"), "moves": False}
-            for m, part in enc_by_mat.items() if part is not None
+            f"case_{m}": {"geom": _positions_b64(part, f"case_{m}"), "moves": False}
+            for m, part in case_by_mat.items() if part is not None
         },
         "frame": {
             "outer_x": FRAME_OUTER_X,
@@ -144,14 +148,18 @@ def build_data():
             "t": table_mod.TABLE_T,
             "free": [round(v) for v in table_mod.free_zone()],
         },
-        "enclosure": {
-            "materials": list(enc.MATERIALS),
-            "x": enc.ENC_X, "y": enc.ENC_Y, "z": enc.ENC_Z,
-            "at": [round(enc.origin_x() - enc.ENC_X / 2), round(enc.origin_x() + enc.ENC_X / 2)],
-            "components": [
-                {"name": n, "size": list(sz), "material": mat, "note": note}
-                for n, sz, _, mat, note in enc.COMPONENTS
-            ],
+        "case": {
+            "materials": ["steel", "pcb", "abs"],
+            "ext": list(case_mod.CASE_EXT),
+            "int": list(case_mod.CASE_INT),
+            "at": [round(case_mod.origin_x() - case_mod.CASE_EXT[0] / 2),
+                   round(case_mod.origin_x() + case_mod.CASE_EXT[0] / 2)],
+            "base": [{"name": n, "size": list(sz), "material": mat, "note": note}
+                     for n, sz, _, mat, note in case_mod.BASE_PARTS],
+            "lid": [{"name": n, "size": list(sz), "material": mat, "note": note}
+                    for n, sz, _, mat, note in case_mod.LID_PARTS],
+            "panel": [{"name": n, "note": note} for n, _, _, note in case_mod.PANEL],
+            "fans": [{"name": n, "note": note} for n, _, note in case_mod.FANS],
         },
         # The assembly's list covers every part, so the viewer no longer shows a
         # partial one when a new part is added.

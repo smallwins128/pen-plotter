@@ -123,39 +123,29 @@ GANTRY_PLATE_LEN = 65.5
 CROSS_BAR_X = 0.0
 
 # ---------------------------------------------------------------------------
-# Electronics enclosure
+# Electronics case (UN4020 hard carry case)
 # ---------------------------------------------------------------------------
 
-# A separate extrusion box bolted alongside the machine (option B), not sharing
-# a rail with it -- so either can be moved without dismantling the other.
+# Replaces the extrusion box. A moulded polypropylene clamshell, sitting flat
+# on the bench beside the machine and running CLOSED, so it needs forced air.
 #
-# Stainless covers are not modelled yet. Neither is any wiring. Contents are
-# stand-in blocks at their real outside dimensions, so the volumes and the
-# clearances between them are honest even though the parts are not detailed.
-# Turned 90 degrees from the first pass: the long rails now run along Y, so
-# they sit parallel to the machine's end rather than across it.
-#
-# The two numbers below are CUT LENGTHS, not the outer envelope. The long rails
-# run full length and the short ones fit between them, so the outer footprint
-# comes out as (ENC_SHORT + 2 x profile) x ENC_LONG.
-ENC_LONG = 500.0          # 4 off, run along Y
-ENC_SHORT = 300.0         # 4 off, fit between them along X
-ENC_UPRIGHT = 200.0       # 4 off, vertical between the two rectangles
-ENC_PROFILE = 20.0        # 2020 throughout
+# The 352 external across the short axis includes the hinge and handle
+# mouldings; the cavity is only 277 there, which is why the wall looks thick on
+# that face and is not.
+CASE_EXT = (352.0, 413.0, 206.0)      # short axis, long axis, height
+CASE_INT = (277.0, 400.0, 198.0)
+CASE_BASE_DEPTH = 99.0
+CASE_LID_DEPTH = 99.0
+CASE_WALL_Z = (CASE_EXT[2] - CASE_INT[2]) / 2     # floor and ceiling thickness
 
-# All three numbers above are what you cut. The envelope falls out of them: the
-# long rails run full length, the short ones fit between, and the uprights
-# stand between the bottom and top rectangles.
-ENC_X = ENC_SHORT + 2 * ENC_PROFILE
-ENC_Y = ENC_LONG
-ENC_Z = ENC_UPRIGHT + 2 * ENC_PROFILE
+# Long axis runs along Y, parallel to the machine's end, as the extrusion box
+# did. Gap to the machine's right-hand rail.
+CASE_GAP = 10.0
 
-# Gap between the machine's right-hand rail and the enclosure's left face.
-# They bolt together across this with plates, which are not modelled yet.
-ENC_GAP = 10.0
-
-# Components sit on the top face of the bottom frame rails.
-ENC_FLOOR_Z = ENC_PROFILE
+# Two 80 mm 24 V axials in the base end walls: intake one end, exhaust the
+# other, so the path runs the length of the case and past the drivers.
+FAN_SIZE = 80.0
+FAN_THICK = 25.0
 
 # ---------------------------------------------------------------------------
 # Machine envelope (from the README, for parts still to come)

@@ -35,15 +35,15 @@ def _parts():
     "metres of stock" is meaningless.
     """
     import assembly
+    import case
     import cross_bar
     import deck
-    import enclosure
     import frame
     import table
 
     return {
         "table": table,
-        "enclosure": enclosure,
+        "case": case,
         "deck": deck,
         "frame": frame,
         "cross_bar": cross_bar,
