@@ -212,6 +212,17 @@ Three things it caught that eyeballing missed:
 - **A TB6600 has two terminal blocks.** Treating it as one point made every
   step/dir bundle look like it ran alongside its own motor phases.
 - **The hinge is an edge, not a point** — power can cross anywhere along it.
+- **A component is not a point either.** Three bundles all leaving the exact
+  centre of one edge is what made the harness look like spaghetti — they left
+  from the same place and overlapped for their whole first leg. Each attachment
+  now gets its own terminal, spread along the face that points at its
+  destination and ordered by where it's headed, so wires don't cross each other
+  the moment they leave a part.
+- **One run height is not a harness.** Every bundle shared a single Z, so
+  sixteen runs sat in the same plane and overlapped wherever their paths
+  agreed. The router has already proved nothing is in the way at any height
+  along a route, so the bay depth is free: bundles now spread through a 34 mm
+  band in lanes, sorted by kind, which is what you'd do with a real loom.
 - **Ports face what they're wired to.** Pointing every terminal at the lid's
   lane made base parts route out of their far side and back through their own
   neighbours.

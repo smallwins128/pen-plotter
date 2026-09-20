@@ -190,28 +190,69 @@ def _centre(name, boxes, points):
     return (b.x, b.y)
 
 
-def _endpoint(name, boxes, points, toward, other=None):
-    """Where a bundle leaves a component.
+def _face(box, other):
+    """Which face of a box points at `other`: ('x'|'y', +1|-1)."""
+    dx, dy = other[0] - box.x, other[1] - box.y
+    if abs(dx) / max(box.w, 1.0) >= abs(dy) / max(box.d, 1.0):
+        return ("x", 1 if dx >= 0 else -1)
+    return ("y", 1 if dy >= 0 else -1)
 
-    `toward` is the other end of the bundle, not a fixed lane: a part should
-    present its terminals to whatever it is wired to. Pointing everything at
-    the lid's lane made base parts route out of their far side and straight
-    back through their neighbours.
+
+def port_plan(boxes, points, nets):
+    """Give every bundle its own terminal, spread along the right face.
+
+    A component is not a point. Three bundles all leaving the exact centre of
+    one edge is what made the harness look like spaghetti -- they left from the
+    same place and overlapped for their whole first leg. Here each attachment
+    gets a distinct spot, and the spots are ordered by where their bundle is
+    headed, so wires do not cross each other the moment they leave the part.
     """
-    base, _, block = name.partition(":")
+    wanted = {}
+    for name, src, dst, _, _, _ in nets:
+        for end, other_end in ((src, dst), (dst, src)):
+            base = end.split(":")[0]
+            if base in points or base == "hinge" or base not in boxes:
+                continue
+            ob = boxes.get(other_end.split(":")[0])
+            target = points.get(other_end.split(":")[0]) or (
+                (ob.x, ob.y) if ob else (case.CASE_INT[0] / 2, boxes[base].y))
+            wanted.setdefault(base, []).append((name, end, target))
+
+    plan = {}
+    for base, attach in wanted.items():
+        box = boxes[base]
+        groups = {}
+        for net, end, target in attach:
+            groups.setdefault(_face(box, target), []).append((net, end, target))
+
+        for (axis, sign), members in groups.items():
+            along = 1 if axis == "x" else 0          # ports vary along the other axis
+            span = (box.d if axis == "x" else box.w) * 0.7
+            members.sort(key=lambda m: m[2][along])
+            n = len(members)
+            for i, (net, end, _) in enumerate(members):
+                off = 0.0 if n == 1 else (i / (n - 1) - 0.5) * span
+                # A named terminal block still biases which end it sits at.
+                block = end.partition(":")[2]
+                bias = (-1 if block == "sig" else 1 if block == "pwr" else 0)
+                off += bias * (box.d if axis == "x" else box.w) * 0.12
+                if axis == "x":
+                    plan[(base, net)] = (box.x + sign * box.w / 2, box.y + off)
+                else:
+                    plan[(base, net)] = (box.x + off, box.y + sign * box.d / 2)
+    return plan
+
+
+def _endpoint(name, net, boxes, points, plan, other=None):
+    """Where a bundle leaves a component: its own terminal, from the plan."""
+    base = name.split(":")[0]
     if base == "hinge":
         y = other[1] if other else 0.0
         limit = case.CASE_INT[1] / 2
         return (case.CASE_INT[0] / 2, max(-limit, min(limit, y)))
     if base in points:
         return points[base]
-    box = boxes[base]
-    offset = 0.0
-    if block == "sig":
-        offset = -box.d * TERMINAL_SPLIT
-    elif block == "pwr":
-        offset = box.d * TERMINAL_SPLIT
-    return box.port(toward, offset)
+    return plan.get((base, net), (boxes[base].x, boxes[base].y))
 
 
 DETOURS = (0.0, 25.0, -25.0, 50.0, -50.0, 80.0, -80.0)
@@ -266,16 +307,18 @@ def route(layout=None, panel_order=None):
     routed = []
 
     base_boxes, base_points = base_geometry()
+    plans = {"lid": port_plan(boxes, points, [n for n in NETS if n[5] == "lid"]),
+             "base": port_plan(base_boxes, base_points, [n for n in NETS if n[5] == "base"])}
 
     for name, src, dst, n, kind, bay in NETS:
         bx, pts = (boxes, points) if bay == "lid" else (base_boxes, base_points)
-        ca, cb = _centre(src, bx, pts), _centre(dst, bx, pts)
+        plan = plans[bay]
         if src == "hinge":
-            b = _endpoint(dst, bx, pts, toward=ca[0])
-            a = _endpoint(src, bx, pts, toward=cb[0], other=b)
+            b = _endpoint(dst, name, bx, pts, plan)
+            a = _endpoint(src, name, bx, pts, plan, other=b)
         else:
-            a = _endpoint(src, bx, pts, toward=cb[0])
-            b = _endpoint(dst, bx, pts, toward=ca[0], other=a)
+            a = _endpoint(src, name, bx, pts, plan)
+            b = _endpoint(dst, name, bx, pts, plan, other=a)
         own = {src.split(":")[0], dst.split(":")[0]}
 
         best = None
@@ -415,11 +458,38 @@ if __name__ == "__main__":
             print(" ", line)
 
 
-# Height the harness runs at in each bay: tucked near the shell, clear of the
-# components, dropping to a terminal only at its ends.
+# Where the harness runs vertically in each bay.
+#
+# Every bundle used to share one height, which is why the result looked like
+# spaghetti: sixteen runs stacked in the same plane, overlapping wherever their
+# paths agreed. The router has already proved nothing is in the way at any
+# height along a route, so the whole bay depth is free -- spread the bundles
+# through it in lanes instead, grouped by kind so power and signal separate.
 LID_RUN_Z = case.LID_CEILING - 14.0
 BASE_RUN_Z = case.CAVITY_Z0 + 12.0
 HINGE_Z = case.SPLIT_Z
+
+LANE_BAND = 34.0        # mm of bay depth the lanes are spread across
+KIND_ORDER = ("mains", "phase", "power", "pwm", "signal", "usb")
+
+
+def lane_heights():
+    """bundle name -> the height it runs at, by bay.
+
+    Sorted by kind so same-kind bundles end up adjacent: the mains sit together
+    at one end of the band and the signal lines at the other, which is both
+    tidier to look at and what you would actually do with a loom.
+    """
+    routed, _ = route()
+    out = {}
+    for bay, top in (("lid", LID_RUN_Z), ("base", BASE_RUN_Z + LANE_BAND)):
+        members = [r for r in routed if r["bay"] == bay]
+        members.sort(key=lambda r: (KIND_ORDER.index(r["kind"]), r["name"]))
+        n = max(len(members), 1)
+        step = LANE_BAND / n
+        for i, r in enumerate(members):
+            out[r["name"]] = top - i * step
+    return out
 
 
 def _terminal_z(name, bay):
@@ -453,12 +523,13 @@ def polylines_3d(layout=None, panel_order=None):
     nothing is in the way there -- with a vertical drop onto each terminal.
     """
     routed, _ = route(layout, panel_order)
+    lanes = lane_heights()
     out = []
 
     for r in routed:
         if not r["segs"]:
             continue
-        run_z = LID_RUN_Z if r["bay"] == "lid" else BASE_RUN_Z
+        run_z = lanes.get(r["name"], LID_RUN_Z if r["bay"] == "lid" else BASE_RUN_Z)
 
         flat = [r["segs"][0][0]] + [s[1] for s in r["segs"]]
         pts = [[flat[0][0], flat[0][1], _terminal_z(r["src"], r["bay"])]]
@@ -466,5 +537,7 @@ def polylines_3d(layout=None, panel_order=None):
         pts.append([flat[-1][0], flat[-1][1], _terminal_z(r["dst"], r["bay"])])
 
         out.append({"name": r["name"], "kind": r["kind"], "n": r["n"],
-                    "bay": r["bay"], "len": round(r["len"], 1), "pts": pts})
+                    "bay": r["bay"], "len": round(r["len"], 1),
+                    "src": r["src"].replace(":", " "), "dst": r["dst"].replace(":", " "),
+                    "z": round(run_z, 1), "pts": pts})
     return out

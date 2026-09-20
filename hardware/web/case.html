@@ -38,6 +38,13 @@
         <h2>Harness filter</h2>
         <div id="kind-toggles"></div>
       </div>
+
+      <div class="panel">
+        <h2>Bundles</h2>
+        <p class="hintline">Click one to isolate it.</p>
+        <div id="bundle-list"></div>
+        <button type="button" id="show-all">Show all</button>
+      </div>
     </div>
   </div>
 
@@ -76,6 +83,28 @@
     <span>Regenerate: <code>python3 hardware/viewer.py</code></span>
   </footer>
 </div>
+<style>
+.hintline{margin:0 0 8px; font-size:11.5px; color:var(--ink-3)}
+#bundle-list{display:flex; flex-direction:column; gap:1px; margin-bottom:9px;
+             max-height:290px; overflow-y:auto}
+.bundle{
+  display:grid; grid-template-columns:9px 1fr auto; align-items:center; gap:8px;
+  padding:4px 6px; border:0; border-radius:2px; background:none; cursor:pointer;
+  font-size:12.5px; text-align:left; color:var(--ink);
+}
+.bundle:hover{background:var(--surface-2)}
+.bundle[aria-pressed="true"]{background:var(--blue-soft); font-weight:600}
+.bundle .dot{width:9px; height:9px; border-radius:50%}
+.bundle .mm{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3);
+            font-variant-numeric:tabular-nums}
+#show-all{width:100%}
+.wire-detail{
+  display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin-top:9px;
+  padding-top:9px; border-top:1px solid var(--line); font-size:12px;
+}
+.wire-detail dt{color:var(--ink-3)}
+.wire-detail dd{margin:0; font-family:"IBM Plex Mono",monospace}
+</style>
 <!--SCRIPT-->
 (function(){
   "use strict";
@@ -134,6 +163,19 @@
            '<span class="sw" style="background:var(--w-'+k+')"></span>'+k+' ('+by[k].n+')</label>';
   }).join("");
 
+  document.getElementById("bundle-list").innerHTML = W.slice().sort(function(a, b){
+    return kinds.indexOf(a.kind) - kinds.indexOf(b.kind) || a.name.localeCompare(b.name);
+  }).map(function(w){
+    return '<button type="button" class="bundle" data-name="'+w.name+'" aria-pressed="false">'+
+           '<span class="dot" style="background:var(--w-'+w.kind+')"></span>'+
+           '<span>'+w.name.replace(/_/g," ")+'</span>'+
+           '<span class="mm">'+w.n+'w &middot; '+PV.mm(w.len)+'</span></button>';
+  }).join("");
+
+  var detail = document.createElement("dl");
+  detail.className = "wire-detail";
+  document.getElementById("bundle-list").after(detail);
+
   document.getElementById("note-lane").innerHTML =
     "<b>The lane is what makes the wiring short.</b> Drivers sit against the hinge so the heavy " +
     "24 V lands as soon as it crosses; the board faces the lane with its ports pointing into it; " +
@@ -144,6 +186,47 @@
     "still air, and polypropylene conducts about a thousandth of what aluminium does. Intake low " +
     "in the base at the cool end, exhaust in the lid at the driver end, so what leaves is the " +
     "hottest air in the box.";
+
+  // Isolating a bundle: the others fade rather than vanish, so you can still
+  // see where the one you are looking at sits among them.
+  var isolated = null;
+  var kindOn = {};
+  kinds.forEach(function(k){ kindOn[k] = true; });
+
+  function applyVisibility(){
+    if (!S) return;          // the list and its detail work without a scene
+    W.forEach(function(w){
+      var m = tubes[w.name];
+      m.visible = kindOn[w.kind];
+      m.material = (isolated && isolated !== w.name) ? ghostMat : wireMats[w.kind];
+    });
+    S.draw();
+  }
+
+  function select(name){
+    isolated = (isolated === name) ? null : name;
+    document.querySelectorAll(".bundle").forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.dataset.name === isolated));
+    });
+    var w = W.filter(function(x){ return x.name === isolated; })[0];
+    detail.innerHTML = w ? [
+      ["from", w.src], ["to", w.dst], ["kind", w.kind],
+      ["conductors", w.n], ["length", PV.mm(w.len) + " mm"],
+      ["bay", w.bay], ["runs at Z", PV.mm(w.z) + " mm"]
+    ].map(function(r){ return "<dt>"+r[0]+"</dt><dd>"+r[1]+"</dd>"; }).join("") : "";
+    applyVisibility();
+  }
+  document.querySelectorAll(".bundle").forEach(function(b){
+    b.addEventListener("click", function(){ select(b.dataset.name); });
+  });
+  document.getElementById("show-all").addEventListener("click", function(){
+    isolated = null;
+    document.querySelectorAll(".bundle").forEach(function(b){ b.setAttribute("aria-pressed","false"); });
+    document.querySelectorAll(".kind").forEach(function(cb){ cb.checked = true; kindOn[cb.dataset.kind] = true; });
+    detail.innerHTML = "";
+    applyVisibility();
+  });
+
 
   var S = PV.stage(document.getElementById("stage"),
                    {tz: C.ext[2]/2, radius: 900, theta: -0.95, phi: 1.02});
@@ -178,19 +261,23 @@
   });
   root.add(parts);
 
-  var wireMats = {}, wireGroups = {};
+  // One mesh per bundle, keyed by name, so a single run can be picked out.
+  var wireMats = {}, tubes = {};
+  var ghostMat = new THREE.MeshStandardMaterial({roughness:.8, metalness:0,
+                                                 transparent:true, opacity:.12});
   var harness = new THREE.Group();
   W.forEach(function(w){
     if (!wireMats[w.kind]) {
       wireMats[w.kind] = new THREE.MeshStandardMaterial({roughness:.5, metalness:.1});
-      wireGroups[w.kind] = new THREE.Group();
-      harness.add(wireGroups[w.kind]);
     }
     var pts = w.pts.map(function(p){ return new THREE.Vector3(p[0]+C.origin_x, p[1], p[2]); });
-    var curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.02);
-    wireGroups[w.kind].add(new THREE.Mesh(
-      new THREE.TubeGeometry(curve, pts.length * 8, 1.1 + 0.4 * Math.sqrt(w.n), 6, false),
-      wireMats[w.kind]));
+    var curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.01);
+    var m = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, pts.length * 10, 0.9 + 0.35 * Math.sqrt(w.n), 8, false),
+      wireMats[w.kind]);
+    m.name = w.name;
+    tubes[w.name] = m;
+    harness.add(m);
   });
   root.add(harness);
 
@@ -201,6 +288,7 @@
     partMats.pcb.color   = new THREE.Color(css("--pcb"));
     partMats.abs.color   = new THREE.Color(css("--abs"));
     kinds.forEach(function(k){ wireMats[k].color = new THREE.Color(css("--w-" + k)); });
+    ghostMat.color = new THREE.Color(css("--ink-3"));
   });
 
   S.views({iso:{theta:-0.95,phi:1.02,radius:900}, top:{theta:-Math.PI/2,phi:0.07,radius:760},
@@ -210,7 +298,7 @@
 
   document.querySelectorAll(".kind").forEach(function(cb){
     cb.addEventListener("change", function(){
-      wireGroups[cb.dataset.kind].visible = cb.checked; S.draw();
+      kindOn[cb.dataset.kind] = cb.checked; applyVisibility();
     });
   });
 
