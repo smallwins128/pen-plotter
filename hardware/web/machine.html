@@ -1,0 +1,223 @@
+<!--BODY-->
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1>Pen plotter &mdash; machine</h1>
+      <p>Frame, base deck and moving gantry on the bench. Drag to orbit, scroll to zoom, shift-drag to pan. The amber beam is the moving axis &mdash; drive it with the travel slider. The electronics case is a black box here; it has <a href="https://claude.ai/artifact/QBGDB6BF3KFNdK2vdznUtU">its own page</a>.</p>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <div class="stage-row">
+    <div class="stage" id="stage">
+      <div class="readout" id="readout"></div>
+      <div class="hint">drag orbit &middot; scroll zoom &middot; shift-drag pan</div>
+      <div class="fallback">The 3D library could not be loaded, so the model can&rsquo;t be drawn. Every dimension below is still exact.</div>
+    </div>
+
+    <div class="rail">
+      <div class="panel">
+        <h2>View</h2>
+        <div class="views">
+          <button type="button" data-view="iso">Isometric</button>
+          <button type="button" data-view="top">Top</button>
+          <button type="button" data-view="front">Front</button>
+          <button type="button" data-view="right">Right</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Show</h2>
+        <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--wood)"></span>Table &mdash; 5 ft bench</label>
+        <label class="toggle"><input type="checkbox" id="t-deck" checked><span class="sw" style="background:var(--steel)"></span>Base deck &mdash; steel sheet</label>
+        <label class="toggle"><input type="checkbox" id="t-frame" checked><span class="sw" style="background:var(--alu)"></span>Frame &mdash; 2040</label>
+        <label class="toggle"><input type="checkbox" id="t-bar" checked><span class="sw" style="background:var(--accent)"></span>Cross bar &mdash; 2020</label>
+        <label class="toggle"><input type="checkbox" id="t-case" checked><span class="sw" style="background:var(--shell)"></span>Electronics case</label>
+        <label class="toggle"><input type="checkbox" id="t-travel" checked><span class="sw" style="background:var(--blue)"></span>Travel limits</label>
+      </div>
+
+      <div class="panel">
+        <h2>X travel</h2>
+        <div class="slider-head"><span>Bar position</span><span class="val" id="xval">0 mm</span></div>
+        <input type="range" id="xpos" min="-460" max="460" value="0" step="1">
+        <div class="ends"><span id="xmin"></span><span>centre</span><span id="xmax"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h2>Cut list</h2>
+      <table>
+        <thead><tr><th>Part</th><th>Stock</th><th class="num">Qty</th><th class="num">Length</th></tr></thead>
+        <tbody id="cuts"></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>Cross bar section &mdash; 2020</h2>
+      <div class="sect" id="sect2020"></div>
+    </div>
+    <div class="panel">
+      <h2>Gantry beam &mdash; will it sag?</h2>
+      <div class="rows" id="sag"></div>
+    </div>
+  </div>
+
+  <div class="panel deck-panel">
+    <h2>Base deck &mdash; why it must sit on the tabletop</h2>
+    <div class="deck-grid">
+      <div class="rows" id="deck-rows"></div>
+      <div><table>
+        <thead><tr><th>If it spanned the opening</th><th class="num">Sag, own weight</th></tr></thead>
+        <tbody id="deck-sag"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="note" id="note-deck"></div>
+  <div class="note" id="note-overhang"></div>
+  <div class="note" id="note-vslot"></div>
+
+  <footer>
+    <span>Datum: origin at frame centre, Z&nbsp;=&nbsp;0 at the tabletop. +X right, +Y away from you.</span>
+    <span>Regenerate: <code>python3 hardware/viewer.py</code></span>
+  </footer>
+</div>
+<!--SCRIPT-->
+(function(){
+  "use strict";
+  var D = PV.D, css = PV.css, mm = PV.mm;
+  var F = D.frame, B = D.bar, K = D.deck;
+
+  document.getElementById("chips").innerHTML = [
+    ["Frame", F.outer_x + " x " + F.outer_y + " mm"],
+    ["Cross bar", B.len + " mm " + B.profile],
+    ["X travel", mm(B.travel) + " mm"],
+    ["Drawable", F.opening_x + " x " + F.opening_y + " mm"],
+    ["Free for electronics", D.table.free[2] + " x " + D.table.free[3] + " mm"]
+  ].map(function(c){
+    return '<div class="chip"><span class="k">'+c[0]+'</span><span class="v">'+c[1]+'</span></div>';
+  }).join("");
+
+  var total = 0;
+  document.getElementById("cuts").innerHTML = D.cut_list.map(function(r){
+    if (r.profile) total += r.qty * r.len;
+    return '<tr><td>'+r.label+'</td><td>'+(r.profile||'&mdash;')+'</td><td class="num">'+r.qty+
+           '</td><td class="num">'+mm(r.len)+' mm</td></tr>';
+  }).join("") +
+  '<tr class="total"><td>Linear stock</td><td></td><td class="num"></td><td class="num">'+
+  (total/1000).toFixed(2)+' m</td></tr>';
+
+  document.getElementById("sag").innerHTML = [
+    ["Supported span", mm(B.span)+" mm"],
+    ["Section I<sub>x</sub>", mm(B.ix)+" mm&#8308;"],
+    ["Sag, self weight", mm(B.sag_self,3)+" mm"],
+    ["Sag, +0.4 kg carriage", mm(B.sag_load,3)+" mm"],
+    ["Sag, total", '<span class="ok">'+mm(B.sag_total,3)+" mm</span>"]
+  ].map(function(r){
+    return '<div class="row"><span>'+r[0]+'</span><span class="n">'+r[1]+'</span></div>';
+  }).join("");
+
+  document.getElementById("deck-rows").innerHTML = [
+    ["Sheet", K.x + " x " + K.y + " x " + K.t + " mm"], ["Mass", K.mass + " kg"],
+    ["Clearance holes", K.holes + " x " + K.hole_d + " mm"],
+    ["Writing surface at Z", K.t + " mm"], ["Supported by", "the tabletop, everywhere"]
+  ].map(function(r){
+    return '<div class="row"><span>'+r[0]+'</span><span class="n">'+r[1]+'</span></div>';
+  }).join("");
+  document.getElementById("deck-sag").innerHTML = Object.keys(K.sag).map(function(t){
+    return '<tr><td>'+t+' mm sheet</td><td class="num bad">'+K.sag[t].toFixed(1)+' mm</td></tr>';
+  }).join("");
+
+  document.getElementById("note-deck").innerHTML =
+    "<b>The sheet does not create flatness &mdash; it inherits it.</b> Spanning the " +
+    F.opening_x + " x " + F.opening_y + " mm opening unsupported, " + K.t +
+    " mm of steel sags " + K.sag[String(K.t)] + " mm under nothing but its own weight. Laid flat " +
+    "on the tabletop it is fine, but it will follow the tabletop, bow and all.";
+  document.getElementById("note-overhang").innerHTML =
+    "<b>The bar overhangs on purpose.</b> At " + B.len + " mm it reaches " +
+    mm((B.len - D.table.y)/2) + " mm past each long edge of the " + D.table.x + " x " + D.table.y +
+    " mm bench. That is where the two X motors mount.";
+  document.getElementById("note-vslot").innerHTML =
+    "<b>V-slot, not T-slot.</b> OpenBuilds gantry wheels run in a 45&deg; V groove. The section " +
+    "modelled here is plain T-slot. Dimensions and fit are right either way, but the rails and " +
+    "the cross bar both need to be V-slot for this to roll.";
+
+  (function(){
+    var S = D.sections["2020"], px = 5.2, pad = 9;
+    var w = 20*px + pad*2, h = 20*px + pad*2;
+    var path = function(pts){
+      return pts.map(function(p,i){
+        return (i?"L":"M") + (p[0]*px + w/2).toFixed(2) + " " + (h/2 - p[1]*px).toFixed(2);
+      }).join(" ") + "Z";
+    };
+    document.getElementById("sect2020").innerHTML =
+      '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="2020 section to scale">' +
+        '<path d="'+(path(S.outline)+" "+S.holes.map(path).join(" "))+'" fill="var(--alu)" ' +
+        'fill-rule="evenodd" stroke="var(--ink)" stroke-width="0.8"/></svg>' +
+      '<dl><dt>Area</dt><dd>'+mm(S.area,1)+' mm&#178;</dd>' +
+      '<dt>Mass</dt><dd>'+(S.area*2.7e-3).toFixed(2)+' kg/m</dd>' +
+      '<dt>I<sub>x</sub></dt><dd>'+mm(S.ix)+' mm&#8308;</dd>' +
+      '<dt>Scale</dt><dd>'+px.toFixed(1)+':1</dd></dl>';
+  })();
+
+  var cx = (D.table.free[1] - F.outer_x / 2) / 2;
+  var S = PV.stage(document.getElementById("stage"),
+                   {tx: cx, tz: 30, radius: 2600, theta: -0.95, phi: 1.02});
+  if (!S) return;
+
+  var mats = {
+    deck:  new THREE.MeshStandardMaterial({roughness:.35, metalness:.6, flatShading:true}),
+    frame: new THREE.MeshStandardMaterial({roughness:.55, metalness:.35, flatShading:true}),
+    bar:   new THREE.MeshStandardMaterial({roughness:.5, metalness:.3, flatShading:true}),
+    table: new THREE.MeshStandardMaterial({roughness:.85, metalness:.05, flatShading:true}),
+    box:   new THREE.MeshStandardMaterial({roughness:.8, metalness:.1, flatShading:true})
+  };
+  function mesh(key, mat){ return new THREE.Mesh(PV.geomFrom(D.parts[key].geom.b64), mat); }
+
+  var table = mesh("table", mats.table), deck = mesh("deck", mats.deck),
+      frame = mesh("frame", mats.frame), bar = mesh("cross_bar", mats.bar),
+      box = mesh("case_block", mats.box);
+  S.scene.add(table, deck, frame, bar, box);
+
+  var dashed = new THREE.LineDashedMaterial({dashSize:14, gapSize:9});
+  var travel = new THREE.Group();
+  [-B.travel_half, B.travel_half].forEach(function(x){
+    var g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, -B.len/2, 0.6), new THREE.Vector3(x, B.len/2, 0.6)]);
+    var l = new THREE.Line(g, dashed); l.computeLineDistances(); travel.add(l);
+  });
+  S.scene.add(travel);
+
+  S.onTheme(function(){
+    mats.deck.color  = new THREE.Color(css("--steel"));
+    mats.frame.color = new THREE.Color(css("--alu"));
+    mats.bar.color   = new THREE.Color(css("--accent"));
+    mats.table.color = new THREE.Color(css("--wood"));
+    mats.box.color   = new THREE.Color(css("--shell"));
+    dashed.color     = new THREE.Color(css("--blue"));
+  });
+
+  S.views({iso:{theta:-0.95,phi:1.02,radius:2600}, top:{theta:-Math.PI/2,phi:0.07,radius:2200},
+           front:{theta:-Math.PI/2,phi:Math.PI/2-0.02,radius:2500},
+           right:{theta:0.001,phi:Math.PI/2-0.02,radius:2500}});
+  S.toggles({"t-table":table, "t-deck":deck, "t-frame":frame, "t-bar":bar,
+             "t-case":box, "t-travel":travel});
+
+  var slider = document.getElementById("xpos");
+  slider.min = -B.travel_half; slider.max = B.travel_half;
+  document.getElementById("xmin").textContent = "-"+mm(B.travel_half);
+  document.getElementById("xmax").textContent = "+"+mm(B.travel_half);
+  function readout(){
+    var x = Number(slider.value);
+    document.getElementById("xval").textContent = (x>0?"+":"") + mm(x) + " mm";
+    document.getElementById("readout").innerHTML =
+      "bar X <b>" + (x>0?"+":"") + mm(x) + "</b> mm<br>span " + mm(B.span) +
+      " &middot; overhang " + mm(B.overhang) + "<br>underside Z " + mm(B.underside_z) + " mm";
+  }
+  slider.addEventListener("input", function(){
+    bar.position.x = Number(slider.value); readout(); S.draw();
+  });
+
+  readout(); S.start();
+})();

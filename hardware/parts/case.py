@@ -273,3 +273,22 @@ if __name__ == "__main__":
     check_layout()
     for line in report():
         print(" ", line)
+
+
+def blackbox_positioned():
+    """The case as a plain solid with its connector stubs.
+
+    For the machine-level view, where the case is context rather than subject:
+    its footprint, its height and where the cables leave are all that matter
+    there. The detail lives in its own page.
+    """
+    body = Pos(0, 0, CASE_EXT[2] / 2) * Box(*CASE_EXT)
+    body.label = "case_body"
+
+    stubs = []
+    for name, dia, (x, y), _ in PANEL:
+        st = Pos(x, y, CASE_EXT[2] + 9) * Box(dia, dia, 18)
+        st.label = name
+        stubs.append(st)
+
+    return _at([body] + stubs, "case_blackbox")

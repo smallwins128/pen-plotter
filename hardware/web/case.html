@@ -1,0 +1,223 @@
+<!--BODY-->
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1>Electronics case &mdash; UN4020</h1>
+      <p>Runs closed on the bench beside the machine. Base carries the supplies, the lid carries the board and drivers, and the harness you see is the one <code>wiring.py</code> routed and scored.</p>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <div class="stage-row">
+    <div class="stage" id="stage">
+      <div class="readout" id="readout"></div>
+      <div class="hint">drag orbit &middot; scroll zoom &middot; shift-drag pan</div>
+      <div class="fallback">The 3D library could not be loaded, so the case can&rsquo;t be drawn. Every dimension below is still exact.</div>
+    </div>
+
+    <div class="rail">
+      <div class="panel">
+        <h2>View</h2>
+        <div class="views">
+          <button type="button" data-view="iso">Isometric</button>
+          <button type="button" data-view="top">Top</button>
+          <button type="button" data-view="front">Front</button>
+          <button type="button" data-view="right">Right</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Show</h2>
+        <label class="toggle"><input type="checkbox" id="t-shell" checked><span class="sw" style="background:var(--shell)"></span>Case shell</label>
+        <label class="toggle"><input type="checkbox" id="t-parts" checked><span class="sw" style="background:var(--steel)"></span><span class="sw" style="background:var(--pcb);margin-left:-5px"></span><span class="sw" style="background:var(--abs);margin-left:-5px"></span>Contents</label>
+        <label class="toggle"><input type="checkbox" id="t-fit" checked><span class="sw" style="background:var(--blue)"></span>Fans &amp; connectors</label>
+        <label class="toggle"><input type="checkbox" id="t-wiring" checked><span class="sw" style="background:var(--w-power)"></span><span class="sw" style="background:var(--w-signal);margin-left:-5px"></span><span class="sw" style="background:var(--w-phase);margin-left:-5px"></span>Harness</label>
+      </div>
+
+      <div class="panel">
+        <h2>Harness filter</h2>
+        <div id="kind-toggles"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h2>Base bay &mdash; 99 mm, on the floor</h2>
+      <table><thead><tr><th>Item</th><th class="num">Size</th><th>Note</th></tr></thead>
+        <tbody id="base-parts"></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>Lid bay &mdash; 99 mm, hanging</h2>
+      <table><thead><tr><th>Item</th><th class="num">Size</th><th>Note</th></tr></thead>
+        <tbody id="lid-parts"></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>Harness &mdash; routed, not eyeballed</h2>
+      <div class="rows" id="wire-stats"></div>
+    </div>
+  </div>
+
+  <div class="panel deck-panel">
+    <h2>Panel &mdash; connectors in the lid top</h2>
+    <div class="deck-grid">
+      <div><table><thead><tr><th>Connector</th><th class="num">At Y</th><th>Note</th></tr></thead>
+        <tbody id="panel-rows"></tbody></table></div>
+      <div><table><thead><tr><th>Bundle kind</th><th class="num">Count</th><th class="num">Longest</th></tr></thead>
+        <tbody id="wire-kinds"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="note" id="note-lane"></div>
+  <div class="note" id="note-cool"></div>
+
+  <footer>
+    <span>Local origin at the case footprint centre, Z&nbsp;=&nbsp;0 at the bench. Hinge on the <span id="hinge"></span> edge.</span>
+    <span>Regenerate: <code>python3 hardware/viewer.py</code></span>
+  </footer>
+</div>
+<!--SCRIPT-->
+(function(){
+  "use strict";
+  var D = PV.D, css = PV.css, mm = PV.mm;
+  var C = D.case, W = D.wiring || [], R = D.wiring_report || {};
+
+  document.getElementById("hinge").textContent = C.hinge;
+  document.getElementById("chips").innerHTML = [
+    ["Outer", C.ext.map(function(v){return mm(v);}).join(" x ") + " mm"],
+    ["Cavity", C.int.map(function(v){return mm(v);}).join(" x ") + " mm"],
+    ["Bays", mm(C.base_depth) + " + " + mm(C.base_depth) + " mm"],
+    ["Bundles", W.length + " / " + W.reduce(function(a,b){return a+b.n;},0) + " conductors"]
+  ].map(function(c){
+    return '<div class="chip"><span class="k">'+c[0]+'</span><span class="v">'+c[1]+'</span></div>';
+  }).join("");
+
+  function rows(list){
+    return list.map(function(c){
+      var sw = '<span class="sw" style="display:inline-block;vertical-align:-1px;margin-right:6px;'+
+               'background:var(--'+c.material+')"></span>';
+      return '<tr><td>'+sw+c.name.replace(/_/g," ")+'</td><td class="num">'+
+             c.size.map(function(v){return mm(v);}).join(" x ")+' mm</td><td>'+c.note+'</td></tr>';
+    }).join("");
+  }
+  document.getElementById("base-parts").innerHTML = rows(C.base);
+  document.getElementById("lid-parts").innerHTML = rows(C.lid);
+
+  document.getElementById("panel-rows").innerHTML = C.panel.map(function(p){
+    return '<tr><td>'+p.name.replace(/_/g," ")+'</td><td class="num">'+
+           (p.at[1]>0?"+":"")+mm(p.at[1])+'</td><td>'+p.note+'</td></tr>';
+  }).join("");
+
+  document.getElementById("wire-stats").innerHTML = [
+    ["Obstructions", '<span class="'+(R.obstruction?"bad":"ok")+'">'+R.obstruction+'</span>'],
+    ["Crossings", (R.crossings||[]).length],
+    ["Noisy alongside signal", (R.near||[]).length],
+    ["Conductor-mm", mm(R.total||0)],
+    ["Score", '<span class="ok">'+mm(R.score||0,1)+'</span>']
+  ].map(function(r){
+    return '<div class="row"><span>'+r[0]+'</span><span class="n">'+r[1]+'</span></div>';
+  }).join("");
+
+  var by = {};
+  W.forEach(function(w){
+    by[w.kind] = by[w.kind] || {n:0, max:0};
+    by[w.kind].n++; by[w.kind].max = Math.max(by[w.kind].max, w.len);
+  });
+  var kinds = Object.keys(by).sort();
+  document.getElementById("wire-kinds").innerHTML = kinds.map(function(k){
+    return '<tr><td><span class="sw" style="display:inline-block;vertical-align:-1px;'+
+           'margin-right:6px;background:var(--w-'+k+')"></span>'+k+'</td><td class="num">'+
+           by[k].n+'</td><td class="num">'+mm(by[k].max)+' mm</td></tr>';
+  }).join("");
+  document.getElementById("kind-toggles").innerHTML = kinds.map(function(k){
+    return '<label class="toggle"><input type="checkbox" class="kind" data-kind="'+k+'" checked>'+
+           '<span class="sw" style="background:var(--w-'+k+')"></span>'+k+' ('+by[k].n+')</label>';
+  }).join("");
+
+  document.getElementById("note-lane").innerHTML =
+    "<b>The lane is what makes the wiring short.</b> Drivers sit against the hinge so the heavy " +
+    "24 V lands as soon as it crosses; the board faces the lane with its ports pointing into it; " +
+    "every connector drops into the same channel, each stepper opposite its own driver. Nothing " +
+    "routes over a driver or across the board.";
+  document.getElementById("note-cool").innerHTML =
+    "<b>It runs closed, so the fans are not optional.</b> Three TB6600 heatsinks hang fin-down in " +
+    "still air, and polypropylene conducts about a thousandth of what aluminium does. Intake low " +
+    "in the base at the cool end, exhaust in the lid at the driver end, so what leaves is the " +
+    "hottest air in the box.";
+
+  var S = PV.stage(document.getElementById("stage"),
+                   {tz: C.ext[2]/2, radius: 900, theta: -0.95, phi: 1.02});
+  if (!S) return;
+
+  // Drawn about the case's own origin, not the machine's.
+  var root = new THREE.Group();
+  root.position.x = -C.origin_x;
+  S.scene.add(root);
+
+  var matShell = new THREE.MeshStandardMaterial({roughness:.9, metalness:0, flatShading:true,
+                                                 transparent:true, opacity:.22, side:THREE.DoubleSide});
+  var matFit = new THREE.MeshStandardMaterial({roughness:.6, metalness:.2, flatShading:true});
+  var partMats = {
+    steel: new THREE.MeshStandardMaterial({roughness:.4, metalness:.55, flatShading:true}),
+    pcb:   new THREE.MeshStandardMaterial({roughness:.65, metalness:.05, flatShading:true}),
+    abs:   new THREE.MeshStandardMaterial({roughness:.8, metalness:0, flatShading:true})
+  };
+
+  var shell = new THREE.Mesh(PV.geomFrom(D.parts.shell.geom.b64), matShell);
+  root.add(shell);
+
+  var fit = new THREE.Group();
+  ["fans", "panel"].forEach(function(k){
+    if (D.parts[k]) fit.add(new THREE.Mesh(PV.geomFrom(D.parts[k].geom.b64), matFit));
+  });
+  root.add(fit);
+
+  var parts = new THREE.Group();
+  C.materials.forEach(function(m){
+    if (D.parts[m]) parts.add(new THREE.Mesh(PV.geomFrom(D.parts[m].geom.b64), partMats[m]));
+  });
+  root.add(parts);
+
+  var wireMats = {}, wireGroups = {};
+  var harness = new THREE.Group();
+  W.forEach(function(w){
+    if (!wireMats[w.kind]) {
+      wireMats[w.kind] = new THREE.MeshStandardMaterial({roughness:.5, metalness:.1});
+      wireGroups[w.kind] = new THREE.Group();
+      harness.add(wireGroups[w.kind]);
+    }
+    var pts = w.pts.map(function(p){ return new THREE.Vector3(p[0]+C.origin_x, p[1], p[2]); });
+    var curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.02);
+    wireGroups[w.kind].add(new THREE.Mesh(
+      new THREE.TubeGeometry(curve, pts.length * 8, 1.1 + 0.4 * Math.sqrt(w.n), 6, false),
+      wireMats[w.kind]));
+  });
+  root.add(harness);
+
+  S.onTheme(function(){
+    matShell.color = new THREE.Color(css("--shell"));
+    matFit.color   = new THREE.Color(css("--blue"));
+    partMats.steel.color = new THREE.Color(css("--steel"));
+    partMats.pcb.color   = new THREE.Color(css("--pcb"));
+    partMats.abs.color   = new THREE.Color(css("--abs"));
+    kinds.forEach(function(k){ wireMats[k].color = new THREE.Color(css("--w-" + k)); });
+  });
+
+  S.views({iso:{theta:-0.95,phi:1.02,radius:900}, top:{theta:-Math.PI/2,phi:0.07,radius:760},
+           front:{theta:-Math.PI/2,phi:Math.PI/2-0.02,radius:860},
+           right:{theta:0.001,phi:Math.PI/2-0.02,radius:860}});
+  S.toggles({"t-shell":shell, "t-parts":parts, "t-fit":fit, "t-wiring":harness});
+
+  document.querySelectorAll(".kind").forEach(function(cb){
+    cb.addEventListener("change", function(){
+      wireGroups[cb.dataset.kind].visible = cb.checked; S.draw();
+    });
+  });
+
+  document.getElementById("readout").innerHTML =
+    C.ext[0] + " x " + C.ext[1] + " x " + C.ext[2] + " mm<br>" +
+    W.length + " bundles &middot; <b>" + R.obstruction + "</b> obstructions<br>" +
+    "hinge " + C.hinge;
+
+  S.start();
+})();

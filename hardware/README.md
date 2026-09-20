@@ -51,7 +51,8 @@ Each part exports:
 | **`parts/assembly.py`** | Frame + cross bar in one coordinate system. |
 | **`make.py`** | Builds and exports everything. Add new parts to `_parts()`. |
 | **`preview.py`** | PNG renders. Sanity check, not a beauty shot. |
-| **`viewer.py`** + **`web/`** | The interactive 3D viewer. `export_web.py` packs the geometry. |
+| **`viewer.py`** + **`web/`** | The two viewers. `_common.html` is the shared core; `machine.html` and `case.html` are the pages. `export_web.py` packs the geometry. |
+| **`wiring.py`** | Routes the case harness, scores it, and searches for a better layout. |
 | **`stock.py`** | Groups every cut list by profile and packs the pieces onto stock bars, kerf included. |
 
 ## Conventions

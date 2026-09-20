@@ -51,12 +51,48 @@ def _simplify(pts, tol=1e-4):
     return [[round(x, 3), round(y, 3)] for x, y in out]
 
 
+def case_data():
+    """Payload for the enclosure page: shell, contents, fans, panel, harness.
+
+    Separate from the machine payload on purpose. The deck mesh alone is 477 KB
+    and means nothing here; the harness means nothing over there.
+    """
+    import case as case_mod
+    import wiring
+
+    shell = case_mod.shell_positioned()
+    extra = {"fans": case_mod.fans_positioned(), "panel": case_mod.panel_positioned()}
+    by_mat = {m: case_mod.parts_positioned(m) for m in ("steel", "pcb", "abs")}
+
+    return {
+        "parts": {"shell": {"geom": _positions_b64(shell, "case_shell")}}
+        | {k: {"geom": _positions_b64(v, f"case_{k}")} for k, v in extra.items() if v}
+        | {m: {"geom": _positions_b64(v, f"case_{m}")} for m, v in by_mat.items() if v},
+        "case": {
+            "materials": ["steel", "pcb", "abs"],
+            "ext": list(case_mod.CASE_EXT),
+            "int": list(case_mod.CASE_INT),
+            "base_depth": case_mod.CASE_BASE_DEPTH,
+            "origin_x": case_mod.origin_x(),
+            "hinge": case_mod.HINGE_EDGE,
+            "lane_x": case_mod.LANE_X,
+            "base": [{"name": n, "size": list(sz), "at": list(xy), "material": m, "note": t}
+                     for n, sz, xy, m, t in case_mod.BASE_PARTS],
+            "lid": [{"name": n, "size": list(sz), "at": list(xy), "material": m, "note": t}
+                    for n, sz, xy, m, t in case_mod.LID_PARTS],
+            "panel": [{"name": n, "at": list(xy), "note": t} for n, _, xy, t in case_mod.PANEL],
+            "fans": [{"name": n, "bay": b, "note": t} for n, b, _, t in case_mod.FANS],
+        },
+        "wiring": wiring.polylines_3d(),
+        "wiring_report": {k: v for k, v in wiring.analyse().items() if k != "routed"},
+    }
+
+
 def build_data():
     import assembly
     import cross_bar
     import deck as deck_mod
     import case as case_mod
-    import wiring
     import frame
     import table as table_mod
     from profiles import section_moments, section_polylines
@@ -82,9 +118,7 @@ def build_data():
     bar_part = cross_bar.build()
     deck_part = deck_mod.build()
     table_part = table_mod.build()
-    case_shell = case_mod.shell_positioned()
-    case_extra = {"fans": case_mod.fans_positioned(), "panel": case_mod.panel_positioned()}
-    case_by_mat = {m: case_mod.parts_positioned(m) for m in ("steel", "pcb", "abs")}
+    case_block = case_mod.blackbox_positioned()
 
     sections = {}
     for label, (w, h) in {"2020": (20, 20), "2040": (20, 40)}.items():
@@ -103,14 +137,7 @@ def build_data():
             "deck": {"geom": _positions_b64(deck_part, "deck"), "moves": False},
             "frame": {"geom": _positions_b64(frame_part, "frame"), "moves": False},
             "cross_bar": {"geom": _positions_b64(bar_part, "cross_bar"), "moves": True},
-            "case_shell": {"geom": _positions_b64(case_shell, "case_shell"), "moves": False},
-        } | {
-            f"case_{k}": {"geom": _positions_b64(v, f"case_{k}"), "moves": False}
-            for k, v in case_extra.items() if v is not None
-        } | {
-            # One mesh per material so the viewer can colour them separately.
-            f"case_{m}": {"geom": _positions_b64(part, f"case_{m}"), "moves": False}
-            for m, part in case_by_mat.items() if part is not None
+            "case_block": {"geom": _positions_b64(case_block, "case_block"), "moves": False},
         },
         "frame": {
             "outer_x": FRAME_OUTER_X,
@@ -150,22 +177,11 @@ def build_data():
             "free": [round(v) for v in table_mod.free_zone()],
         },
         "case": {
-            "materials": ["steel", "pcb", "abs"],
             "ext": list(case_mod.CASE_EXT),
-            "int": list(case_mod.CASE_INT),
             "at": [round(case_mod.origin_x() - case_mod.CASE_EXT[0] / 2),
                    round(case_mod.origin_x() + case_mod.CASE_EXT[0] / 2)],
-            "base": [{"name": n, "size": list(sz), "material": mat, "note": note}
-                     for n, sz, _, mat, note in case_mod.BASE_PARTS],
-            "lid": [{"name": n, "size": list(sz), "material": mat, "note": note}
-                    for n, sz, _, mat, note in case_mod.LID_PARTS],
-            "panel": [{"name": n, "note": note} for n, _, _, note in case_mod.PANEL],
-            "fans": [{"name": n, "bay": b, "note": note} for n, b, _, note in case_mod.FANS],
-            "hinge": case_mod.HINGE_EDGE,
-            "wiring": wiring.polylines_3d(),
-            "wiring_report": {k: v for k, v in wiring.analyse().items()
-                              if k != "routed"},
-            "lane_x": case_mod.LANE_X,
+            "ports": len(case_mod.PANEL),
+            "fans": len(case_mod.FANS),
         },
         # The assembly's list covers every part, so the viewer no longer shows a
         # partial one when a new part is added.

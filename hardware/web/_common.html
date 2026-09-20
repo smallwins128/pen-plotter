@@ -1,0 +1,303 @@
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+:root{
+  --paper:#e9edf1; --surface:#ffffff; --surface-2:#f3f6f8;
+  --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a;
+  --line:#ccd6de; --line-2:#dde4ea;
+  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --pcb:#1b6b41; --abs:#eef0f2; --shell:#3c4248; --w-mains:#b3341f; --w-phase:#d98324; --w-power:#c9403a; --w-signal:#2f7fa6; --w-pwm:#7a4fa3; --w-usb:#5a6b78; --accent:#c2622c; --accent-soft:#f0dccd;
+  --blue:#37718f; --blue-soft:#dde9ef;
+  --stage-top:#dfe6ec; --stage-bot:#c8d3db;
+  --shadow:0 1px 2px rgba(19,27,34,.06),0 8px 24px -12px rgba(19,27,34,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
+    --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
+    --line:#26333d; --line-2:#1e2a33;
+    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --shell:#20262b; --w-mains:#e2664c; --w-phase:#e8a253; --w-power:#e2645e; --w-signal:#5aa8cc; --w-pwm:#a67fd0; --w-usb:#8697a5; --accent:#e08a52; --accent-soft:#3a2417;
+    --blue:#6aa8c6; --blue-soft:#162a35;
+    --stage-top:#151f27; --stage-bot:#0a1015;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
+  --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
+  --line:#26333d; --line-2:#1e2a33;
+  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --shell:#20262b; --w-mains:#e2664c; --w-phase:#e8a253; --w-power:#e2645e; --w-signal:#5aa8cc; --w-pwm:#a67fd0; --w-usb:#8697a5; --accent:#e08a52; --accent-soft:#3a2417;
+  --blue:#6aa8c6; --blue-soft:#162a35;
+  --stage-top:#151f27; --stage-bot:#0a1015;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px; margin:0 auto; padding:28px 22px 56px}
+
+/* ---- header ---- */
+header{display:flex; flex-wrap:wrap; align-items:flex-end; gap:18px 32px; margin-bottom:20px}
+.title h1{
+  margin:0; font-size:27px; font-weight:600; letter-spacing:-.02em; text-wrap:balance;
+}
+.title p{margin:4px 0 0; color:var(--ink-2); font-size:14px; max-width:60ch}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-left:auto}
+.chip{
+  display:flex; flex-direction:column; gap:1px;
+  padding:7px 12px; background:var(--surface); border:1px solid var(--line);
+  border-radius:3px;
+}
+.chip .k{font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--ink-3)}
+.chip .v{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:14px; font-weight:500; font-variant-numeric:tabular-nums}
+
+/* ---- stage + rail ---- */
+.stage-row{display:grid; grid-template-columns:1fr 258px; gap:16px; align-items:start}
+@media (max-width:900px){.stage-row{grid-template-columns:1fr}}
+
+.stage{
+  position:relative; height:min(62vh,540px); min-height:380px;
+  border:1px solid var(--line); border-radius:4px; overflow:hidden;
+  background:linear-gradient(170deg,var(--stage-top),var(--stage-bot));
+  cursor:grab; touch-action:none;
+}
+.stage:active{cursor:grabbing}
+.stage canvas{display:block; width:100%; height:100%}
+.hint{
+  position:absolute; left:12px; bottom:10px; pointer-events:none;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3);
+}
+.readout{
+  position:absolute; right:12px; top:11px; pointer-events:none; text-align:right;
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-2);
+  font-variant-numeric:tabular-nums; line-height:1.7;
+}
+.readout b{color:var(--accent); font-weight:600}
+.fallback{
+  position:absolute; inset:0; display:none; place-items:center; padding:24px; text-align:center;
+  color:var(--ink-2); font-size:14px;
+}
+
+.rail{display:flex; flex-direction:column; gap:14px}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:14px}
+.panel h2{
+  margin:0 0 10px; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.1em; color:var(--ink-3);
+}
+.views{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+button{
+  font:inherit; font-size:13px; color:var(--ink); cursor:pointer;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:3px;
+  padding:7px 4px; transition:background .12s,border-color .12s;
+}
+button:hover{background:var(--blue-soft); border-color:var(--blue)}
+button:focus-visible{outline:2px solid var(--blue); outline-offset:1px}
+
+.toggle{display:flex; align-items:center; gap:9px; padding:5px 0; cursor:pointer; font-size:13.5px}
+.toggle input{accent-color:var(--blue); width:15px; height:15px; cursor:pointer; margin:0}
+.sw{width:11px; height:11px; border-radius:2px; flex:none}
+
+.slider-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px}
+.slider-head .val{
+  font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600;
+  color:var(--accent); font-variant-numeric:tabular-nums;
+}
+input[type=range]{width:100%; accent-color:var(--accent); margin:0; cursor:pointer}
+.ends{
+  display:flex; justify-content:space-between; margin-top:3px;
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3);
+}
+
+/* ---- lower panels ---- */
+.grid3{display:grid; grid-template-columns:1.15fr .85fr 1fr; gap:16px; margin-top:16px}
+@media (max-width:900px){.grid3{grid-template-columns:1fr}}
+
+table{width:100%; border-collapse:collapse; font-size:13.5px}
+th{
+  text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--ink-3); font-weight:600; padding:0 0 6px; border-bottom:1px solid var(--line);
+}
+td{padding:7px 0; border-bottom:1px solid var(--line-2)}
+tr:last-child td{border-bottom:none}
+.num{
+  font-family:"IBM Plex Mono",monospace; text-align:right;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.total td{font-weight:600; border-top:1px solid var(--line); padding-top:9px}
+
+.sect{display:flex; gap:16px; align-items:center}
+.sect svg{flex:none}
+.sect dl{margin:0; display:grid; grid-template-columns:auto auto; gap:4px 12px; font-size:12.5px; align-content:center}
+.sect dt{color:var(--ink-3)}
+.sect dd{margin:0; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+
+.rows{display:flex; flex-direction:column; gap:0}
+.row{display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid var(--line-2); font-size:13.5px}
+.row:last-child{border-bottom:none}
+.row .n{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+.ok{color:var(--blue); font-weight:500}
+
+.deck-panel{margin-top:16px}
+.deck-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px 28px}
+@media (max-width:900px){.deck-grid{grid-template-columns:1fr}}
+.bad{color:var(--accent); font-weight:500}
+.note{
+  margin-top:16px; padding:12px 14px; font-size:13px; color:var(--ink-2);
+  background:var(--accent-soft); border-left:2px solid var(--accent); border-radius:0 3px 3px 0;
+}
+.note b{color:var(--ink); font-weight:600}
+.note + .deck-panel{margin-top:16px}
+.deck-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px 28px}
+@media (max-width:900px){.deck-grid{grid-template-columns:1fr}}
+.bad{color:var(--accent); font-weight:500}
+.note{margin-top:8px}
+footer{
+  margin-top:22px; padding-top:14px; border-top:1px solid var(--line);
+  font-size:12px; color:var(--ink-3); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+}
+code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+__BODY__
+
+<script id="model-data" type="application/json">__DATA__</script>
+<script>
+/* Shared viewer core. Both pages draw the same kind of picture -- a shaded
+   solid you orbit -- so the scene, the controls and the theme plumbing live
+   here once and each page only describes what it is showing. */
+window.PV = (function(){
+  "use strict";
+  var D = JSON.parse(document.getElementById("model-data").textContent);
+
+  function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function mm(v, d){ return Number(v).toFixed(d === undefined ? 0 : d); }
+
+  function geomFrom(b64){
+    var bin = atob(b64), buf = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    var g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(buf.buffer), 3));
+    g.computeVertexNormals();   // non-indexed, so these come out flat per face
+    return g;
+  }
+
+  function stage(el, opts){
+    opts = opts || {};
+    if (typeof THREE === "undefined") {
+      var fb = el.querySelector(".fallback");
+      if (fb) fb.style.display = "grid";
+      return null;
+    }
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(38, 1, 5, 12000);
+    camera.up.set(0, 0, 1);
+    var renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    el.appendChild(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x404850, 0.85));
+    var key = new THREE.DirectionalLight(0xffffff, 0.75);
+    key.position.set(600, -900, 1100); scene.add(key);
+    var fill = new THREE.DirectionalLight(0xffffff, 0.3);
+    fill.position.set(-800, 500, 300); scene.add(fill);
+
+    var target = new THREE.Vector3(opts.tx || 0, opts.ty || 0, opts.tz || 0);
+    var home = {theta: opts.theta !== undefined ? opts.theta : -0.95,
+                phi: opts.phi || 1.02, radius: opts.radius || 1200};
+    var cam = {theta: home.theta, phi: home.phi, radius: home.radius};
+    var themeCbs = [];
+
+    function place(){
+      var sp = Math.sin(cam.phi);
+      camera.position.set(target.x + cam.radius * sp * Math.cos(cam.theta),
+                          target.y + cam.radius * sp * Math.sin(cam.theta),
+                          target.z + cam.radius * Math.cos(cam.phi));
+      camera.lookAt(target);
+    }
+    function draw(){ place(); renderer.render(scene, camera); }
+    function resize(){
+      var w = el.clientWidth, h = el.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+      draw();
+    }
+    addEventListener("resize", resize);
+
+    var drag = null;
+    el.addEventListener("pointerdown", function(e){
+      if (e.target.closest(".readout,.hint")) return;
+      drag = {x:e.clientX, y:e.clientY, pan:e.shiftKey || e.button === 2};
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener("pointermove", function(e){
+      if (!drag) return;
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      drag.x = e.clientX; drag.y = e.clientY;
+      if (drag.pan){
+        var dir = new THREE.Vector3().subVectors(camera.position, target).normalize();
+        var right = new THREE.Vector3().crossVectors(dir, camera.up).normalize();
+        var up = new THREE.Vector3().crossVectors(right, dir).normalize();
+        var k = cam.radius * 0.0013;
+        target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+      } else {
+        cam.theta -= dx * 0.006;
+        cam.phi = Math.max(0.06, Math.min(Math.PI - 0.06, cam.phi - dy * 0.006));
+      }
+      draw();
+    });
+    ["pointerup","pointercancel"].forEach(function(ev){
+      el.addEventListener(ev, function(){ drag = null; });
+    });
+    el.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+    el.addEventListener("wheel", function(e){
+      e.preventDefault();
+      cam.radius = Math.max(120, Math.min(8000, cam.radius * Math.exp(e.deltaY * 0.0012)));
+      draw();
+    }, {passive:false});
+
+    function applyTheme(){ themeCbs.forEach(function(cb){ cb(); }); draw(); }
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+    new MutationObserver(applyTheme).observe(document.documentElement,
+      {attributes:true, attributeFilter:["data-theme"]});
+
+    return {
+      scene: scene, camera: camera, cam: cam, target: target, draw: draw,
+      onTheme: function(cb){ themeCbs.push(cb); },
+      views: function(map){
+        document.querySelectorAll("[data-view]").forEach(function(btn){
+          btn.addEventListener("click", function(){
+            var v = map[btn.dataset.view];
+            cam.theta = v.theta; cam.phi = v.phi; cam.radius = v.radius;
+            target.set(opts.tx || 0, opts.ty || 0, opts.tz || 0);
+            draw();
+          });
+        });
+      },
+      toggles: function(map){
+        Object.keys(map).forEach(function(id){
+          var el2 = document.getElementById(id);
+          if (el2) el2.addEventListener("change", function(e){
+            map[id].visible = e.target.checked; draw();
+          });
+        });
+      },
+      start: function(){ applyTheme(); resize(); }
+    };
+  }
+
+  return {D: D, css: css, mm: mm, geomFrom: geomFrom, stage: stage};
+})();
+</script>
+<script>
+__PAGE_SCRIPT__
+</script>
