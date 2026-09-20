@@ -56,6 +56,7 @@ def build_data():
     import cross_bar
     import deck as deck_mod
     import case as case_mod
+    import wiring
     import frame
     import table as table_mod
     from profiles import section_moments, section_polylines
@@ -161,6 +162,9 @@ def build_data():
             "panel": [{"name": n, "note": note} for n, _, _, note in case_mod.PANEL],
             "fans": [{"name": n, "bay": b, "note": note} for n, b, _, note in case_mod.FANS],
             "hinge": case_mod.HINGE_EDGE,
+            "wiring": wiring.polylines_3d(),
+            "wiring_report": {k: v for k, v in wiring.analyse().items()
+                              if k != "routed"},
             "lane_x": case_mod.LANE_X,
         },
         # The assembly's list covers every part, so the viewer no longer shows a

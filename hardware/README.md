@@ -191,8 +191,12 @@ python3 hardware/wiring.py            # report the current layout
 python3 hardware/wiring.py --search   # try board positions and connector orders
 ```
 
-Geometry comes from `case.py`, so the analysis can't drift from the model.
-**Re-run the search after moving anything in the lid.**
+Geometry comes from `case.py`, so the analysis can't drift from the model, and
+the routed paths are fed back into the viewer as 3D tubes — coloured by kind,
+sized by conductor count. **The harness you see is the harness that was
+scored**, not a drawing of one.
+
+**Re-run the search after moving anything.**
 
 It has already earned its keep. The first layout scored 20331 with two
 obstructions; the current one scores 386 with none, and uses a fifth less wire.
@@ -207,6 +211,18 @@ Three things it caught that eyeballing missed:
 - **A TB6600 has two terminal blocks.** Treating it as one point made every
   step/dir bundle look like it ran alongside its own motor phases.
 - **The hinge is an edge, not a point** — power can cross anywhere along it.
+- **Ports face what they're wired to.** Pointing every terminal at the lid's
+  lane made base parts route out of their far side and back through their own
+  neighbours.
+- **A router that can only turn one corner isn't a router.** Where two ends
+  share a coordinate there's exactly one possible L, so anything sitting on it
+  was reported as unroutable. Z-shaped detours let it go around, which is what
+  a person would obviously do.
+
+The base got the same treatment and needed it more: the servo PSU sat
+diagonally opposite the IEC inlet, a 460 mm mains run that crossed both DC
+rails. Mains are now clustered in one corner — inlet and both PSU inputs
+together — and the 220 V stays out of the DC half entirely.
 
 And one thing the *optimiser* got wrong before the objective was fixed: it
 parked the servo PWM 274 mm away, because a single conductor scores cheap.

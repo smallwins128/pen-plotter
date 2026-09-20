@@ -56,13 +56,17 @@ HINGE_EDGE = "+X"
 
 # PSUs down the -X side, distribution down the +X side, mains in the -Y corner
 # clear of the intake fan.
+# Mains clustered in the -Y corner: IEC and both PSU inputs together, so the
+# 220 V runs are short and stay out of the DC half. Before this the servo PSU
+# sat diagonally opposite the inlet -- a 460 mm mains run that crossed both DC
+# rails on its way. DC distribution lives up the +X side by the hinge.
 BASE_PARTS = [
-    ("psu_24v_main",  (115, 215, 30), ( -70,  -60), "steel", "LRS-350-24, ex-Ender 3"),
-    ("psu_24v_servo", ( 51,  78, 28), ( -95,  140), "steel", "RS-25-24"),
-    ("bus_ground",    ( 25, 150, 30), (  85,  -60), "abs",   "ground terminal bus"),
-    ("bus_24v",       ( 25, 150, 30), ( 120,  -60), "abs",   "24 V bus, nearest the hinge"),
-    ("buck_servo",    ( 45,  65, 25), ( 110,  160), "pcb",   "24 -> 6.0 V, MG996R"),
-    ("iec_inlet",     ( 50,  30, 30), (  95, -180), "abs",   "panel-mount IEC, 220 V in"),
+    ("iec_inlet",     ( 50,  30, 30), (-105, -180), "abs",   "panel-mount IEC, 220 V in"),
+    ("psu_24v_main",  (115, 215, 30), ( -75,  -35), "steel", "LRS-350-24, ex-Ender 3"),
+    ("psu_24v_servo", ( 51,  78, 28), (  70, -155), "steel", "RS-25-24, beside the inlet"),
+    ("buck_servo",    ( 45,  65, 25), (  60,  -80), "pcb",   "24 -> 6.0 V, MG996R"),
+    ("bus_ground",    ( 25, 150, 30), (  85,  100), "abs",   "ground terminal bus"),
+    ("bus_24v",       ( 25, 150, 30), ( 120,  100), "abs",   "24 V bus, nearest the hinge"),
 ]
 
 # TB6600: 96.5 flange to flange, 67.7 deep over the terminals, 57 tall.

@@ -48,7 +48,8 @@ STRETCH_LIMIT = {"signal": 200.0, "pwm": 150.0}
 
 # Bundles inside the lid. The base is trivially short and is not routed.
 # A driver endpoint may name a terminal block: "tb6600_x1:sig" or ":pwr".
-NETS = [
+# "hinge" is the edge the two bays talk across.
+LID_NETS = [
     ("step_x1",   "elecrow_6x", "tb6600_x1:sig",  4, "signal"),
     ("step_x2",   "elecrow_6x", "tb6600_x2:sig",  4, "signal"),
     ("step_y",    "elecrow_6x", "tb6600_y:sig",   4, "signal"),
@@ -68,6 +69,26 @@ NETS = [
     # would mean crossing the whole driver row for no reason.
     ("fan_pwr",   "tb6600_y:pwr", "fan_exhaust", 2, "power"),
 ]
+
+# The base runs are short and its parts do not move, so these are not searched
+# over -- but they are routed and drawn, because a harness you cannot see is a
+# harness you cannot check.
+BASE_NETS = [
+    ("mains_main",  "iec_inlet",     "psu_24v_main",  3, "mains"),
+    ("mains_servo", "iec_inlet",     "psu_24v_servo", 3, "mains"),
+    ("rail_24v",    "psu_24v_main",  "bus_24v",       2, "power"),
+    ("rail_gnd",    "psu_24v_main",  "bus_ground",    2, "power"),
+    ("servo_in",    "psu_24v_servo", "buck_servo",    2, "power"),
+    ("servo_out",   "buck_servo",    "hinge",         2, "power"),
+    ("vmot_up",     "bus_24v",       "hinge",         2, "power"),
+    ("gnd_up",      "bus_ground",    "hinge",         2, "power"),
+    # The intake fan sits at the far end from the bus; it takes its 24 V from
+    # the main supply's own terminals, which are right beside it.
+    ("fan_in_pwr",  "psu_24v_main",  "fan_intake",    2, "power"),
+]
+
+NETS = [(n, a, b, c, k, "lid") for n, a, b, c, k in LID_NETS] + \
+       [(n, a, b, c, k, "base") for n, a, b, c, k in BASE_NETS]
 
 CLEARANCE = 12.0        # mm a noisy bundle should keep from a signal bundle
 # Total conductor-mm alone undervalues a thin, noise-sensitive line: the servo
@@ -110,6 +131,17 @@ def current_layout():
             "driver_x": drv[2][0], "lane_x": case.LANE_X}
 
 
+def base_geometry():
+    """Base-bay obstacles and connection points."""
+    boxes = {}
+    for name, (w, d, _), (x, y), _, _ in case.BASE_PARTS:
+        boxes[name] = Box2(name, x, y, w, d)
+    for name, bay, (x, y), _ in case.FANS:
+        if bay == "base":
+            boxes[name] = Box2(name, x, y, case.FAN_SIZE, case.FAN_THICK)
+    return boxes, {}
+
+
 def geometry(layout=None, panel_order=None):
     """Lid components and connector points, as the router sees them.
 
@@ -148,7 +180,24 @@ def geometry(layout=None, panel_order=None):
 TERMINAL_SPLIT = 0.25    # of the driver's depth, either side of centre
 
 
+def _centre(name, boxes, points):
+    base = name.split(":")[0]
+    if base == "hinge":
+        return (case.CASE_INT[0] / 2, 0.0)
+    if base in points:
+        return points[base]
+    b = boxes[base]
+    return (b.x, b.y)
+
+
 def _endpoint(name, boxes, points, toward, other=None):
+    """Where a bundle leaves a component.
+
+    `toward` is the other end of the bundle, not a fixed lane: a part should
+    present its terminals to whatever it is wired to. Pointing everything at
+    the lid's lane made base parts route out of their far side and straight
+    back through their neighbours.
+    """
     base, _, block = name.partition(":")
     if base == "hinge":
         y = other[1] if other else 0.0
@@ -165,10 +214,26 @@ def _endpoint(name, boxes, points, toward, other=None):
     return box.port(toward, offset)
 
 
-def _segments(a, b, flip):
-    """An L from a to b: along X first, or along Y first."""
-    corner = (b[0], a[1]) if flip else (a[0], b[1])
-    return [(a, corner), (corner, b)]
+DETOURS = (0.0, 25.0, -25.0, 50.0, -50.0, 80.0, -80.0)
+
+
+def _candidates(a, b):
+    """Every rectilinear path worth trying between two points.
+
+    Two Ls, plus Z-shaped detours offset to either side. Without the detours a
+    bundle whose ends share a coordinate has exactly one possible path, and if
+    something sits on it the router can only report the collision -- it cannot
+    route around, which is what a person would obviously do.
+    """
+    out = [[(a, (a[0], b[1])), ((a[0], b[1]), b)],
+           [(a, (b[0], a[1])), ((b[0], a[1]), b)]]
+
+    for off in DETOURS[1:]:
+        y = a[1] + off
+        out.append([(a, (a[0], y)), ((a[0], y), (b[0], y)), ((b[0], y), b)])
+        x = a[0] + off
+        out.append([(a, (x, a[1])), ((x, a[1]), (x, b[1])), ((x, b[1]), b)])
+    return out
 
 
 def _hits(seg, box, pad=0.0):
@@ -200,29 +265,38 @@ def route(layout=None, panel_order=None):
     boxes, points = geometry(layout, panel_order)
     routed = []
 
-    for name, src, dst, n, kind in NETS:
-        lane = (layout or current_layout())["lane_x"]
+    base_boxes, base_points = base_geometry()
+
+    for name, src, dst, n, kind, bay in NETS:
+        bx, pts = (boxes, points) if bay == "lid" else (base_boxes, base_points)
+        ca, cb = _centre(src, bx, pts), _centre(dst, bx, pts)
         if src == "hinge":
-            b = _endpoint(dst, boxes, points, toward=lane)
-            a = _endpoint(src, boxes, points, toward=lane, other=b)
+            b = _endpoint(dst, bx, pts, toward=ca[0])
+            a = _endpoint(src, bx, pts, toward=cb[0], other=b)
         else:
-            a = _endpoint(src, boxes, points, toward=lane)
-            b = _endpoint(dst, boxes, points, toward=lane, other=a)
+            a = _endpoint(src, bx, pts, toward=cb[0])
+            b = _endpoint(dst, bx, pts, toward=ca[0], other=a)
         own = {src.split(":")[0], dst.split(":")[0]}
 
         best = None
-        for flip in (False, True):
-            segs = _segments(a, b, flip)
-            blocked = sum(1 for s in segs for bx in boxes.values()
-                          if bx.name not in own and _hits(s, bx))
+        for segs in _candidates(a, b):
+            if any(abs(s[0][0] - s[1][0]) + abs(s[0][1] - s[1][1]) < 1e-9 for s in segs):
+                segs = [s for s in segs if abs(s[0][0] - s[1][0]) + abs(s[0][1] - s[1][1]) > 1e-9]
+            if not segs:
+                continue
+            blocked = sum(1 for s in segs for ob in bx.values()
+                          if ob.name not in own and _hits(s, ob))
             length = sum(abs(s[1][0] - s[0][0]) + abs(s[1][1] - s[0][1]) for s in segs)
             cand = (blocked, length, segs)
             if best is None or cand[:2] < best[:2]:
                 best = cand
+        if best is None:
+            best = (0, 0.0, [])
 
         blocked, length, segs = best
         routed.append({"name": name, "kind": kind, "n": n, "segs": segs,
-                       "len": length, "blocked": blocked})
+                       "len": length, "blocked": blocked, "bay": bay,
+                       "src": src, "dst": dst})
     return routed, boxes
 
 
@@ -235,6 +309,8 @@ def analyse(layout=None, panel_order=None):
     crossings, near = [], []
     for i, r1 in enumerate(routed):
         for r2 in routed[i + 1:]:
+            if r1["bay"] != r2["bay"]:
+                continue
             if any(_cross(s1, s2) for s1 in r1["segs"] for s2 in r2["segs"]):
                 crossings.append((r1["name"], r2["name"]))
             noisy1, noisy2 = KINDS[r1["kind"]][0], KINDS[r2["kind"]][0]
@@ -337,3 +413,58 @@ if __name__ == "__main__":
         print()
         for line in report(layout, order):
             print(" ", line)
+
+
+# Height the harness runs at in each bay: tucked near the shell, clear of the
+# components, dropping to a terminal only at its ends.
+LID_RUN_Z = case.LID_CEILING - 14.0
+BASE_RUN_Z = case.CAVITY_Z0 + 12.0
+HINGE_Z = case.SPLIT_Z
+
+
+def _terminal_z(name, bay):
+    """Height of the terminal a bundle lands on."""
+    base = name.split(":")[0]
+    if base == "hinge":
+        return HINGE_Z
+
+    for n, b, _, _ in case.FANS:
+        if n == base:
+            z0 = case.CAVITY_Z0 if b == "base" else case.SPLIT_Z
+            return z0 + case.FAN_SIZE / 2
+
+    for n, _, _, _ in case.PANEL:
+        if n == base:
+            return case.LID_CEILING - case.PANEL_DEPTH
+
+    for n, (_, _, h), _, _, _ in case.BASE_PARTS:
+        if n == base:
+            return case.CAVITY_Z0 + h / 2
+    for n, (_, _, h), _, _, _ in case.LID_PARTS:
+        if n == base:
+            return case.LID_CEILING - h / 2
+    return LID_RUN_Z if bay == "lid" else BASE_RUN_Z
+
+
+def polylines_3d(layout=None, panel_order=None):
+    """Every bundle as a 3D polyline, for the viewer.
+
+    The run height is constant within a bay -- the router has already proved
+    nothing is in the way there -- with a vertical drop onto each terminal.
+    """
+    routed, _ = route(layout, panel_order)
+    out = []
+
+    for r in routed:
+        if not r["segs"]:
+            continue
+        run_z = LID_RUN_Z if r["bay"] == "lid" else BASE_RUN_Z
+
+        flat = [r["segs"][0][0]] + [s[1] for s in r["segs"]]
+        pts = [[flat[0][0], flat[0][1], _terminal_z(r["src"], r["bay"])]]
+        pts += [[x, y, run_z] for x, y in flat]
+        pts.append([flat[-1][0], flat[-1][1], _terminal_z(r["dst"], r["bay"])])
+
+        out.append({"name": r["name"], "kind": r["kind"], "n": r["n"],
+                    "bay": r["bay"], "len": round(r["len"], 1), "pts": pts})
+    return out

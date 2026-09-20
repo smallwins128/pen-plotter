@@ -9,7 +9,7 @@
   --paper:#e9edf1; --surface:#ffffff; --surface-2:#f3f6f8;
   --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a;
   --line:#ccd6de; --line-2:#dde4ea;
-  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --pcb:#1b6b41; --abs:#eef0f2; --shell:#3c4248; --accent:#c2622c; --accent-soft:#f0dccd;
+  --alu:#8f9daa; --steel:#b6c0c8; --wood:#b99b76; --pcb:#1b6b41; --abs:#eef0f2; --shell:#3c4248; --w-mains:#b3341f; --w-phase:#d98324; --w-power:#c9403a; --w-signal:#2f7fa6; --w-pwm:#7a4fa3; --w-usb:#5a6b78; --accent:#c2622c; --accent-soft:#f0dccd;
   --blue:#37718f; --blue-soft:#dde9ef;
   --stage-top:#dfe6ec; --stage-bot:#c8d3db;
   --shadow:0 1px 2px rgba(19,27,34,.06),0 8px 24px -12px rgba(19,27,34,.18);
@@ -19,7 +19,7 @@
     --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
     --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
     --line:#26333d; --line-2:#1e2a33;
-    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --shell:#20262b; --accent:#e08a52; --accent-soft:#3a2417;
+    --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --shell:#20262b; --w-mains:#e2664c; --w-phase:#e8a253; --w-power:#e2645e; --w-signal:#5aa8cc; --w-pwm:#a67fd0; --w-usb:#8697a5; --accent:#e08a52; --accent-soft:#3a2417;
     --blue:#6aa8c6; --blue-soft:#162a35;
     --stage-top:#151f27; --stage-bot:#0a1015;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -29,7 +29,7 @@
   --paper:#0c1218; --surface:#141d25; --surface-2:#1a242d;
   --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a;
   --line:#26333d; --line-2:#1e2a33;
-  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --shell:#20262b; --accent:#e08a52; --accent-soft:#3a2417;
+  --alu:#98a6b3; --steel:#7c8994; --wood:#6d5a44; --pcb:#2f9161; --abs:#ccd3d9; --shell:#20262b; --w-mains:#e2664c; --w-phase:#e8a253; --w-power:#e2645e; --w-signal:#5aa8cc; --w-pwm:#a67fd0; --w-usb:#8697a5; --accent:#e08a52; --accent-soft:#3a2417;
   --blue:#6aa8c6; --blue-soft:#162a35;
   --stage-top:#151f27; --stage-bot:#0a1015;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
@@ -205,6 +205,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
         <label class="toggle"><input type="checkbox" id="t-table" checked><span class="sw" style="background:var(--wood)"></span>Table &mdash; 5 ft bench</label>
         <label class="toggle"><input type="checkbox" id="t-caseshell" checked><span class="sw" style="background:var(--shell)"></span>Case shell &mdash; UN4020</label>
         <label class="toggle"><input type="checkbox" id="t-caseparts" checked><span class="sw" style="background:var(--steel)"></span><span class="sw" style="background:var(--pcb);margin-left:-5px"></span><span class="sw" style="background:var(--abs);margin-left:-5px"></span>Case contents</label>
+        <label class="toggle"><input type="checkbox" id="t-wiring" checked><span class="sw" style="background:var(--w-power)"></span><span class="sw" style="background:var(--w-signal);margin-left:-5px"></span><span class="sw" style="background:var(--w-phase);margin-left:-5px"></span>Harness &mdash; 25 bundles</label>
         <label class="toggle"><input type="checkbox" id="t-casefit" checked><span class="sw" style="background:var(--blue)"></span>Fans &amp; panel connectors</label>
         <label class="toggle"><input type="checkbox" id="t-travel" checked><span class="sw" style="background:var(--blue)"></span>Travel limits</label>
       </div>
@@ -258,6 +259,17 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
           <tbody id="deck-sag"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <div class="panel deck-panel">
+    <h2>Harness &mdash; routed and scored, not eyeballed</h2>
+    <div class="deck-grid">
+      <div class="rows" id="wire-stats"></div>
+      <div><table>
+        <thead><tr><th>Kind</th><th class="num">Bundles</th><th class="num">Longest</th></tr></thead>
+        <tbody id="wire-kinds"></tbody>
+      </table></div>
     </div>
   </div>
 
@@ -331,6 +343,30 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     '<tr class="total"><td>Panel &amp; cooling</td><td class="num">'+
     D.case.panel.length+' cutouts</td><td></td><td>'+
     D.case.fans.map(function(f){return f.note;}).join(", ")+'</td></tr>';
+
+  (function(){
+    var W = D.case.wiring || [], R = D.case.wiring_report || {};
+    document.getElementById("wire-stats").innerHTML = [
+      ["Bundles", W.length],
+      ["Conductors", W.reduce(function(a,b){return a+b.n;}, 0)],
+      ["Obstructions", '<span class="'+(R.obstruction?"bad":"ok")+'">'+R.obstruction+"</span>"],
+      ["Crossings", R.crossings ? R.crossings.length : 0],
+      ["Conductor-mm", Math.round(R.total || 0)]
+    ].map(function(r){
+      return '<div class="row"><span>'+r[0]+'</span><span class="n">'+r[1]+'</span></div>';
+    }).join("");
+
+    var by = {};
+    W.forEach(function(w){
+      by[w.kind] = by[w.kind] || {n:0, max:0};
+      by[w.kind].n++; by[w.kind].max = Math.max(by[w.kind].max, w.len);
+    });
+    document.getElementById("wire-kinds").innerHTML = Object.keys(by).sort().map(function(k){
+      return '<tr><td><span class="sw" style="display:inline-block;vertical-align:-1px;'+
+             'margin-right:6px;background:var(--w-'+k+')"></span>'+k+'</td><td class="num">'+
+             by[k].n+'</td><td class="num">'+by[k].max.toFixed(0)+' mm</td></tr>';
+    }).join("");
+  })();
 
   var K = D.deck;
   document.getElementById("deck-rows").innerHTML = [
@@ -460,6 +496,23 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
   });
   scene.add(caseParts);
 
+  // The harness, as tubes along the routed polylines. Radius grows with the
+  // conductor count so a 4-wire bundle reads heavier than a single signal.
+  var wireMats = {};
+  var wiring = new THREE.Group();
+  (D.case.wiring || []).forEach(function(w){
+    if (!wireMats[w.kind]) {
+      wireMats[w.kind] = new THREE.MeshStandardMaterial({roughness:.5, metalness:.1});
+    }
+    var pts = w.pts.map(function(p){ return new THREE.Vector3(p[0], p[1], p[2]); });
+    var curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.02);
+    var r = 1.1 + 0.4 * Math.sqrt(w.n);
+    wiring.add(new THREE.Mesh(new THREE.TubeGeometry(curve, pts.length * 8, r, 6, false),
+                              wireMats[w.kind]));
+  });
+  wiring.position.x = D.case.at[0] + (D.case.ext[0] / 2);
+  scene.add(wiring);
+
   var lineMat  = new THREE.LineBasicMaterial({});
   var lineMat2 = new THREE.LineDashedMaterial({dashSize:14, gapSize:9});
   function rectAt(x0,x1,y0,y1,z,mat){
@@ -489,6 +542,9 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     matTable.color = new THREE.Color(css("--wood"));
     matShell.color = new THREE.Color(css("--shell"));
     matFit.color   = new THREE.Color(css("--blue"));
+    Object.keys(wireMats).forEach(function(k){
+      wireMats[k].color = new THREE.Color(css("--w-" + k));
+    });
     partMats.steel.color = new THREE.Color(css("--steel"));
     partMats.pcb.color   = new THREE.Color(css("--pcb"));
     partMats.abs.color   = new THREE.Color(css("--abs"));
@@ -581,7 +637,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
     readout(); draw();
   });
 
-  var toggles = {"t-caseshell":caseShell, "t-caseparts":caseParts, "t-casefit":caseFit, "t-deck":deckMesh, "t-frame":frameMesh, "t-bar":barMesh, "t-table":table, "t-travel":travel};
+  var toggles = {"t-wiring":wiring, "t-caseshell":caseShell, "t-caseparts":caseParts, "t-casefit":caseFit, "t-deck":deckMesh, "t-frame":frameMesh, "t-bar":barMesh, "t-table":table, "t-travel":travel};
   Object.keys(toggles).forEach(function(id){
     document.getElementById(id).addEventListener("change", function(e){
       toggles[id].visible = e.target.checked; draw();
