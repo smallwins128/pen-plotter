@@ -10,8 +10,12 @@ they do not go as the crow flies -- and the result is scored on four things:
 
     obstruction   a bundle crossing a component it does not belong to. This is
                   the hard failure: you cannot route through a TB6600.
-    crossing      two bundles crossing each other. Each one is a place where
-                  something has to lift over something else.
+    crossing      two bundles crossing in plan. This mattered a great deal
+                  when every bundle ran at one height; now each has its own
+                  lane they simply pass at different heights, which is what a
+                  real loom does. Still counted, because a crossing is still a
+                  place the harness is not flat -- but weighted lightly, not
+                  as a fault.
     separation    mains or motor-phase running close to a signal bundle.
     length        total conductor-millimetres, which is both cost and noise.
 
@@ -60,31 +64,30 @@ LID_NETS = [
     ("endstop_y", "gx16_3_endstop_y", "elecrow_6x", 3, "signal"),
     ("servo_sig", "gx16_4_servo", "elecrow_6x", 1, "pwm"),
     ("servo_pwr", "hinge",      "gx16_4_servo", 2, "power"),
+    # One pair crosses the hinge, then fans out from the lid strip. Daisy
+    # chaining the drivers instead would put all 9 A through the first one's
+    # screw terminal.
+    ("vmot_trunk", "hinge",    "dist_lid",   2, "power"),
     ("usb",       "usb_c",      "elecrow_6x", 4, "usb"),
-    ("vmot_x1",   "hinge",      "tb6600_x1:pwr",  2, "power"),
-    ("vmot_x2",   "hinge",      "tb6600_x2:pwr",  2, "power"),
-    ("vmot_y",    "hinge",      "tb6600_y:pwr",   2, "power"),
-    ("vmot_board", "hinge",     "elecrow_6x", 2, "power"),
-    # 24 V is already at the nearest driver; running this back to the hinge
-    # would mean crossing the whole driver row for no reason.
-    ("fan_pwr",   "tb6600_y:pwr", "fan_exhaust", 2, "power"),
+    ("vmot_x1",   "dist_lid",   "tb6600_x1:pwr",  2, "power"),
+    ("vmot_x2",   "dist_lid",   "tb6600_x2:pwr",  2, "power"),
+    ("vmot_y",    "dist_lid",   "tb6600_y:pwr",   2, "power"),
+    ("vmot_board", "dist_lid",  "elecrow_6x", 2, "power"),
+    ("fan_pwr",   "dist_lid",   "fan_exhaust", 2, "power"),
 ]
 
 # The base runs are short and its parts do not move, so these are not searched
 # over -- but they are routed and drawn, because a harness you cannot see is a
 # harness you cannot check.
 BASE_NETS = [
-    ("mains_main",  "iec_inlet",     "psu_24v_main",  3, "mains"),
-    ("mains_servo", "iec_inlet",     "psu_24v_servo", 3, "mains"),
-    ("rail_24v",    "psu_24v_main",  "bus_24v",       2, "power"),
-    ("rail_gnd",    "psu_24v_main",  "bus_ground",    2, "power"),
-    ("servo_in",    "psu_24v_servo", "buck_servo",    2, "power"),
-    ("servo_out",   "buck_servo",    "hinge",         2, "power"),
-    ("vmot_up",     "bus_24v",       "hinge",         2, "power"),
-    ("gnd_up",      "bus_ground",    "hinge",         2, "power"),
-    # The intake fan sits at the far end from the bus; it takes its 24 V from
-    # the main supply's own terminals, which are right beside it.
-    ("fan_in_pwr",  "psu_24v_main",  "fan_intake",    2, "power"),
+    ("mains_in",    "iec_inlet",      "mains_splitter", 3, "mains"),
+    ("mains_main",  "mains_splitter", "psu_24v_main",   3, "mains"),
+    ("mains_servo", "mains_splitter", "psu_24v_servo",  3, "mains"),
+    ("rail_out",    "psu_24v_main",   "dist_base",      2, "power"),
+    ("servo_in",    "psu_24v_servo",  "buck_servo",     2, "power"),
+    ("servo_out",   "buck_servo",     "hinge",          2, "power"),
+    ("trunk_up",    "dist_base",      "hinge",          2, "power"),
+    ("fan_in_pwr",  "dist_base",      "fan_intake",     2, "power"),
 ]
 
 NETS = [(n, a, b, c, k, "lid") for n, a, b, c, k in LID_NETS] + \
@@ -372,7 +375,10 @@ def analyse(layout=None, panel_order=None):
                  if r["kind"] in STRETCH_LIMIT and r["len"] > STRETCH_LIMIT[r["kind"]]]
     stretch_cost = sum(l - lim for _, l, lim in stretched) * 3.0
 
-    score = (obstruction * 10000 + len(crossings) * 500 + len(near) * 250
+    # Obstruction is the only hard failure: you cannot route through a part.
+    # Crossings are resolved by the lanes (see the note above), so they are
+    # priced as untidiness rather than as a conflict.
+    score = (obstruction * 10000 + len(crossings) * 40 + len(near) * 250
              + stretch_cost + total / 100.0)
     return {"routed": routed, "obstruction": obstruction, "crossings": crossings,
             "near": near, "total": total, "stretched": stretched, "score": score}

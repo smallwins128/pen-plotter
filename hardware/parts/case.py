@@ -60,13 +60,22 @@ HINGE_EDGE = "+X"
 # 220 V runs are short and stay out of the DC half. Before this the servo PSU
 # sat diagonally opposite the inlet -- a 460 mm mains run that crossed both DC
 # rails on its way. DC distribution lives up the +X side by the hinge.
+# A DIN terminal strip is about 58 mm tall once it is on its rail, not the
+# 30 mm a bare bus bar would be. Both bays have 99 mm, so it fits -- but it is
+# the tallest thing in the base now.
+DIN_H = 58.0
+
+# Ways per distribution strip, as (24 V positions, 0 V positions). The BOM
+# counts blocks, end clamps and jumper combs off these.
+DIST_WAYS = {"dist_base": (4, 4), "dist_lid": (6, 6)}
+
 BASE_PARTS = [
-    ("iec_inlet",     ( 50,  30, 30), (-105, -180), "abs",   "panel-mount IEC, 220 V in"),
-    ("psu_24v_main",  (115, 215, 30), ( -75,  -35), "steel", "LRS-350-24, ex-Ender 3"),
-    ("psu_24v_servo", ( 51,  78, 28), (  70, -155), "steel", "RS-25-24, beside the inlet"),
-    ("buck_servo",    ( 45,  65, 25), (  60,  -80), "pcb",   "24 -> 6.0 V, MG996R"),
-    ("bus_ground",    ( 25, 150, 30), (  85,  100), "abs",   "ground terminal bus"),
-    ("bus_24v",       ( 25, 150, 30), ( 120,  100), "abs",   "24 V bus, nearest the hinge"),
+    ("iec_inlet",      ( 50,  30, 30), (-110, -150), "abs",   "panel-mount IEC, fused + switched"),
+    ("mains_splitter", ( 60,  50, 30), (-100,  -85), "abs",   "3-in/6-out lever splitter, L/N/E"),
+    ("psu_24v_main",   (115, 215, 30), ( -60,   80), "steel", "LRS-350-24, ex-Ender 3"),
+    ("psu_24v_servo",  ( 51,  78, 28), (  75, -160), "steel", "RS-25-24, servo supply"),
+    ("buck_servo",     ( 45,  65, 25), (  75,  -80), "pcb",   "24 -> 6.0 V, MG996R"),
+    ("dist_base",      ( 50,  58, DIN_H), ( 105,   60), "abs", "DIN strip: 4x 24 V + 4x 0 V"),
 ]
 
 # TB6600: 96.5 flange to flange, 67.7 deep over the terminals, 57 tall.
@@ -77,16 +86,18 @@ TB6600 = (96.5, 67.7, 57.0)
 # drops into it -- so nothing has to route over the top of a driver or the board
 # to reach anything.
 #
-# The board's Y position is not a guess: wiring.py routes every bundle and
-# scores the result, and moving the board from -120 to +60 -- up beside the
-# drivers it talks to -- took the score from 20331 to 386 and cut a fifth off
-# the total conductor length. Re-run `python3 hardware/wiring.py --search`
-# after moving anything in here.
+# Neither the board's position nor the connector order is a guess: wiring.py
+# routes every bundle and scores the result, and both come from its search.
+# Re-run `python3 hardware/wiring.py --search` after moving anything in here.
 LID_PARTS = [
-    ("tb6600_x1",  TB6600,        (  86,   25), "steel", "stepper driver"),
-    ("tb6600_x2",  TB6600,        (  86,   95), "steel", "stepper driver"),
-    ("tb6600_y",   TB6600,        (  86,  165), "steel", "stepper driver"),
-    ("elecrow_6x", (85, 125, 25), ( -94,   60), "pcb",   "Elecrow 6-axis, 125 x 85"),
+    ("tb6600_x1",  TB6600,          (  86,   25), "steel", "stepper driver"),
+    ("tb6600_x2",  TB6600,          (  86,   95), "steel", "stepper driver"),
+    ("tb6600_y",   TB6600,          (  86,  165), "steel", "stepper driver"),
+    ("elecrow_6x", (85, 125, 25),   ( -94,    0), "pcb",   "Elecrow 6-axis, 125 x 85"),
+    # One pair crosses the hinge and fans out here. Without this the five lid
+    # loads had nothing to start from, or the first driver's screw terminal
+    # would have carried all 9 A for the three of them.
+    ("dist_lid",   (50, 80, DIN_H), (  86,  -80), "abs",   "DIN strip: 6x 24 V + 6x 0 V"),
 ]
 
 # Panel connectors sit in the lid's top face and their bodies hang ~25 mm into
@@ -99,11 +110,11 @@ LANE_X = -7.0
 # Ordered along the lane so each lands beside what it wires to: board services
 # at the board end, steppers opposite their own driver.
 PANEL = [
-    ("usb_c",            14, (LANE_X, -170), "USB-C to the board"),
-    ("gx16_3_endstop_x", 16, (LANE_X, -120), "endstop X"),
+    ("gx16_3_endstop_x", 16, (LANE_X, -170), "endstop X"),
+    ("gx16_4_servo",     16, (LANE_X, -120), "servo, 6 V + signal"),
     ("gx16_3_endstop_y", 16, (LANE_X,  -70), "endstop Y"),
-    ("gx16_4_servo",     16, (LANE_X,  -20), "servo, 6 V + signal"),
-    ("gx16_5_x1",        16, (LANE_X,   25), "stepper X1, 4 wires + shield"),
+    ("gx16_5_x1",        16, (LANE_X,  -20), "stepper X1, 4 wires + shield"),
+    ("usb_c",            14, (LANE_X,   25), "USB-C to the board"),
     ("gx16_5_x2",        16, (LANE_X,   95), "stepper X2, 4 wires + shield"),
     ("gx16_5_y",         16, (LANE_X,  160), "stepper Y, 4 wires + shield"),
 ]

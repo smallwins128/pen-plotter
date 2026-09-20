@@ -20,6 +20,8 @@ python3 hardware/preview.py         # render PNGs to eyeball the result
 python3 hardware/profiles.py        # print + plot the frame cross-section
 python3 hardware/viewer.py          # build the interactive 3D viewer
 python3 hardware/stock.py           # what to buy, and how to cut it
+python3 hardware/bom.py             # full bill of materials
+python3 hardware/bom.py --csv       # the same, for a spreadsheet
 python3 hardware/stock.py 20x20     # just one profile
 ```
 
@@ -53,6 +55,7 @@ Each part exports:
 | **`preview.py`** | PNG renders. Sanity check, not a beauty shot. |
 | **`viewer.py`** + **`web/`** | The two viewers. `_common.html` is the shared core; `machine.html` and `case.html` are the pages. `export_web.py` packs the geometry. |
 | **`wiring.py`** | Routes the case harness, scores it, and searches for a better layout. |
+| **`bom.py`** | Bill of materials. Counts what the model knows; declares what it can't. |
 | **`stock.py`** | Groups every cut list by profile and packs the pieces onto stock bars, kerf included. |
 
 ## Conventions
@@ -241,6 +244,21 @@ parked the servo PWM 274 mm away, because a single conductor scores cheap.
 That line is single-ended and timing-critical, and `FINDINGS.md` §7 is a long
 argument about the servo being marginal. USB is differential and doesn't care
 about length; the servo does. They now have separate budgets.
+
+### Distribution, in both bays
+
+One pair of conductors crosses the hinge and fans out from a DIN strip in each
+bay. Before this, five lid loads — three drivers, the board and the exhaust fan
+— each started at the hinge with nothing to start from. The alternative is
+daisy-chaining driver to driver, which puts all **9 A** for three drivers
+through the first one's screw terminal.
+
+A DIN strip stands ~58 mm once it's on its rail, not the 30 mm a bare bus bar
+would be. Both bays have 99 mm, so it fits, but it's now the tallest thing in
+the base.
+
+`bom.py` counts the blocks, end clamps and jumper combs off `DIST_WAYS`, so the
+shopping list follows the model rather than the other way round.
 
 ### There is no 5 V rail
 
