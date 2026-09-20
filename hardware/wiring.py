@@ -194,11 +194,26 @@ def _centre(name, boxes, points):
 
 
 def _face(box, other):
-    """Which face of a box points at `other`: ('x'|'y', +1|-1)."""
+    """Which of a box's ACTUAL terminal faces points at `other`.
+
+    Wires leave a part where its terminals are, not wherever is convenient.
+    Almost nothing in this case has terminals on more than one side -- a TB6600
+    has both its blocks on a single 96 mm edge -- so letting the router pick a
+    face was quietly inventing connections that cannot be made.
+    """
+    allowed, _conf, _why = case.terminal_faces(box.name)
     dx, dy = other[0] - box.x, other[1] - box.y
-    if abs(dx) / max(box.w, 1.0) >= abs(dy) / max(box.d, 1.0):
-        return ("x", 1 if dx >= 0 else -1)
-    return ("y", 1 if dy >= 0 else -1)
+
+    best, best_score = None, None
+    for face in allowed:
+        sign = 1 if face[0] == "+" else -1
+        axis = face[1]
+        # How well this face points at the target: the component of the
+        # direction along the face normal.
+        score = (dx if axis == "x" else dy) * sign
+        if best_score is None or score > best_score:
+            best, best_score = (axis, sign), score
+    return best
 
 
 def port_plan(boxes, points, nets):

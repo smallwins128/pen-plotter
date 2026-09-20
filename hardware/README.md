@@ -245,6 +245,32 @@ That line is single-ended and timing-critical, and `FINDINGS.md` §7 is a long
 argument about the servo being marginal. USB is differential and doesn't care
 about length; the servo does. They now have separate budgets.
 
+### Where the terminals actually are
+
+`TERMINALS` in `case.py` records which faces each component's wires can leave
+from, and **how confident that is** — because it varies a lot:
+
+| | |
+|---|---|
+| **measured** | TB6600 — both terminal blocks on one 96 mm edge, off the drawing |
+| **convention** | Mean Well PSUs (one end), LM2596 (both ends), IEC (rear), fans (one corner), DIN blocks (both sides), splitter (opposite faces) |
+| **UNKNOWN** | Elecrow board — its product page is blocked, so header positions are a guess and marked as one |
+
+This matters more than it sounds. The router had been free to take wires out of
+whichever face pointed at the destination, which quietly invented connections
+that cannot be made. Enforcing it caught a layout that was **not buildable**:
+
+- The three TB6600s were laid with their 96.5 mm dimension across, so their
+  terminal edge faced the next driver **2.3 mm away**. No wire, no screwdriver.
+  They are now turned 90° with that edge facing the lane.
+- `buck_servo` had the servo PSU 25 mm off its input face.
+- `dist_base` had its +X face 5 mm from the shell — a DIN block takes a wire
+  each side, so a face against the wall is as unwirable as one against a part.
+- `psu_24v_servo` was pressed end-on into the shell; it's turned to face inward.
+
+`check_layout()` now enforces `TERMINAL_CLEARANCE` (25 mm in front of every
+terminal face, against both parts and the shell) on every build.
+
 ### Distribution, in both bays
 
 One pair of conductors crosses the hinge and fans out from a DIN strip in each

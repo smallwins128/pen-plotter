@@ -74,12 +74,48 @@ BASE_PARTS = [
     ("mains_splitter", ( 60,  50, 30), (-100,  -85), "abs",   "3-in/6-out lever splitter, L/N/E"),
     ("psu_24v_main",   (115, 215, 30), ( -60,   80), "steel", "LRS-350-24, ex-Ender 3"),
     ("psu_24v_servo",  ( 51,  78, 28), (  75, -160), "steel", "RS-25-24, servo supply"),
-    ("buck_servo",     ( 45,  65, 25), (  75,  -80), "pcb",   "24 -> 6.0 V, MG996R"),
-    ("dist_base",      ( 50,  58, DIN_H), ( 105,   60), "abs", "DIN strip: 4x 24 V + 4x 0 V"),
+    ("buck_servo",     ( 45,  65, 25), (  75,  -55), "pcb",   "24 -> 6.0 V, MG996R"),
+    ("dist_base",      ( 50,  58, DIN_H), (  85,   60), "abs", "DIN strip: 4x 24 V + 4x 0 V"),
 ]
 
 # TB6600: 96.5 flange to flange, 67.7 deep over the terminals, 57 tall.
-TB6600 = (96.5, 67.7, 57.0)
+# Rotated from the first pass so its 96.5 mm dimension runs along Y: its two
+# terminal blocks both sit on ONE 96 mm edge, and laid the other way that edge
+# faced the next driver 2.3 mm away. Nothing could have been wired.
+TB6600 = (67.7, 96.5, 57.0)
+
+# Which faces a component's wires can actually leave from, in its local frame,
+# and how much clearance that face needs in front of it.
+#
+# This is the constraint the router was missing. It had been free to take wires
+# out of whichever face pointed at the destination, but almost nothing here has
+# terminals on more than one side. Confidence is recorded because it varies:
+# one of these is measured, most are the part's obvious convention, and one is
+# genuinely unknown.
+TERMINAL_CLEARANCE = 25.0       # mm in front of a terminal face for the wire to turn
+
+TERMINALS = {
+    "tb6600":         (("-x",),        "measured", "both blocks on one 96 mm edge, from the drawing"),
+    "psu_24v_main":   (("-y",),        "convention", "Mean Well screw terminals in a row on one short end"),
+    "psu_24v_servo":  (("+y",),        "convention", "same; turned to face inward, not the shell"),
+    "buck_servo":     (("-y", "+y"),   "convention", "LM2596: IN one end, OUT the other"),
+    "mains_splitter": (("-y", "+y"),   "convention", "3 in one face, 6 out the opposite"),
+    "iec_inlet":      (("+y",),        "convention", "spade terminals on the rear face"),
+    "dist_base":      (("-x", "+x"),   "convention", "DIN blocks take a wire each side"),
+    "dist_lid":       (("-y", "+y"),   "convention", "same"),
+    "fan_intake":     (("+y",),        "convention", "single lead out of one corner"),
+    "fan_exhaust":    (("-y",),        "convention", "same"),
+    "elecrow_6x":     (("-x", "+x", "-y", "+y"), "UNKNOWN",
+                       "product page is blocked; header positions are a guess"),
+}
+
+
+def terminal_faces(name):
+    """Faces a component's wires may leave from, and how sure we are."""
+    for key, val in TERMINALS.items():
+        if name.startswith(key):
+            return val
+    return (("-x", "+x", "-y", "+y"), "unconstrained", "")
 
 # Drivers hard against the hinge edge, board opposite, and a clear lane down the
 # middle. The board's ports face down into that lane, and every panel connector
@@ -90,14 +126,14 @@ TB6600 = (96.5, 67.7, 57.0)
 # routes every bundle and scores the result, and both come from its search.
 # Re-run `python3 hardware/wiring.py --search` after moving anything in here.
 LID_PARTS = [
-    ("tb6600_x1",  TB6600,          (  86,   25), "steel", "stepper driver"),
-    ("tb6600_x2",  TB6600,          (  86,   95), "steel", "stepper driver"),
-    ("tb6600_y",   TB6600,          (  86,  165), "steel", "stepper driver"),
+    ("tb6600_x1",  TB6600,          (  70,  -52), "steel", "stepper driver, terminals facing the lane"),
+    ("tb6600_x2",  TB6600,          (  70, 48.5), "steel", "stepper driver, terminals facing the lane"),
+    ("tb6600_y",   TB6600,          (  70,  149), "steel", "stepper driver, terminals facing the lane"),
     ("elecrow_6x", (85, 125, 25),   ( -94,    0), "pcb",   "Elecrow 6-axis, 125 x 85"),
     # One pair crosses the hinge and fans out here. Without this the five lid
     # loads had nothing to start from, or the first driver's screw terminal
     # would have carried all 9 A for the three of them.
-    ("dist_lid",   (50, 80, DIN_H), (  86,  -80), "abs",   "DIN strip: 6x 24 V + 6x 0 V"),
+    ("dist_lid",   (78, 47, DIN_H), (  50, -151), "abs",   "DIN strip: 6x 24 V + 6x 0 V"),
 ]
 
 # Panel connectors sit in the lid's top face and their bodies hang ~25 mm into
@@ -166,8 +202,43 @@ def check_layout():
                         and abs(y1 - y2) < (d1 + d2) / 2 - 1e-9):
                     problems.append(f"{n1} overlaps {n2} in the {bay}")
 
+    # A terminal face needs room in front of it for the wire to turn. This is
+    # what caught the drivers stacked 2.3 mm apart on the very axis their
+    # terminals face -- unbuildable, and invisible until the faces were declared.
+    for bay, parts in (("base", BASE_PARTS + fans_in("base")), ("lid", LID_PARTS + fans_in("lid"))):
+        for name, (w, d, _), (x, y), _, _ in parts:
+            faces, conf, _why = terminal_faces(name)
+            if conf == "UNKNOWN":
+                continue
+            for face in faces:
+                axis, sign = face[1], (1 if face[0] == "+" else -1)
+                half = (w if axis == "x" else d) / 2
+                edge = (x if axis == "x" else y) + sign * half
+                front = (edge + sign * TERMINAL_CLEARANCE)
+                lo, hi = sorted((edge, front))
+
+                limit = (CASE_INT[0] if axis == "x" else CASE_INT[1]) / 2
+                if abs(front) > limit + 1e-9:
+                    problems.append(
+                        f"{name}'s {face} terminal face is under "
+                        f"{TERMINAL_CLEARANCE:g} mm from the shell -- no room to wire it")
+
+                for on, (ow, od, _), (ox, oy), _, _ in parts:
+                    if on == name:
+                        continue
+                    if axis == "x":
+                        clash = (abs(oy - y) < (od + d) / 2
+                                 and lo < ox + ow / 2 and ox - ow / 2 < hi)
+                    else:
+                        clash = (abs(ox - x) < (ow + w) / 2
+                                 and lo < oy + od / 2 and oy - od / 2 < hi)
+                    if clash:
+                        problems.append(
+                            f"{name}'s {face} terminal face has {on} within "
+                            f"{TERMINAL_CLEARANCE:g} mm -- no room to wire it")
+
     if problems:
-        raise ValueError("case layout: " + "; ".join(problems))
+        raise ValueError("case layout: " + "; ".join(sorted(set(problems))))
 
 
 def build_shell():
