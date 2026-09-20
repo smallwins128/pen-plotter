@@ -174,6 +174,46 @@ Airflow runs diagonally: intake low in the base at the cool end, exhaust in the
 **lid** at the driver end, so the air leaving is the hottest air in the box.
 That costs two conductors across the hinge, which is worth it.
 
+### The wiring is routed, not eyeballed
+
+`wiring.py` models every bundle in the lid — source, destination, conductor
+count, kind — routes each as an L, and scores the result on four things:
+
+| | |
+|---|---|
+| **obstruction** | a bundle crossing a component it doesn't belong to. The hard failure: you can't route through a TB6600. |
+| **crossing** | two bundles crossing each other — a place something must lift over something else. |
+| **separation** | mains or motor phase running alongside a signal bundle. |
+| **length** | conductor-millimetres, with a tighter budget on lines that care. |
+
+```sh
+python3 hardware/wiring.py            # report the current layout
+python3 hardware/wiring.py --search   # try board positions and connector orders
+```
+
+Geometry comes from `case.py`, so the analysis can't drift from the model.
+**Re-run the search after moving anything in the lid.**
+
+It has already earned its keep. The first layout scored 20331 with two
+obstructions; the current one scores 386 with none, and uses a fifth less wire.
+What it found was that the *board position* was the problem, not the connector
+order — moving the board from y −120 to y +60, up beside the drivers it talks
+to, fixed most of it.
+
+Three things it caught that eyeballing missed:
+
+- **Connector bodies are obstacles.** A panel-mount GX16 hangs ~25 mm into the
+  bay. Leaving them out of the model let routes pass straight through the lane.
+- **A TB6600 has two terminal blocks.** Treating it as one point made every
+  step/dir bundle look like it ran alongside its own motor phases.
+- **The hinge is an edge, not a point** — power can cross anywhere along it.
+
+And one thing the *optimiser* got wrong before the objective was fixed: it
+parked the servo PWM 274 mm away, because a single conductor scores cheap.
+That line is single-ended and timing-critical, and `FINDINGS.md` §7 is a long
+argument about the servo being marginal. USB is differential and doesn't care
+about length; the servo does. They now have separate budgets.
+
 ### There is no 5 V rail
 
 The Elecrow board regulates its own 5 V (500 mA) and 3.3 V (100 mA) from VMot,

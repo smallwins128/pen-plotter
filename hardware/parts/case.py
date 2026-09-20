@@ -72,11 +72,17 @@ TB6600 = (96.5, 67.7, 57.0)
 # middle. The board's ports face down into that lane, and every panel connector
 # drops into it -- so nothing has to route over the top of a driver or the board
 # to reach anything.
+#
+# The board's Y position is not a guess: wiring.py routes every bundle and
+# scores the result, and moving the board from -120 to +60 -- up beside the
+# drivers it talks to -- took the score from 20331 to 386 and cut a fifth off
+# the total conductor length. Re-run `python3 hardware/wiring.py --search`
+# after moving anything in here.
 LID_PARTS = [
     ("tb6600_x1",  TB6600,        (  86,   25), "steel", "stepper driver"),
     ("tb6600_x2",  TB6600,        (  86,   95), "steel", "stepper driver"),
     ("tb6600_y",   TB6600,        (  86,  165), "steel", "stepper driver"),
-    ("elecrow_6x", (85, 125, 25), ( -94, -120), "pcb",   "Elecrow 6-axis, 125 x 85"),
+    ("elecrow_6x", (85, 125, 25), ( -94,   60), "pcb",   "Elecrow 6-axis, 125 x 85"),
 ]
 
 # Panel connectors sit in the lid's top face and their bodies hang ~25 mm into
