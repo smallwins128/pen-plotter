@@ -151,9 +151,39 @@ them. Airflow needed is small — roughly 22–30 CFM of fan rating covers 50 W 
 a 10 °C rise once derated for grille and filter — so 24 V axials off the
 existing bus do the job and keep more mains out of the box.
 
-Contents are stand-in blocks at real outside sizes. Only the control board is a
-guess; everything else is measured. Not modelled: wiring, the sub-plate the lid
-parts want to mount to, the switches, and the shell's moulded detail.
+### The lane
+
+The lid is laid out around a clear channel down the middle. It is not spare
+space — it is what makes the wiring short:
+
+- **Drivers hard against the hinge edge**, so the heavy 24 V conductors cross
+  the hinge and land immediately, without running the length of the lid.
+- **Board opposite**, with its ports facing down into the lane.
+- **Every panel connector drops into the lane**, ordered so each lands beside
+  what it wires to: USB and endstops at the board end, each stepper connector
+  opposite its own driver.
+
+Nothing then has to route over the top of a driver or across the board.
+
+The connectors are also the reason the lane has to exist at all. A panel-mount
+GX16 hangs about 25 mm into the bay, and a TB6600 is 57 mm tall, so a connector
+simply cannot sit above a driver. `check_layout()` counts connector bodies and
+fans as bay-occupying parts for exactly this reason.
+
+Airflow runs diagonally: intake low in the base at the cool end, exhaust in the
+**lid** at the driver end, so the air leaving is the hottest air in the box.
+That costs two conductors across the hinge, which is worth it.
+
+### The 5 V bus may be redundant
+
+The Elecrow board regulates its own 5 V (500 mA) and 3.3 V (100 mA) from VMot.
+If nothing outside the board needs 5 V, `buck_5v` and `bus_5v` come out and the
+base gets simpler. Both are still modelled, flagged, pending a decision — the
+servo's 6 V buck is unaffected either way.
+
+Contents are stand-in blocks at real outside sizes. Not modelled: wiring, the
+sub-plate the lid parts want to mount to, the switches, and the shell's moulded
+detail.
 
 ## V-slot vs T-slot
 

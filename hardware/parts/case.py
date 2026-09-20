@@ -46,14 +46,19 @@ LID_CEILING = CAVITY_Z1
 SPLIT_Z = CAVITY_Z0 + CASE_BASE_DEPTH
 
 # name, (w, d, h), (x, y), material, note
+# The lid hinges along the +X edge, so that is where power crosses. The 24 V
+# and ground buses sit nearest it and the drivers sit nearest it on the other
+# side, which keeps the only heavy conductors in the machine short.
+HINGE_EDGE = "+X"
+
 # PSUs down the -X side, distribution down the +X side, mains in the -Y corner
 # clear of the intake fan.
 BASE_PARTS = [
     ("psu_24v_main",  (115, 215, 30), ( -70,  -60), "steel", "LRS-350-24, ex-Ender 3"),
     ("psu_24v_servo", ( 51,  78, 28), ( -95,  140), "steel", "RS-25-24"),
-    ("bus_24v",       ( 25, 150, 30), (  50,  -60), "abs",   "24 V terminal bus"),
-    ("bus_5v",        ( 25, 150, 30), (  85,  -60), "abs",   "5 V terminal bus"),
-    ("bus_ground",    ( 25, 150, 30), ( 120,  -60), "abs",   "ground terminal bus"),
+    ("bus_5v",        ( 25, 150, 30), (  50,  -60), "abs",   "5 V bus -- may be redundant, see README"),
+    ("bus_ground",    ( 25, 150, 30), (  85,  -60), "abs",   "ground terminal bus"),
+    ("bus_24v",       ( 25, 150, 30), ( 120,  -60), "abs",   "24 V bus, nearest the hinge"),
     ("buck_5v",       ( 45,  65, 25), ( 110,   90), "pcb",   "24 -> 5 V, logic"),
     ("buck_servo",    ( 45,  65, 25), ( 110,  160), "pcb",   "24 -> 6.0 V, MG996R"),
     ("iec_inlet",     ( 50,  30, 30), (  95, -180), "abs",   "panel-mount IEC, 220 V in"),
@@ -62,27 +67,42 @@ BASE_PARTS = [
 # TB6600: 96.5 flange to flange, 67.7 deep over the terminals, 57 tall.
 TB6600 = (96.5, 67.7, 57.0)
 
+# Drivers hard against the hinge edge, board opposite, and a clear lane down the
+# middle. The board's ports face down into that lane, and every panel connector
+# drops into it -- so nothing has to route over the top of a driver or the board
+# to reach anything.
 LID_PARTS = [
-    ("tb6600_x1",   TB6600,          (-50,  -90), "steel", "stepper driver"),
-    ("tb6600_x2",   TB6600,          (-50,    0), "steel", "stepper driver"),
-    ("tb6600_y",    TB6600,          (-50,   90), "steel", "stepper driver"),
-    ("elecrow_6x", (100, 100, 25),   ( 70,    0), "pcb",   "6-axis board -- SIZE IS A PLACEHOLDER"),
+    ("tb6600_x1",  TB6600,        (  86,   25), "steel", "stepper driver"),
+    ("tb6600_x2",  TB6600,        (  86,   95), "steel", "stepper driver"),
+    ("tb6600_y",   TB6600,        (  86,  165), "steel", "stepper driver"),
+    ("elecrow_6x", (85, 125, 25), ( -94, -120), "pcb",   "Elecrow 6-axis, 125 x 85"),
 ]
 
-# 3x GX16-5 steppers, 2x GX16-3 endstops, 1x GX16-4 servo, 1x USB-C.
+# Panel connectors sit in the lid's top face and their bodies hang ~25 mm into
+# the bay, so they occupy floor like anything else -- which is why they are in
+# the lane and not above a 57 mm driver.
+PANEL_BODY = 22.0
+PANEL_DEPTH = 25.0
+LANE_X = -7.0
+
+# Ordered along the lane so each lands beside what it wires to: board services
+# at the board end, steppers opposite their own driver.
 PANEL = [
-    ("gx16_5_x1",   16, ( 95, -150), "stepper, 4 wires + shield"),
-    ("gx16_5_x2",   16, ( 95, -100), "stepper, 4 wires + shield"),
-    ("gx16_5_y",    16, ( 95,  -50), "stepper, 4 wires + shield"),
-    ("gx16_3_endstop_x", 16, ( 95,   0), "endstop"),
-    ("gx16_3_endstop_y", 16, ( 95,  50), "endstop"),
-    ("gx16_4_servo",     16, ( 95, 100), "servo"),
-    ("usb_c",            14, ( 95, 150), "panel-mount USB-C to the board"),
+    ("usb_c",            14, (LANE_X, -170), "USB-C to the board"),
+    ("gx16_3_endstop_x", 16, (LANE_X, -120), "endstop X"),
+    ("gx16_3_endstop_y", 16, (LANE_X,  -70), "endstop Y"),
+    ("gx16_4_servo",     16, (LANE_X,  -20), "servo, 6 V + signal"),
+    ("gx16_5_x1",        16, (LANE_X,   25), "stepper X1, 4 wires + shield"),
+    ("gx16_5_x2",        16, (LANE_X,   95), "stepper X2, 4 wires + shield"),
+    ("gx16_5_y",         16, (LANE_X,  160), "stepper Y, 4 wires + shield"),
 ]
 
+# Intake low in the base at the cool end, exhaust in the LID at the driver end,
+# so the path runs diagonally through both bays and leaves carrying the hottest
+# air. Costs two more conductors across the hinge, which is a fair trade.
 FANS = [
-    ("fan_intake",  (0, -(CASE_INT[1] / 2 - FAN_THICK / 2)), "intake, filtered"),
-    ("fan_exhaust", (0,  (CASE_INT[1] / 2 - FAN_THICK / 2)), "exhaust"),
+    ("fan_intake",  "base", (   0, -(CASE_INT[1] / 2 - FAN_THICK / 2)), "intake, filtered"),
+    ("fan_exhaust", "lid",  ( -60,  (CASE_INT[1] / 2 - FAN_THICK / 2)), "exhaust, at the drivers"),
 ]
 
 
@@ -99,12 +119,19 @@ def check_layout():
     hx, hy = _half_cavity()
     problems = []
 
-    # Fans stand on the base floor like anything else, so they take part in the
-    # collision check rather than being drawn in afterwards and hoped for.
-    fan_parts = [(n, (FAN_SIZE, FAN_THICK, FAN_SIZE), xy, "abs", note)
-                 for n, xy, note in FANS]
+    # Fans and panel connectors occupy their bay like anything else, so they
+    # take part in the collision check rather than being drawn in afterwards
+    # and hoped for. The connectors are the reason the lane exists: their
+    # bodies hang into the lid bay and cannot share floor with a driver.
+    def fans_in(bay):
+        return [(n, (FAN_SIZE, FAN_THICK, FAN_SIZE), xy, "abs", note)
+                for n, b, xy, note in FANS if b == bay]
 
-    for bay, parts in (("base", BASE_PARTS + fan_parts), ("lid", LID_PARTS)):
+    panel_parts = [(n, (PANEL_BODY, PANEL_BODY, PANEL_DEPTH), xy, "abs", note)
+                   for n, _, xy, note in PANEL]
+
+    for bay, parts in (("base", BASE_PARTS + fans_in("base")),
+                       ("lid", LID_PARTS + fans_in("lid") + panel_parts)):
         for name, (w, d, h), (x, y), _, _ in parts:
             if abs(x) + w / 2 > hx + 1e-9 or abs(y) + d / 2 > hy + 1e-9:
                 problems.append(f"{name} outside the cavity")
@@ -160,18 +187,21 @@ def build_parts(material=None):
 
 def build_fans():
     out = []
-    for name, (x, y), _ in FANS:
-        f = Pos(x, y, CAVITY_Z0 + FAN_SIZE / 2) * Box(FAN_SIZE, FAN_THICK, FAN_SIZE)
+    for name, bay, (x, y), _ in FANS:
+        z0 = CAVITY_Z0 if bay == "base" else SPLIT_Z
+        f = Pos(x, y, z0 + FAN_SIZE / 2) * Box(FAN_SIZE, FAN_THICK, FAN_SIZE)
         f.label = name
         out.append(f)
     return out
 
 
 def build_panel():
-    """Connector bodies in the lid's top face, sticking up."""
+    """Connectors through the lid's top face: a stub outside, a body inside."""
     out = []
     for name, dia, (x, y), _ in PANEL:
-        c = Pos(x, y, CASE_EXT[2] + 6) * Box(dia, dia, 24)
+        outside = Pos(x, y, CASE_EXT[2] + 9) * Box(dia, dia, 18)
+        inside = Pos(x, y, LID_CEILING - PANEL_DEPTH / 2) * Box(PANEL_BODY, PANEL_BODY, PANEL_DEPTH)
+        c = Compound(children=[outside, inside])
         c.label = name
         out.append(c)
     return out
@@ -218,7 +248,13 @@ def report():
         for name, (w, d, h), (x, y), mat, note in parts:
             lines.append(f"   {name:16s} {w:5.1f} x {d:5.1f} x {h:4.1f}  at ({x:+4.0f}, {y:+4.0f})  {mat:5s}  {note}")
         lines.append("")
-    lines.append(f"panel: {len(PANEL)} cutouts in the lid top; fans: {len(FANS)} x {FAN_SIZE:g} mm")
+    lines.append(f"lane at x = {LANE_X:+.0f}, {len(PANEL)} connectors dropping into it:")
+    for name, _, (x, y), note in PANEL:
+        lines.append(f"   {name:18s} at ({x:+4.0f}, {y:+4.0f})   {note}")
+    lines.append("")
+    for name, bay, (x, y), note in FANS:
+        lines.append(f"   {name:18s} {bay:4s} at ({x:+4.0f}, {y:+4.0f})   {note}")
+    lines.append(f"   hinge on the {HINGE_EDGE} edge -- power crosses there")
     return lines
 
 

@@ -159,7 +159,9 @@ def build_data():
             "lid": [{"name": n, "size": list(sz), "material": mat, "note": note}
                     for n, sz, _, mat, note in case_mod.LID_PARTS],
             "panel": [{"name": n, "note": note} for n, _, _, note in case_mod.PANEL],
-            "fans": [{"name": n, "note": note} for n, _, note in case_mod.FANS],
+            "fans": [{"name": n, "bay": b, "note": note} for n, b, _, note in case_mod.FANS],
+            "hinge": case_mod.HINGE_EDGE,
+            "lane_x": case_mod.LANE_X,
         },
         # The assembly's list covers every part, so the viewer no longer shows a
         # partial one when a new part is added.
