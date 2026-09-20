@@ -174,12 +174,12 @@ Airflow runs diagonally: intake low in the base at the cool end, exhaust in the
 **lid** at the driver end, so the air leaving is the hottest air in the box.
 That costs two conductors across the hinge, which is worth it.
 
-### The 5 V bus may be redundant
+### There is no 5 V rail
 
-The Elecrow board regulates its own 5 V (500 mA) and 3.3 V (100 mA) from VMot.
-If nothing outside the board needs 5 V, `buck_5v` and `bus_5v` come out and the
-base gets simpler. Both are still modelled, flagged, pending a decision — the
-servo's 6 V buck is unaffected either way.
+The Elecrow board regulates its own 5 V (500 mA) and 3.3 V (100 mA) from VMot,
+so the external 5 V buck and bus would have fed nothing. Both are gone. The
+only conversion left in the case is 24 V → 6.0 V for the servo, which is its
+own supply for the reasons in `FINDINGS.md` §7.
 
 Contents are stand-in blocks at real outside sizes. Not modelled: wiring, the
 sub-plate the lid parts want to mount to, the switches, and the shell's moulded

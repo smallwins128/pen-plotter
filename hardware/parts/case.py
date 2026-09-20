@@ -6,8 +6,11 @@ heatsinks hang fin-down in still air otherwise.
 
 Split of contents, settled with the packing numbers:
 
-    base   the two 24 V supplies, both bucks, the three terminal buses, the
-           IEC inlet and the two fans          -- heavy things, low down
+    base   the two 24 V supplies, the servo buck, the ground and 24 V buses,
+           the IEC inlet and the intake fan    -- heavy things, low down
+
+There is no 5 V rail in the case: the board regulates its own 5 V and 3.3 V
+from VMot, so an external 5 V buck and bus would have fed nothing.
     lid    the control board and three TB6600s -- they hang from the lid
            ceiling, with the panel connectors directly above them
 
@@ -56,10 +59,8 @@ HINGE_EDGE = "+X"
 BASE_PARTS = [
     ("psu_24v_main",  (115, 215, 30), ( -70,  -60), "steel", "LRS-350-24, ex-Ender 3"),
     ("psu_24v_servo", ( 51,  78, 28), ( -95,  140), "steel", "RS-25-24"),
-    ("bus_5v",        ( 25, 150, 30), (  50,  -60), "abs",   "5 V bus -- may be redundant, see README"),
     ("bus_ground",    ( 25, 150, 30), (  85,  -60), "abs",   "ground terminal bus"),
     ("bus_24v",       ( 25, 150, 30), ( 120,  -60), "abs",   "24 V bus, nearest the hinge"),
-    ("buck_5v",       ( 45,  65, 25), ( 110,   90), "pcb",   "24 -> 5 V, logic"),
     ("buck_servo",    ( 45,  65, 25), ( 110,  160), "pcb",   "24 -> 6.0 V, MG996R"),
     ("iec_inlet",     ( 50,  30, 30), (  95, -180), "abs",   "panel-mount IEC, 220 V in"),
 ]
