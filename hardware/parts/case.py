@@ -146,11 +146,11 @@ LANE_X = -7.0
 # Ordered along the lane so each lands beside what it wires to: board services
 # at the board end, steppers opposite their own driver.
 PANEL = [
-    ("gx16_3_endstop_x", 16, (LANE_X, -170), "endstop X"),
-    ("gx16_4_servo",     16, (LANE_X, -120), "servo, 6 V + signal"),
-    ("gx16_3_endstop_y", 16, (LANE_X,  -70), "endstop Y"),
-    ("gx16_5_x1",        16, (LANE_X,  -20), "stepper X1, 4 wires + shield"),
-    ("usb_c",            14, (LANE_X,   25), "USB-C to the board"),
+    ("gx16_3_endstop_y", 16, (LANE_X, -170), "endstop Y"),
+    ("gx16_3_endstop_x", 16, (LANE_X, -120), "endstop X"),
+    ("gx16_5_x1",        16, (LANE_X,  -70), "stepper X1, 4 wires + shield"),
+    ("usb_c",            14, (LANE_X,  -20), "USB-C to the board"),
+    ("gx16_4_servo",     16, (LANE_X,   25), "servo, 6 V + signal"),
     ("gx16_5_x2",        16, (LANE_X,   95), "stepper X2, 4 wires + shield"),
     ("gx16_5_y",         16, (LANE_X,  160), "stepper Y, 4 wires + shield"),
 ]
