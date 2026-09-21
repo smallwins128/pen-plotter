@@ -22,6 +22,8 @@ sys.path.insert(0, str(HERE / "parts"))
 
 from build123d import export_stl  # noqa: E402
 
+from params import LINK_WIRE  # noqa: E402
+
 OUT = HERE / "out"
 
 
@@ -52,39 +54,44 @@ def _simplify(pts, tol=1e-4):
 
 
 def case_data():
-    """Payload for the enclosure page: shell, contents, fans, panel, harness.
+    """Payload for the enclosure page: two boxes, shells and contents.
 
-    Separate from the machine payload on purpose. The deck mesh alone is 477 KB
-    and means nothing here; the harness means nothing over there.
+    No harness: the router is parked until the real internal layout exists
+    (see wiring.py), and drawing a harness from placeholder positions is how
+    the last round ended up polishing a fiction.
     """
     import case as case_mod
-    import wiring
 
-    shell = case_mod.shell_positioned()
-    extra = {"fans": case_mod.fans_positioned(), "panel": case_mod.panel_positioned()}
-    by_mat = {m: case_mod.parts_positioned(m) for m in ("steel", "pcb", "abs")}
+    parts, boxes = {}, {}
+    for box in case_mod.BOXES:
+        parts[f"{box}_shell"] = {"geom": _positions_b64(case_mod.shell_positioned(box),
+                                                        f"{box}_shell")}
+        parts[f"{box}_fan"] = {"geom": _positions_b64(case_mod.fan_positioned(box),
+                                                      f"{box}_fan")}
+        for mat in ("steel", "pcb", "abs"):
+            piece = case_mod.parts_positioned(box, mat)
+            if piece is not None:
+                parts[f"{box}_{mat}"] = {"geom": _positions_b64(piece, f"{box}_{mat}")}
+
+        boxes[box] = {
+            "origin_x": case_mod.origin_x(box),
+            "parts": [{"name": n, "size": [w, d, h], "material": m, "note": t}
+                      for n, (w, d, h), _, m, t in case_mod.check(box)],
+            "panel": [{"name": n, "note": t} for n, t in case_mod.BOXES[box]["panel"]],
+        }
 
     return {
-        "parts": {"shell": {"geom": _positions_b64(shell, "case_shell")}}
-        | {k: {"geom": _positions_b64(v, f"case_{k}")} for k, v in extra.items() if v}
-        | {m: {"geom": _positions_b64(v, f"case_{m}")} for m, v in by_mat.items() if v},
+        "parts": parts,
         "case": {
+            "model": "UN4412",
             "materials": ["steel", "pcb", "abs"],
             "ext": list(case_mod.CASE_EXT),
             "int": list(case_mod.CASE_INT),
-            "base_depth": case_mod.CASE_BASE_DEPTH,
-            "origin_x": case_mod.origin_x(),
-            "hinge": case_mod.HINGE_EDGE,
-            "lane_x": case_mod.LANE_X,
-            "base": [{"name": n, "size": list(sz), "at": list(xy), "material": m, "note": t}
-                     for n, sz, xy, m, t in case_mod.BASE_PARTS],
-            "lid": [{"name": n, "size": list(sz), "at": list(xy), "material": m, "note": t}
-                    for n, sz, xy, m, t in case_mod.LID_PARTS],
-            "panel": [{"name": n, "at": list(xy), "note": t} for n, _, xy, t in case_mod.PANEL],
-            "fans": [{"name": n, "bay": b, "note": t} for n, b, _, t in case_mod.FANS],
+            "bay": case_mod.CASE_BASE_DEPTH,
+            "clearance": case_mod.TERMINAL_CLEARANCE,
+            "link": LINK_WIRE,
+            "boxes": boxes,
         },
-        "wiring": wiring.polylines_3d(),
-        "wiring_report": {k: v for k, v in wiring.analyse().items() if k != "routed"},
     }
 
 
@@ -118,7 +125,7 @@ def build_data():
     bar_part = cross_bar.build()
     deck_part = deck_mod.build()
     table_part = table_mod.build()
-    case_block = case_mod.blackbox_positioned()
+    case_block = case_mod.build_all()
 
     sections = {}
     for label, (w, h) in {"2020": (20, 20), "2040": (20, 40)}.items():
@@ -178,10 +185,8 @@ def build_data():
         },
         "case": {
             "ext": list(case_mod.CASE_EXT),
-            "at": [round(case_mod.origin_x() - case_mod.CASE_EXT[0] / 2),
-                   round(case_mod.origin_x() + case_mod.CASE_EXT[0] / 2)],
-            "ports": len(case_mod.PANEL),
-            "fans": len(case_mod.FANS),
+            "boxes": len(case_mod.BOXES),
+            "ports": sum(len(b["panel"]) for b in case_mod.BOXES.values()),
         },
         # The assembly's list covers every part, so the viewer no longer shows a
         # partial one when a new part is added.

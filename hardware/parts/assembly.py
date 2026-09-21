@@ -22,7 +22,7 @@ import table
 
 
 def build():
-    parts = [table.build(), deck.build()] + list(frame.build().children) + [cross_bar.build(), case.build()]
+    parts = [table.build(), deck.build()] + list(frame.build().children) + [cross_bar.build(), case.build_all()]
     asm = Compound(children=parts)
     asm.label = "assembly"
     return asm

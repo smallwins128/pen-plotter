@@ -123,29 +123,85 @@ GANTRY_PLATE_LEN = 65.5
 CROSS_BAR_X = 0.0
 
 # ---------------------------------------------------------------------------
-# Electronics case (UN4020 hard carry case)
+# Electronics: two UN4412 cases
 # ---------------------------------------------------------------------------
 
-# Replaces the extrusion box. A moulded polypropylene clamshell, sitting flat
-# on the bench beside the machine and running CLOSED, so it needs forced air.
+# Split from one UN4020 into a power box and a control box. The win is that the
+# control box -- the one you actually open -- has nothing above 24 V in it.
 #
-# The 352 external across the short axis includes the hinge and handle
-# mouldings; the cavity is only 277 there, which is why the wall looks thick on
-# that face and is not.
-CASE_EXT = (352.0, 413.0, 206.0)      # short axis, long axis, height
-CASE_INT = (277.0, 400.0, 198.0)
-CASE_BASE_DEPTH = 99.0
-CASE_LID_DEPTH = 99.0
-CASE_WALL_Z = (CASE_EXT[2] - CASE_INT[2]) / 2     # floor and ceiling thickness
+# Catalogue figures are INTERNAL (its UN4020 row reads 400 x 277 x 198, which
+# matches that case's measured cavity). External is estimated from the UN4020's
+# own internal-to-external deltas, so it is approximate and marked as such.
+CASE_INT = (442.0, 265.0, 124.0)
+CASE_EXT = (455.0, 340.0, 132.0)     # ESTIMATED, see above
+CASE_BASE_DEPTH = CASE_INT[2] / 2
+CASE_LID_DEPTH = CASE_INT[2] / 2
+CASE_WALL_Z = (CASE_EXT[2] - CASE_INT[2]) / 2
 
-# Long axis runs along Y, parallel to the machine's end, as the extrusion box
-# did. Gap to the machine's right-hand rail.
+# Both boxes sit on the bench to the right of the machine, control box nearest.
 CASE_GAP = 10.0
+CASE_SPACING = 40.0                  # between the two boxes
 
-# Two 80 mm 24 V axials in the base end walls: intake one end, exhaust the
-# other, so the path runs the length of the case and past the drivers.
-FAN_SIZE = 80.0
+# Fans mount in the LID face, not a side wall, so bay depth does not limit fan
+# size. 11 W total across both boxes means this is insurance, not cooling.
+FAN_SIZE = 60.0
 FAN_THICK = 25.0
+
+# The link between the boxes. Three conductors, but not three of the same:
+# the ground is two sizes up because the servo's 2.5 A return shares it, and
+# at 0.75 mm^2 that puts ~94 mV on the logic reference every time the pen
+# lifts -- which is the failure in FINDINGS.md section 7.
+LINK_WIRE = {"24v": 0.75, "6v": 0.75, "gnd": 2.5}
+
+# ---------------------------------------------------------------------------
+# Base deck (the sheet the paper sits on)
+# ---------------------------------------------------------------------------
+
+# A steel sheet across the whole frame footprint, laid on the tabletop with the
+# frame bolted down on top of it. It is NOT a spanning panel -- see deck.py for
+# why. The tabletop carries it; the sheet just gives a hard, uniform surface.
+DECK_T = 1.5
+DECK_X = 1000.0       # full frame footprint, so the frame sits on it
+DECK_Y = 600.0
+
+DECK_HOLE_D = 5.5     # M5 clearance, into drop-in T-nuts in the rails' bottom slot
+DECK_HOLE_PITCH = 160.0   # target spacing; actual is evened out to fit
+DECK_EDGE_MARGIN = 70.0   # keep the end holes clear of the corner joints
+
+# Everything above the deck is lifted by its thickness, so the frame sits on
+# the sheet rather than intersecting it.
+FRAME_BASE_Z = DECK_T
+
+STEEL_DENSITY = 7.85e-3   # g/mm^3
+STEEL_E = 200000.0        # N/mm^2
+STEEL_NU = 0.30
+
+# ---------------------------------------------------------------------------
+# Cross bar (the moving gantry beam)
+# ---------------------------------------------------------------------------
+
+# The bar spans Y and travels along X, riding the two 1000 mm frame rails on
+# OpenBuilds gantry plates.
+CROSS_BAR_LEN = 700.0
+CROSS_BAR_W = 20.0    # 2020
+CROSS_BAR_H = 20.0
+
+# Height of the underside of the cross bar above the top of the frame rails --
+# i.e. the gantry plate + wheel stack.
+#
+# APPROXIMATE: eyeballed at 1-2 cm, taken as the midpoint. Good enough to lay
+# the machine out; not good enough to drill against. Every Z dimension above
+# the frame scales with it, so re-measure before committing to any part whose
+# height has to be right (the pen carriage and pen tip most of all).
+GANTRY_RISE = 15.0
+
+# Gantry plate footprint along the direction of travel (X). Sets how much of
+# the 1000 mm rail is lost to the plate. From the plate drawing: 65.5 mm square,
+# 3 mm thick, R3 corners, 12x 5.10 and 3x 7.20 holes.
+GANTRY_PLATE_LEN = 65.5
+
+# Where to park the bar when rendering. 0 = mid-travel.
+CROSS_BAR_X = 0.0
 
 # ---------------------------------------------------------------------------
 # Machine envelope (from the README, for parts still to come)

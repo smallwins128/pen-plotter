@@ -142,162 +142,53 @@ M5 countersink wants ~2.5 mm of depth and a 1.5 mm sheet cannot give it. Either
 relieve the tabletop under each head, or drop an opening-sized sheet into the
 frame well instead and let the rails retain it.
 
-## The electronics case
+## The electronics: two UN4412 boxes
 
-`parts/case.py` models a UN4020 hard carry case standing beside the machine.
-It replaced an extrusion box when the plan changed; that part is gone rather
-than left sitting around looking current.
+Split from a single UN4020 so that **the box you actually open has nothing
+above 24 V in it**. Power box: IEC in, both PSUs, the servo buck, the mains
+splitter, and the single point where the two PSU 0 V rails bond. Control box:
+the Elecrow board, three TB6600s, and the distribution.
 
-It runs **closed**, which is why the two 80 mm fans are not optional. Three
-TB6600 heatsinks hang fin-down in still air otherwise, and polypropylene
-conducts about a thousandth of what aluminium does, so the shell will not help
-them. Airflow needed is small — roughly 22–30 CFM of fan rating covers 50 W at
-a 10 °C rise once derated for grille and filter — so 24 V axials off the
-existing bus do the job and keep more mains out of the box.
+Both run ~33% packed on a 442 × 265 floor, with spare panel positions on
+purpose — displays and switches are wanted later and the wall is where they go.
 
-### The lane
+### Three wires between them, and one is thicker
 
-The lid is laid out around a clear channel down the middle. It is not spare
-space — it is what makes the wiring short:
+24 V and 6 V at 0.75 mm², **ground at 2.5 mm²**. Not symmetry for its own sake:
+the servo's 2.5 A return shares that conductor, and at 0.75 mm² it puts about
+**94 mV on the logic reference** every time the pen lifts. That is the failure
+in `FINDINGS.md` §7, and a shared thin return down 1.2 m of cable re-creates it.
+At 2.5 mm² it is a quarter of that.
 
-- **Drivers hard against the hinge edge**, so the heavy 24 V conductors cross
-  the hinge and land immediately, without running the length of the lid.
-- **Board opposite**, with its ports facing down into the lane.
-- **Every panel connector drops into the lane**, ordered so each lands beside
-  what it wires to: USB and endstops at the board end, each stepper connector
-  opposite its own driver.
+### Height alone doesn't tell you whether a thing can be wired
 
-Nothing then has to route over the top of a driver or across the board.
+The 62 mm bay holds a 57 mm TB6600 with 5 mm over its fins — and that is fine,
+because its **terminals sit at about 28 mm**, so there is ~34 mm over the screw.
 
-The connectors are also the reason the lane has to exist at all. A panel-mount
-GX16 hangs about 25 mm into the bay, and a TB6600 is 57 mm tall, so a connector
-simply cannot sit above a driver. `check_layout()` counts connector bodies and
-fans as bay-occupying parts for exactly this reason.
+A DIN terminal block is 58 mm with its screw near the **top**, which leaves
+4 mm. A screwdriver needs ~30. So the distribution here is **lever blocks, not
+DIN** — which reverses the earlier recommendation, made when the bay was 99 mm.
+At 1.7 A they are more than adequate.
 
-Airflow runs diagonally: intake low in the base at the cool end, exhaust in the
-**lid** at the driver end, so the air leaving is the hottest air in the box.
-That costs two conductors across the hinge, which is worth it.
+### Cooling is insurance, not cooling
 
-### The wiring is routed, not eyeballed
+11 W across both boxes. Sealed, with no fan at all, that is **+2 to +4 °C**.
+One 60 mm 24 V fan per box, **in the lid face** so bay depth never limits fan
+size. Nothing on the 6 V rail but the servo.
 
-`wiring.py` models every bundle in the lid — source, destination, conductor
-count, kind — routes each as an L, and scores the result on four things:
+### Internal placement is provisional
 
-| | |
-|---|---|
-| **obstruction** | a bundle crossing a component it doesn't belong to. The hard failure: you can't route through a TB6600. |
-| **crossing** | two bundles crossing each other — a place something must lift over something else. |
-| **separation** | mains or motor phase running alongside a signal bundle. |
-| **length** | conductor-millimetres, with a tighter budget on lines that care. |
+`case.py` shelf-packs the contents into rows. It makes no claim to be a good
+arrangement — sizes, counts, panel and box geometry are real; **where a block
+sits is not, and is not pretending to be**. Real positions come from laying the
+parts in the case.
 
-```sh
-python3 hardware/wiring.py            # report the current layout
-python3 hardware/wiring.py --search   # try board positions and connector orders
-```
+`wiring.py` is parked for the same reason: it was written around one case with
+a hinge and a lane, neither of which exists now, and porting it against
+placeholder positions is how it ended up optimising a fiction. What was worth
+keeping from it is in its docstring.
 
-Geometry comes from `case.py`, so the analysis can't drift from the model, and
-the routed paths are fed back into the viewer as 3D tubes — coloured by kind,
-sized by conductor count. **The harness you see is the harness that was
-scored**, not a drawing of one.
-
-**Re-run the search after moving anything.**
-
-It has already earned its keep. The first layout scored 20331 with two
-obstructions; the current one scores 386 with none, and uses a fifth less wire.
-What it found was that the *board position* was the problem, not the connector
-order — moving the board from y −120 to y +60, up beside the drivers it talks
-to, fixed most of it.
-
-Three things it caught that eyeballing missed:
-
-- **Connector bodies are obstacles.** A panel-mount GX16 hangs ~25 mm into the
-  bay. Leaving them out of the model let routes pass straight through the lane.
-- **A TB6600 has two terminal blocks.** Treating it as one point made every
-  step/dir bundle look like it ran alongside its own motor phases.
-- **The hinge is an edge, not a point** — power can cross anywhere along it.
-- **A component is not a point either.** Three bundles all leaving the exact
-  centre of one edge is what made the harness look like spaghetti — they left
-  from the same place and overlapped for their whole first leg. Each attachment
-  now gets its own terminal, spread along the face that points at its
-  destination and ordered by where it's headed, so wires don't cross each other
-  the moment they leave a part.
-- **One run height is not a harness.** Every bundle shared a single Z, so
-  sixteen runs sat in the same plane and overlapped wherever their paths
-  agreed. The router has already proved nothing is in the way at any height
-  along a route, so the bay depth is free: bundles now spread through a 34 mm
-  band in lanes, sorted by kind, which is what you'd do with a real loom.
-- **Ports face what they're wired to.** Pointing every terminal at the lid's
-  lane made base parts route out of their far side and back through their own
-  neighbours.
-- **A router that can only turn one corner isn't a router.** Where two ends
-  share a coordinate there's exactly one possible L, so anything sitting on it
-  was reported as unroutable. Z-shaped detours let it go around, which is what
-  a person would obviously do.
-
-The base got the same treatment and needed it more: the servo PSU sat
-diagonally opposite the IEC inlet, a 460 mm mains run that crossed both DC
-rails. Mains are now clustered in one corner — inlet and both PSU inputs
-together — and the 220 V stays out of the DC half entirely.
-
-And one thing the *optimiser* got wrong before the objective was fixed: it
-parked the servo PWM 274 mm away, because a single conductor scores cheap.
-That line is single-ended and timing-critical, and `FINDINGS.md` §7 is a long
-argument about the servo being marginal. USB is differential and doesn't care
-about length; the servo does. They now have separate budgets.
-
-### Where the terminals actually are
-
-`TERMINALS` in `case.py` records which faces each component's wires can leave
-from, and **how confident that is** — because it varies a lot:
-
-| | |
-|---|---|
-| **measured** | TB6600 — both terminal blocks on one 96 mm edge, off the drawing |
-| **convention** | Mean Well PSUs (one end), LM2596 (both ends), IEC (rear), fans (one corner), DIN blocks (both sides), splitter (opposite faces) |
-| **UNKNOWN** | Elecrow board — its product page is blocked, so header positions are a guess and marked as one |
-
-This matters more than it sounds. The router had been free to take wires out of
-whichever face pointed at the destination, which quietly invented connections
-that cannot be made. Enforcing it caught a layout that was **not buildable**:
-
-- The three TB6600s were laid with their 96.5 mm dimension across, so their
-  terminal edge faced the next driver **2.3 mm away**. No wire, no screwdriver.
-  They are now turned 90° with that edge facing the lane.
-- `buck_servo` had the servo PSU 25 mm off its input face.
-- `dist_base` had its +X face 5 mm from the shell — a DIN block takes a wire
-  each side, so a face against the wall is as unwirable as one against a part.
-- `psu_24v_servo` was pressed end-on into the shell; it's turned to face inward.
-
-`check_layout()` now enforces `TERMINAL_CLEARANCE` (25 mm in front of every
-terminal face, against both parts and the shell) on every build.
-
-### Distribution, in both bays
-
-One pair of conductors crosses the hinge and fans out from a DIN strip in each
-bay. Before this, five lid loads — three drivers, the board and the exhaust fan
-— each started at the hinge with nothing to start from. The alternative is
-daisy-chaining driver to driver, which puts all **9 A** for three drivers
-through the first one's screw terminal.
-
-A DIN strip stands ~58 mm once it's on its rail, not the 30 mm a bare bus bar
-would be. Both bays have 99 mm, so it fits, but it's now the tallest thing in
-the base.
-
-`bom.py` counts the blocks, end clamps and jumper combs off `DIST_WAYS`, so the
-shopping list follows the model rather than the other way round.
-
-### There is no 5 V rail
-
-The Elecrow board regulates its own 5 V (500 mA) and 3.3 V (100 mA) from VMot,
-so the external 5 V buck and bus would have fed nothing. Both are gone. The
-only conversion left in the case is 24 V → 6.0 V for the servo, which is its
-own supply for the reasons in `FINDINGS.md` §7.
-
-Contents are stand-in blocks at real outside sizes. Not modelled: wiring, the
-sub-plate the lid parts want to mount to, the switches, and the shell's moulded
-detail.
-
-## V-slot vs T-slot
+## V-slot vs T-slot## V-slot vs T-slot
 
 `profiles.py` models a **T-slot** section. OpenBuilds gantry wheels need a
 **V-slot** — a 45° groove the wheels run in. If the machine uses OpenBuilds

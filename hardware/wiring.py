@@ -1,26 +1,29 @@
-#!/usr/bin/env python3
-"""Route the case harness, find the conflicts, and search for a better layout.
+"""PARKED -- this router targets the old single-case layout.
 
-    python3 hardware/wiring.py            # report the current layout
-    python3 hardware/wiring.py --search   # try connector orderings, print the best
+It was written around one UN4020: a hinge the power crossed, a lane down the
+middle of the lid, and components whose positions the search was free to move.
+The design is now two UN4412 boxes with no hinge crossing and no lane, and the
+internal positions are going to come from actually laying the parts in the
+case rather than from a search.
 
-Every bundle in the lid is modelled as a source, a destination, a conductor
-count and a kind. Each is routed as an L -- wires in a box turn square corners,
-they do not go as the crow flies -- and the result is scored on four things:
+Rather than port it against placeholder positions -- which is how it ended up
+optimising a fiction last time -- it waits here for the real layout. What is
+worth keeping is in the checks, not the geometry:
 
-    obstruction   a bundle crossing a component it does not belong to. This is
-                  the hard failure: you cannot route through a TB6600.
-    crossing      two bundles crossing in plan. This mattered a great deal
-                  when every bundle ran at one height; now each has its own
-                  lane they simply pass at different heights, which is what a
-                  real loom does. Still counted, because a crossing is still a
-                  place the harness is not flat -- but weighted lightly, not
-                  as a fault.
-    separation    mains or motor-phase running close to a signal bundle.
-    length        total conductor-millimetres, which is both cost and noise.
+  * a component is not a point; bundles leaving one edge centre overlap
+  * a component is not free to present any face; terminals are where they are
+  * a run height per bay is not a harness; bundles need lanes
+  * the hard failure is obstruction, not crossing
 
-Geometry comes from case.py, so this cannot drift from the model.
+`case.py` carries the terminal-face idea forward as TERMINAL_CLEARANCE.
+
+To revive: rebuild NETS against the two-box split, point geometry() at
+case.BOXES, and drop everything about the hinge.
 """
+
+raise SystemExit(__doc__) if __name__ == "__main__" else None
+
+
 
 import argparse
 import itertools

@@ -3,7 +3,7 @@
   <header>
     <div class="title">
       <h1>Pen plotter &mdash; machine</h1>
-      <p>Frame, base deck and moving gantry on the bench. Drag to orbit, scroll to zoom, shift-drag to pan. The amber beam is the moving axis &mdash; drive it with the travel slider. The electronics case is a black box here; it has <a href="https://claude.ai/artifact/QBGDB6BF3KFNdK2vdznUtU">its own page</a>.</p>
+      <p>Frame, base deck and moving gantry on the bench. Drag to orbit, scroll to zoom, shift-drag to pan. The amber beam is the moving axis &mdash; drive it with the travel slider. The two electronics boxes are black boxes here; they have <a href="https://claude.ai/artifact/QBGDB6BF3KFNdK2vdznUtU">their own page</a>.</p>
     </div>
     <div class="chips" id="chips"></div>
   </header>
@@ -32,7 +32,7 @@
         <label class="toggle"><input type="checkbox" id="t-deck" checked><span class="sw" style="background:var(--steel)"></span>Base deck &mdash; steel sheet</label>
         <label class="toggle"><input type="checkbox" id="t-frame" checked><span class="sw" style="background:var(--alu)"></span>Frame &mdash; 2040</label>
         <label class="toggle"><input type="checkbox" id="t-bar" checked><span class="sw" style="background:var(--accent)"></span>Cross bar &mdash; 2020</label>
-        <label class="toggle"><input type="checkbox" id="t-case" checked><span class="sw" style="background:var(--shell)"></span>Electronics case</label>
+        <label class="toggle"><input type="checkbox" id="t-case" checked><span class="sw" style="background:var(--shell)"></span>Electronics boxes</label>
         <label class="toggle"><input type="checkbox" id="t-travel" checked><span class="sw" style="background:var(--blue)"></span>Travel limits</label>
       </div>
 
@@ -94,7 +94,7 @@
     ["Cross bar", B.len + " mm " + B.profile],
     ["X travel", mm(B.travel) + " mm"],
     ["Drawable", F.opening_x + " x " + F.opening_y + " mm"],
-    ["Free for electronics", D.table.free[2] + " x " + D.table.free[3] + " mm"]
+    ["Electronics", D.case.boxes + " boxes, " + D.case.ports + " panel positions"]
   ].map(function(c){
     return '<div class="chip"><span class="k">'+c[0]+'</span><span class="v">'+c[1]+'</span></div>';
   }).join("");

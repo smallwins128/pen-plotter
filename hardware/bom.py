@@ -24,7 +24,6 @@ sys.path.insert(0, str(HERE / "parts"))
 import case                     # noqa: E402
 import deck as deck_mod         # noqa: E402
 import stock                    # noqa: E402
-import wiring                   # noqa: E402
 from params import DECK_T, DECK_X, DECK_Y  # noqa: E402
 
 # Conductor gauge per bundle kind, and the ferrule that goes on its ends.
@@ -50,10 +49,8 @@ BOUGHT = [
     ("Electronics", "TB6600 stepper driver", 3, "ea", "96.5 x 67.7 x 57 mm"),
     ("Electronics", "LM2596 buck, adjustable", 1, "ea", "set to 6.0 V for the MG996R"),
     ("Electronics", "TowerPro MG996R servo", 1, "ea", "already owned"),
-    ("Enclosure", "UN4020 hard carry case", 1, "ea", "413 x 352 x 206 mm"),
-    ("Enclosure", "IEC C14 inlet, fused + switched", 1, "ea", "panel mount"),
-    ("Enclosure", "3-in/6-out lever splitter", 1, "ea", "L/N/E; label it, the colours are not mains code"),
-    ("Enclosure", "DIN rail, 35 mm", 0.3, "m", "cut to suit both strips"),
+    ("Enclosure", "UN4412 hard carry case", 2, "ea", "442 x 265 x 124 internal; power box + control box"),
+    ("Enclosure", "IEC C14 inlet, fused + switched", 1, "ea", "power box"),
     ("Consumable", "Heatshrink, assorted", 1, "pack", ""),
     ("Consumable", "Cable ties + adhesive mounts", 1, "pack", ""),
     ("Consumable", "Cable gland / grommet", 2, "ea", "every hole the harness passes through"),
@@ -73,54 +70,60 @@ def extrusion():
 
 
 def terminals():
-    total_blocks = 0
-    for name, (pos, neg) in case.DIST_WAYS.items():
-        total_blocks += pos + neg
-        yield ("Enclosure", f"DIN terminal block 2.5 mm^2 ({name})", pos + neg, "ea",
-               f"{pos}x 24 V + {neg}x 0 V")
-    yield ("Enclosure", "DIN end clamp", 2 * len(case.DIST_WAYS), "ea", "one each end of each strip")
-    yield ("Enclosure", "Jumper comb, 2/4/10 way", 1, "set",
-           f"what turns {total_blocks} blocks into buses")
+    """Lever distribution blocks, one set in the control box.
+
+    Not DIN: a DIN block on its rail stands 58 mm and its screw is near the
+    top, which leaves 4 mm of access in the UN4412's 62 mm bay. At 1.7 A the
+    lever blocks are more than adequate and they fit.
+    """
+    for name, (w, d, h), _, _, note in case.check("control"):
+        if name.startswith("dist_"):
+            yield ("Enclosure", f"Lever distribution block ({note.split(':')[0]})", 1, "ea", note)
+    yield ("Enclosure", "3-in/6-out lever splitter", 1, "ea",
+           "mains L/N/E in the power box; label it, the colours are not mains code")
 
 
 def harness():
-    """Wire by gauge and ferrules by size, both counted off the routed harness."""
-    wire = defaultdict(float)
-    ferrules = defaultdict(int)
+    """Wire and ferrules cannot be counted until the layout is real.
 
-    for name, src, dst, n, kind, bay in wiring.NETS:
-        g = GAUGE[kind]
-        routed = [r for r in wiring.route()[0] if r["name"] == name]
-        length = routed[0]["len"] if routed else 0.0
-        wire[g] += length * n * SLACK / 1000.0
-
-        screw_ends = sum(
-            0 if (e.split(":")[0] == "hinge" or e.split(":")[0].startswith("gx16")
-                  or e.split(":")[0] == "usb_c") else 1
-            for e in (src, dst))
-        ferrules[g] += n * screw_ends
-
-    for g in sorted(wire, reverse=True):
-        yield ("Consumable", f"Wire, {g:g} mm^2 stranded", round(wire[g] + 0.5), "m",
-               f"routed length x {SLACK} for slack; case only, not the machine harness")
-    yield ("Consumable", "Wire, 1.5 mm^2 stranded", 2, "m", "24 V trunk, 9 A -- sized by load not by route")
-    for g in sorted(ferrules, reverse=True):
-        need = ferrules[g]
-        yield ("Consumable", f"Ferrule, insulated, {g:g} mm^2", int(need * 1.6 // 50 + 1) * 50, "ea",
-               f"{need} ends counted, bought in 50s with spares")
+    The router that produced these numbers is parked (see wiring.py). Rather
+    than carry forward figures from a layout that no longer exists, the rows
+    say what they depend on.
+    """
+    for g, why in ((0.75, "24 V and 6 V between the boxes"),
+                   (2.5,  "ground between the boxes -- two sizes up on purpose"),
+                   (0.5,  "motor phases"),
+                   (0.25, "step/dir, endstops, servo signal")):
+        yield ("Consumable", f"Wire, {g:g} mm^2 stranded", "TBD", "m",
+               f"{why}; length needs the real layout")
+    yield ("Consumable", "Ferrule kit, insulated, 0.25-6 mm^2", 1, "kit",
+           "assorted; ~100 ends expected across both boxes")
 
 
 def connectors():
-    kinds = defaultdict(int)
-    for name, _, _, note in case.PANEL:
-        key = ("USB-C panel mount" if name.startswith("usb")
-               else "GX16-" + name.split("_")[1] + " aviator, panel mount")
-        kinds[key] += 1
+    """Panel cutouts, counted per box off case.BOXES."""
+    from collections import Counter
+    kinds = Counter()
+    for box, spec in case.BOXES.items():
+        for name, note in spec["panel"]:
+            if name.startswith("gx16"):
+                kinds["GX16-" + name.split("_")[1] + " aviator, panel mount"] += 1
+            elif name.startswith("usb"):
+                kinds["USB-C panel mount"] += 1
+            elif name.startswith("link"):
+                kinds["GX16-4 aviator (inter-box link)"] += 1
+            elif name.startswith("spare"):
+                kinds["-- spare panel position, left free"] += 1
+            elif name.startswith("mains_switch"):
+                kinds["Rocker switch, panel mount"] += 1
     for key in sorted(kinds):
-        yield ("Enclosure", key, kinds[key], "ea", "")
-    for name, bay, _, note in case.FANS:
-        yield ("Enclosure", f"Fan, 80 mm 24 V axial ({bay})", 1, "ea", note)
-    yield ("Enclosure", "Fan guard + filter, 80 mm", len(case.FANS), "ea", "filter on the intake at least")
+        if key.startswith("--"):
+            yield ("Enclosure", key, kinds[key], "ea", "for a display or control later")
+        else:
+            yield ("Enclosure", key, kinds[key], "ea", "")
+    yield ("Enclosure", "Fan, 60 mm 24 V axial", len(case.BOXES), "ea",
+           "in the lid face; 11 W total means this is insurance, not cooling")
+    yield ("Enclosure", "Fan guard + filter, 60 mm", len(case.BOXES), "ea", "")
 
 
 def sheet():
@@ -152,7 +155,7 @@ def main(as_csv=False):
         if cat != group:
             print(f"\n{cat.upper()}")
             group = cat
-        q = f"{qty:g}"
+        q = f"{qty:g}" if isinstance(qty, (int, float)) else str(qty)
         print(f"  {q:>5} {unit:<7} {item}" + (f"   -- {note}" if note else ""))
     print(f"\n{len(data)} line items")
     return 0

@@ -2,8 +2,8 @@
 <div class="wrap">
   <header>
     <div class="title">
-      <h1>Electronics case &mdash; UN4020</h1>
-      <p>Runs closed on the bench beside the machine. Base carries the supplies, the lid carries the board and drivers, and the harness you see is the one <code>wiring.py</code> routed and scored.</p>
+      <h1>Electronics &mdash; two UN4412 boxes</h1>
+      <p>Split so the box you actually open has nothing above 24&nbsp;V in it. Three conductors run between them, and the ground is deliberately two sizes up. <b>Internal placement is provisional</b> &mdash; contents are auto-packed in rows, not arranged.</p>
     </div>
     <div class="chips" id="chips"></div>
   </header>
@@ -12,9 +12,8 @@
     <div class="stage" id="stage">
       <div class="readout" id="readout"></div>
       <div class="hint">drag orbit &middot; scroll zoom &middot; shift-drag pan</div>
-      <div class="fallback">The 3D library could not be loaded, so the case can&rsquo;t be drawn. Every dimension below is still exact.</div>
+      <div class="fallback">The 3D library could not be loaded. Every dimension below is still exact.</div>
     </div>
-
     <div class="rail">
       <div class="panel">
         <h2>View</h2>
@@ -25,287 +24,144 @@
           <button type="button" data-view="right">Right</button>
         </div>
       </div>
-
       <div class="panel">
         <h2>Show</h2>
-        <label class="toggle"><input type="checkbox" id="t-shell" checked><span class="sw" style="background:var(--shell)"></span>Case shell</label>
+        <label class="toggle"><input type="checkbox" id="t-shell" checked><span class="sw" style="background:var(--shell)"></span>Case shells</label>
         <label class="toggle"><input type="checkbox" id="t-parts" checked><span class="sw" style="background:var(--steel)"></span><span class="sw" style="background:var(--pcb);margin-left:-5px"></span><span class="sw" style="background:var(--abs);margin-left:-5px"></span>Contents</label>
-        <label class="toggle"><input type="checkbox" id="t-fit" checked><span class="sw" style="background:var(--blue)"></span>Fans &amp; connectors</label>
-        <label class="toggle"><input type="checkbox" id="t-wiring" checked><span class="sw" style="background:var(--w-power)"></span><span class="sw" style="background:var(--w-signal);margin-left:-5px"></span><span class="sw" style="background:var(--w-phase);margin-left:-5px"></span>Harness</label>
+        <label class="toggle"><input type="checkbox" id="t-fans" checked><span class="sw" style="background:var(--blue)"></span>Fans</label>
       </div>
-
       <div class="panel">
-        <h2>Harness filter</h2>
-        <div id="kind-toggles"></div>
-      </div>
-
-      <div class="panel">
-        <h2>Bundles</h2>
-        <p class="hintline">Click one to isolate it.</p>
-        <div id="bundle-list"></div>
-        <button type="button" id="show-all">Show all</button>
+        <h2>The link</h2>
+        <div class="rows" id="link"></div>
       </div>
     </div>
   </div>
 
   <div class="grid3">
     <div class="panel">
-      <h2>Base bay &mdash; 99 mm, on the floor</h2>
-      <table><thead><tr><th>Item</th><th class="num">Size</th><th>Note</th></tr></thead>
-        <tbody id="base-parts"></tbody></table>
+      <h2>Power box</h2>
+      <table><thead><tr><th>Item</th><th class="num">Size</th></tr></thead><tbody id="power-parts"></tbody></table>
     </div>
     <div class="panel">
-      <h2>Lid bay &mdash; 99 mm, hanging</h2>
-      <table><thead><tr><th>Item</th><th class="num">Size</th><th>Note</th></tr></thead>
-        <tbody id="lid-parts"></tbody></table>
+      <h2>Control box</h2>
+      <table><thead><tr><th>Item</th><th class="num">Size</th></tr></thead><tbody id="control-parts"></tbody></table>
     </div>
     <div class="panel">
-      <h2>Harness &mdash; routed, not eyeballed</h2>
-      <div class="rows" id="wire-stats"></div>
+      <h2>Panel cutouts</h2>
+      <div class="rows" id="panel-rows"></div>
     </div>
   </div>
 
-  <div class="panel deck-panel">
-    <h2>Panel &mdash; connectors in the lid top</h2>
-    <div class="deck-grid">
-      <div><table><thead><tr><th>Connector</th><th class="num">At Y</th><th>Note</th></tr></thead>
-        <tbody id="panel-rows"></tbody></table></div>
-      <div><table><thead><tr><th>Bundle kind</th><th class="num">Count</th><th class="num">Longest</th></tr></thead>
-        <tbody id="wire-kinds"></tbody></table></div>
-    </div>
-  </div>
-
-  <div class="note" id="note-lane"></div>
-  <div class="note" id="note-cool"></div>
+  <div class="note" id="note-ground"></div>
+  <div class="note" id="note-clearance"></div>
+  <div class="note" id="note-provisional"></div>
 
   <footer>
-    <span>Local origin at the case footprint centre, Z&nbsp;=&nbsp;0 at the bench. Hinge on the <span id="hinge"></span> edge.</span>
+    <span>Each box has its own origin at its footprint centre, Z&nbsp;=&nbsp;0 at the bench.</span>
     <span>Regenerate: <code>python3 hardware/viewer.py</code></span>
   </footer>
 </div>
-<style>
-.hintline{margin:0 0 8px; font-size:11.5px; color:var(--ink-3)}
-#bundle-list{display:flex; flex-direction:column; gap:1px; margin-bottom:9px;
-             max-height:290px; overflow-y:auto}
-.bundle{
-  display:grid; grid-template-columns:9px 1fr auto; align-items:center; gap:8px;
-  padding:4px 6px; border:0; border-radius:2px; background:none; cursor:pointer;
-  font-size:12.5px; text-align:left; color:var(--ink);
-}
-.bundle:hover{background:var(--surface-2)}
-.bundle[aria-pressed="true"]{background:var(--blue-soft); font-weight:600}
-.bundle .dot{width:9px; height:9px; border-radius:50%}
-.bundle .mm{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3);
-            font-variant-numeric:tabular-nums}
-#show-all{width:100%}
-.wire-detail{
-  display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin-top:9px;
-  padding-top:9px; border-top:1px solid var(--line); font-size:12px;
-}
-.wire-detail dt{color:var(--ink-3)}
-.wire-detail dd{margin:0; font-family:"IBM Plex Mono",monospace}
-</style>
 <!--SCRIPT-->
 (function(){
   "use strict";
-  var D = PV.D, css = PV.css, mm = PV.mm;
-  var C = D.case, W = D.wiring || [], R = D.wiring_report || {};
+  var D = PV.D, css = PV.css, mm = PV.mm, C = D.case;
 
-  document.getElementById("hinge").textContent = C.hinge;
   document.getElementById("chips").innerHTML = [
-    ["Outer", C.ext.map(function(v){return mm(v);}).join(" x ") + " mm"],
-    ["Cavity", C.int.map(function(v){return mm(v);}).join(" x ") + " mm"],
-    ["Bays", mm(C.base_depth) + " + " + mm(C.base_depth) + " mm"],
-    ["Bundles", W.length + " / " + W.reduce(function(a,b){return a+b.n;},0) + " conductors"]
+    ["Case", C.model + " x2"],
+    ["Internal", C.int.map(function(v){return mm(v);}).join(" x ") + " mm"],
+    ["Bay", mm(C.bay) + " mm"],
+    ["Packed", Object.keys(C.boxes).map(function(b){
+        var f = C.boxes[b].parts.reduce(function(a,p){return a+p.size[0]*p.size[1];},0);
+        return Math.round(f/(C.int[0]*C.int[1])*100)+"%";
+      }).join(" / ")]
   ].map(function(c){
     return '<div class="chip"><span class="k">'+c[0]+'</span><span class="v">'+c[1]+'</span></div>';
   }).join("");
 
-  function rows(list){
-    return list.map(function(c){
+  document.getElementById("link").innerHTML = Object.keys(C.link).map(function(k){
+    var flag = k === "gnd" ? ' <span class="ok">two sizes up</span>' : '';
+    return '<div class="row"><span>'+k.toUpperCase()+flag+'</span><span class="n">'+
+           C.link[k]+' mm²</span></div>';
+  }).join("");
+
+  function rows(box){
+    return C.boxes[box].parts.map(function(p){
       var sw = '<span class="sw" style="display:inline-block;vertical-align:-1px;margin-right:6px;'+
-               'background:var(--'+c.material+')"></span>';
-      return '<tr><td>'+sw+c.name.replace(/_/g," ")+'</td><td class="num">'+
-             c.size.map(function(v){return mm(v);}).join(" x ")+' mm</td><td>'+c.note+'</td></tr>';
+               'background:var(--'+p.material+')"></span>';
+      return '<tr><td>'+sw+p.name.replace(/_/g," ")+'</td><td class="num">'+
+             p.size.map(function(v){return mm(v);}).join(" x ")+' mm</td></tr>';
     }).join("");
   }
-  document.getElementById("base-parts").innerHTML = rows(C.base);
-  document.getElementById("lid-parts").innerHTML = rows(C.lid);
+  document.getElementById("power-parts").innerHTML = rows("power");
+  document.getElementById("control-parts").innerHTML = rows("control");
 
-  document.getElementById("panel-rows").innerHTML = C.panel.map(function(p){
-    return '<tr><td>'+p.name.replace(/_/g," ")+'</td><td class="num">'+
-           (p.at[1]>0?"+":"")+mm(p.at[1])+'</td><td>'+p.note+'</td></tr>';
+  document.getElementById("panel-rows").innerHTML = Object.keys(C.boxes).map(function(b){
+    return '<div class="row total"><span>'+b+' box</span><span class="n">'+
+           C.boxes[b].panel.length+'</span></div>' +
+      C.boxes[b].panel.map(function(p){
+        var spare = p.name.indexOf("spare") === 0;
+        return '<div class="row"><span'+(spare?' style="color:var(--ink-3)"':'')+'>'+
+               p.name.replace(/_/g," ")+'</span><span class="n" style="font-size:11px;color:var(--ink-3)">'+
+               p.note+'</span></div>';
+      }).join("");
   }).join("");
 
-  document.getElementById("wire-stats").innerHTML = [
-    ["Obstructions", '<span class="'+(R.obstruction?"bad":"ok")+'">'+R.obstruction+'</span>'],
-    ["Crossings", (R.crossings||[]).length],
-    ["Noisy alongside signal", (R.near||[]).length],
-    ["Conductor-mm", mm(R.total||0)],
-    ["Score", '<span class="ok">'+mm(R.score||0,1)+'</span>']
-  ].map(function(r){
-    return '<div class="row"><span>'+r[0]+'</span><span class="n">'+r[1]+'</span></div>';
-  }).join("");
+  document.getElementById("note-ground").innerHTML =
+    "<b>The ground wire is thicker on purpose.</b> The servo's 2.5 A return shares it, and at " +
+    "0.75 mm² that puts about 94 mV on the logic reference every time the pen lifts &mdash; which is " +
+    "exactly the failure described in FINDINGS.md §7. At " + C.link.gnd + " mm² it is a quarter of that.";
+  document.getElementById("note-clearance").innerHTML =
+    "<b>Height alone does not tell you whether a thing can be wired.</b> A TB6600 is 57 mm in a " +
+    mm(C.bay) + " mm bay &mdash; 5 mm over its fins &mdash; but its terminals sit at about 28 mm, so there " +
+    "is ~34 mm over the screw. A DIN block is 58 mm with its screw near the top, leaving 4 mm. " +
+    "Hence lever blocks here, not DIN.";
+  document.getElementById("note-provisional").innerHTML =
+    "<b>Where things sit is provisional.</b> Contents are shelf-packed into rows by " +
+    "<code>case.py</code>, not arranged. Sizes, counts, panel and box geometry are real; positions " +
+    "are waiting on the parts actually going into the case.";
 
-  var by = {};
-  W.forEach(function(w){
-    by[w.kind] = by[w.kind] || {n:0, max:0};
-    by[w.kind].n++; by[w.kind].max = Math.max(by[w.kind].max, w.len);
-  });
-  var kinds = Object.keys(by).sort();
-  document.getElementById("wire-kinds").innerHTML = kinds.map(function(k){
-    return '<tr><td><span class="sw" style="display:inline-block;vertical-align:-1px;'+
-           'margin-right:6px;background:var(--w-'+k+')"></span>'+k+'</td><td class="num">'+
-           by[k].n+'</td><td class="num">'+mm(by[k].max)+' mm</td></tr>';
-  }).join("");
-  document.getElementById("kind-toggles").innerHTML = kinds.map(function(k){
-    return '<label class="toggle"><input type="checkbox" class="kind" data-kind="'+k+'" checked>'+
-           '<span class="sw" style="background:var(--w-'+k+')"></span>'+k+' ('+by[k].n+')</label>';
-  }).join("");
-
-  document.getElementById("bundle-list").innerHTML = W.slice().sort(function(a, b){
-    return kinds.indexOf(a.kind) - kinds.indexOf(b.kind) || a.name.localeCompare(b.name);
-  }).map(function(w){
-    return '<button type="button" class="bundle" data-name="'+w.name+'" aria-pressed="false">'+
-           '<span class="dot" style="background:var(--w-'+w.kind+')"></span>'+
-           '<span>'+w.name.replace(/_/g," ")+'</span>'+
-           '<span class="mm">'+w.n+'w &middot; '+PV.mm(w.len)+'</span></button>';
-  }).join("");
-
-  var detail = document.createElement("dl");
-  detail.className = "wire-detail";
-  document.getElementById("bundle-list").after(detail);
-
-  document.getElementById("note-lane").innerHTML =
-    "<b>The lane is what makes the wiring short.</b> Drivers sit against the hinge so the heavy " +
-    "24 V lands as soon as it crosses; the board faces the lane with its ports pointing into it; " +
-    "every connector drops into the same channel, each stepper opposite its own driver. Nothing " +
-    "routes over a driver or across the board.";
-  document.getElementById("note-cool").innerHTML =
-    "<b>It runs closed, so the fans are not optional.</b> Three TB6600 heatsinks hang fin-down in " +
-    "still air, and polypropylene conducts about a thousandth of what aluminium does. Intake low " +
-    "in the base at the cool end, exhaust in the lid at the driver end, so what leaves is the " +
-    "hottest air in the box.";
-
-  // Isolating a bundle: the others fade rather than vanish, so you can still
-  // see where the one you are looking at sits among them.
-  var isolated = null;
-  var kindOn = {};
-  kinds.forEach(function(k){ kindOn[k] = true; });
-
-  function applyVisibility(){
-    if (!S) return;          // the list and its detail work without a scene
-    W.forEach(function(w){
-      var m = tubes[w.name];
-      m.visible = kindOn[w.kind];
-      m.material = (isolated && isolated !== w.name) ? ghostMat : wireMats[w.kind];
-    });
-    S.draw();
-  }
-
-  function select(name){
-    isolated = (isolated === name) ? null : name;
-    document.querySelectorAll(".bundle").forEach(function(b){
-      b.setAttribute("aria-pressed", String(b.dataset.name === isolated));
-    });
-    var w = W.filter(function(x){ return x.name === isolated; })[0];
-    detail.innerHTML = w ? [
-      ["from", w.src], ["to", w.dst], ["kind", w.kind],
-      ["conductors", w.n], ["length", PV.mm(w.len) + " mm"],
-      ["bay", w.bay], ["runs at Z", PV.mm(w.z) + " mm"]
-    ].map(function(r){ return "<dt>"+r[0]+"</dt><dd>"+r[1]+"</dd>"; }).join("") : "";
-    applyVisibility();
-  }
-  document.querySelectorAll(".bundle").forEach(function(b){
-    b.addEventListener("click", function(){ select(b.dataset.name); });
-  });
-  document.getElementById("show-all").addEventListener("click", function(){
-    isolated = null;
-    document.querySelectorAll(".bundle").forEach(function(b){ b.setAttribute("aria-pressed","false"); });
-    document.querySelectorAll(".kind").forEach(function(cb){ cb.checked = true; kindOn[cb.dataset.kind] = true; });
-    detail.innerHTML = "";
-    applyVisibility();
-  });
-
-
-  var S = PV.stage(document.getElementById("stage"),
-                   {tz: C.ext[2]/2, radius: 900, theta: -0.95, phi: 1.02});
+  var S = PV.stage(document.getElementById("stage"), {tz: C.ext[2]/2, radius: 1400});
   if (!S) return;
 
-  // Drawn about the case's own origin, not the machine's.
-  var root = new THREE.Group();
-  root.position.x = -C.origin_x;
-  S.scene.add(root);
-
   var matShell = new THREE.MeshStandardMaterial({roughness:.9, metalness:0, flatShading:true,
-                                                 transparent:true, opacity:.22, side:THREE.DoubleSide});
-  var matFit = new THREE.MeshStandardMaterial({roughness:.6, metalness:.2, flatShading:true});
+                                                 transparent:true, opacity:.2, side:THREE.DoubleSide});
+  var matFan = new THREE.MeshStandardMaterial({roughness:.6, metalness:.2, flatShading:true});
   var partMats = {
     steel: new THREE.MeshStandardMaterial({roughness:.4, metalness:.55, flatShading:true}),
     pcb:   new THREE.MeshStandardMaterial({roughness:.65, metalness:.05, flatShading:true}),
     abs:   new THREE.MeshStandardMaterial({roughness:.8, metalness:0, flatShading:true})
   };
 
-  var shell = new THREE.Mesh(PV.geomFrom(D.parts.shell.geom.b64), matShell);
-  root.add(shell);
-
-  var fit = new THREE.Group();
-  ["fans", "panel"].forEach(function(k){
-    if (D.parts[k]) fit.add(new THREE.Mesh(PV.geomFrom(D.parts[k].geom.b64), matFit));
+  var shells = new THREE.Group(), parts = new THREE.Group(), fans = new THREE.Group();
+  var mid = 0, n = 0;
+  Object.keys(C.boxes).forEach(function(b){
+    mid += C.boxes[b].origin_x; n++;
+    shells.add(new THREE.Mesh(PV.geomFrom(D.parts[b+"_shell"].geom.b64), matShell));
+    fans.add(new THREE.Mesh(PV.geomFrom(D.parts[b+"_fan"].geom.b64), matFan));
+    C.materials.forEach(function(m){
+      var k = b + "_" + m;
+      if (D.parts[k]) parts.add(new THREE.Mesh(PV.geomFrom(D.parts[k].geom.b64), partMats[m]));
+    });
   });
-  root.add(fit);
-
-  var parts = new THREE.Group();
-  C.materials.forEach(function(m){
-    if (D.parts[m]) parts.add(new THREE.Mesh(PV.geomFrom(D.parts[m].geom.b64), partMats[m]));
-  });
-  root.add(parts);
-
-  // One mesh per bundle, keyed by name, so a single run can be picked out.
-  var wireMats = {}, tubes = {};
-  var ghostMat = new THREE.MeshStandardMaterial({roughness:.8, metalness:0,
-                                                 transparent:true, opacity:.12});
-  var harness = new THREE.Group();
-  W.forEach(function(w){
-    if (!wireMats[w.kind]) {
-      wireMats[w.kind] = new THREE.MeshStandardMaterial({roughness:.5, metalness:.1});
-    }
-    var pts = w.pts.map(function(p){ return new THREE.Vector3(p[0]+C.origin_x, p[1], p[2]); });
-    var curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.01);
-    var m = new THREE.Mesh(
-      new THREE.TubeGeometry(curve, pts.length * 10, 0.9 + 0.35 * Math.sqrt(w.n), 8, false),
-      wireMats[w.kind]);
-    m.name = w.name;
-    tubes[w.name] = m;
-    harness.add(m);
-  });
-  root.add(harness);
+  var root = new THREE.Group();
+  root.position.x = -mid / n;
+  root.add(shells, parts, fans);
+  S.scene.add(root);
 
   S.onTheme(function(){
     matShell.color = new THREE.Color(css("--shell"));
-    matFit.color   = new THREE.Color(css("--blue"));
+    matFan.color   = new THREE.Color(css("--blue"));
     partMats.steel.color = new THREE.Color(css("--steel"));
     partMats.pcb.color   = new THREE.Color(css("--pcb"));
     partMats.abs.color   = new THREE.Color(css("--abs"));
-    kinds.forEach(function(k){ wireMats[k].color = new THREE.Color(css("--w-" + k)); });
-    ghostMat.color = new THREE.Color(css("--ink-3"));
   });
-
-  S.views({iso:{theta:-0.95,phi:1.02,radius:900}, top:{theta:-Math.PI/2,phi:0.07,radius:760},
-           front:{theta:-Math.PI/2,phi:Math.PI/2-0.02,radius:860},
-           right:{theta:0.001,phi:Math.PI/2-0.02,radius:860}});
-  S.toggles({"t-shell":shell, "t-parts":parts, "t-fit":fit, "t-wiring":harness});
-
-  document.querySelectorAll(".kind").forEach(function(cb){
-    cb.addEventListener("change", function(){
-      kindOn[cb.dataset.kind] = cb.checked; applyVisibility();
-    });
-  });
+  S.views({iso:{theta:-0.95,phi:1.02,radius:1400}, top:{theta:-Math.PI/2,phi:0.07,radius:1200},
+           front:{theta:-Math.PI/2,phi:Math.PI/2-0.02,radius:1300},
+           right:{theta:0.001,phi:Math.PI/2-0.02,radius:1300}});
+  S.toggles({"t-shell":shells, "t-parts":parts, "t-fans":fans});
 
   document.getElementById("readout").innerHTML =
-    C.ext[0] + " x " + C.ext[1] + " x " + C.ext[2] + " mm<br>" +
-    W.length + " bundles &middot; <b>" + R.obstruction + "</b> obstructions<br>" +
-    "hinge " + C.hinge;
-
+    C.model + " x2<br>" + mm(C.int[0]) + " x " + mm(C.int[1]) + " x " + mm(C.int[2]) +
+    " mm internal<br>bay " + mm(C.bay) + " mm";
   S.start();
 })();
