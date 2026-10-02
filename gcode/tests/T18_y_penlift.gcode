@@ -1,4 +1,4 @@
-; T14 - Y travel + pen lift, ten cycles.
+; T18 - Y travel + pen lift, ten cycles.
 ;
 ; The pattern a real plot actually makes: travel with the pen UP, stop, then
 ; actuate the servo. That is the combination FINDINGS.md section 7 records as the
@@ -13,7 +13,7 @@
 ; PEN UP = S120, PEN DOWN = S60   <-- edit both if your values differ
 ; Y travel = 20 mm each way       <-- needs 20 mm of clearance in -Y
 ;
-; Run it:  python3 plot2.py --no-home --unlock --force T14_y_penlift.gcode
+; Run it:  python3 plot2.py --no-home --unlock --force T18_y_penlift.gcode
 ;   --force because this file is relative and does not need the G54 offset that
 ;   plot2.py normally insists on.
 ;

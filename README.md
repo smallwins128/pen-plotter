@@ -17,6 +17,7 @@ positional servo pen lift on D11.
 | **[docs/UGS.md](docs/UGS.md)** | Driving the machine by hand from Universal Gcode Sender: connect, unlock, work zero, macros for the pen, and the UGS buttons that do the wrong thing here. Manual work only — `plot2.py` still streams the plots. |
 | **[settings/plotter.grbl.txt](settings/plotter.grbl.txt)** | Restore block for after a re-flash (which wipes EEPROM). |
 | **[docs/FIELD_ART.md](docs/FIELD_ART.md)** | The dense multi-colour interference plots: how the generator works, how two ink layers register with a taped-down pen, and how long each piece takes. Needs no working pen lift. |
+| **[hardware/](hardware)** | Parametric CAD for the physical parts, as Python (build123d). The 2040 frame is modelled; enclosures and the pen lifter to follow. |
 | **[gcode/tests/](gcode/tests)** | T0–T6 bring-up tests, in the order you should run them. |
 | **[tools/plot2.py](tools/plot2.py)** | The sender. Homes in the same connection it streams in, refuses to run without a work offset, `--lockstep` for one-line-at-a-time. |
 | **[tools/fieldart.py](tools/fieldart.py)** | Generator for the interference-field pieces. Writes G-code plus an SVG preview; every layer closes back on its start point so colours register. |

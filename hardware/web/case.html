@@ -1,0 +1,167 @@
+<!--BODY-->
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1>Electronics &mdash; two UN4412 boxes</h1>
+      <p>Split so the box you actually open has nothing above 24&nbsp;V in it. Three conductors run between them, and the ground is deliberately two sizes up. <b>Internal placement is provisional</b> &mdash; contents are auto-packed in rows, not arranged.</p>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <div class="stage-row">
+    <div class="stage" id="stage">
+      <div class="readout" id="readout"></div>
+      <div class="hint">drag orbit &middot; scroll zoom &middot; shift-drag pan</div>
+      <div class="fallback">The 3D library could not be loaded. Every dimension below is still exact.</div>
+    </div>
+    <div class="rail">
+      <div class="panel">
+        <h2>View</h2>
+        <div class="views">
+          <button type="button" data-view="iso">Isometric</button>
+          <button type="button" data-view="top">Top</button>
+          <button type="button" data-view="front">Front</button>
+          <button type="button" data-view="right">Right</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Show</h2>
+        <label class="toggle"><input type="checkbox" id="t-shell" checked><span class="sw" style="background:var(--shell)"></span>Case shells</label>
+        <label class="toggle"><input type="checkbox" id="t-parts" checked><span class="sw" style="background:var(--steel)"></span><span class="sw" style="background:var(--pcb);margin-left:-5px"></span><span class="sw" style="background:var(--abs);margin-left:-5px"></span>Contents</label>
+        <label class="toggle"><input type="checkbox" id="t-fans" checked><span class="sw" style="background:var(--blue)"></span>Fans</label>
+      </div>
+      <div class="panel">
+        <h2>The link</h2>
+        <div class="rows" id="link"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h2>Power box</h2>
+      <table><thead><tr><th>Item</th><th class="num">Size</th></tr></thead><tbody id="power-parts"></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>Control box</h2>
+      <table><thead><tr><th>Item</th><th class="num">Size</th></tr></thead><tbody id="control-parts"></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>Panel cutouts</h2>
+      <div class="rows" id="panel-rows"></div>
+    </div>
+  </div>
+
+  <div class="note" id="note-ground"></div>
+  <div class="note" id="note-clearance"></div>
+  <div class="note" id="note-provisional"></div>
+
+  <footer>
+    <span>Each box has its own origin at its footprint centre, Z&nbsp;=&nbsp;0 at the bench.</span>
+    <span>Regenerate: <code>python3 hardware/viewer.py</code></span>
+  </footer>
+</div>
+<!--SCRIPT-->
+(function(){
+  "use strict";
+  var D = PV.D, css = PV.css, mm = PV.mm, C = D.case;
+
+  document.getElementById("chips").innerHTML = [
+    ["Case", C.model + " x2"],
+    ["Internal", C.int.map(function(v){return mm(v);}).join(" x ") + " mm"],
+    ["Bay", mm(C.bay) + " mm"],
+    ["Packed", Object.keys(C.boxes).map(function(b){
+        var f = C.boxes[b].parts.reduce(function(a,p){return a+p.size[0]*p.size[1];},0);
+        return Math.round(f/(C.int[0]*C.int[1])*100)+"%";
+      }).join(" / ")]
+  ].map(function(c){
+    return '<div class="chip"><span class="k">'+c[0]+'</span><span class="v">'+c[1]+'</span></div>';
+  }).join("");
+
+  document.getElementById("link").innerHTML = Object.keys(C.link).map(function(k){
+    var flag = k === "gnd" ? ' <span class="ok">two sizes up</span>' : '';
+    return '<div class="row"><span>'+k.toUpperCase()+flag+'</span><span class="n">'+
+           C.link[k]+' mm²</span></div>';
+  }).join("");
+
+  function rows(box){
+    return C.boxes[box].parts.map(function(p){
+      var sw = '<span class="sw" style="display:inline-block;vertical-align:-1px;margin-right:6px;'+
+               'background:var(--'+p.material+')"></span>';
+      return '<tr><td>'+sw+p.name.replace(/_/g," ")+'</td><td class="num">'+
+             p.size.map(function(v){return mm(v);}).join(" x ")+' mm</td></tr>';
+    }).join("");
+  }
+  document.getElementById("power-parts").innerHTML = rows("power");
+  document.getElementById("control-parts").innerHTML = rows("control");
+
+  document.getElementById("panel-rows").innerHTML = Object.keys(C.boxes).map(function(b){
+    return '<div class="row total"><span>'+b+' box</span><span class="n">'+
+           C.boxes[b].panel.length+'</span></div>' +
+      C.boxes[b].panel.map(function(p){
+        var spare = p.name.indexOf("spare") === 0;
+        return '<div class="row"><span'+(spare?' style="color:var(--ink-3)"':'')+'>'+
+               p.name.replace(/_/g," ")+'</span><span class="n" style="font-size:11px;color:var(--ink-3)">'+
+               p.note+'</span></div>';
+      }).join("");
+  }).join("");
+
+  document.getElementById("note-ground").innerHTML =
+    "<b>The ground wire is thicker on purpose.</b> The servo's 2.5 A return shares it, and at " +
+    "0.75 mm² that puts about 94 mV on the logic reference every time the pen lifts &mdash; which is " +
+    "exactly the failure described in FINDINGS.md §7. At " + C.link.gnd + " mm² it is a quarter of that.";
+  document.getElementById("note-clearance").innerHTML =
+    "<b>Height alone does not tell you whether a thing can be wired.</b> A TB6600 is 57 mm in a " +
+    mm(C.bay) + " mm bay &mdash; 5 mm over its fins &mdash; but its terminals sit at about 28 mm, so there " +
+    "is ~34 mm over the screw. A DIN block is 58 mm with its screw near the top, leaving 4 mm. " +
+    "Hence lever blocks here, not DIN.";
+  document.getElementById("note-provisional").innerHTML =
+    "<b>Where things sit is provisional.</b> Contents are shelf-packed into rows by " +
+    "<code>case.py</code>, not arranged. Sizes, counts, panel and box geometry are real; positions " +
+    "are waiting on the parts actually going into the case.";
+
+  var S = PV.stage(document.getElementById("stage"), {tz: C.ext[2]/2, radius: 1400});
+  if (!S) return;
+
+  var matShell = new THREE.MeshStandardMaterial({roughness:.9, metalness:0, flatShading:true,
+                                                 transparent:true, opacity:.2, side:THREE.DoubleSide});
+  var matFan = new THREE.MeshStandardMaterial({roughness:.6, metalness:.2, flatShading:true});
+  var partMats = {
+    steel: new THREE.MeshStandardMaterial({roughness:.4, metalness:.55, flatShading:true}),
+    pcb:   new THREE.MeshStandardMaterial({roughness:.65, metalness:.05, flatShading:true}),
+    abs:   new THREE.MeshStandardMaterial({roughness:.8, metalness:0, flatShading:true})
+  };
+
+  var shells = new THREE.Group(), parts = new THREE.Group(), fans = new THREE.Group();
+  var mid = 0, n = 0;
+  Object.keys(C.boxes).forEach(function(b){
+    mid += C.boxes[b].origin_x; n++;
+    shells.add(new THREE.Mesh(PV.geomFrom(D.parts[b+"_shell"].geom.b64), matShell));
+    fans.add(new THREE.Mesh(PV.geomFrom(D.parts[b+"_fan"].geom.b64), matFan));
+    C.materials.forEach(function(m){
+      var k = b + "_" + m;
+      if (D.parts[k]) parts.add(new THREE.Mesh(PV.geomFrom(D.parts[k].geom.b64), partMats[m]));
+    });
+  });
+  var root = new THREE.Group();
+  root.position.x = -mid / n;
+  root.add(shells, parts, fans);
+  S.scene.add(root);
+
+  S.onTheme(function(){
+    matShell.color = new THREE.Color(css("--shell"));
+    matFan.color   = new THREE.Color(css("--blue"));
+    partMats.steel.color = new THREE.Color(css("--steel"));
+    partMats.pcb.color   = new THREE.Color(css("--pcb"));
+    partMats.abs.color   = new THREE.Color(css("--abs"));
+  });
+  S.views({iso:{theta:-0.95,phi:1.02,radius:1400}, top:{theta:-Math.PI/2,phi:0.07,radius:1200},
+           front:{theta:-Math.PI/2,phi:Math.PI/2-0.02,radius:1300},
+           right:{theta:0.001,phi:Math.PI/2-0.02,radius:1300}});
+  S.toggles({"t-shell":shells, "t-parts":parts, "t-fans":fans});
+
+  document.getElementById("readout").innerHTML =
+    C.model + " x2<br>" + mm(C.int[0]) + " x " + mm(C.int[1]) + " x " + mm(C.int[2]) +
+    " mm internal<br>bay " + mm(C.bay) + " mm";
+  S.start();
+})();

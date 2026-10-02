@@ -255,7 +255,8 @@ docs/         SETUP.md (8-phase build), FIRMWARE_SERVO.md, FINDINGS.md, this fil
 settings/     plotter.grbl.txt — live values, restore after any re-flash
 tools/        plot2.py (sender), pentest.py (servo swing sweep), servo_sweep.py
 gcode/tests/  T0-T17, in bring-up order. T14 is the 10-minute soak, T15 the pen-cycle
-              metric (FINDINGS 7c), T16/T17 the reversal tests (FINDINGS 7a).
+              metric (FINDINGS 7c), T16/T17 the reversal tests (FINDINGS 7a), T18 Y-travel
+              then pen lift (the section 7 pattern).
               U1 is the pen-free smoke test to send from UGS.
 gcode/art/    single-stroke pieces: Hilbert, rosette, ripples, Gosper, dragon,
               Sierpinski, one-line labyrinth, and the dense interference fields

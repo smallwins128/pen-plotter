@@ -1,0 +1,7 @@
+# Modelling. build123d wraps OpenCASCADE, so this pulls a real B-rep kernel.
+build123d>=0.9
+
+# Preview rendering only (hardware/preview.py). Not needed to build models.
+trimesh>=4.0
+matplotlib>=3.7
+numpy>=1.24
