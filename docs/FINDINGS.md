@@ -133,6 +133,44 @@ cannot supply a current step. Next steps, in order:
 3. **220–470 µF, 50 V** across the shield's 24 V terminals. A4988s require local bulk
    capacitance; the clone shield ships with very little.
 
+## 7a. A motion-only reset at 180 mm — the servo was not involved
+
+Running an 18 cm piece (`field_18cm_proof.gcode`, servo disconnected, pen taped) the board
+reset mid-stream. The sender reported `GRBL RESET mid-stream at line 284 (brownout)`.
+
+Section 7 says motion alone is fine — but that was established with **T7, a 50 mm square**,
+and nothing had ever run for minutes at a stretch.
+
+Two more followed: line 1116, then line 3014. Their positions relative to the row-end
+turnarounds are 52, 20 and 70 moves — with rows 181–226 moves long, a random point averages
+~45 moves from a turn, so that is scatter, not clustering. **An earlier draft of this
+section called the reversal the trigger on the strength of the first two points. Three
+points do not support it.**
+
+What the three do show is **duration**: at F500 with 0.8 mm moves the machine runs about
+10 moves a second, so the runs lasted roughly **27 s, 107 s and 290 s**. Random position,
+increasing survival — the signature of an intermittent fault, not of any particular move.
+
+**The detail that reframes it:** the Arduino is **USB-powered** and the shield never feeds
+`VIN` (section 1 of HANDOFF, verified — the power LED is off with the PSU on and USB out).
+A sag on the 24 V motor rail therefore cannot brown out the Arduino directly. For motor
+current to reset it, the disturbance has to arrive through ground or as radiated noise.
+Which leaves a candidate never yet tested: **the USB connection itself** — a marginal cable,
+port or hub causing the Mac to re-enumerate, which resets the board exactly as opening the
+serial port does.
+
+**The decisive test costs nothing and moves nothing:**
+
+> Switch the **24 V PSU off** and stream a full art file on USB power alone. GRBL executes
+> the entire motion profile in software with identical timing; the steppers have no current
+> so nothing moves. If it still resets, the motors are not involved at all and the fault is
+> in the USB/serial path. If it runs to completion, motor current is implicated and the
+> hunt moves to grounding and bulk capacitance.
+
+Run it before buying any capacitors. `T14_reversal_sharp.gcode` and `T15_reversal_rounded.gcode`
+remain useful for separating cusped from looped turns, but only once the PSU-off test has
+said whether motion matters at all.
+
 ## 8. Working right now, without the servo
 
 Motion is in better shape than it has ever been: homing repeatable, work zero persistent,
