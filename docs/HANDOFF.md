@@ -3,7 +3,11 @@
 Paste this into a fresh chat to pick up where the last one left off. Everything here is
 **verified on the machine**, not assumed. Where something is unverified it says so.
 
-_Last updated: 2026-08-24_
+_Last updated: 2026-10-02 (September branches merged into main)_
+
+> This repo is room **R04 Etch** in Allwin's Copilot harness. Room state (status, next actions,
+> tracker) lives in the Drive doc `[R04 Etch] Handoff`; this file stays the technical source of
+> truth for the machine.
 
 ---
 
@@ -254,7 +258,7 @@ firmware/     patched GRBL 1.1h source + flashable zip
 docs/         SETUP.md (8-phase build), FIRMWARE_SERVO.md, FINDINGS.md, this file
 settings/     plotter.grbl.txt — live values, restore after any re-flash
 tools/        plot2.py (sender), pentest.py (servo swing sweep), servo_sweep.py
-gcode/tests/  T0-T17, in bring-up order. T14 is the 10-minute soak, T15 the pen-cycle
+gcode/tests/  T0-T18, in bring-up order. T14 is the 10-minute soak, T15 the pen-cycle
               metric (FINDINGS 7c), T16/T17 the reversal tests (FINDINGS 7a), T18 Y-travel
               then pen lift (the section 7 pattern).
               U1 is the pen-free smoke test to send from UGS.
