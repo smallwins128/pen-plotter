@@ -66,19 +66,19 @@ Plotting can survive a reset; writing EEPROM cannot.
 ## 6. The servo's first energisation is its largest current draw
 
 Until the first `M3`, the PWM pin is disconnected and the servo is limp — no holding
-torque. Asking it to jump straight to an extreme (`M3 S120`) from that state is the
+torque. Asking it to jump straight to an extreme (`M3 S140`) from that state is the
 biggest current step it ever makes.
 
-**Soft-start it.** Wake it near centre and walk it out in stages:
+**Soft-start it.** Wake it at pen down and walk it out in stages:
 
 ```gcode
 M3 S90
 G4 P0.50
-M3 S100
+M3 S107
 G4 P0.30
-M3 S110
+M3 S123
 G4 P0.30
-M3 S120
+M3 S140
 G4 P0.30
 ```
 
@@ -167,9 +167,75 @@ serial port does.
 > in the USB/serial path. If it runs to completion, motor current is implicated and the
 > hunt moves to grounding and bulk capacitance.
 
-Run it before buying any capacitors. `T14_reversal_sharp.gcode` and `T15_reversal_rounded.gcode`
+Run it before buying any capacitors. `T16_reversal_sharp.gcode` and `T17_reversal_rounded.gcode`
 remain useful for separating cusped from looped turns, but only once the PSU-off test has
 said whether motion matters at all.
+
+## 7b. A static hold at S180 resets the board — no motion involved
+
+_Observed 2026-09-04, on the machine, during a `servo_sweep.py` session._
+
+**Geometry at the time of this observation:** `S90` = pen **down**, arm pointing straight
+down. `S180` = pen **up**, arm pointing right — a 90° swing, where the old values
+(`S120`/`S60`) were 60 units apart.
+
+**The horn was re-aligned on its spline later the same day**, and the working pair is now
+`S90` down / `S140` up. The reset below was seen on the *earlier* alignment, so the exact
+number `S180` is specific to that setup. What carries over is the mechanism, not the value:
+driving the horn into its mechanical stop stalls the servo, and a stalled MG996R will reset
+this board whether or not the gantry is moving.
+
+**S180 held the board for a few seconds and then reset it.** The gantry was stationary and
+no motion command had been sent in that connection.
+
+This is the first reset observed **without a preceding move**, and it narrows section 7
+rather than repeating it. `S180` is the top of GRBL's S range and, on this linkage, the end
+of the servo's mechanical travel — so the horn is stalled against its stop, and an MG996R
+stalled draws its full ~2.5 A for as long as the signal holds it there. A hold, not a
+transient. That is enough on its own to collapse the rail, which means:
+
+- The buck's **transient** response is not the only problem; its **sustained** capability
+  matters too, and section 7's fix list should be read with that in mind.
+- **Never park the pen at an extreme.** Pen-up wants the smallest S that clears the paper,
+  not the biggest S the servo accepts. A pen lift needs a few millimetres; 90° of horn
+  travel is many times more than that, and every degree past contact is stall current.
+- A reset while idle is no longer evidence of the motion-coupled fault. Check where the
+  servo is parked first.
+
+**Open:** the minimum S that lifts the pen clear, and whether holding *that* value is
+stable. Until it is measured, treat any S above ~S150 as a stall risk.
+
+## 7c. A repeatable cycle-count to failure — the number to test fixes against
+
+_Observed 2026-09-04 on the machine, first run of `gcode/tests/T15_pen_cycle_grid.gcode`,
+new arm alignment (S90 down / S140 up)._
+
+```
+Streaming 994 lines ...
+   75/994
+   !! GRBL RESET mid-stream at line 91 (brownout)
+Position: <Alarm|MPos:0.000,0.000,0.000|Bf:15,128|FS:0,0|WCO:-303.000,-107.000,0.000>
+```
+
+Stream line 91 is `M3 S90` — pen **down** — and line 90 is `G0 X-5.0`. **The board reset on
+a pen actuation immediately following a move**, which is section 7's signature exactly. The
+re-aligned arm and the new S values changed nothing about it.
+
+**11 pen cycles completed before the reset**, roughly 30 seconds in.
+
+What is new is not the fault but the measurement. Every previous reproduction was "somewhere
+in a long job". T15 fails **in about half a minute, at a countable cycle number**, which
+turns the open problem into something with a metric:
+
+- **Before any fix: dies at cycle ~12 of 140.**
+- A fix that gets it to 40 is progress even if it still fails. A fix that completes all 140
+  is the answer. Previously there was no way to tell a partial improvement from noise.
+- It also means each hardware change can be evaluated in a minute rather than a long plot,
+  so **change one thing at a time** is finally cheap to obey.
+
+Read the cycle count **off the paper**, not the console: `plot2.py` reports lines accepted
+into GRBL's buffer, which runs seconds ahead of the pen, and a reset discards whatever was
+still in flight. Expect the paper to show slightly fewer ticks than the line number implies.
 
 ## 8. Working right now, without the servo
 

@@ -1,11 +1,11 @@
-; T15 - the same 20 reversals, but each turn LOOPS ROUND instead of cusping.
-; Run this only after T14. If T14 resets and T15 does not, the reversal is
+; T17 - the same 20 reversals, but each turn LOOPS ROUND instead of cusping.
+; Run this only after T16. If T16 resets and T17 does not, the reversal is
 ; the trigger and rounding the turns is a real mitigation.
 ;
 ; The loop bulges 3 mm past each row end, so leave 45 mm clear to the RIGHT
 ; and 40 mm BEHIND. PEN OUT, no servo. About 2 minutes.
 ;
-; Run:  python3 plot2.py --no-home --unlock T15_reversal_rounded.gcode
+; Run:  python3 plot2.py --no-home --unlock T17_reversal_rounded.gcode
 G21
 G90
 G94

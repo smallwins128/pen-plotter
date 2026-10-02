@@ -14,6 +14,7 @@ positional servo pen lift on D11.
 | **[docs/ARTGEN.md](docs/ARTGEN.md)** | Making the art, not just plotting it: the vsketch assessment, the browser studio, layered multi-pen work and blueprint posters. |
 | **[docs/POWER.md](docs/POWER.md)** | Control-box design: one mains inlet, one 24 V rail, one star ground, and all 19 machine wires on keyed panel connectors. Design only — nothing built yet. |
 | **[docs/FINDINGS.md](docs/FINDINGS.md)** | What commissioning actually taught us — the servo ground wire, the zero-work-offset crash, the EEPROM rule, servo soft-start, and what is still open. Read this before re-debugging anything. |
+| **[docs/UGS.md](docs/UGS.md)** | Driving the machine by hand from Universal Gcode Sender: connect, unlock, work zero, macros for the pen, and the UGS buttons that do the wrong thing here. Manual work only — `plot2.py` still streams the plots. |
 | **[settings/plotter.grbl.txt](settings/plotter.grbl.txt)** | Restore block for after a re-flash (which wipes EEPROM). |
 | **[docs/FIELD_ART.md](docs/FIELD_ART.md)** | The dense multi-colour interference plots: how the generator works, how two ink layers register with a taped-down pen, and how long each piece takes. Needs no working pen lift. |
 | **[gcode/tests/](gcode/tests)** | T0–T6 bring-up tests, in the order you should run them. |
