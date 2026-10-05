@@ -22,6 +22,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "parts"))
 
 import case                     # noqa: E402
+import psu_layout               # noqa: E402
 import deck as deck_mod         # noqa: E402
 import stock                    # noqa: E402
 from params import DECK_T, DECK_X, DECK_Y  # noqa: E402
@@ -83,21 +84,79 @@ def terminals():
            "mains L/N/E in the power box; label it, the colours are not mains code")
 
 
-def harness():
-    """Wire and ferrules cannot be counted until the layout is real.
+def power_rail():
+    """Everything on the power box's DIN rail, counted off psu_layout.RAIL."""
+    sched, rail_len = psu_layout.rail_schedule()
+    kinds = defaultdict(int)
+    for name, _x, _w, kind, _note in sched:
+        kinds[kind] += 1
 
-    The router that produced these numbers is parked (see wiring.py). Rather
-    than carry forward figures from a layout that no longer exists, the rows
-    say what they depend on.
+    yield ("Electronics", "DIN rail TS35, 35 x 7.5 mm", 1, "x 250 mm",
+           f"{rail_len:.0f} mm used in the power box; buy a length and cut it")
+    yield ("Electronics", "DIN end clamp", kinds["clamp"], "ea", "")
+    yield ("Electronics", "MCB, 6 A 1P+N C-curve", 1, "ea", "mains in; protects both supplies")
+    yield ("Electronics", "MCB, 5 A 1P DC-rated", 1, "ea",
+           "protects the 24 V trunk wiring, not the supply -- the LRS limits itself")
+    yield ("Electronics", "Relay, 24 V coil 1 N/O, + DIN socket", 1, "ea",
+           "K1; drops only the driver rail on E-stop")
+    yield ("Electronics", "Feed-through terminal, 2.5 mm^2 screw",
+           kinds["L"] + kinds["N"] + kinds["v24"] + kinds["v0"] + kinds["v6"] + kinds["sp"],
+           "ea", f"includes {kinds['sp']} left spare")
+    yield ("Electronics", "Earth terminal, 2.5 mm^2 (green/yellow, rail-bonding)",
+           kinds["E"], "ea", "")
+    combs = defaultdict(int)
+    for grp in psu_layout.JUMPERS:
+        combs[len(grp)] += 1
+    for ways in sorted(combs):
+        yield ("Electronics", f"Insertable jumper comb, {ways}-way", combs[ways], "ea",
+               "bridges a group without a wire -- this is most of the tidiness")
+    yield ("Electronics", "E-stop button, 22 mm, N/C", 1, "ea",
+           "lives on the machine, not on the box; the box carries the loop connector")
+
+    duct, clips = defaultdict(lambda: [0.0, []]), []
+    for name, (axis, c0, c1, s0, s1) in sorted(psu_layout.DUCTS.items()):
+        kind, nom = psu_layout.DUCT_KIND[name]
+        if kind == "duct":
+            duct[nom][0] += (s1 - s0) / 1000.0
+            duct[nom][1].append(name)
+        else:
+            clips.append(name)
+    for nom in sorted(duct):
+        run, names = duct[nom]
+        yield ("Electronics", f"Slotted wiring duct + lid, {nom:.0f} mm wide",
+               f"{run:.2f}", "m", ", ".join(names))
+    if clips:
+        yield ("Consumable", "P-clip, 6 mm, adhesive", 2 * len(clips), "ea",
+               f"{', '.join(clips)} -- three conductors, not worth a duct")
+
+
+def harness():
+    """Power box wire is counted from the routed layout. The rest is not.
+
+    psu_layout routes all thirty conductors inside the power box, so those
+    lengths are real -- SLACK is already in them. The control box is still
+    shelf-packed and the inter-box link depends on where the two cases end up
+    on the table, so those rows say what they are waiting on rather than
+    carrying a number that looks computed.
     """
+    routes, _used = psu_layout.build_routes()
+    by_gauge, ends = defaultdict(float), defaultdict(int)
+    for r in routes:
+        by_gauge[r["mm2"]] += r["len"]
+        ends[r["mm2"]] += 2
+    for g in sorted(by_gauge, reverse=True):
+        yield ("Consumable", f"Wire, {g:g} mm^2 stranded 300/500 V", f"{by_gauge[g]/1000:.2f}",
+               "m", f"power box, routed; {ends[g]} ends")
+    for g in sorted(ends, reverse=True):
+        yield ("Consumable", f"Bootlace ferrule, {g:g} mm^2 ({psu_layout.FERRULE[g].split()[1]})",
+               ends[g], "ea", "never tin a stranded end with solder -- it creeps and loosens")
+
     for g, why in ((0.75, "24 V and 6 V between the boxes"),
                    (2.5,  "ground between the boxes -- two sizes up on purpose"),
                    (0.5,  "motor phases"),
                    (0.25, "step/dir, endstops, servo signal")):
-        yield ("Consumable", f"Wire, {g:g} mm^2 stranded", "TBD", "m",
-               f"{why}; length needs the real layout")
-    yield ("Consumable", "Ferrule kit, insulated, 0.25-6 mm^2", 1, "kit",
-           "assorted; ~100 ends expected across both boxes")
+        yield ("Consumable", f"Wire, {g:g} mm^2 stranded (control box + link)", "TBD", "m",
+               f"{why}; needs the control box laid out for real")
 
 
 def connectors():
@@ -121,9 +180,10 @@ def connectors():
             yield ("Enclosure", key, kinds[key], "ea", "for a display or control later")
         else:
             yield ("Enclosure", key, kinds[key], "ea", "")
-    yield ("Enclosure", "Fan, 60 mm 24 V axial", len(case.BOXES), "ea",
-           "in the lid face; 11 W total means this is insurance, not cooling")
-    yield ("Enclosure", "Fan guard + filter, 60 mm", len(case.BOXES), "ea", "")
+    yield ("Enclosure", "Fan, 24 V axial", len(case.BOXES), "ea",
+           "insurance, not cooling -- 11 W total. The model still says 60 mm; the one in hand is 40 mm")
+    yield ("Enclosure", "Fan guard + filter", len(case.BOXES), "ea",
+           "size follows the fan")
 
 
 def sheet():
@@ -135,7 +195,7 @@ def sheet():
 
 def rows():
     out = list(extrusion()) + list(sheet()) + list(BOUGHT) + list(connectors()) \
-        + list(terminals()) + list(harness())
+        + list(terminals()) + list(power_rail()) + list(harness())
     order = ["Structure", "Motion", "Electronics", "Enclosure", "Consumable", "Tool"]
     return sorted(out, key=lambda r: (order.index(r[0]), r[1]))
 
