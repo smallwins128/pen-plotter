@@ -22,6 +22,8 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "parts"))
 
 import case                     # noqa: E402
+import panel                    # noqa: E402
+import ctrl_layout              # noqa: E402
 import psu_layout               # noqa: E402
 import deck as deck_mod         # noqa: E402
 import stock                    # noqa: E402
@@ -70,93 +72,89 @@ def extrusion():
         yield ("Structure", f"{profile} stock to buy", len(bars), "x 1 m", "first-fit, kerf allowed")
 
 
-def terminals():
-    """Lever distribution blocks, one set in the control box.
+def din_hardware():
+    """Rail, blocks, combs and duct for BOTH boxes, counted off their layouts.
 
-    Not DIN: a DIN block on its rail stands 58 mm and its screw is near the
-    top, which leaves 4 mm of access in the UN4412's 62 mm bay. At 1.7 A the
-    lever blocks are more than adequate and they fit.
+    The control box used to carry lever distribution blocks because a DIN block
+    looked unwirable in a 62 mm bay. That was wrong -- the case's 124 mm is base
+    plus lid, so a block on the floor has the whole cavity. Both boxes are on
+    rail now and the counts come from the two rail schedules.
     """
-    for name, (w, d, h), _, _, note in case.check("control"):
-        if name.startswith("dist_"):
-            yield ("Enclosure", f"Lever distribution block ({note.split(':')[0]})", 1, "ea", note)
-    yield ("Enclosure", "3-in/6-out lever splitter", 1, "ea",
-           "mains L/N/E in the power box; label it, the colours are not mains code")
+    boxes = [("power box", psu_layout), ("control box", ctrl_layout)]
+    kinds, rail_mm, combs = defaultdict(int), 0.0, defaultdict(int)
+    duct, clips = defaultdict(lambda: [0.0, []]), []
+    for label, mod in boxes:
+        sched, used = panel.rail_schedule(mod)
+        rail_mm += used
+        for name, _x, _w, kind, _note in sched:
+            kinds[kind] += 1
+        for grp in mod.JUMPERS:
+            combs[len(grp)] += 1
+        for d, (_axis, _c0, _c1, s0, s1) in sorted(mod.DUCTS.items()):
+            kind, nom = mod.DUCT_KIND[d]
+            if kind == "duct":
+                duct[nom][0] += (s1 - s0) / 1000.0
+                duct[nom][1].append(f"{label[:5]} {d}")
+            else:
+                clips.append(f"{label[:5]} {d}")
 
-
-def power_rail():
-    """Everything on the power box's DIN rail, counted off psu_layout.RAIL."""
-    sched, rail_len = psu_layout.rail_schedule()
-    kinds = defaultdict(int)
-    for name, _x, _w, kind, _note in sched:
-        kinds[kind] += 1
-
-    yield ("Electronics", "DIN rail TS35, 35 x 7.5 mm", 1, "x 250 mm",
-           f"{rail_len:.0f} mm used in the power box; buy a length and cut it")
-    yield ("Electronics", "DIN end clamp", kinds["clamp"], "ea", "")
+    yield ("Electronics", "DIN rail TS35, 35 x 7.5 mm", 1, "x 1 m",
+           f"{rail_mm:.0f} mm used across both boxes -- cut "
+           f"{panel.rail_schedule(psu_layout)[1]:.0f} and "
+           f"{panel.rail_schedule(ctrl_layout)[1]:.0f} from one length")
+    yield ("Electronics", "DIN end clamp", kinds["clamp"], "ea", "two per rail")
     yield ("Electronics", "MCB, 6 A 1P+N C-curve", 1, "ea", "mains in; protects both supplies")
     yield ("Electronics", "MCB, 5 A 1P DC-rated", 1, "ea",
            "protects the 24 V trunk wiring, not the supply -- the LRS limits itself")
     yield ("Electronics", "Relay, 24 V coil 1 N/O, + DIN socket", 1, "ea",
            "K1; drops only the driver rail on E-stop")
-    yield ("Electronics", "Feed-through terminal, 2.5 mm^2 screw",
-           kinds["L"] + kinds["N"] + kinds["v24"] + kinds["v0"] + kinds["v6"] + kinds["sp"],
-           "ea", f"includes {kinds['sp']} left spare")
+    plain = kinds["L"] + kinds["N"] + kinds["v24"] + kinds["v0"] + kinds["v6"] \
+        + kinds["v5"] + kinds["es"] + kinds["pwm"] + kinds["sp"]
+    yield ("Electronics", "Feed-through terminal, 2.5 mm^2 screw", plain, "ea",
+           f"both boxes; {kinds['sp']} left spare")
     yield ("Electronics", "Earth terminal, 2.5 mm^2 (green/yellow, rail-bonding)",
-           kinds["E"], "ea", "")
-    combs = defaultdict(int)
-    for grp in psu_layout.JUMPERS:
-        combs[len(grp)] += 1
+           kinds["E"], "ea", "power box only")
     for ways in sorted(combs):
         yield ("Electronics", f"Insertable jumper comb, {ways}-way", combs[ways], "ea",
                "bridges a group without a wire -- this is most of the tidiness")
     yield ("Electronics", "E-stop button, 22 mm, N/C", 1, "ea",
-           "lives on the machine, not on the box; the box carries the loop connector")
-
-    duct, clips = defaultdict(lambda: [0.0, []]), []
-    for name, (axis, c0, c1, s0, s1) in sorted(psu_layout.DUCTS.items()):
-        kind, nom = psu_layout.DUCT_KIND[name]
-        if kind == "duct":
-            duct[nom][0] += (s1 - s0) / 1000.0
-            duct[nom][1].append(name)
-        else:
-            clips.append(name)
+           "lives on the machine, not on a box; the box carries the loop connector")
     for nom in sorted(duct):
         run, names = duct[nom]
         yield ("Electronics", f"Slotted wiring duct + lid, {nom:.0f} mm wide",
                f"{run:.2f}", "m", ", ".join(names))
     if clips:
         yield ("Consumable", "P-clip, 6 mm, adhesive", 2 * len(clips), "ea",
-               f"{', '.join(clips)} -- three conductors, not worth a duct")
+               ", ".join(clips) + " -- too few conductors to be worth a duct")
 
 
 def harness():
-    """Power box wire is counted from the routed layout. The rest is not.
+    """Wire and ferrules, counted from both routed layouts.
 
-    psu_layout routes all thirty conductors inside the power box, so those
-    lengths are real -- SLACK is already in them. The control box is still
-    shelf-packed and the inter-box link depends on where the two cases end up
-    on the table, so those rows say what they are waiting on rather than
-    carrying a number that looks computed.
+    Both boxes are routed now, so these lengths are real and SLACK is already in
+    them. What is still open is the cable between the boxes and out to the
+    machine, because that depends on where the two cases end up on the table.
     """
-    routes, _used = psu_layout.build_routes()
     by_gauge, ends = defaultdict(float), defaultdict(int)
-    for r in routes:
-        by_gauge[r["mm2"]] += r["len"]
-        ends[r["mm2"]] += 2
+    for mod in (psu_layout, ctrl_layout):
+        routes, _used = panel.build_routes(mod)
+        for r in routes:
+            by_gauge[r["mm2"]] += r["len"]
+            ends[r["mm2"]] += 2
     for g in sorted(by_gauge, reverse=True):
         yield ("Consumable", f"Wire, {g:g} mm^2 stranded 300/500 V", f"{by_gauge[g]/1000:.2f}",
-               "m", f"power box, routed; {ends[g]} ends")
+               "m", f"inside the boxes, routed; {ends[g]} ends")
     for g in sorted(ends, reverse=True):
-        yield ("Consumable", f"Bootlace ferrule, {g:g} mm^2 ({psu_layout.FERRULE[g].split()[1]})",
-               ends[g], "ea", "never tin a stranded end with solder -- it creeps and loosens")
+        colour = (psu_layout.FERRULE.get(g) or ctrl_layout.FERRULE[g]).split()[1]
+        yield ("Consumable", f"Bootlace ferrule, {g:g} mm^2 ({colour})", ends[g], "ea",
+               "never tin a stranded end with solder -- it creeps and loosens")
 
     for g, why in ((0.75, "24 V and 6 V between the boxes"),
                    (2.5,  "ground between the boxes -- two sizes up on purpose"),
-                   (0.5,  "motor phases"),
-                   (0.25, "step/dir, endstops, servo signal")):
-        yield ("Consumable", f"Wire, {g:g} mm^2 stranded (control box + link)", "TBD", "m",
-               f"{why}; needs the control box laid out for real")
+                   (0.5,  "motor phases, box to machine"),
+                   (0.25, "endstops and the servo signal, box to machine")):
+        yield ("Consumable", f"Cable, {g:g} mm^2 (box to box, box to machine)", "TBD", "m",
+               f"{why}; needs the cases placed on the table")
 
 
 def connectors():
@@ -170,7 +168,7 @@ def connectors():
             elif name.startswith("usb"):
                 kinds["USB-C panel mount"] += 1
             elif name.startswith("link"):
-                kinds["GX16-4 aviator (inter-box link)"] += 1
+                kinds["GX16-6 aviator (inter-box link, 2 ways spare)"] += 1
             elif name.startswith("spare"):
                 kinds["-- spare panel position, left free"] += 1
             elif name.startswith("mains_switch"):
@@ -195,7 +193,7 @@ def sheet():
 
 def rows():
     out = list(extrusion()) + list(sheet()) + list(BOUGHT) + list(connectors()) \
-        + list(terminals()) + list(power_rail()) + list(harness())
+        + list(din_hardware()) + list(harness())
     order = ["Structure", "Motion", "Electronics", "Enclosure", "Consumable", "Tool"]
     return sorted(out, key=lambda r: (order.index(r[0]), r[1]))
 

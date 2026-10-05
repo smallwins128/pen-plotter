@@ -139,6 +139,78 @@ Motion is in better shape than it has ever been: homing repeatable, work zero pe
 T7 draws a clean square with no errors. **Single-stroke plots run start to finish today** —
 disconnect the servo (both wires), tape the pen at drawing height, and plot as before.
 
+## 10. One 24 V supply feeds all three drivers and the board — on purpose
+
+The question was whether the LRS-350-24 can carry three TB6600s plus the Elecrow
+board, and whether a small dedicated supply per component would be better. The
+answer is that capacity was never the constraint, and splitting would make the
+real problem worse.
+
+### What the rail actually carries
+
+Per stepper, from first principles rather than the driver's 3 A rating — the
+motors are Ender 42-34s run at ~0.84 A/phase into ~2.3 Ω coils:
+
+| | at 24 V |
+|---|---|
+| copper loss, two phases energised: 2 × 0.84² × 2.3 | 3.2 W |
+| mechanical + iron, at plotter speeds | ~1 W |
+| TB6600 losses | ~1 W |
+| **per driver** | **~5 W, 0.21 A** |
+| three drivers | ~15 W, 0.63 A |
+| Elecrow board + endstops | ~3 W, 0.13 A |
+| **total** | **~18 W, 0.75 A of 14.6 A — about 5 %** |
+
+Double every line and it is still under 1.5 A. The LRS series has no minimum-load
+requirement, so running it at 5 % is fine; it costs a few watts of efficiency and
+nothing else.
+
+**This is the same mistake as section 6a in a different place.** The first trunk
+sizing used the TB6600's 3 A rating instead of what the motors draw, and came out
+roughly 5× high. Size from the load, not from the device that feeds it.
+
+### Why four small supplies would be worse, not better
+
+1. **The grounds cannot actually be separate.** Step/dir/enable and the endstops
+   reference the board's 0 V against the drivers' 0 V. Four supplies still have to
+   have their 0 V rails bonded — and then there are multiple return paths between
+   them. That is a ground loop, which is the *cause* of the noise that splitting
+   supplies is meant to avoid. One supply with a star point at the rail is
+   strictly better, and is what `hardware/psu_layout.py` builds.
+2. **Regeneration.** A decelerating stepper pumps energy back into its supply. The
+   LRS-350's bulk output capacitance absorbs it without noticing. A 25 W supply has
+   a fraction of that capacitance and its over-voltage protection can trip. Small
+   supplies are *more* exposed to this.
+3. **Transient response.** A simultaneous three-axis acceleration is nothing to a
+   supply at 5 % load. It is a real step for three supplies each near their limit.
+4. **Four supplies is four of everything mains-side** — four L/N/PE landings, four
+   earth bonds, four times the mains wiring, roughly double the DIN rail.
+
+### The one separation that does earn its place
+
+The servo, which already has it: RS-25-24 → LM2596 → 6 V. An MG996R stalls near
+2.5 A, it is brushed, and its current steps are exactly what shifts a shared
+reference. That is section 2 and section 7 of this document, and it is why that
+supply is separate and its return is 2.5 mm².
+
+### Open: what regulator the Elecrow board uses for its 5 V
+
+If it is a linear 7805, then 24 V in at ~150 mA burns (24 − 5) × 0.15 ≈ 2.9 W in a
+TO-220 with no heatsink — thermal shutdown, or a dead regulator. If it is a
+switcher (MP1584, LM2596, or an AMS1117 behind a pre-regulator) then 24 V is fine.
+
+**Check before first power-up:** read the silkscreen on the regulator beside the
+VIN terminal, or power the board alone at 24 V and feel it after a minute. If it
+is linear, the fix is one small 24 → 12 V buck on the rail for the board — not
+four power supplies. Elecrow's own site is unreachable from the build container,
+so this has not been confirmed from the datasheet.
+
+### Later, not now
+
+TB6600s accept 9–42 V, and a higher rail means faster coil current rise and more
+torque at speed. If rapids ever need to be quicker, 36 V would help — and at that
+point the board needs its own buck regardless. A pen plotter does not need it.
+
 ## 9. Method note
 
 Most of the time lost went to treating each new symptom as a new fault. The resets, the

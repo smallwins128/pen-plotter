@@ -21,7 +21,8 @@ python3 hardware/profiles.py        # print + plot the frame cross-section
 python3 hardware/viewer.py          # build the interactive 3D viewer
 python3 hardware/stock.py           # what to buy, and how to cut it
 python3 hardware/bom.py             # full bill of materials
-python3 hardware/psu_layout.py      # power box: rail schedule, floor plan, wiring
+python3 hardware/psu_layout.py      # power box: rail schedule, floor plan, every wire
+python3 hardware/ctrl_layout.py     # control box: the same, for the drivers and board
 python3 hardware/bom.py --csv       # the same, for a spreadsheet
 python3 hardware/stock.py 20x20     # just one profile
 ```
@@ -56,7 +57,9 @@ Each part exports:
 | **`preview.py`** | PNG renders. Sanity check, not a beauty shot. |
 | **`viewer.py`** + **`web/`** | The two viewers. `_common.html` is the shared core; `machine.html` and `case.html` are the pages. `export_web.py` packs the geometry. |
 | **`wiring.py`** | Routes the case harness, scores it, and searches for a better layout. |
-| **`psu_layout.py`** | The power box's flat layout. Rail schedule, floor plan and wire runs, drawn from one set of tables. |
+| **`panel.py`** | The layout engine both boxes share: duct graph, lane assignment, routing, the checks, and the drawing. Knows nothing about either box. |
+| **`psu_layout.py`** | The power box's tables: rail schedule, duct grid, where the gear sits, and all 30 conductors. |
+| **`ctrl_layout.py`** | The control box's tables: 49 conductors, three drivers and the board. |
 | **`bom.py`** | Bill of materials. Counts what the model knows; declares what it can't. |
 | **`stock.py`** | Groups every cut list by profile and packs the pieces onto stock bars, kerf included. |
 

@@ -26,9 +26,13 @@ floor, and no wire leaves a terminal at an angle.
 """
 
 import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+import panel  # noqa: E402
 
 OUT = pathlib.Path(__file__).resolve().parent / "out" / "psu_layout.html"
-
 FLOOR = (442.0, 265.0)          # UN4412 internal
 MODULE = 17.5                   # one DIN module
 
@@ -100,8 +104,11 @@ DUCT_KIND = {"H1": ("duct", 40.0), "V1": ("duct", 25.0),
 LANE_PITCH, LANE_INSET = 2.1, 2.0
 MAINS = {"L", "N", "E"}
 # which band sits nearest the duct's "inner" edge
-BANDS = {"H1": ("mains", "dc"), "V1": ("dc", "mains"),
-         "V2": ("dc", "mains"), "V3": ("dc", "mains")}
+# Which band takes the lanes nearest a duct's inner edge. "a" is BAND_A below.
+# In H1 that puts mains next to the rail it comes off; in the verticals it puts
+# DC innermost, which is also the order the PSU strips read, so those fan out
+# without a single crossing.
+BANDS = {"H1": ("a", "b"), "V1": ("b", "a"), "V2": ("b", "a"), "V3": ("b", "a")}
 
 # --- gear on the floor -------------------------------------------------------
 # name, x, y, w, d, kind, note
@@ -116,10 +123,10 @@ GEAR = [
 
 # gear, face x, body y, body depth, pitch, duct, [(terminal, class)] back → front
 STRIPS = [
-    ("LRS-350-24", 221.0, 134.0, 115.0, 10.5, "V1",
+    ("LRS-350-24", "v", 221.0, 134.0, 115.0, 10.5, "V1",
      [("LRS.+V", "v24"), ("LRS.+V2", "v24"), ("LRS.-V", "v0"), ("LRS.-V2", "v0"),
       ("LRS.PE", "E"), ("LRS.N", "N"), ("LRS.L", "L")]),
-    ("RS-25-24", 324.0, 134.0, 51.0, 7.6, "V2",
+    ("RS-25-24", "v", 324.0, 134.0, 51.0, 7.6, "V2",
      [("RS.+V", "v24"), ("RS.-V", "v0"), ("RS.PE", "E"), ("RS.N", "N"), ("RS.L", "L")]),
 ]
 
@@ -192,506 +199,36 @@ LINK = [("+24 always", 0.75, "to the board — stays up through an E-stop"),
         ("0V", 2.5, "two sizes up: the servo's 2.5 A return shares it")]
 
 
-# --- schedule and terminal map ----------------------------------------------
+# --- what panel.py needs to know about this box ------------------------------
+SPINE = RAIL_DUCT = "H1"          # the duct every other duct meets
+BAND_A = MAINS                    # mains keeps the lanes nearest the rail
+STRIP_SIDE = {}                   # strips sit on a right-hand face; mark to the left
+MARKS = [("BUCK.IN+", "v24", -1), ("BUCK.IN-", "v0", -1),
+         ("BUCK.OUT+", "v6", 1), ("BUCK.OUT-", "sp", 1)]
 
-def rail_schedule():
-    out, x = [], RAIL_START
-    for name, w, kind, note in RAIL:
-        out.append((name, x, w, kind, note))
-        x += w
-    return out, x - RAIL_START
+PLAN_ALT = ("Plan of the power box floor, drawn to scale: a DIN rail across the back,"
+            " the two supplies and the buck converter in front with their terminal faces"
+            " turned toward vertical wiring ducts, and all thirty conductors drawn"
+            " individually, each in its own lane inside the ducts.")
+ELEV_ALT = ("Front elevation of the DIN rail: mains breaker, line, neutral and earth"
+            " terminals, the DC breaker, the E-stop relay, the DC distribution terminals"
+            " and three spares, in the order power flows, with jumper combs marked across"
+            " each bridged group.")
+ELEV_NOTE = ("{rail:.0f} mm of rail — breakers and the relay stand 85 mm, terminals 58 mm,"
+             " in a 124 mm cavity. Pale bars are jumper combs.")
+ELEV_ZONES = [("mains, protected", RAIL_START + 8, RAIL_START + 86),
+              ("DC protect + switch", RAIL_START + 88, RAIL_START + 124),
+              ("DC distribution", RAIL_START + 126, RAIL_START + 173),
+              ("spare", RAIL_START + 175, RAIL_START + 190)]
+LEGEND = [("L", "L, brown"), ("N", "N, blue"), ("E", "PE, green/yellow"),
+          ("v24", "+24 V, red"), ("v0", "0 V, black"), ("v6", "+6 V, orange"),
+          ("ctrl", "E-stop loop, violet")]
+FLOOR_LABEL = "UN4412 base — 442 × 265 mm internal, terminals facing up into the lid cavity"
 
-
-def build_terminals():
-    """name -> (x, y, duct, stub axis). Fans multi-wire rail blocks apart."""
-    t = {}
-    sched, _ = rail_schedule()
-    users = {}
-    for _, _, frm, to, _, _ in WIRES:
-        for n in (frm, to):
-            users[n] = users.get(n, 0) + 1
-
-    for name, x, w, kind, note in sched:
-        if kind in ("part", "clamp"):
-            continue
-        if name in RAIL_SUBS:
-            for sub, off in RAIL_SUBS[name]:
-                t[sub] = (x + off, RAIL_FACE, "H1", "y")
-            continue
-        n = users.get(name, 0)
-        if n <= 1:
-            t[name] = (x + w / 2, RAIL_FACE, "H1", "y")
-        else:                                    # two landings, fanned for legibility
-            for i in range(n):
-                t.setdefault(name, (x + w / 2 - 1.3 + 2.6 * i, RAIL_FACE, "H1", "y"))
-            # the second wire on the block gets the other screw
-            t[name] = (x + w / 2 - 1.3, RAIL_FACE, "H1", "y")
-            t[name + "#2"] = (x + w / 2 + 1.3, RAIL_FACE, "H1", "y")
-
-    for gear, fx, by, bd, pitch, duct, strip in STRIPS:
-        span = pitch * (len(strip) - 1)
-        y0 = by + bd / 2 - span / 2
-        for i, (name, _cls) in enumerate(strip):
-            t[name] = (fx, y0 + i * pitch, duct, "x")
-
-    for name, x, y, duct, axis in LOOSE:
-        t[name] = (x, y, duct, axis)
-    return t
-
-
-TERMINALS = build_terminals()
-
-
-def _endpoint(name, seen):
-    """Resolve the second wire on a shared rail block to its own screw."""
-    if name in seen and (name + "#2") in TERMINALS:
-        return TERMINALS[name + "#2"], name + " (2nd screw)"
-    return TERMINALS[name], name
-
-
-# --- routing -----------------------------------------------------------------
-
-def _dmid(d):
-    axis, c0, c1, _s0, _s1 = DUCTS[d]
-    return (c0 + c1) / 2
-
-
-def chain_for(da, db):
-    if da == db:
-        return [da]
-    if da == "H1" or db == "H1":
-        return [da, db] if da != "H1" else [da, db]
-    return [da, "H1", db]
-
-
-def spans(a, b, chain):
-    """Extent of the wire along each duct in its chain (lane-independent)."""
-    out = []
-    for i, d in enumerate(chain):
-        axis = DUCTS[d][0]
-        start = a[1] if axis == "v" else a[0]
-        end = b[1] if axis == "v" else b[0]
-        if i > 0:
-            prev = chain[i - 1]
-            start = _dmid(prev)
-        if i < len(chain) - 1:
-            nxt = chain[i + 1]
-            end = _dmid(nxt)
-        out.append((d, min(start, end), max(start, end)))
-    return out
-
-
-def allocate_lanes(routes):
-    """Left-edge assignment per duct, banded so mains and DC never interleave."""
-    demand = {d: [] for d in DUCTS}
-    for r in routes:
-        for d, lo, hi in r["spans"]:
-            demand[d].append((r["id"], lo, hi, r["cls"]))
-
-    lanes, used_max = {}, {}
-    for d, items in demand.items():
-        placed = []
-        base = 0
-        for band in BANDS[d]:
-            grp = [i for i in items
-                   if (i[3] in MAINS) == (band == "mains")]
-            for wid, lo, hi, _cls in sorted(grp, key=lambda i: (i[1], i[2])):
-                lane = base
-                while any(l == lane and lo < h - 1e-6 and hi > o + 1e-6
-                          for l, o, h in placed):
-                    lane += 1
-                placed.append((lane, lo, hi))
-                lanes[(wid, d)] = lane
-            base = max((l for l, _, _ in placed), default=-1) + 1
-        used_max[d] = max((l for l, _, _ in placed), default=-1) + 1
-    return lanes, used_max
-
-
-def lane_coord(d, lane):
-    axis, c0, c1, _s0, _s1 = DUCTS[d]
-    return c0 + LANE_INSET + lane * LANE_PITCH
-
-
-def capacity(d):
-    _axis, c0, c1, _s0, _s1 = DUCTS[d]
-    return int((c1 - c0 - 2 * LANE_INSET) / LANE_PITCH) + 1
-
-
-def _dedupe(pts):
-    out = [pts[0]]
-    for p in pts[1:]:
-        if abs(p[0] - out[-1][0]) > 1e-6 or abs(p[1] - out[-1][1]) > 1e-6:
-            out.append(p)
-    return out
-
-
-def route(a, b, chain, wid, lanes):
-    pts = [(a[0], a[1])]
-    cx, cy = a[0], a[1]
-    for d in chain:
-        c = lane_coord(d, lanes[(wid, d)])
-        if DUCTS[d][0] == "h":
-            cy = c
-        else:
-            cx = c
-        pts.append((cx, cy))
-    if DUCTS[chain[-1]][0] == "h":
-        pts.append((b[0], cy))
-    else:
-        pts.append((cx, b[1]))
-    pts.append((b[0], b[1]))
-    return _dedupe(pts)
-
-
-def path_len(pts):
-    return sum(abs(pts[i + 1][0] - pts[i][0]) + abs(pts[i + 1][1] - pts[i][1])
-               for i in range(len(pts) - 1))
-
-
-def build_routes():
-    seen = set()
-    pre = []
-    for wid, cls, frm, to, mm2, note in WIRES:
-        ta, la = _endpoint(frm, seen)
-        tb, lb = _endpoint(to, seen)
-        seen.add(frm); seen.add(to)
-        chain = chain_for(ta[2], tb[2])
-        pre.append({"id": wid, "cls": cls, "mm2": mm2, "note": note,
-                    "a": ta, "b": tb, "la": la, "lb": lb,
-                    "frm": frm, "to": to, "chain": chain,
-                    "spans": spans(ta, tb, chain)})
-    lanes, used = allocate_lanes(pre)
-    for r in pre:
-        r["pts"] = route(r["a"], r["b"], r["chain"], r["id"], lanes)
-        r["len"] = path_len(r["pts"]) + SLACK
-        r["lanes"] = [(d, lanes[(r["id"], d)]) for d in r["chain"]]
-    return pre, used
-
-
-# --- checks ------------------------------------------------------------------
-
-def _crosses(p, q, rect, eps=0.4):
-    x, y, w, d = rect
-    x0, y0, x1, y1 = x + eps, y + eps, x + w - eps, y + d - eps
-    ax, ay, bx, by = p[0], p[1], q[0], q[1]
-    if abs(ay - by) < 1e-6:                                 # horizontal segment
-        return y0 < ay < y1 and max(ax, bx) > x0 and min(ax, bx) < x1
-    return x0 < ax < x1 and max(ay, by) > y0 and min(ay, by) < y1
-
-
-def check(routes, used):
-    bad = []
-    for d, n in used.items():
-        if n > capacity(d):
-            bad.append(f"{d} needs {n} lanes, holds {capacity(d)}")
-
-    rects = [(x, y, w, dd) for _n, x, y, w, dd, _k, _t in GEAR]
-    rects.append((RAIL_START, RAIL_Y, rail_schedule()[1], RAIL_DEPTH))
-    for r in routes:
-        for i in range(len(r["pts"]) - 1):
-            for rect in rects:
-                if _crosses(r["pts"][i], r["pts"][i + 1], rect):
-                    bad.append(f"{r['id']} segment {i} runs through {rect}")
-
-    landings = {}
-    for wid, _c, frm, to, _m, _n in WIRES:
-        for t in (frm, to):
-            landings.setdefault(t, []).append(wid)
-    for t, ws in landings.items():
-        limit = 2 if t in {n for n, _x, _w, k, _o in rail_schedule()[0]
-                           if k not in ("part", "clamp")} else 1
-        if len(ws) > limit:
-            bad.append(f"{t} has {len(ws)} wires on a {limit}-screw landing: {ws}")
-
-    crossings = 0
-    for i, r in enumerate(routes):
-        for s in routes[i + 1:]:
-            for a in range(len(r["pts"]) - 1):
-                p, q = r["pts"][a], r["pts"][a + 1]
-                for b in range(len(s["pts"]) - 1):
-                    u, v = s["pts"][b], s["pts"][b + 1]
-                    ph = abs(p[1] - q[1]) < 1e-6
-                    uh = abs(u[1] - v[1]) < 1e-6
-                    if ph == uh:
-                        continue
-                    hp, hq, vp, vq = (p, q, u, v) if ph else (u, v, p, q)
-                    if (min(hp[0], hq[0]) < vp[0] < max(hp[0], hq[0]) and
-                            min(vp[1], vq[1]) < hp[1] < max(vp[1], vq[1])):
-                        crossings += 1
-    return bad, crossings
-
-
-# --- drawing -----------------------------------------------------------------
-
-def _esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-
-def plan_svg(routes, scale=2.0):
-    pad_l, pad_t = 172, 46
-    W, H = FLOOR
-    vw, vh = W * scale + pad_l + 186, H * scale + pad_t + 112
-    X = lambda mm: pad_l + mm * scale
-    Y = lambda mm: pad_t + mm * scale
-    p = [f'<svg viewBox="0 0 {vw:.0f} {vh:.0f}" role="img" xmlns="http://www.w3.org/2000/svg"'
-         ' aria-label="Plan of the power box floor, drawn to scale: a DIN rail across the back,'
-         ' the two supplies and the buck converter in front with their terminal faces turned'
-         ' toward vertical wiring ducts, and all thirty conductors drawn individually, each in'
-         ' its own lane inside the ducts.">']
-
-    p.append(f'<rect x="{X(0):.1f}" y="{Y(0):.1f}" width="{W*scale:.1f}" height="{H*scale:.1f}"'
-             ' rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.8"/>')
-    p.append(f'<text x="{X(W/2):.1f}" y="{Y(0)-17:.1f}" text-anchor="middle" font-size="12.5"'
-             f' fill="currentColor" opacity=".72">UN4412 base — {W:.0f} × {H:.0f} mm internal,'
-             ' terminals facing up into the lid cavity</text>')
-
-    # duct floors, under everything
-    for name, (axis, c0, c1, s0, s1) in DUCTS.items():
-        x, y, w, d = ((s0, c0, s1 - s0, c1 - c0) if axis == "h"
-                      else (c0, s0, c1 - c0, s1 - s0))
-        p.append(f'<rect x="{X(x):.1f}" y="{Y(y):.1f}" width="{w*scale:.1f}"'
-                 f' height="{d*scale:.1f}" fill="var(--duct)"/>')
-
-    # the rail
-    sched, rail_len = rail_schedule()
-    p.append(f'<rect x="{X(RAIL_START):.1f}" y="{Y(RAIL_Y):.1f}" width="{rail_len*scale:.1f}"'
-             f' height="{RAIL_DEPTH*scale:.1f}" fill="var(--rail)" stroke="currentColor"'
-             ' stroke-width="1.3"/>')
-    for name, x, w, kind, note in sched:
-        if kind in ("part", "clamp"):
-            continue
-        fill = {"mcb": "var(--w-L)", "relay": "var(--accent)"}.get(kind, f"var(--w-{kind})")
-        h = RAIL_DEPTH if kind in ("mcb", "relay") else RAIL_DEPTH * 0.70
-        p.append(f'<rect x="{X(x)+0.5:.1f}" y="{Y(RAIL_Y):.1f}" width="{max(w*scale-1,2):.1f}"'
-                 f' height="{h*scale:.1f}" fill="{fill}" opacity=".80"/>')
-        cx, ty = X(x + w / 2), Y(RAIL_Y + h) - 7
-        p.append(f'<text x="{cx:.1f}" y="{ty:.1f}" font-size="9.5" font-weight="500"'
-                 f' fill="{"var(--surface)" if kind in ("mcb","relay") else "currentColor"}"'
-                 f' transform="rotate(-90 {cx:.1f} {ty:.1f})">{_esc(name)}</text>')
-    for grp in JUMPERS:
-        xs = [x for n, x, w, k, o in sched if n in grp]
-        ws = [w for n, x, w, k, o in sched if n in grp]
-        if not xs:
-            continue
-        a, b = min(xs) + 1.0, max(xs) + max(ws) - 1.0
-        yy = Y(RAIL_Y + RAIL_DEPTH * 0.70) + 4
-        p.append(f'<line x1="{X(a):.1f}" y1="{yy:.1f}" x2="{X(b):.1f}" y2="{yy:.1f}"'
-                 ' stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".85"/>')
-    p.append(f'<text x="{X(RAIL_START):.1f}" y="{Y(RAIL_Y)-7:.1f}" font-size="10.5"'
-             f' fill="currentColor" opacity=".72">DIN rail, {rail_len:.0f} mm — thick bars'
-             ' underneath are jumper combs, not wires</text>')
-
-    # gear
-    for name, x, y, w, d, kind, note in GEAR:
-        fill = {"psu": "var(--g-steel)", "pcb": "var(--g-pcb)"}.get(kind, "var(--g-abs)")
-        p.append(f'<rect x="{X(x):.1f}" y="{Y(y):.1f}" width="{w*scale:.1f}"'
-                 f' height="{d*scale:.1f}" rx="2.5" fill="{fill}" stroke="currentColor"'
-                 ' stroke-width="1.4"/>')
-        if w > 24:
-            p.append(f'<text x="{X(x+w/2):.1f}" y="{Y(y+d/2)+4:.1f}" text-anchor="middle"'
-                     f' font-size="11.5" fill="currentColor" opacity=".9">{_esc(name)}</text>')
-
-    # terminal strips, labelled inside the gear at the face
-    for gear, fx, by, bd, pitch, duct, strip in STRIPS:
-        for name, cls in strip:
-            tx, ty, _d, _a = TERMINALS[name]
-            p.append(f'<rect x="{X(tx)-9:.1f}" y="{Y(ty)-3.0:.1f}" width="9" height="6"'
-                     f' fill="var(--w-{cls})" opacity=".9"/>')
-            p.append(f'<text x="{X(tx)-12:.1f}" y="{Y(ty)+3:.1f}" text-anchor="end"'
-                     f' font-size="8" fill="currentColor" opacity=".8">'
-                     f'{_esc(name.split(".")[1])}</text>')
-    for nm in ("BUCK.IN+", "BUCK.IN-", "BUCK.OUT+", "BUCK.OUT-"):
-        tx, ty, _d, _a = TERMINALS[nm]
-        side = -1 if "IN" in nm else 1
-        p.append(f'<rect x="{X(tx)+(0 if side>0 else -7):.1f}" y="{Y(ty)-2.2:.1f}" width="7"'
-                 f' height="4.4" fill="var(--w-v24)" opacity=".85"/>')
-
-    # every conductor
-    for r in routes:
-        pts = " ".join(f"{X(a):.1f},{Y(b):.1f}" for a, b in r["pts"])
-        p.append(f'<polyline points="{pts}" fill="none" stroke="var(--w-{r["cls"]})"'
-                 f' stroke-width="{1.9 if r["mm2"]<=0.75 else 2.5:.1f}" stroke-linejoin="round"'
-                 ' stroke-linecap="round"/>')
-
-    # duct lids, drawn over the wires: what you actually see with the lid on
-    for name, (axis, c0, c1, s0, s1) in DUCTS.items():
-        x, y, w, d = ((s0, c0, s1 - s0, c1 - c0) if axis == "h"
-                      else (c0, s0, c1 - c0, s1 - s0))
-        p.append(f'<rect x="{X(x):.1f}" y="{Y(y):.1f}" width="{w*scale:.1f}"'
-                 f' height="{d*scale:.1f}" fill="var(--duct-lid)" stroke="currentColor"'
-                 ' stroke-width="1" stroke-dasharray="6 4" opacity=".95"/>')
-        kind, nom = DUCT_KIND[name]
-        lab = (f'{name} · {nom:.0f} mm duct' if kind == "duct"
-               else f'{name} · clipped, not a duct')
-        if axis == "h":
-            p.append(f'<text x="{X(x)+4:.1f}" y="{Y(y)-5:.1f}" font-size="9.5"'
-                     f' font-weight="600" fill="currentColor" opacity=".6">{lab}</text>')
-        else:
-            tx, ty = X(x + w / 2) + 3.5, Y(y + d) - 5
-            p.append(f'<text x="{tx:.1f}" y="{ty:.1f}" font-size="9.5" font-weight="600"'
-                     f' fill="currentColor" opacity=".6" text-anchor="start"'
-                     f' transform="rotate(-90 {tx:.1f} {ty:.1f})">{lab}</text>')
-
-    # panel penetrations
-    for label, x, y, wall in PANEL:
-        left = wall == "left"
-        p.append(f'<circle cx="{X(x):.1f}" cy="{Y(y):.1f}" r="4.5" fill="var(--accent)"/>')
-        p.append(f'<text x="{X(x)+(-9 if left else 9):.1f}" y="{Y(y)+4:.1f}" font-size="10"'
-                 f' fill="currentColor" opacity=".85"'
-                 f' text-anchor="{"end" if left else "start"}">{_esc(label)}</text>')
-
-    # legend
-    lx, ly = X(8), Y(H) + 26
-    items = [("L", "L, brown"), ("N", "N, blue"), ("E", "PE, green/yellow"),
-             ("v24", "+24 V, red"), ("v0", "0 V, black"), ("v6", "+6 V, orange"),
-             ("ctrl", "E-stop loop, violet")]
-    for i, (k, lab) in enumerate(items):
-        cx = lx + (i % 4) * 150
-        cy = ly + (i // 4) * 18
-        p.append(f'<line x1="{cx:.0f}" y1="{cy:.0f}" x2="{cx+20:.0f}" y2="{cy:.0f}"'
-                 f' stroke="var(--w-{k})" stroke-width="2.6" stroke-linecap="round"/>')
-        p.append(f'<text x="{cx+27:.0f}" y="{cy+4:.0f}" font-size="10.5" fill="currentColor"'
-                 f' opacity=".8">{lab}</text>')
-    p.append(f'<text x="{lx:.0f}" y="{ly+44:.0f}" font-size="10.5" fill="currentColor"'
-             ' opacity=".6">Shaded bands are the ducts, drawn over the wires — with the duct'
-             ' lids on, only the stubs are visible. Each conductor has its own lane inside.</text>')
-    p.append("</svg>")
-    return "\n".join(p)
-
-
-def elevation_svg(scale=2.4):
-    sched, rail_len = rail_schedule()
-    pad_l, pad_t = 16, 30
-    H_MCB, H_TB = 85.0, 58.0
-    vw = rail_len * scale + pad_l * 2
-    vh = H_MCB * scale + pad_t + 80
-    X = lambda mm: pad_l + (mm - RAIL_START) * scale
-    base = pad_t + H_MCB * scale
-
-    p = [f'<svg viewBox="0 0 {vw:.0f} {vh:.0f}" role="img" xmlns="http://www.w3.org/2000/svg"'
-         ' aria-label="Front elevation of the DIN rail: mains breaker, line, neutral and earth'
-         ' terminals, the DC breaker, the E-stop relay, the DC distribution terminals and three'
-         ' spares, in the order power flows, with jumper combs marked across each bridged group.">']
-    p.append(f'<line x1="{X(RAIL_START):.1f}" y1="{base:.1f}"'
-             f' x2="{X(RAIL_START+rail_len):.1f}" y2="{base:.1f}"'
-             ' stroke="currentColor" stroke-width="3" opacity=".7"/>')
-
-    for name, x, w, kind, note in sched:
-        if kind in ("part", "clamp"):
-            continue
-        h = H_MCB if kind in ("mcb", "relay") else H_TB
-        fill = {"mcb": "var(--w-L)", "relay": "var(--accent)"}.get(kind, f"var(--w-{kind})")
-        p.append(f'<rect x="{X(x):.1f}" y="{base - h*scale:.1f}"'
-                 f' width="{max(w*scale-1.2,2.5):.1f}" height="{h*scale:.1f}" rx="1.5"'
-                 f' fill="{fill}" opacity=".88"/>')
-        if kind in ("mcb", "relay"):
-            p.append(f'<text x="{X(x+w/2):.1f}" y="{base - h*scale/2 + 4:.1f}"'
-                     ' text-anchor="middle" font-size="12" font-weight="600"'
-                     f' fill="var(--surface)">{_esc(name)}</text>')
-        else:
-            tx, ty = X(x + w / 2), base - h * scale - 6
-            p.append(f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="start" font-size="9"'
-                     f' fill="currentColor" opacity=".8"'
-                     f' transform="rotate(-90 {tx:.1f} {ty:.1f})">{_esc(name)}</text>')
-
-    for grp in JUMPERS:
-        xs = [x for n, x, w, k, o in sched if n in grp]
-        ws = [w for n, x, w, k, o in sched if n in grp]
-        a, b = min(xs) + 1.2, max(xs) + max(ws) - 1.2
-        yy = base - H_TB * scale * 0.52
-        p.append(f'<line x1="{X(a):.1f}" y1="{yy:.1f}" x2="{X(b):.1f}" y2="{yy:.1f}"'
-                 ' stroke="var(--surface)" stroke-width="3.4" stroke-linecap="round"'
-                 ' opacity=".95"/>')
-
-    for label, a, b in (("mains, protected", RAIL_START + 8, RAIL_START + 86),
-                        ("DC protect + switch", RAIL_START + 88, RAIL_START + 124),
-                        ("DC distribution", RAIL_START + 126, RAIL_START + 173),
-                        ("spare", RAIL_START + 175, RAIL_START + 190)):
-        y = base + 16
-        p.append(f'<line x1="{X(a):.1f}" y1="{y:.1f}" x2="{X(b):.1f}" y2="{y:.1f}"'
-                 ' stroke="currentColor" stroke-width="1.2" opacity=".5"/>')
-        p.append(f'<text x="{X((a+b)/2):.1f}" y="{y+15:.1f}" text-anchor="middle"'
-                 f' font-size="10.5" fill="currentColor" opacity=".72">{_esc(label)}</text>')
-
-    p.append(f'<text x="{X(RAIL_START):.1f}" y="{pad_t-12:.1f}" font-size="10.5"'
-             f' fill="currentColor" opacity=".7">{rail_len:.0f} mm of rail — breakers and the'
-             ' relay stand 85 mm, terminals 58 mm, in a 124 mm cavity. Pale bars are'
-             ' jumper combs.</text>')
-    p.append("</svg>")
-    return "\n".join(p)
-
+TERMINALS = panel.build_terminals(sys.modules[__name__])
 
 PAGE = """<title>Power Box Wiring</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<style>
-:root{
-  --paper:#e9edf1; --surface:#fff; --surface-2:#f1f5f8; --rail:#dde4ea;
-  --duct:#e4ebf1; --duct-lid:rgba(255,255,255,.22);
-  --g-steel:#dfe4e8; --g-pcb:#cdd9c4; --g-abs:#f0f2f4;
-  --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a; --line:#ccd6de; --line-2:#dde4ea;
-  --accent:#c2622c;
-  --w-L:#7d4426; --w-N:#2d5c8c; --w-E:#5d7f2e;
-  --w-v24:#c33a2a; --w-v0:#2b343b; --w-v6:#c2821a; --w-ctrl:#7a4fa3;
-  --w-sp:#aab6c0; --w-mcb:#7d4426; --w-relay:#c2622c;
-}
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --paper:#0c1218; --surface:#141d25; --surface-2:#18212a; --rail:#232f38;
-  --duct:#1e2831; --duct-lid:rgba(20,29,37,.28);
-  --g-steel:#2b3740; --g-pcb:#36442f; --g-abs:#283139;
-  --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a; --line:#26333d; --line-2:#1e2a33;
-  --accent:#e08a52;
-  --w-L:#c08055; --w-N:#5f94c4; --w-E:#90b85c;
-  --w-v24:#e2614c; --w-v0:#97a6b2; --w-v6:#d9a63f; --w-ctrl:#a67fd0;
-  --w-sp:#55646f; --w-mcb:#c08055; --w-relay:#e08a52;
-}}
-:root[data-theme="dark"]{
-  --paper:#0c1218; --surface:#141d25; --surface-2:#18212a; --rail:#232f38;
-  --duct:#1e2831; --duct-lid:rgba(20,29,37,.28);
-  --g-steel:#2b3740; --g-pcb:#36442f; --g-abs:#283139;
-  --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a; --line:#26333d; --line-2:#1e2a33;
-  --accent:#e08a52;
-  --w-L:#c08055; --w-N:#5f94c4; --w-E:#90b85c;
-  --w-v24:#e2614c; --w-v0:#97a6b2; --w-v6:#d9a63f; --w-ctrl:#a67fd0;
-  --w-sp:#55646f; --w-mcb:#c08055; --w-relay:#e08a52;
-}
-*{box-sizing:border-box}
-body{margin:0; background:var(--paper); color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:15px; line-height:1.55;
-  -webkit-font-smoothing:antialiased}
-.wrap{max-width:1040px; margin:0 auto; padding:30px 20px 60px}
-h1{margin:0; font-size:27px; font-weight:600; letter-spacing:-.02em}
-.sub{margin:5px 0 0; color:var(--ink-2); font-size:14px; max-width:68ch}
-h2{margin:0 0 10px; font-size:10.5px; font-weight:600; text-transform:uppercase;
-   letter-spacing:.1em; color:var(--ink-3)}
-figure{margin:24px 0 0; padding:14px; background:var(--surface);
-       border:1px solid var(--line); border-radius:4px; overflow-x:auto}
-figure svg{display:block; max-width:100%; height:auto; color:var(--ink)}
-figcaption{margin-top:12px; font-size:12.5px; color:var(--ink-2); max-width:74ch}
-table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:4px}
-th{text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
-   color:var(--ink-3); font-weight:600; padding:0 8px 6px 0; border-bottom:1px solid var(--line)}
-td{padding:5px 8px 5px 0; border-bottom:1px solid var(--line-2); vertical-align:top}
-tr:last-child td{border-bottom:none}
-td.grp{padding-top:14px; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
-       color:var(--ink-3); font-weight:600; border-bottom:1px solid var(--line)}
-.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
-.id{font-family:"IBM Plex Mono",monospace; color:var(--ink-3)}
-.sw{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:7px;
-    vertical-align:-1px}
-.panel{background:var(--surface); border:1px solid var(--line); border-radius:4px;
-       padding:16px; margin-top:16px}
-.cols{display:grid; grid-template-columns:1fr 1fr; gap:16px}
-.cols3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px}
-@media (max-width:860px){.cols,.cols3{grid-template-columns:1fr}}
-.note{margin-top:14px; padding:12px 14px; font-size:13.5px; color:var(--ink-2);
-      background:var(--surface); border-left:2px solid var(--accent); border-radius:0 3px 3px 0}
-.note b{color:var(--ink)}
-code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
-footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
-       font-size:12px; color:var(--ink-3)}
-</style>
+__HEAD__
 
 <div class="wrap">
   <h1>Power box — every conductor</h1>
@@ -707,7 +244,7 @@ footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
     with that face turned into <b>V1</b> — its second <code>+V</code>/<code>−V</code> pair is left spare for a future feed. The RS-25 does the same into <b>V2</b>, where the
     buck's IN terminals meet it; the buck's OUT terminals are on the opposite end and face
     <b>V3</b>, which also picks up the fan. Everything collects in <b>H1</b> across the face
-    of the rail. Nothing crosses open floor: __XING__</figcaption>
+    of the rail. Nothing crosses open floor at all.</figcaption>
   </figure>
 
   <figure>
@@ -751,8 +288,8 @@ footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
   <div class="note"><b>The duct grid is doing the work, not neatness.</b> A wire that leaves
   its terminal at 90° into a duct 20 mm away has nowhere to wander. The drawing puts the duct
   lids <i>over</i> the conductors, so what you see is what the box looks like built: short,
-  identical stubs into a clean band. Inside the ducts the wires lie across each other
-  __XING2__ — that is normal and invisible, and it is why a duct exists.</div>
+  identical stubs into a clean band. Inside the ducts the conductors lie across each other
+  (__XING__ times) — that is normal and invisible, and it is why a duct exists.</div>
 
   <div class="note"><b>Lay the LRS-350 with its <code>+V</code> end toward the back wall.</b>
   The strip reads <code>+V +V −V −V ⏚ N L</code> in one fixed order, and the unit can only be
@@ -782,75 +319,13 @@ footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
   the script refuses to write a layout whose wires pass through a part.</footer>
 </div>
 """
-
 GROUPS = [("mains, 220 V", ("L", "N", "E")), ("24 V DC", ("v24", "v0")),
           ("6 V DC", ("v6",)), ("E-stop loop", ("ctrl",))]
 
 
 def build():
-    routes, used = build_routes()
-    bad, crossings = check(routes, used)
-    if bad:
-        raise ValueError("layout is not buildable:\n  " + "\n  ".join(bad))
-
-    by_id = {r["id"]: r for r in routes}
-    rows = []
-    for title, classes in GROUPS:
-        rows.append(f'<tr><td class="grp" colspan="9">{title}</td></tr>')
-        for r in [x for x in routes if x["cls"] in classes]:
-            rt = " → ".join(f"{d}·{l}" for d, l in r["lanes"])
-            rows.append(
-                f'<tr><td class="id">{r["id"][1:]}</td>'
-                f'<td><span class="sw" style="background:var(--w-{r["cls"]})"></span>'
-                f'{_esc(r["la"])}</td><td>{_esc(r["lb"])}</td>'
-                f'<td class="num">{r["mm2"]}</td><td>{COLOUR[r["cls"]]}</td>'
-                f'<td class="num">{FERRULE[r["mm2"]]}</td>'
-                f'<td class="num">{rt}</td><td class="num">{r["len"]:.0f}</td>'
-                f'<td>{_esc(r["note"])}</td></tr>')
-
-    cut = {}
-    for r in routes:
-        n, m = cut.get(r["mm2"], (0, 0.0))
-        cut[r["mm2"]] = (n + 1, m + r["len"])
-    cutrows = "".join(f'<tr><td class="num">{k}</td><td class="num">{v[0]}</td>'
-                      f'<td class="num">{v[1]/1000:.2f}</td></tr>'
-                      for k, v in sorted(cut.items()))
-
-    jump = "".join(f'<tr><td>{" – ".join(g)}</td><td class="num">{len(g)}</td></tr>'
-                   for g in JUMPERS)
-    link = "".join(f'<tr><td>{_esc(n)}</td><td class="num">{mm2}</td></tr>'
-                   for n, mm2, _w in LINK)
-
-    sched, _ = rail_schedule()
-    srows = []
-    for name, x, w, kind, note in sched:
-        if kind in ("part", "clamp"):
-            continue
-        srows.append(f'<tr><td><span class="sw" style="background:var(--w-{kind})"></span>'
-                     f'{_esc(name)}</td><td class="num">{x:.1f}</td>'
-                     f'<td class="num">{w:.1f}</td><td>{_esc(note)}</td></tr>')
-
-    total = sum(r["len"] for r in routes) / 1000
-    html = (PAGE.replace("__PLAN__", plan_svg(routes))
-                .replace("__ELEV__", elevation_svg())
-                .replace("__WIRES__", "".join(rows))
-                .replace("__CUT__", cutrows)
-                .replace("__JUMP__", jump)
-                .replace("__LINK__", link)
-                .replace("__SCHED__", "".join(srows))
-                .replace("__NWIRE__", str(len(routes)))
-                .replace("__TOTAL__", f"{total:.1f}")
-                .replace("__XING__", "zero of the crossings in this drawing are outside a duct.")
-                .replace("__XING2__", f"({crossings} times)"))
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(html)
-    return OUT, routes, used, crossings
+    return panel.write(sys.modules[__name__])
 
 
 if __name__ == "__main__":
-    path, routes, used, crossings = build()
-    print(f"wrote {path.relative_to(path.parent.parent.parent)} "
-          f"({path.stat().st_size/1024:.0f} KB)")
-    print(f"  {len(routes)} conductors, "
-          f"{sum(r['len'] for r in routes)/1000:.2f} m, {crossings} in-duct crossings")
-    print(f"  lanes: " + ", ".join(f"{d} {n}/{capacity(d)}" for d, n in used.items()))
+    build()

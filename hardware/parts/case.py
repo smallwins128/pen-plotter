@@ -58,32 +58,30 @@ CONTROL_PARTS = [
     ("tb6600_x2",  TB6600,          "steel", "stepper driver"),
     ("tb6600_y",   TB6600,          "steel", "stepper driver"),
     ("elecrow_6x", (125, 85, 25),   "pcb",   "Elecrow 6-axis"),
-    # Lever blocks, not DIN. A DIN block on its rail stands 58 mm and its screw
-    # sits near the top, leaving 4 mm of screwdriver access in a 62 mm bay. The
-    # driver next to it is 57 mm and fine, because its terminals are down at
-    # ~28 mm -- height alone does not tell you whether a thing can be wired.
-    ("dist_24v",   (60, 50, 30),    "abs",   "lever block, 1-in/6-out: 24 V"),
-    ("dist_gnd",   (75, 50, 30),    "abs",   "lever block, 1-in/8-out: ground"),
-    ("dist_6v",    (40, 40, 25),    "abs",   "lever block, 1-in/3-out: 6 V"),
+    # DIN, like the power box. The earlier note here said a DIN block could not
+    # be wired in a 62 mm bay -- that was the bay-as-ceiling mistake. The case's
+    # 124 mm internal height is base PLUS lid, so a block on the floor under an
+    # empty lid has the lot. See hardware/ctrl_layout.py for the rail schedule.
+    ("din_rail",   (125, 45, 58),   "abs",   "19 feed-through blocks, 4 of them spare"),
 ]
 
 # Panel cutouts, per box. Spare rows are deliberate -- displays and switches
 # are wanted later and the wall is where they go.
 POWER_PANEL = [
     ("iec_c14",     "220 V in, fused + switched"),
-    ("link_out",    "24 V / 6 V / ground to the control box"),
+    ("link_out",    "24 V always + switched / 6 V / ground to the control box"),
     ("mains_switch", "front-panel switch"),
     ("spare_a",     "spare: voltmeter or indicator"),
 ]
 CONTROL_PANEL = [
-    ("link_in",          "24 V / 6 V / ground from the power box"),
+    ("link_in",          "24 V always + switched / 6 V / ground from the power box"),
     ("usb_c",            "USB-C to the laptop"),
     ("gx16_5_x1",        "stepper X1, 4 wires + shield"),
     ("gx16_5_x2",        "stepper X2, 4 wires + shield"),
     ("gx16_5_y",         "stepper Y, 4 wires + shield"),
     ("gx16_3_endstop_x", "endstop X"),
     ("gx16_3_endstop_y", "endstop Y"),
-    ("gx16_4_servo",     "servo, 6 V + signal"),
+    ("gx16_4_servo",     "servo, 6 V + ground + signal"),
     ("spare_b",          "spare: display or e-stop"),
 ]
 
