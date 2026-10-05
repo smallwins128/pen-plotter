@@ -20,6 +20,11 @@ on a two-screw block are, and build() refuses to write any of them.
 
 LANE_PITCH, LANE_INSET = 2.1, 2.0
 
+# Outside diameter of 300/500 V PVC single core, by conductor size. Used for the
+# only capacity question that is real: does the bundle fit in the duct.
+WIRE_OD = {0.25: 2.1, 0.5: 2.5, 0.75: 2.9, 1.0: 3.1, 1.5: 3.6, 2.5: 4.4}
+FILL = 0.5          # the usual working limit for slotted duct
+
 
 def esc(s):
     return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -63,13 +68,19 @@ def build_terminals(S):
             t[name + "#2"] = (x + w / 2 + 1.3, rail_face(S), S.RAIL_DUCT, "y")
 
     for _gear, axis, fixed, c0, clen, pitch, duct, strip in S.STRIPS:
-        span = pitch * (len(strip) - 1)
-        start = c0 + clen / 2 - span / 2
+        if isinstance(pitch, (list, tuple)):
+            # explicit offsets from c0 -- for a face carrying two blocks with a
+            # gap between them, which a single pitch cannot describe
+            offs = list(pitch)
+        else:
+            span = pitch * (len(strip) - 1)
+            offs = [clen / 2 - span / 2 + i * pitch for i in range(len(strip))]
+        start = c0
         for i, (name, _cls) in enumerate(strip):
             # "v": a face on the left or right of a part -- terminals run down it
             # in y and their stubs leave in x. "h": a face on its back or front.
-            t[name] = ((fixed, start + i * pitch, duct, "x") if axis == "v"
-                       else (start + i * pitch, fixed, duct, "y"))
+            t[name] = ((fixed, start + offs[i], duct, "x") if axis == "v"
+                       else (start + offs[i], fixed, duct, "y"))
 
     for name, x, y, duct, axis in S.LOOSE:
         t[name] = (x, y, duct, axis)
@@ -193,14 +204,32 @@ def allocate_lanes(S, routes):
     return lanes, used
 
 
-def lane_coord(S, d, lane):
-    _axis, c0, _c1, _s0, _s1 = S.DUCTS[d]
-    return c0 + LANE_INSET + lane * LANE_PITCH
+def lane_pitch(S, d, used):
+    """Lanes are a drawing device, not a physical stack.
 
-
-def capacity(S, d):
+    A conductor in a duct lies wherever it lands; drawing each one in its own
+    lane is what makes a wire followable end to end. So the pitch shrinks to fit
+    however many a duct carries, and the capacity question that actually matters
+    -- whether the bundle fits -- is answered by fill, below.
+    """
     _axis, c0, c1, _s0, _s1 = S.DUCTS[d]
-    return int((c1 - c0 - 2 * LANE_INSET) / LANE_PITCH) + 1
+    room = c1 - c0 - 2 * LANE_INSET
+    n = max(1, used.get(d, 1) - 1)
+    return min(LANE_PITCH, room / n)
+
+
+def lane_coord(S, d, lane, used):
+    _axis, c0, _c1, _s0, _s1 = S.DUCTS[d]
+    return c0 + LANE_INSET + lane * lane_pitch(S, d, used)
+
+
+def fill(S, d, routes):
+    """Fraction of the duct's cross-section the conductors in it occupy."""
+    _axis, c0, c1, _s0, _s1 = S.DUCTS[d]
+    w = c1 - c0 - 2.0
+    area = sum(3.1416 / 4 * WIRE_OD[r["mm2"]] ** 2
+               for r in routes if any(dd == d for dd, _l in r["lanes"]))
+    return area / (w * w)
 
 
 def _dedupe(pts):
@@ -211,8 +240,8 @@ def _dedupe(pts):
     return out
 
 
-def route(S, a, b, chain, wid, lanes):
-    return corners(S, a, b, chain, lambda d: lane_coord(S, d, lanes[(wid, d)]))
+def route(S, a, b, chain, wid, lanes, used):
+    return corners(S, a, b, chain, lambda d: lane_coord(S, d, lanes[(wid, d)], used))
 
 
 def path_len(pts):
@@ -236,7 +265,7 @@ def build_routes(S):
                     "chain": chain, "spans": spans(S, ta, tb, chain)})
     lanes, used = allocate_lanes(S, pre)
     for r in pre:
-        r["pts"] = route(S, r["a"], r["b"], r["chain"], r["id"], lanes)
+        r["pts"] = route(S, r["a"], r["b"], r["chain"], r["id"], lanes, used)
         r["len"] = path_len(r["pts"]) + S.SLACK
         r["lanes"] = [(d, lanes[(r["id"], d)]) for d in r["chain"]]
     return pre, used
@@ -263,12 +292,20 @@ def _in_duct(S, pt):
 
 def check(S, routes, used):
     bad = []
-    for d, n in used.items():
-        if n > capacity(S, d):
-            bad.append(f"{d} needs {n} lanes, holds {capacity(S, d)}")
+    for d in S.DUCTS:
+        if S.DUCT_KIND[d][0] != "duct":
+            continue
+        f = fill(S, d, routes)
+        if f > FILL:
+            bad.append(f"{d} is {f*100:.0f}% full; slotted duct works to {FILL*100:.0f}%")
 
     rects = [(x, y, w, dd) for _n, x, y, w, dd, _k, _t in S.GEAR]
-    rects.append((S.RAIL_START, S.RAIL_Y, rail_schedule(S)[1], S.RAIL_DEPTH))
+    rail = (S.RAIL_START, S.RAIL_Y, rail_schedule(S)[1], S.RAIL_DEPTH)
+    for name, x, y, w, dd, _k, _t in S.GEAR:
+        if (x < rail[0] + rail[2] and rail[0] < x + w
+                and y < rail[1] + rail[3] and rail[1] < y + dd):
+            bad.append(f"the rail overlaps {name}")
+    rects.append(rail)
     def _owns(rect, pt):
         x, y, w, d = rect
         return x - .5 <= pt[0] <= x + w + .5 and y - .5 <= pt[1] <= y + d + .5
@@ -373,10 +410,12 @@ def plan_svg(S, routes, scale=2.0, pad_l=172, pad_r=186):
         p.append(f'<line x1="{X(a):.1f}" y1="{yy:.1f}" x2="{X(b):.1f}" y2="{yy:.1f}"'
                  ' stroke="currentColor" stroke-width="3" stroke-linecap="round"'
                  ' opacity=".85"/>')
-    p.append(f'<text x="{X(S.RAIL_START+rail_len)+10:.1f}"'
-             f' y="{Y(S.RAIL_Y+S.RAIL_DEPTH/2)+4:.1f}" font-size="10.5" fill="currentColor"'
-             f' opacity=".72">DIN rail, {rail_len:.0f} mm — the thick bars are jumper'
-             ' combs, not wires</text>')
+    cap = (X(S.RAIL_START + rail_len), Y(S.RAIL_Y - 7)) if S.RAIL_Y >= 14 else \
+          (X(S.RAIL_START) - 10, Y(S.RAIL_Y + S.RAIL_DEPTH / 2) + 4)
+    p.append(f'<text x="{cap[0]:.1f}" y="{cap[1]:.1f}" font-size="10.5"'
+             f' fill="currentColor" opacity=".72" text-anchor="end">DIN rail,'
+             f' {rail_len:.0f} mm{"" if S.RAIL_Y < 14 else " — the thick bars are jumper combs"}'
+             '</text>')
 
     for name, x, y, w, d, kind, _note in S.GEAR:
         p.append(f'<rect x="{X(x):.1f}" y="{Y(y):.1f}" width="{w*scale:.1f}"'
@@ -426,19 +465,25 @@ def plan_svg(S, routes, scale=2.0, pad_l=172, pad_r=186):
         kind, nom = S.DUCT_KIND[name]
         lab = f'{name} · {nom:.0f} mm duct' if kind == "duct" else f'{name} · clipped, not a duct'
         if axis == "h":
-            p.append(f'<text x="{X(x+w)-4:.1f}" y="{Y(y)-5:.1f}" font-size="9.5"'
+            at_start = getattr(S, "DUCT_LABEL_AT", {}).get(name) == "start"
+            lx = X(x) + 4 if at_start else X(x + w) - 4
+            ly = Y(y) + 13 if at_start else Y(y) - 5
+            p.append(f'<text x="{lx:.1f}" y="{ly:.1f}" font-size="9.5"'
                      f' font-weight="600" fill="currentColor" opacity=".6"'
-                     f' text-anchor="end">{lab}</text>')
+                     f' text-anchor="{"start" if at_start else "end"}">{lab}</text>')
         else:
             tx, ty = X(x + w / 2) + 3.5, Y(y + d) - 5
             p.append(f'<text x="{tx:.1f}" y="{ty:.1f}" font-size="9.5" font-weight="600"'
                      f' fill="currentColor" opacity=".6"'
                      f' transform="rotate(-90 {tx:.1f} {ty:.1f})">{lab}</text>')
 
+    nfront = 0
     for label, x, y, wall in S.PANEL:
         p.append(f'<circle cx="{X(x):.1f}" cy="{Y(y):.1f}" r="4.5" fill="var(--accent)"/>')
         if wall == "front":
-            p.append(f'<text x="{X(x):.1f}" y="{Y(y)+17:.1f}" font-size="10"'
+            dy = 17 if nfront % 2 == 0 else 31
+            nfront += 1
+            p.append(f'<text x="{X(x):.1f}" y="{Y(y)+dy:.1f}" font-size="10"'
                      f' fill="currentColor" opacity=".85" text-anchor="middle">{esc(label)}</text>')
         else:
             left = wall == "left"
@@ -446,7 +491,8 @@ def plan_svg(S, routes, scale=2.0, pad_l=172, pad_r=186):
                      f' font-size="10" fill="currentColor" opacity=".85"'
                      f' text-anchor="{"end" if left else "start"}">{esc(label)}</text>')
 
-    lx, ly = X(8), Y(H) + 26
+    lx = X(8)
+    ly = Y(H) + (50 if any(w == "front" for _l, _x, _y, w in S.PANEL) else 26)
     for i, (k, lab) in enumerate(S.LEGEND):
         cx, cy = lx + (i % 4) * 160, ly + (i // 4) * 18
         p.append(f'<line x1="{cx:.0f}" y1="{cy:.0f}" x2="{cx+20:.0f}" y2="{cy:.0f}"'
@@ -669,5 +715,7 @@ def write(S):
           f"({S.OUT.stat().st_size/1024:.0f} KB)")
     print(f"  {len(routes)} conductors, {sum(r['len'] for r in routes)/1000:.2f} m, "
           f"{inn} in-duct crossings, 0 on open floor")
-    print("  lanes: " + ", ".join(f"{d} {n}/{capacity(S, d)}" for d, n in used.items()))
+    print("  ducts: " + ", ".join(
+        f"{d} {n} lanes @{lane_pitch(S, d, used):.1f} mm, {fill(S, d, routes)*100:.0f}% full"
+        for d, n in used.items()))
     return S.OUT

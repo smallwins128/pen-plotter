@@ -9,16 +9,16 @@ this box is above 24 V -- the link from the power box brings +24 always,
 
 What decided the placement:
 
-  TB6600     Its two 6-way blocks are on OPPOSITE ends of the long axis, like
-             the buck in the power box. So each driver stands with its long
-             axis front-to-back: signals out of the back into H1 toward the
-             board, motor and supply out of the front into H2.
-  motors     The four phase wires are the only chopped currents in the box.
-             Each driver's GX16-5 sits on the front wall DIRECTLY BELOW it, so
-             those four wires drop 45 mm and leave. They share a duct with
-             almost nothing and run beside no signal wire.
-  the rest   Link, servo and the two endstops land on the left wall and go up
-             V0 to the rail. The board sits at the right against V1.
+  TB6600     All twelve terminals are on ONE long face, in two six-way blocks
+             side by side. So the drivers stand in a row with that face turned
+             forward and a single duct, H2, takes the lot.
+  grouping   Ports are grouped by what they are. The whole front wall goes to
+             the machine -- three motors, the servo, two endstops, in that
+             order. Power comes in on the right wall, beside the rail it lands
+             on and nowhere near the outputs. USB is on the left wall, beside
+             the board it plugs into.
+  ducts      One vertical between each pair of drivers and one at the right, so
+             nothing has to run the length of the box to change ducts.
 
 Board header positions are PROVISIONAL -- see the note on the page. Everything
 else is from the real parts.
@@ -66,108 +66,106 @@ RAIL = [
     ("", 8.0, "clamp", "end clamp"),
 ]
 
-RAIL_START, RAIL_Y, RAIL_DEPTH = 40.0, 8.0, 45.0
+RAIL_START, RAIL_Y, RAIL_DEPTH = 295.0, 4.0, 45.0
 RAIL_SUBS = {}
 JUMPERS = [("+24s", "+24sa"), ("+24a", "+24f"),
            ("0V", "0Va", "0Vb", "0Vc", "0Vd"), ("+5", "+5a")]
 
 # --- the duct grid -----------------------------------------------------------
 DUCTS = {
-    "H1": ("h",  54.0, 118.0,   0.0, 440.0),   # the spine, across the rail face
-    "V0": ("v",  22.0,  64.0,  54.0, 243.0),   # serves the left wall connectors
-    "V1": ("v", 284.0, 302.0,  54.0, 243.0),   # the far end of H2, two wires only
-    "H2": ("h", 216.0, 243.0,  22.0, 302.0),   # driver supply + the motor drops
+    "H1": ("h",  91.0, 133.0,  10.0, 430.0),   # the spine: rail, board, link, fan
+    "H2": ("h", 205.0, 247.0,  10.0, 425.0),   # the drivers' one terminal face
+    "VA": ("v", 140.0, 165.0,  91.0, 247.0),   # one between each pair of drivers,
+    "VB": ("v", 270.0, 295.0,  91.0, 247.0),   # as in the power box, so nothing has
+    "V1": ("v", 400.0, 425.0,  91.0, 247.0),   # to run the length of the box
 }
-DUCT_KIND = {"H1": ("duct", 60.0), "V0": ("duct", 40.0),
-             "V1": ("clip", 0.0), "H2": ("duct", 25.0)}
+DUCT_LABEL_AT = {"H2": "start"}
+DUCT_KIND = {"H1": ("duct", 40.0), "H2": ("duct", 40.0),
+             "VA": ("duct", 25.0), "VB": ("duct", 25.0), "V1": ("duct", 25.0)}
 SPINE = RAIL_DUCT = "H1"
-# Band "a" is power and motor; band "b" is logic. Keeping them from interleaving
-# is why the signal wires never end up lying between two phase wires.
+# Band "a" is power and motor; band "b" is logic. A TB6600 puts both on the same
+# face, so they do share H2 -- but never a lane next to each other.
 BAND_A = {"v24", "v0", "v6", "motA", "motB"}
-BANDS = {"H1": ("a", "b"), "V0": ("a", "b"), "V1": ("b", "a"), "H2": ("a", "b")}
+BANDS = {d: ("a", "b") for d in DUCTS}
 
 # --- gear on the floor -------------------------------------------------------
-TBW, TBD = 67.7, 96.5
-D1X, D2X, D3X = 66.0, 139.7, 213.4
-DY0, DY1 = 119.0, 119.0 + TBD
+# A TB6600 is 96.5 x 67.7 and ALL TWELVE terminals are on one long face, in two
+# six-way blocks side by side with a gap. So the drivers stand in a row with that
+# face turned forward, and one duct takes everything they have.
+TBW, TBD = 96.5, 67.7
+D1X, D2X, D3X = 40.0, 170.0, 300.0
+DY0, DY1 = 135.0, 135.0 + TBD          # back edge, terminal face
 
 GEAR = [
     ("TB6600 X1", D1X, DY0, TBW, TBD, "heatsink", "stepper driver, X left"),
     ("TB6600 X2", D2X, DY0, TBW, TBD, "heatsink", "stepper driver, X right"),
     ("TB6600 Y", D3X, DY0, TBW, TBD, "heatsink", "stepper driver, Y — rides the gantry"),
-    ("Elecrow 6-axis", 305.0, 119.0, 125.0, 85.0, "pcb", "controller; header positions provisional"),
-    ("fan 40", 432.0, 119.0, 10.0, 40.0, "abs", "24 V, always on"),
+    ("Elecrow 6-axis", 10.0, 4.0, 125.0, 85.0, "pcb", "controller; header positions provisional"),
+    ("fan 40", 432.0, 155.0, 10.0, 40.0, "abs", "24 V, always on"),
 ]
 
-# A TB6600's two 6-way blocks, on opposite ends of the long axis. Pitch is the
-# usual 7.62 mm. CHECK YOUR SILKSCREEN -- clone boards reorder this block.
-TB_PITCH = 7.62
-SIG = ["ENA-", "ENA+", "DIR-", "DIR+", "PUL-", "PUL+"]
-PWR = ["B-", "B+", "A-", "A+", "VCC", "GND"]
-SIG_CLS = {"ENA-": "sig", "ENA+": "v5", "DIR-": "sig", "DIR+": "v5",
-           "PUL-": "sig", "PUL+": "v5"}
-PWR_CLS = {"B-": "motB", "B+": "motB", "A-": "motA", "A+": "motA",
-           "VCC": "v24", "GND": "v0"}
+# The face, left to right: the motor and supply block, a gap, then the signal
+# block. Mounted this way round the motor terminals sit above their own
+# connector on the front wall and the signal terminals face the board.
+# CHECK YOUR SILKSCREEN -- clone boards reorder within a block.
+FACE = ["B-", "B+", "A-", "A+", "VCC", "GND", "ENA-", "ENA+", "DIR-", "DIR+", "PUL-", "PUL+"]  # noqa: E501
+FACE_OFF = [2.65, 10.27, 17.89, 25.51, 33.13, 40.75,
+            55.75, 63.37, 70.99, 78.61, 86.23, 93.85]
+FACE_CLS = {"B-": "motB", "B+": "motB", "A-": "motA", "A+": "motA",
+            "VCC": "v24", "GND": "v0", "ENA-": "sig", "ENA+": "v5",
+            "DIR-": "sig", "DIR+": "v5", "PUL-": "sig", "PUL+": "v5"}
 
 # Provisional. The Elecrow product page is unreachable from the build container,
-# so these are a plausible strip down the board's left edge, not measured.
+# so this is a plausible strip along the board's front edge, not measured.
 BRD = ["VIN", "GND", "5V", "PUL1", "DIR1", "ENA1", "PUL2", "DIR2", "ENA2",
        "PUL3", "DIR3", "ENA3", "LIMX", "LIMY", "PWM"]
 BRD_CLS = {"VIN": "v24", "GND": "v0", "5V": "v5", "LIMX": "es", "LIMY": "es",
            "PWM": "pwm"}
 
-STRIPS = [("TB6600 X1", "h", DY0, D1X, TBW, TB_PITCH, "H1",
-           [(f"D1.{n}", SIG_CLS[n]) for n in SIG]),
-          ("TB6600 X1f", "h", DY1, D1X, TBW, TB_PITCH, "H2",
-           [(f"D1.{n}", PWR_CLS[n]) for n in PWR]),
-          ("TB6600 X2", "h", DY0, D2X, TBW, TB_PITCH, "H1",
-           [(f"D2.{n}", SIG_CLS[n]) for n in SIG]),
-          ("TB6600 X2f", "h", DY1, D2X, TBW, TB_PITCH, "H2",
-           [(f"D2.{n}", PWR_CLS[n]) for n in PWR]),
-          ("TB6600 Y", "h", DY0, D3X, TBW, TB_PITCH, "H1",
-           [(f"D3.{n}", SIG_CLS[n]) for n in SIG]),
-          ("TB6600 Yf", "h", DY1, D3X, TBW, TB_PITCH, "H2",
-           [(f"D3.{n}", PWR_CLS[n]) for n in PWR]),
-          ("Elecrow 6-axis", "h", 119.0, 305.0, 125.0, 7.5, "H1",
+STRIPS = [(f"TB6600 {n}", "h", DY1, x, TBW, FACE_OFF, "H2",
+           [(f"D{i}.{t}", FACE_CLS[t]) for t in FACE])
+          for i, (n, x) in enumerate((("X1", D1X), ("X2", D2X), ("Y", D3X)), start=1)] + [
+          ("Elecrow 6-axis", "h", 89.0, 10.0, 125.0, 8.0, "H1",
            [(f"BRD.{n}", BRD_CLS.get(n, "sig")) for n in BRD])]
-# +1 draws the terminal mark on the body side of the face; the back faces have
-# their body in front of them, the front faces behind.
-STRIP_SIDE = {"TB6600 X1": 1, "TB6600 X2": 1, "TB6600 Y": 1,
-              "TB6600 X1f": -1, "TB6600 X2f": -1, "TB6600 Yf": -1,
-              "Elecrow 6-axis": 1}
+# The driver bodies are behind their face, the board's body behind its own.
+STRIP_SIDE = {"TB6600 X1": -1, "TB6600 X2": -1, "TB6600 Y": -1,
+              "Elecrow 6-axis": -1}
 MARKS = []
 
 
-def _mx(cx):
-    """Four phase terminals on a GX16-5, under a driver, on the front wall."""
-    return [cx - 13.5, cx - 4.5, cx + 4.5, cx + 13.5]
+def _pins(cx, n, pitch=9.0):
+    return [cx - pitch * (n - 1) / 2 + i * pitch for i in range(n)]
 
+
+# Front wall: everything that goes out to the machine, in the order you plug it.
+MOTOR_X = {"1": D1X + 22.0, "2": D2X + 22.0, "3": D3X + 22.0}
+SERVO_X, EX_X, EY_X = 352.0, 382.0, 412.0
 
 LOOSE = (
-    # the link, the servo and the endstops: left wall, into V0
-    [("LINK.+24a", 22.0, 118.0, "V0", "x"), ("LINK.+24s", 22.0, 125.0, "V0", "x"),
-     ("LINK.+6", 22.0, 132.0, "V0", "x"), ("LINK.0V", 22.0, 139.0, "V0", "x"),
-     ("SRV.V+", 22.0, 160.0, "V0", "x"), ("SRV.GND", 22.0, 167.0, "V0", "x"),
-     ("SRV.SIG", 22.0, 174.0, "V0", "x"),
-     ("EXG.sig", 22.0, 195.0, "V0", "x"), ("EXG.com", 22.0, 202.0, "V0", "x"),
-     ("EYG.sig", 22.0, 220.0, "V0", "x"), ("EYG.com", 22.0, 227.0, "V0", "x"),
-     ("FAN.+", 436.0, 126.0, "H1", "y"), ("FAN.-", 436.0, 140.0, "H1", "y")]
-    # the three motor connectors, each directly below its own driver
-    + [(f"M{d}.{i+1}", x, 243.0, "H2", "y")
-       for d, cx in (("1", D1X + TBW / 2), ("2", D2X + TBW / 2), ("3", D3X + TBW / 2))
-       for i, x in enumerate(_mx(cx))]
+    # power in: left wall, on its own, landing straight on the spine by the rail
+    [("LINK.+24a", 430.0, 100.0, "H1", "y"), ("LINK.+24s", 430.0, 108.0, "H1", "y"),
+     ("LINK.+6", 430.0, 116.0, "H1", "y"), ("LINK.0V", 430.0, 124.0, "H1", "y"),
+     ("FAN.+", 432.0, 168.0, "V1", "x"), ("FAN.-", 432.0, 182.0, "V1", "x")]
+    # front wall: three motor connectors, each under its own driver's motor block
+    + [(f"M{d}.{i+1}", x, 246.0, "H2", "y")
+       for d, cx in MOTOR_X.items() for i, x in enumerate(_pins(cx, 4))]
+    # front wall: the servo and the two endstops, beside the motors
+    + [("SRV.V+", SERVO_X - 9, 246.0, "H2", "y"), ("SRV.GND", SERVO_X, 246.0, "H2", "y"),
+       ("SRV.SIG", SERVO_X + 9, 246.0, "H2", "y"),
+       ("EXG.sig", EX_X - 5, 246.0, "H2", "y"), ("EXG.com", EX_X + 5, 246.0, "H2", "y"),
+       ("EYG.sig", EY_X - 5, 246.0, "H2", "y"), ("EYG.com", EY_X + 5, 246.0, "H2", "y")]
 )
 
 PANEL = [
-    ("link in, GX16-6", 0.0, 128.0, "left"),
-    ("servo, GX16-4", 0.0, 167.0, "left"),
-    ("endstop X, GX16-3", 0.0, 198.0, "left"),
-    ("endstop Y, GX16-3", 0.0, 223.0, "left"),
-    ("USB-C to the laptop", 0.0, 250.0, "left"),
-    ("fan 40 mm, exhaust", 442.0, 139.0, "right"),
-    ("X1 motor, GX16-5", D1X + TBW / 2, 265.0, "front"),
-    ("X2 motor, GX16-5", D2X + TBW / 2, 265.0, "front"),
-    ("Y motor, GX16-5", D3X + TBW / 2, 265.0, "front"),
+    ("USB-C to the laptop", 0.0, 46.0, "left"),
+    ("power in — GX16-6", 442.0, 112.0, "right"),
+    ("fan 40 mm, exhaust", 442.0, 175.0, "right"),
+    ("X1 motor", MOTOR_X["1"], 265.0, "front"),
+    ("X2 motor", MOTOR_X["2"], 265.0, "front"),
+    ("Y motor", MOTOR_X["3"], 265.0, "front"),
+    ("servo", SERVO_X, 265.0, "front"),
+    ("endstop X", EX_X, 265.0, "front"),
+    ("endstop Y", EY_X, 265.0, "front"),
 ]
 
 # --- every conductor ---------------------------------------------------------
@@ -278,14 +276,15 @@ __HEAD__
 
   <figure>
     __PLAN__
-    <figcaption><b>Floor plan, to scale.</b> A TB6600's two six-way blocks are on
-    <i>opposite ends</i> of its long axis, so each driver stands front-to-back: signals
-    out of the back into <b>H1</b> toward the board, motor and supply out of the front
-    into <b>H2</b>. Each driver's motor connector sits on the front wall directly below
-    it, so its four phase wires drop 30 mm and leave — they are the only chopped
-    currents in the box and they share a duct with almost nothing. The board's headers
-    face <b>H1</b> too, which is why there is no duct between it and the drivers at
-    all. Nothing crosses open floor.</figcaption>
+    <figcaption><b>Floor plan, to scale.</b> A TB6600 carries all twelve of its
+    terminals on <i>one</i> long face, in two six-way blocks side by side. So the three
+    drivers stand in a row with that face turned forward and one duct, <b>H2</b>, takes
+    everything they have — motor and supply from the left block, step/dir/enable from
+    the right. Each driver's motor connector is on the front wall directly below its own
+    motor block, so those four phase wires drop 45 mm and leave. The ports are grouped
+    by what they are, not by what is nearest: <b>the whole front wall goes to the
+    machine</b>, power comes in on the right beside the rail it lands on, and USB sits
+    on the left beside the board it plugs into. Nothing crosses open floor.</figcaption>
   </figure>
 
   <figure>
@@ -337,11 +336,12 @@ __HEAD__
   the real parts.</div>
 
   <div class="note"><b>Check the TB6600's silkscreen before you wire a single core.</b>
-  The six-way blocks are drawn <code>ENA− ENA+ DIR− DIR+ PUL− PUL+</code> and
-  <code>B− B+ A− A+ VCC GND</code>, which is the common order — but clone boards reorder
-  them, and some put <code>VCC</code>/<code>GND</code> at the opposite end of the block.
-  The drawing is right about <i>which end of the driver</i> each block is on, which is
-  what the layout depends on.</div>
+  The face is drawn <code>B− B+ A− A+ VCC GND</code> then, after the gap,
+  <code>ENA− ENA+ DIR− DIR+ PUL− PUL+</code>. That is the common arrangement, but clones
+  reorder within a block and some label the motor pair the other way round. What the
+  layout actually depends on is that all twelve are on one face with the motor block at
+  one end — if yours has the blocks the other way round, turn the driver end for end and
+  the motor connector below it still lines up.</div>
 
   <div class="note"><b>Find the coil pairs with a meter, not with the wire colours.</b>
   Two wires that read a couple of ohms between them are one coil; two that read open are
