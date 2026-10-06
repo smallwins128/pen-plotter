@@ -51,11 +51,11 @@ RAIL = [
     ("PE3", 5.2, "E", "earth out to the RS-25 chassis"),
     ("PE4", 5.2, "E", "earth out to the case + lid bonding stud"),
     ("", 2.0, "part", ""),
-    ("MCB2", MODULE, "mcb", "5 A 1P DC — protects the 24 V trunk wiring"),
+    ("F1", 6.2, "fuse", "fuse terminal, 5 A 5x20 mm — protects the 24 V trunk wiring"),
     ("", 2.0, "part", ""),
     ("K1", 16.0, "relay", "24 V coil, 1 N/O — drops the driver rail on E-stop"),
     ("", 2.0, "part", ""),
-    ("+24", 5.2, "v24", "in from MCB2; also feeds the E-stop loop"),
+    ("+24", 5.2, "v24", "in from F1; also feeds the E-stop loop"),
     ("+24a", 5.2, "v24", "always on → the board, and K1's contact"),
     ("+24f", 5.2, "v24", "always on → the fan"),
     ("+24s", 5.2, "v24", "switched by K1 → the drivers"),
@@ -78,12 +78,11 @@ RAIL_FACE = RAIL_Y + RAIL_DEPTH # where a conductor leaves the gear, in plan
 RAIL_SUBS = {
     "MCB1": [("MCB1.L-in", 4.0), ("MCB1.L-out", 13.0),
              ("MCB1.N-in", 22.0), ("MCB1.N-out", 31.0)],
-    "MCB2": [("MCB2.in", 3.4), ("MCB2.out", 13.4)],
     "K1":   [("K1.A1", 1.9), ("K1.A2", 5.9), ("K1.13", 10.9), ("K1.14", 14.9)],
 }
 
 # combs, not wires: adjacent blocks bridged by an insertable jumper bar
-JUMPERS = [("L1", "L2"), ("N1", "N2"), ("PE1", "PE2", "PE3", "PE4"),
+JUMPERS = [("L1", "L2"), ("N1", "N2"),
            ("+24", "+24a", "+24f"), ("0V", "0Va", "0Vb"), ("+6", "+6o")]
 
 # --- the duct grid -----------------------------------------------------------
@@ -137,7 +136,7 @@ LOOSE = [
     ("IEC.L", 30.0, 42.0, "H1", "y"), ("IEC.N", 30.0, 55.0, "H1", "y"),
     ("IEC.PE", 30.0, 68.0, "H1", "y"),
     ("ESTOP.1", 16.0, 100.0, "H1", "y"), ("ESTOP.2", 16.0, 108.0, "H1", "y"),
-    ("BOND", 6.0, 124.0, "H1", "y"),
+    ("FRAME", 6.0, 124.0, "H1", "y"),
     ("FAN.+", 432.0, 197.0, "V3", "x"), ("FAN.-", 432.0, 213.0, "V3", "x"),
     ("LINK.+24a", 430.0, 100.0, "H1", "y"), ("LINK.+24s", 430.0, 106.0, "H1", "y"),
     ("LINK.+6", 430.0, 112.0, "H1", "y"), ("LINK.0V", 430.0, 118.0, "H1", "y"),
@@ -147,7 +146,7 @@ LOOSE = [
 PANEL = [
     ("IEC inlet", 0.0, 55.0, "left"),
     ("E-stop loop, 2-pole", 0.0, 104.0, "left"),
-    ("earth stud (lid strap)", 0.0, 124.0, "left"),
+    ("earth out → machine frame", 0.0, 124.0, "left"),
     ("link gland → control box", 442.0, 109.0, "right"),
     ("fan 40 mm, exhaust", 442.0, 202.0, "right"),
 ]
@@ -166,10 +165,10 @@ WIRES = [
     ("w09", "L",    "L2",         "RS.L",       0.75, ""),
     ("w10", "N",    "N2",         "RS.N",       0.75, ""),
     ("w11", "E",    "PE3",        "RS.PE",      0.75, ""),
-    ("w12", "E",    "PE4",        "BOND",       1.5, "case and lid bond to the same stud"),
-    ("w13", "v24",  "LRS.+V",     "MCB2.in",    1.5, "the whole 24 V output, through its breaker"),
+    ("w12", "E",    "PE4",        "FRAME",      1.5, "out to the machine frame — see the note"),
+    ("w13", "v24",  "LRS.+V",     "F1",         1.5, "the whole 24 V output, through its fuse"),
     ("w14", "v0",   "LRS.-V",     "0V",         1.5, ""),
-    ("w15", "v24",  "MCB2.out",   "+24",        1.5, ""),
+    ("w15", "v24",  "F1",         "+24",        1.5, ""),
     ("w16", "v24",  "+24a",       "K1.13",      1.5, "relay common"),
     ("w17", "v24",  "K1.14",      "+24s",       1.5, "the only rail K1 cuts"),
     ("w18", "ctrl", "+24",        "ESTOP.1",    0.5, "coil feed, out to the button"),
@@ -217,9 +216,9 @@ ELEV_ALT = ("Front elevation of the DIN rail: mains breaker, line, neutral and e
 ELEV_NOTE = ("{rail:.0f} mm of rail — breakers and the relay stand 85 mm, terminals 58 mm,"
              " in a 124 mm cavity. Pale bars are jumper combs.")
 ELEV_ZONES = [("mains, protected", RAIL_START + 8, RAIL_START + 86),
-              ("DC protect + switch", RAIL_START + 88, RAIL_START + 124),
-              ("DC distribution", RAIL_START + 126, RAIL_START + 173),
-              ("spare", RAIL_START + 175, RAIL_START + 190)]
+              ("DC fuse + E-stop relay", RAIL_START + 88, RAIL_START + 113),
+              ("DC distribution", RAIL_START + 115, RAIL_START + 162),
+              ("spare", RAIL_START + 164, RAIL_START + 179)]
 LEGEND = [("L", "L, brown"), ("N", "N, blue"), ("E", "PE, green/yellow"),
           ("v24", "+24 V, red"), ("v0", "0 V, black"), ("v6", "+6 V, orange"),
           ("ctrl", "E-stop loop, violet")]
@@ -310,9 +309,26 @@ __HEAD__
   K1's coil</b>, so a cut wire stops the machine too. It lives on the machine, not on this
   box — the box only carries a 2-pole connector for the loop.</div>
 
-  <div class="note"><b>MCB2 protects the wiring, not the supply.</b> The LRS-350 already
+  <div class="note"><b>F1 protects the wiring, not the supply.</b> The LRS-350 already
   limits its own output. What it cannot do is notice a pinched conductor in the drag chain
-  drawing 4 A through a wire sized for 1.7.</div>
+  drawing 4 A through a wire sized for 1.7. It is a <b>fuse terminal</b> rather than a
+  miniature breaker because an ordinary MCB is tested on AC, where the arc self-extinguishes
+  twice a cycle; on DC it does not. At 24 V that is survivable, but a 5 x 20 mm fuse in a
+  terminal-sized carrier is cheaper, narrower, sits in the same family as its neighbours,
+  and removes the question.</div>
+
+  <div class="note"><b>The earth blocks are commoned by the rail, not by a comb.</b> A PE
+  block has a metal foot that clamps the DIN rail, so every PE block on the same rail is
+  already the same node — which is also why the rail must be a single piece with the
+  incoming earth landing on <code>PE1</code>. Do not fit a jumper comb across them; most
+  PE blocks have no jumper slot to fit one into.</div>
+
+  <div class="note"><b>There is no case to bond.</b> The UN4412 is plastic, so the only
+  things here that need earthing are the two supplies' metal chassis. <code>PE4</code>
+  goes out to the <b>machine frame</b> instead — not because a 24 V fault could make it
+  live, but because an earthed frame gives the endstop and servo runs a reference, and
+  because the day a mains-powered spindle or laser gets added, the frame is already
+  earthed.</div>
 
   <footer>Generated by <code>python3 hardware/psu_layout.py</code>. Lane assignment, path
   routing, wire lengths and the cut list all come from the same tables as the drawing, and

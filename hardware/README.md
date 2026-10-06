@@ -23,6 +23,7 @@ python3 hardware/stock.py           # what to buy, and how to cut it
 python3 hardware/bom.py             # full bill of materials
 python3 hardware/psu_layout.py      # power box: rail schedule, floor plan, every wire
 python3 hardware/ctrl_layout.py     # control box: the same, for the drivers and board
+python3 hardware/din_parts.py       # what to order for the two rails, and why
 python3 hardware/bom.py --csv       # the same, for a spreadsheet
 python3 hardware/stock.py 20x20     # just one profile
 ```
@@ -60,6 +61,7 @@ Each part exports:
 | **`panel.py`** | The layout engine both boxes share: duct graph, lane assignment, routing, the checks, and the drawing. Knows nothing about either box. |
 | **`psu_layout.py`** | The power box's tables: rail schedule, duct grid, where the gear sits, and all 30 conductors. |
 | **`ctrl_layout.py`** | The control box's tables: 49 conductors, three drivers and the board. |
+| **`din_parts.py`** | The DIN order list. Specifications are written; quantities are counted off the two rail schedules. |
 | **`bom.py`** | Bill of materials. Counts what the model knows; declares what it can't. |
 | **`stock.py`** | Groups every cut list by profile and packs the pieces onto stock bars, kerf included. |
 

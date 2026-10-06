@@ -104,8 +104,12 @@ def din_hardware():
            f"{panel.rail_schedule(ctrl_layout)[1]:.0f} from one length")
     yield ("Electronics", "DIN end clamp", kinds["clamp"], "ea", "two per rail")
     yield ("Electronics", "MCB, 6 A 1P+N C-curve", 1, "ea", "mains in; protects both supplies")
-    yield ("Electronics", "MCB, 5 A 1P DC-rated", 1, "ea",
+    yield ("Electronics", "Fuse terminal block, 5 x 20 mm, same family as the blocks",
+           kinds["fuse"], "ea",
            "protects the 24 V trunk wiring, not the supply -- the LRS limits itself")
+    yield ("Consumable", "Fuse, 5 A 5 x 20 mm, time-lag (T)", 5, "ea", "F1, plus spares")
+    yield ("Consumable", "Fuse, 2 A 5 x 20 mm, time-lag (T)", 5, "ea",
+           "the IEC inlet's own fuse -- the box draws ~0.2 A at 230 V")
     yield ("Electronics", "Relay, 24 V coil 1 N/O, + DIN socket", 1, "ea",
            "K1; drops only the driver rail on E-stop")
     plain = kinds["L"] + kinds["N"] + kinds["v24"] + kinds["v0"] + kinds["v6"] \
@@ -113,10 +117,12 @@ def din_hardware():
     yield ("Electronics", "Feed-through terminal, 2.5 mm^2 screw", plain, "ea",
            f"both boxes; {kinds['sp']} left spare")
     yield ("Electronics", "Earth terminal, 2.5 mm^2 (green/yellow, rail-bonding)",
-           kinds["E"], "ea", "power box only")
-    for ways in sorted(combs):
-        yield ("Electronics", f"Insertable jumper comb, {ways}-way", combs[ways], "ea",
-               "bridges a group without a wire -- this is most of the tidiness")
+           kinds["E"], "ea",
+           "power box only; commoned by the rail they clamp, not by a comb")
+    ways_total = sum(n * w for w, n in combs.items())
+    yield ("Electronics", "Insertable jumper comb, 10-way, matching the blocks", 3, "ea",
+           f"cut to length: {', '.join(f'{n}x {w}-way' for w, n in sorted(combs.items()))} "
+           f"= {ways_total} ways needed")
     yield ("Electronics", "E-stop button, 22 mm, N/C", 1, "ea",
            "lives on the machine, not on a box; the box carries the loop connector")
     for nom in sorted(duct):
