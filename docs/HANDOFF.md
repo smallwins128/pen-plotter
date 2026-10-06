@@ -3,7 +3,7 @@
 Paste this into a fresh chat to pick up where the last one left off. Everything here is
 **verified on the machine**, not assumed. Where something is unverified it says so.
 
-_Last updated: 2026-08-24_
+_Last updated: 2026-10-06_
 
 ---
 
@@ -16,6 +16,12 @@ correctly to commands, but actuating it while the machine is moving resets the c
 Cause is narrowed to supply/grounding around the servo; the fix is on order. **In the
 meantime the machine plots single-stroke artwork with the pen taped down**, which is what
 the files in `gcode/art/` are for.
+
+Separately, **the electronics have been redesigned on paper and not yet built**: a
+parametric model of the machine in `hardware/`, and two enclosures — a power box and a
+control box — wired down to the individual conductor. Nothing in section 8 has been
+assembled; it is a design to order against, and the parts list is section 8's whole
+point. The servo problem above is unaffected by it either way.
 
 ---
 
@@ -244,11 +250,116 @@ pen with ordinary Z moves. Full reasoning in [`FINDINGS.md`](FINDINGS.md) sectio
 
 ---
 
-## 8. Repo layout
+## 8. The electronics boxes — designed, not built
+
+A parametric model lives in `hardware/`, written in **build123d** (Python code-CAD on
+OpenCASCADE; exports STEP, STL and DXF). It was chosen over Blender because this is
+dimensioned engineering, not meshes, and over FreeCAD/Fusion because a script can be
+diffed, checked and re-run. All of the work below is on the branch
+`claude/3d-modeling-hardware-design-fkp2d1`.
+
+```
+python3 hardware/make.py           # build every part -> hardware/out/
+python3 hardware/bom.py            # full bill of materials (--csv for a spreadsheet)
+python3 hardware/viewer.py         # interactive 3D pages
+python3 hardware/psu_layout.py     # power box: rail schedule, floor plan, every wire
+python3 hardware/ctrl_layout.py    # control box: the same
+python3 hardware/din_parts.py      # what to order for the rails, and why
+python3 hardware/din_bom.py        # the same as a supplier quote sheet
+```
+
+### What is modelled
+
+The machine: a 1000 × 600 outer frame of 2040, a 700 mm 2020 cross bar riding OpenBuilds
+plates along the 1000 mm side, a 1000 × 600 × 1.5 mm steel deck bolted under the frame,
+and a 1524 × 600 bench with the machine hard left.
+
+The electronics: **two UN4412 cases**, split so the box you open to change a driver has
+nothing above 24 V in it.
+
+- **Power box.** Panel-mount fused + switched IEC inlet → `MCB1` (6 A, C-curve, 1P+N) →
+  L/N/PE terminals → the LRS-350-24 and the RS-25-24. The LRS's 24 V goes through `F1`
+  (a 5 A fuse terminal) to the `+24` rail. `K1`, a 24 V relay in series with a
+  normally-closed E-stop loop, switches **only** `+24s`. The RS-25 feeds an LM2596 set
+  to 6.0 V for the servo. Out: one GX16-6 carrying `+24a`, `+24s`, `+6`, `0V`.
+- **Control box.** Link in on the right wall beside the rail. Three TB6600s in a row,
+  their single terminal face forward into one duct. The Elecrow board at the back-left
+  with USB-C beside it. **The whole front wall goes to the machine** — three motor
+  connectors, the servo, two endstops, in that order.
+
+Both boxes are routed conductor by conductor: **30 wires in the power box, 49 in the
+control box**, each from the terminal it actually lands on, through a duct, to the
+terminal at the other end.
+
+### DIN rail totals
+
+187 mm of rail for the power box, 125 mm for the control box — **one 1 m length covers
+both**. 35 feed-through terminals (2.5 mm², 5.2 mm pitch), 4 PE terminals, 1 fuse
+terminal, 3 × 10-way jumper combs cut to length, 1 MCB, 1 relay and socket. Full ratings
+in `din_bom.py`.
+
+**Terminal blocks are commoned by an insertable comb, not by wiring one to the next.**
+That is what the ten combs are for, and it is why there are 79 wires instead of 93.
+Earth blocks are the exception: they clamp the rail, so the rail is the common.
+
+### The layout engine
+
+`hardware/panel.py` is shared by both boxes; `psu_layout.py` and `ctrl_layout.py` are
+tables and prose. It builds the duct adjacency graph from where duct rectangles actually
+overlap, routes each conductor through the shortest path, and gives it its own lane so a
+wire can be followed end to end. **It refuses to write a layout** that runs a wire
+through a part, overlaps the rail with a part, lands three conductors on a two-screw
+block, crosses on open floor, or fills a duct past 50%. Every one of those checks exists
+because it caught something.
+
+### The pages
+
+All private unless noted — use the Share menu before sending one to anybody.
+
+| | |
+|---|---|
+| Machine, 3D | https://claude.ai/artifact/2AN2q4qFQ4fbEECBUUztsq — link-shared |
+| Electronics cases, 3D | https://claude.ai/artifact/QBGDB6BF3KFNdK2vdznUtU |
+| Power box wiring | https://claude.ai/artifact/BGLa9GLqQQn4MzRDbeGE45 |
+| Control box wiring | https://claude.ai/artifact/FMTWRsi1MVCqrYTcgt6NCq |
+| DIN parts, explained | https://claude.ai/artifact/Ua6RjD4LC6M6x7vyRNg7eF |
+| DIN BOM for a supplier | https://claude.ai/artifact/BYFjNCtQzwpjw3YpGsvE38 |
+
+### What is not verified, in the order it will bite
+
+1. **The Elecrow board's 5 V regulator.** If it is a linear 7805, 24 V in at ~150 mA
+   burns 2.9 W in a TO-220 with no heatsink. Read the silkscreen beside the VIN terminal
+   before first power-up. `FINDINGS.md` section 10 has the fix if it is linear.
+2. **The Elecrow board's header positions are guessed.** Their site is unreachable from
+   the build container. Measure yours and edit `BRD` in `ctrl_layout.py`; the drawing,
+   the lengths and the cut list all follow from it.
+3. **The TB6600 block order.** All twelve terminals are on one long face — that part is
+   confirmed and the layout depends on it. The order *within* each block is drawn as the
+   common one, but clones reorder it. Check the silkscreen.
+4. **The two boxes do not fit on the table as the model places them.** `case.origin_x()`
+   puts the power box at x 1005–1460 while the free zone ends at 1024, so it hangs off
+   the end. Side by side needs 910 mm of a 524 mm gap; front-to-back needs 680 mm of a
+   600 mm depth. **They have to stack**, and nothing in the model says so yet.
+5. **Internal placement is real for the two boxes, provisional for nothing else.** Both
+   wiring layouts are laid out deliberately; `case.py`'s `pack()` still shelf-packs and
+   says so in its own docstring.
+6. Smaller ones: `CASE_EXT` is estimated from the UN4020's deltas; `GANTRY_RISE` is an
+   eyeballed 15 mm; `case.py` still models a 60 mm fan where the one in hand is 40 mm;
+   the frame and cross bar are modelled as T-slot and the real extrusion may be V-slot;
+   the deck needs to be 430 ferritic if magnets are ever wanted.
+7. `hardware/wiring.py` is **parked** — it targets the single-case layout that no longer
+   exists. Its docstring says what was worth keeping from it.
+
+---
+
+## 9. Repo layout
 
 ```
 firmware/     patched GRBL 1.1h source + flashable zip
 docs/         SETUP.md (8-phase build), FIRMWARE_SERVO.md, FINDINGS.md, this file
+hardware/     build123d model of the machine and the two electronics boxes.
+              panel.py is the layout engine; psu_layout.py and ctrl_layout.py
+              are its two sets of tables. See section 8.
 settings/     plotter.grbl.txt — live values, restore after any re-flash
 tools/        plot2.py (sender), pentest.py (servo swing sweep), servo_sweep.py
 gcode/tests/  T0-T13, in bring-up order
@@ -264,7 +375,7 @@ missing ground wire.
 
 ---
 
-## 9. Gotchas, kept
+## 10. Gotchas, kept
 
 - `$22=1` makes GRBL **boot into Alarm** and refuse everything, jogging included, until
   `$H` or `$X`.
