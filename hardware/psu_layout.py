@@ -188,8 +188,11 @@ WIRES = [
 
 COLOUR = {"L": "brown", "N": "blue", "E": "green/yellow", "v24": "red",
           "v0": "black", "v6": "orange", "ctrl": "violet"}
-FERRULE = {0.5: "0.5 orange", 0.75: "0.75 white", 1.0: "1.0 yellow",
-           1.5: "1.5 black", 2.5: "2.5 blue"}
+# Ferrule colours to DIN 46228-4. Order by cross-section, never by colour:
+# a second code is in wide use (0.5 orange, 0.75 white, 1.0 yellow, 1.5 red,
+# 2.5 blue) and cheap assorted kits often ship it.
+FERRULE = {0.25: "0.25 lilac", 0.5: "0.5 white", 0.75: "0.75 blue",
+           1.0: "1.0 red", 1.5: "1.5 black", 2.5: "2.5 grey"}
 SLACK = 60.0                    # 30 mm of dressing allowance at each end
 
 LINK = [("+24 always", 0.75, "to the board — stays up through an E-stop"),
