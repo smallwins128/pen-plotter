@@ -4,8 +4,9 @@ rows (24 V, 12 V, 6 V), each label -> toggle -> 2-wire voltage display ->
 
     python3 hardware/parts/link_panel.py
 
-Writes hardware/out/link_panel_psu.{stl,step} and link_panel_mockup.png
-(true-scale front view).
+Writes hardware/out/link_panel_{psu,ctrl}.{stl,step} and link_panel_mockup.png
+(true-scale front views of both). "ctrl" is the receiving panel on the
+control box: the same five jacks in the same order, with labels, nothing else.
 
     ┌───────────────────────────────────────┐
     │ 24V  [sw]  [ 24.1 ]  (O)    G1  (O)   │
@@ -106,28 +107,33 @@ def _toggle_footprint():
     return max(w, TOGGLE_NUT), max(h, TOGGLE_NUT)
 
 
-def _layout():
+def _layout(kind="psu"):
     """Cutout size and component list in cutout coordinates (0,0 = bottom-left
     of the cutout). Items are (kind, x, y, name).
 
     Portrait: each voltage row runs jack -> label -> display -> toggle, left to
-    right; the two ground jacks sit below in the jack column, after a gap."""
+    right; the two ground jacks sit below in the jack column, after a gap.
+    The "ctrl" panel (receiving end) is the jack and label columns only, on
+    the same row pitch, so the two panels read the same."""
     tw, th = _toggle_footprint()
     row_h = max(DISP_PCB_H, JACK_NUT, th, LABEL[1]) + ROW_CLEAR
 
     x = MARGIN
     x_jack = x + JACK_NUT / 2;     x += JACK_NUT + GAP
-    x_label = x + LABEL[0] / 2;    x += LABEL[0] + GAP
-    x_disp = x + DISP_PCB_W / 2;   x += DISP_PCB_W + GAP
-    x_toggle = x + tw / 2;         x += tw + MARGIN
-    w = x
+    x_label = x + LABEL[0] / 2;    x += LABEL[0]
+    if kind == "psu":
+        x += GAP
+        x_disp = x + DISP_PCB_W / 2;   x += DISP_PCB_W + GAP
+        x_toggle = x + tw / 2;         x += tw
+    w = x + MARGIN
     h = 2 * MARGIN + (len(RAILS) + len(GROUNDS)) * row_h + GROUP_GAP
 
     items = []
     y = h - MARGIN - row_h / 2
     for rail in RAILS:
-        items += [("jack", x_jack, y, rail), ("label", x_label, y, rail),
-                  ("display", x_disp, y, rail), ("toggle", x_toggle, y, rail)]
+        items += [("jack", x_jack, y, rail), ("label", x_label, y, rail)]
+        if kind == "psu":
+            items += [("display", x_disp, y, rail), ("toggle", x_toggle, y, rail)]
         y -= row_h
     y -= GROUP_GAP
     for name in GROUNDS:
@@ -142,10 +148,10 @@ def _screws(w, h):
     return [(sx * ex, sy * ey) for sx in (-1, 1) for sy in (-1, 1)]
 
 
-def build_panel():
+def build_panel(kind="psu"):
     """Front face at Z = PLATE_T, back of the boss at Z = -BOSS_H, centred in
     X/Y. Looking at the front, +X right, +Y up."""
-    w, h, items = _layout()
+    w, h, items = _layout(kind)
     cx, cy = w / 2, h / 2
 
     with BuildPart() as p:
@@ -196,25 +202,43 @@ def build():
     return build_panel()
 
 
-def draw_mockup(path):
-    """True-scale front view with parts fitted. Dashed outlines show what sits
-    behind the panel, so the clear space between parts is visible."""
+def draw_mockup(path, kinds=("psu", "ctrl")):
+    """True-scale front views of both panels, side by side, with parts fitted.
+    Dashed outlines show what sits behind the panel, so the clear space between
+    parts is visible."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.patches import Circle, FancyBboxPatch, Rectangle
 
-    w, h, items = _layout()
-    W, H = w + 2 * FLANGE, h + 2 * FLANGE
-    fig, ax = plt.subplots(figsize=(W / 14, H / 14 + 1), dpi=130)
-    ax.set_xlim(-5, W + 5)
-    ax.set_ylim(-14, H + 5)
+    sizes = [_layout(k)[:2] for k in kinds]
+    SEP = 25.0
+    TW = sum(w + 2 * FLANGE for w, _ in sizes) + SEP * (len(kinds) - 1)
+    TH = max(h for _, h in sizes) + 2 * FLANGE
+    fig, ax = plt.subplots(figsize=(TW / 14, TH / 14 + 1.5), dpi=130)
+    ax.set_xlim(-5, TW + 5)
+    ax.set_ylim(-22, TH + 5)
     ax.set_aspect("equal")
     ax.axis("off")
-    x0 = y0 = FLANGE
     behind = dict(fill=False, ec="#8a8f94", ls="--", lw=0.8)
+    titles = {"psu": "PSU box (sending)", "ctrl": "Control box (receiving)"}
 
-    ax.add_patch(FancyBboxPatch((0, 0), W, H, boxstyle=f"round,pad=0,rounding_size={CORNER_R}",
+    ox = 0.0
+    for kind in kinds:
+        ox = _draw_panel(ax, kind, ox, behind, titles[kind]) + SEP
+    fig.savefig(path, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
+def _draw_panel(ax, kind, ox, behind, title):
+    """One panel's front view with its left edge at x = ox. Returns its right edge."""
+    from matplotlib.patches import Circle, FancyBboxPatch, Rectangle
+
+    w, h, items = _layout(kind)
+    W, H = w + 2 * FLANGE, h + 2 * FLANGE
+    x0, y0 = ox + FLANGE, FLANGE
+
+    ax.add_patch(FancyBboxPatch((ox, 0), W, H, boxstyle=f"round,pad=0,rounding_size={CORNER_R}",
                                 fc="#2b2d2f", ec="#111", lw=1.5))
     ax.add_patch(Rectangle((x0, y0), w, h, fill=False, ec="#b0412e", ls=":", lw=0.8))
     for sx, sy in _screws(w, h):
@@ -249,11 +273,9 @@ def draw_mockup(path):
         elif kind == "jack":
             ax.add_patch(Circle((x, y), JACK_COLLAR / 2, fc=RAIL_COLOUR[name], ec="#000"))
             ax.add_patch(Circle((x, y), 2.0, fc="#222", ec="#666"))
-    ax.text(W / 2, -6, f'0.36" displays: plate {W:.0f} x {H:.0f} mm, box cutout '
-            f'{w:.0f} x {h:.0f} mm.  Dashed = behind the panel.',
-            ha="center", va="top", fontsize=9)
-    fig.savefig(path, bbox_inches="tight", facecolor="white")
-    plt.close(fig)
+    ax.text(ox + W / 2, -5, f"{title}\nplate {W:.0f} x {H:.0f} mm\n"
+            f"box cutout {w:.0f} x {h:.0f} mm", ha="center", va="top", fontsize=8.5)
+    return ox + W
 
 
 def _digits(ax, text, x, y):
@@ -279,12 +301,14 @@ def main(argv):
 
     out = pathlib.Path(__file__).resolve().parent.parent / "out"
     out.mkdir(exist_ok=True)
-    part = build_panel()
-    export_step(part, str(out / "link_panel_psu.step"))
-    export_stl(part.rotate(Axis.X, 180), str(out / "link_panel_psu.stl"))  # face-down
-    w, h, _ = _layout()
-    print(f"link_panel_psu  plate {w + 2 * FLANGE:.0f} x {h + 2 * FLANGE:.0f} mm   "
-          f"cut the box {w:.0f} x {h:.0f} mm   {part.volume * DENSITY:.0f} g")
+    for kind in ("psu", "ctrl"):
+        part = build_panel(kind)
+        name = f"link_panel_{kind}"
+        export_step(part, str(out / f"{name}.step"))
+        export_stl(part.rotate(Axis.X, 180), str(out / f"{name}.stl"))  # face-down
+        w, h, _ = _layout(kind)
+        print(f"{name:15s} plate {w + 2 * FLANGE:.0f} x {h + 2 * FLANGE:.0f} mm   "
+              f"cut the box {w:.0f} x {h:.0f} mm   {part.volume * DENSITY:.0f} g")
     draw_mockup(out / "link_panel_mockup.png")
     return 0
 
