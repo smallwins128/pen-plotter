@@ -22,7 +22,8 @@ The display is the bare 0.36" 3-digit 2-wire voltmeter (2.5-30 V): a
 22.70 x 10.42 x 7.5 mm display block on a PCB 30.40 mm across its mounting
 ears (listing dimensions). The block pokes through a window; the ears sit
 behind the panel on two M2 screws. Ear hole spacing is ESTIMATED from the
-listing photo -- measure it. Jack and toggle sizes are still typical.
+listing photo -- measure it. Jack sizes are from its datasheet; the
+toggle size is still typical.
 
 Spacing is set from what each part occupies BEHIND the panel (the display's
 PCB ears, the jack and toggle nuts), plus GAP of clear space, so there is
@@ -69,8 +70,11 @@ DISP_EAR_PITCH = 26.6           # ear hole centres (ESTIMATE -- measure)
 DISP_SCREW_D = 2.2              # M2 clearance
 DIGIT_H = 9.1                   # 0.36"
 
-JACK_HOLE = 8.0       # 4 mm banana panel jack
-JACK_COLLAR = 14.0    # its front collar / nut, for spacing
+# 4 mm banana binding post, Sharvi Technologies datasheet: M12 x 0.75 body,
+# drill 12 +/- 0.1, front cap 14.5 dia x 2 proud, 23.5 long overall.
+JACK_HOLE = 12.2      # 12.0 drill + allowance for printed holes running small
+JACK_COLLAR = 14.5    # front cap
+JACK_NUT = 18.0       # M12 fine nut behind the panel, across corners, for spacing
 TOGGLE_HOLE = 6.2     # mini bat toggle, 6 mm bushing
 TOGGLE_W = 13.0       # its body, for spacing
 LABEL = (14.0, 10.0)  # label pocket, fits 9 mm Dymo tape
@@ -89,10 +93,10 @@ def _layout():
 
     Portrait: each voltage row runs jack -> label -> display -> toggle, left to
     right; the two ground jacks sit below in the jack column, after a gap."""
-    row_h = max(DISP_PCB_H, JACK_COLLAR, TOGGLE_W, LABEL[1]) + ROW_CLEAR
+    row_h = max(DISP_PCB_H, JACK_NUT, TOGGLE_W, LABEL[1]) + ROW_CLEAR
 
     x = MARGIN
-    x_jack = x + JACK_COLLAR / 2;  x += JACK_COLLAR + GAP
+    x_jack = x + JACK_NUT / 2;     x += JACK_NUT + GAP
     x_label = x + LABEL[0] / 2;    x += LABEL[0] + GAP
     x_disp = x + DISP_PCB_W / 2;   x += DISP_PCB_W + GAP
     x_toggle = x + TOGGLE_W / 2;   x += TOGGLE_W + MARGIN
