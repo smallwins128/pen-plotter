@@ -40,6 +40,7 @@ def _parts():
     import deck
     import frame
     import table
+    import wire_jig
 
     return {
         "table": table,
@@ -48,6 +49,7 @@ def _parts():
         "frame": frame,
         "cross_bar": cross_bar,
         "assembly": assembly,
+        "wire_jig": wire_jig,
     }
 
 
