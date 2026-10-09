@@ -43,7 +43,9 @@ import pathlib
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from build123d import (Align, Axis, Box, BuildPart, BuildSketch, Cylinder, Locations,
+import math
+
+from build123d import (Align, Axis, Box, BuildPart, BuildSketch, Cone, Cylinder, Locations,
                        Mode, RectangleRounded, extrude)
 
 DENSITY = 1.24e-3     # PLA, g/mm^3
@@ -55,6 +57,9 @@ FLANGE = 10.0         # rim past the box cutout, on every side
 BOSS_H = 2.0          # back boss depth; roughly your box wall thickness
 BOSS_CLEAR = 0.3      # boss is this much smaller than the cutout, per side
 SCREW_D = 3.4         # M3 clearance, in the flange
+CSK_D = 6.4           # countersink at the face: M3 countersunk head is 6.0
+                      # (DIN 7991 / ISO 10642, 90 deg); 6.4 lets it sit just flush
+CSK_ANGLE = 90.0
 SCREW_INSET = 6.0     # screw centre in from both plate edges
 CORNER_R = SCREW_INSET  # corner arc concentric with the screw: even wall all round
 MARGIN = 6.0          # cutout edge to nearest component
@@ -152,6 +157,13 @@ def build_panel():
 
         with Locations(*[(x, y, 0) for x, y in _screws(w, h)]):
             Cylinder(SCREW_D / 2, 40, mode=Mode.SUBTRACT)
+        # 90 deg cone from CSK_D at the front face down to the clearance hole,
+        # carried 1 mm above the face so the cut is clean
+        csk_depth = (CSK_D - SCREW_D) / 2 / math.tan(math.radians(CSK_ANGLE / 2))
+        over = 1.0
+        with Locations(*[(x, y, PLATE_T - csk_depth) for x, y in _screws(w, h)]):
+            Cone(SCREW_D / 2, CSK_D / 2 + over, csk_depth + over,
+                 align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
     return p.part
 
 
