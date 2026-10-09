@@ -42,7 +42,8 @@ import pathlib
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from build123d import Align, Axis, Box, BuildPart, Cylinder, Locations, Mode
+from build123d import (Align, Axis, Box, BuildPart, BuildSketch, Cylinder, Locations,
+                       Mode, RectangleRounded, extrude)
 
 DENSITY = 1.24e-3     # PLA, g/mm^3
 LINEAR_STOCK = False
@@ -53,6 +54,7 @@ FLANGE = 8.0          # rim past the box cutout, on every side
 BOSS_H = 2.0          # back boss depth; roughly your box wall thickness
 BOSS_CLEAR = 0.3      # boss is this much smaller than the cutout, per side
 SCREW_D = 3.4         # M3 clearance, in the flange
+CORNER_R = 5.0        # plate corner radius
 MARGIN = 6.0          # cutout edge to nearest component
 GAP = 6.0             # clear space between neighbouring components in a row
 ROW_CLEAR = 8.0       # clear space between rows
@@ -70,39 +72,42 @@ JACK_HOLE = 8.0       # 4 mm banana panel jack
 JACK_COLLAR = 14.0    # its front collar / nut, for spacing
 TOGGLE_HOLE = 6.2     # mini bat toggle, 6 mm bushing
 TOGGLE_W = 13.0       # its body, for spacing
-LABEL = (16.0, 10.0)  # label pocket, fits 9 mm Dymo tape
-GLABEL = (12.0, 10.0) # shorter pocket for "G1" / "G2"
+LABEL = (14.0, 10.0)  # label pocket, fits 9 mm Dymo tape
 LABEL_D = 0.6
 
 RAILS = ["24V", "12V", "6V"]
-GROUNDS = [("G1", 0), ("G2", 2)]   # (name, row it sits on)
+GROUNDS = ["G1", "G2"]
+GROUP_GAP = 10.0      # extra space between the voltage rows and the grounds
 RAIL_COLOUR = {"24V": "#c0392b", "12V": "#e67e22", "6V": "#f1c40f",
                "G1": "#1a1a1a", "G2": "#1a1a1a"}
 
 
 def _layout():
     """Cutout size and component list in cutout coordinates (0,0 = bottom-left
-    of the cutout). Items are (kind, x, y, name)."""
+    of the cutout). Items are (kind, x, y, name).
+
+    Portrait: each voltage row runs jack -> label -> display -> toggle, left to
+    right; the two ground jacks sit below in the jack column, after a gap."""
     row_h = max(DISP_PCB_H, JACK_COLLAR, TOGGLE_W, LABEL[1]) + ROW_CLEAR
 
     x = MARGIN
+    x_jack = x + JACK_COLLAR / 2;  x += JACK_COLLAR + GAP
     x_label = x + LABEL[0] / 2;    x += LABEL[0] + GAP
-    x_toggle = x + TOGGLE_W / 2;   x += TOGGLE_W + GAP
     x_disp = x + DISP_PCB_W / 2;   x += DISP_PCB_W + GAP
-    x_jack = x + JACK_COLLAR / 2;  x += JACK_COLLAR + 2 * GAP
-    x_glabel = x + GLABEL[0] / 2;  x += GLABEL[0] + GAP
-    x_gjack = x + JACK_COLLAR / 2; x += JACK_COLLAR + MARGIN
+    x_toggle = x + TOGGLE_W / 2;   x += TOGGLE_W + MARGIN
     w = x
-    h = 2 * MARGIN + len(RAILS) * row_h
+    h = 2 * MARGIN + (len(RAILS) + len(GROUNDS)) * row_h + GROUP_GAP
 
     items = []
-    for i, rail in enumerate(RAILS):
-        y = h - MARGIN - row_h * (i + 0.5)
-        items += [("label", x_label, y, rail), ("toggle", x_toggle, y, rail),
-                  ("display", x_disp, y, rail), ("jack", x_jack, y, rail)]
-    for name, row in GROUNDS:
-        y = h - MARGIN - row_h * (row + 0.5)
-        items += [("glabel", x_glabel, y, name), ("jack", x_gjack, y, name)]
+    y = h - MARGIN - row_h / 2
+    for rail in RAILS:
+        items += [("jack", x_jack, y, rail), ("label", x_label, y, rail),
+                  ("display", x_disp, y, rail), ("toggle", x_toggle, y, rail)]
+        y -= row_h
+    y -= GROUP_GAP
+    for name in GROUNDS:
+        items += [("jack", x_jack, y, name), ("label", x_label, y, name)]
+        y -= row_h
     return w, h, items
 
 
@@ -119,8 +124,9 @@ def build_panel():
     cx, cy = w / 2, h / 2
 
     with BuildPart() as p:
-        Box(w + 2 * FLANGE, h + 2 * FLANGE, PLATE_T,
-            align=(Align.CENTER, Align.CENTER, Align.MIN))
+        with BuildSketch():
+            RectangleRounded(w + 2 * FLANGE, h + 2 * FLANGE, CORNER_R)
+        extrude(amount=PLATE_T)
         Box(w - 2 * BOSS_CLEAR, h - 2 * BOSS_CLEAR, BOSS_H,
             align=(Align.CENTER, Align.CENTER, Align.MAX))
 
@@ -135,10 +141,9 @@ def build_panel():
                     Cylinder(JACK_HOLE / 2, 40, mode=Mode.SUBTRACT)
                 elif kind == "toggle":
                     Cylinder(TOGGLE_HOLE / 2, 40, mode=Mode.SUBTRACT)
-            if kind in ("label", "glabel"):
+            if kind == "label":
                 with Locations((x - cx, y - cy, PLATE_T)):
-                    Box(*(LABEL if kind == "label" else GLABEL), 2 * LABEL_D,
-                        mode=Mode.SUBTRACT)
+                    Box(*LABEL, 2 * LABEL_D, mode=Mode.SUBTRACT)
 
         with Locations(*[(x, y, 0) for x, y in _screws(w, h)]):
             Cylinder(SCREW_D / 2, 40, mode=Mode.SUBTRACT)
@@ -167,7 +172,7 @@ def draw_mockup(path):
     x0 = y0 = FLANGE
     behind = dict(fill=False, ec="#8a8f94", ls="--", lw=0.8)
 
-    ax.add_patch(FancyBboxPatch((0, 0), W, H, boxstyle="round,pad=0,rounding_size=2",
+    ax.add_patch(FancyBboxPatch((0, 0), W, H, boxstyle=f"round,pad=0,rounding_size={CORNER_R}",
                                 fc="#2b2d2f", ec="#111", lw=1.5))
     ax.add_patch(Rectangle((x0, y0), w, h, fill=False, ec="#b0412e", ls=":", lw=0.8))
     for sx, sy in _screws(w, h):
@@ -175,8 +180,8 @@ def draw_mockup(path):
                             fc="#b8b8b8", ec="#555"))
     for kind, x, y, name in items:
         x, y = x0 + x, y0 + y
-        if kind in ("label", "glabel"):
-            lw_, lh = LABEL if kind == "label" else GLABEL
+        if kind == "label":
+            lw_, lh = LABEL
             ax.add_patch(Rectangle((x - lw_ / 2, y - lh / 2), lw_, lh,
                                    fc="#e8e2cf", ec="none"))
             ax.text(x, y, name, ha="center", va="center", fontsize=7,
