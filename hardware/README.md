@@ -52,6 +52,7 @@ Each part exports:
 | **`parts/cross_bar.py`** | The moving 2020 gantry beam, plus its span/travel/deflection maths. |
 | **`parts/assembly.py`** | Frame + cross bar in one coordinate system. |
 | **`parts/wire_jig.py`** | Stick-on wire-routing jig for the control panel: N round channels on a flanged base, straight and 90° bend. `python3 hardware/parts/wire_jig.py 4 8` writes each size. |
+| **`parts/link_panel.py`** | Bench-supply style panels for the 5-wire power link (24 V, 12 V, 6 V, G1, G2): binding posts, switches, meter selector, label pockets, flange + locating boss. |
 | **`make.py`** | Builds and exports everything. Add new parts to `_parts()`. |
 | **`preview.py`** | PNG renders. Sanity check, not a beauty shot. |
 | **`viewer.py`** + **`web/`** | The two viewers. `_common.html` is the shared core; `machine.html` and `case.html` are the pages. `export_web.py` packs the geometry. |
