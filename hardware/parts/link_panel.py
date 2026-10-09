@@ -113,18 +113,20 @@ def _layout(kind="psu"):
 
     Portrait: each voltage row runs jack -> label -> display -> toggle, left to
     right; the two ground jacks sit below in the jack column, after a gap.
-    The "ctrl" panel (receiving end) is the jack and label columns only, on
-    the same row pitch, so the two panels read the same."""
+    The "ctrl" panel (receiving end) is labels then jacks, left to right, on
+    the same row pitch, so each rail sits at the same height on both panels."""
     tw, th = _toggle_footprint()
     row_h = max(DISP_PCB_H, JACK_NUT, th, LABEL[1]) + ROW_CLEAR
 
     x = MARGIN
-    x_jack = x + JACK_NUT / 2;     x += JACK_NUT + GAP
-    x_label = x + LABEL[0] / 2;    x += LABEL[0]
     if kind == "psu":
-        x += GAP
+        x_jack = x + JACK_NUT / 2;     x += JACK_NUT + GAP
+        x_label = x + LABEL[0] / 2;    x += LABEL[0] + GAP
         x_disp = x + DISP_PCB_W / 2;   x += DISP_PCB_W + GAP
         x_toggle = x + tw / 2;         x += tw
+    else:   # receiving panel: labels on the left, jacks on the right
+        x_label = x + LABEL[0] / 2;    x += LABEL[0] + GAP
+        x_jack = x + JACK_NUT / 2;     x += JACK_NUT
     w = x + MARGIN
     h = 2 * MARGIN + (len(RAILS) + len(GROUNDS)) * row_h + GROUP_GAP
 
