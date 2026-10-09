@@ -66,7 +66,7 @@ FLANGE_T = 1.6        # flange thickness
 FLANGE_FILLET = 1.5   # concave fillet where flange meets body
 
 # Modules
-STRAIGHT_LEN = 20.0   # straight module length along the wires
+STRAIGHT_LEN = 10.0   # straight module length along the wires
 BEND_R = 8.0          # radius to the inside face of the body (not the flange)
 BEND_STUB = 5.0       # straight lead-in at each end of the bend
 
