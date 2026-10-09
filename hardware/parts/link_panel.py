@@ -80,8 +80,15 @@ DIGIT_H = 9.1                   # 0.36"
 JACK_HOLE = 12.2      # 12.0 drill + allowance for printed holes running small
 JACK_COLLAR = 14.5    # front cap
 JACK_NUT = 18.0       # M12 fine nut behind the panel, across corners, for spacing
-TOGGLE_HOLE = 6.2     # mini bat toggle, 6 mm bushing
-TOGGLE_W = 13.0       # its body, for spacing
+# KN3(A)-101 SPST ON-OFF toggle, Sharvi Technologies datasheet: M12 x 0.75
+# bushing, panel hole 12.2 with an anti-rotation key slot 1.9 wide reaching
+# 0.9 past the hole edge, body 28 x 16 x 17 deep (+7 for screw terminals),
+# lever 17.5 tall, throwing 30 deg across the 28 mm side.
+TOGGLE_HOLE = 12.2
+TOGGLE_KEY = (1.9, 0.9)   # key slot width, depth past the hole edge
+TOGGLE_BODY = (28.0, 16.0)  # (along the lever throw, across it)
+TOGGLE_NUT = 18.0     # M12 fine nut across corners
+TOGGLE_THROW = "horizontal"   # "vertical": flick up/down; "horizontal": left/right
 LABEL = (14.0, 10.0)  # label pocket, fits 9 mm Dymo tape
 LABEL_D = 0.6
 
@@ -92,19 +99,27 @@ RAIL_COLOUR = {"24V": "#c0392b", "12V": "#e67e22", "6V": "#f1c40f",
                "G1": "#1a1a1a", "G2": "#1a1a1a"}
 
 
+def _toggle_footprint():
+    """(width, height) the toggle takes up behind the panel, as mounted."""
+    along, across = TOGGLE_BODY
+    w, h = (across, along) if TOGGLE_THROW == "vertical" else (along, across)
+    return max(w, TOGGLE_NUT), max(h, TOGGLE_NUT)
+
+
 def _layout():
     """Cutout size and component list in cutout coordinates (0,0 = bottom-left
     of the cutout). Items are (kind, x, y, name).
 
     Portrait: each voltage row runs jack -> label -> display -> toggle, left to
     right; the two ground jacks sit below in the jack column, after a gap."""
-    row_h = max(DISP_PCB_H, JACK_NUT, TOGGLE_W, LABEL[1]) + ROW_CLEAR
+    tw, th = _toggle_footprint()
+    row_h = max(DISP_PCB_H, JACK_NUT, th, LABEL[1]) + ROW_CLEAR
 
     x = MARGIN
     x_jack = x + JACK_NUT / 2;     x += JACK_NUT + GAP
     x_label = x + LABEL[0] / 2;    x += LABEL[0] + GAP
     x_disp = x + DISP_PCB_W / 2;   x += DISP_PCB_W + GAP
-    x_toggle = x + TOGGLE_W / 2;   x += TOGGLE_W + MARGIN
+    x_toggle = x + tw / 2;         x += tw + MARGIN
     w = x
     h = 2 * MARGIN + (len(RAILS) + len(GROUNDS)) * row_h + GROUP_GAP
 
@@ -151,6 +166,16 @@ def build_panel():
                     Cylinder(JACK_HOLE / 2, 40, mode=Mode.SUBTRACT)
                 elif kind == "toggle":
                     Cylinder(TOGGLE_HOLE / 2, 40, mode=Mode.SUBTRACT)
+                    # key slot on the throw axis: above the hole for an
+                    # up/down switch, to its left for a left/right one
+                    kw, kd = TOGGLE_KEY
+                    r = TOGGLE_HOLE / 2
+                    if TOGGLE_THROW == "vertical":
+                        with Locations((0, r + kd / 2 - 0.5)):
+                            Box(kw, kd + 1.0, 40, mode=Mode.SUBTRACT)
+                    else:
+                        with Locations((-(r + kd / 2 - 0.5), 0)):
+                            Box(kd + 1.0, kw, 40, mode=Mode.SUBTRACT)
             if kind == "label":
                 with Locations((x - cx, y - cy, PLATE_T)):
                     Box(*LABEL, 2 * LABEL_D, mode=Mode.SUBTRACT)
@@ -204,11 +229,14 @@ def draw_mockup(path):
             ax.text(x, y, name, ha="center", va="center", fontsize=7,
                     family="monospace", weight="bold", color="#222")
         elif kind == "toggle":
-            ax.add_patch(Rectangle((x - TOGGLE_W / 2, y - TOGGLE_W / 2),
-                                   TOGGLE_W, TOGGLE_W, **behind))
-            ax.add_patch(Circle((x, y), 4.5, fc="#c9c9c9", ec="#777"))
-            ax.plot([x, x], [y, y + 8], color="#e0e0e0", lw=3,
-                    solid_capstyle="round")
+            along, across = TOGGLE_BODY
+            bw_, bh_ = (across, along) if TOGGLE_THROW == "vertical" else (along, across)
+            ax.add_patch(Rectangle((x - bw_ / 2, y - bh_ / 2), bw_, bh_, **behind))
+            ax.add_patch(Circle((x, y), 8.0, fc="#c9c9c9", ec="#777"))   # front nut
+            ax.add_patch(Circle((x, y), 6.0, fc="#b0b0b0", ec="#777"))   # bushing
+            dx, dy = (0, 9) if TOGGLE_THROW == "vertical" else (9, 0)
+            ax.plot([x, x + dx], [y, y + dy], color="#111", lw=5,
+                    solid_capstyle="round")                            # black lever
         elif kind == "display":
             ax.add_patch(Rectangle((x - DISP_PCB_W / 2, y - DISP_PCB_H / 2),
                                    DISP_PCB_W, DISP_PCB_H, **behind))
