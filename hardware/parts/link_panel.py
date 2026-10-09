@@ -50,11 +50,12 @@ LINEAR_STOCK = False
 
 # Plate
 PLATE_T = 3.0         # front plate thickness
-FLANGE = 8.0          # rim past the box cutout, on every side
+FLANGE = 10.0         # rim past the box cutout, on every side
 BOSS_H = 2.0          # back boss depth; roughly your box wall thickness
 BOSS_CLEAR = 0.3      # boss is this much smaller than the cutout, per side
 SCREW_D = 3.4         # M3 clearance, in the flange
-CORNER_R = 5.0        # plate corner radius
+SCREW_INSET = 6.0     # screw centre in from both plate edges
+CORNER_R = SCREW_INSET  # corner arc concentric with the screw: even wall all round
 MARGIN = 6.0          # cutout edge to nearest component
 GAP = 6.0             # clear space between neighbouring components in a row
 ROW_CLEAR = 8.0       # clear space between rows
@@ -113,7 +114,7 @@ def _layout():
 
 def _screws(w, h):
     """Screw centres in the flange, plate-centred coordinates."""
-    ex, ey = w / 2 + FLANGE / 2, h / 2 + FLANGE / 2
+    ex, ey = w / 2 + FLANGE - SCREW_INSET, h / 2 + FLANGE - SCREW_INSET
     return [(sx * ex, sy * ey) for sx in (-1, 1) for sy in (-1, 1)]
 
 
