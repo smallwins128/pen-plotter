@@ -67,3 +67,11 @@ Things that change with a metal box:
 - **Panel step depth:** `link_panel.py` panels have a 2 mm locating step (`BOSS_H`). Set it to the sheet thickness (1 mm) when panels are reused.
 - **Removable top + back:** keep everything that needs servicing reachable from the top. Run only flexible, strain-relieved leads to anything mounted on the removable piece (fans, if they go there), ideally through a pass-through connector so it lifts off cleanly.
 - **Mounting plate:** mount the PSUs, drivers and board on an internal plate that lifts out, rather than drilling the shell for every part.
+
+## Observations from the decision to switch
+
+- **1 mm stainless is very doable.** Have the panel holes laser-cut by the fabricator from a DXF (the GX16, jack, toggle and display cutouts are already defined in `link_panel.py`), instead of cutting by hand.
+- **One box removes the hinge problem entirely.** No wires cross a moving joint, so the two-bundle hinge crossing, the lid pass-throughs and the "keep clear" corner from the box layout all go away.
+- **The box-to-box link goes away too:** the five banana jacks, the jumper cable and the receiving panel. 24 V, 12 V and 6 V now go straight from the PSUs and buck to the distribution inside the one box.
+- **The toggle + display rows are still worth keeping** as a front "rails" panel: per-rail switch, live voltage readout, and a binding post per rail for bench use. Its jacks become test points rather than the link.
+- **Earthing:** earth stud on the shell from the IEC earth pin. DC 0 V stays off earth; stepper shields go to the 0 V star via GX16 pin 5, not the shell.
