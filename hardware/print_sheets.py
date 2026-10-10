@@ -150,54 +150,122 @@ LABELS = [
     ("Spare, write your own", [""] * 8),
 ]
 
-CELL = (48.0, 11.0)   # one strip
-COLS = 4
+# Label colours, matched on whole words in the name, first match wins. Power
+# rails match the jack colours; each motor axis has its own colour, used on its
+# phase wires and its driver wiring alike.
+LABEL_COLOURS = [
+    ("G1", "#1a1a1a"), ("G2", "#1a1a1a"), ("GND", "#1a1a1a"),
+    ("24V", "#c0392b"), ("12V", "#e67e22"), ("+12V", "#e67e22"), ("6V", "#f1c40f"), ("+6V", "#f1c40f"),
+    ("X1", "#1f5fa8"), ("X2", "#2e8b57"), ("Y", "#7d3c98"),
+    ("XLIM", "#aed6f1"), ("YLIM", "#d7bde2"), ("PEN", "#f5b7b1"),
+    ("FAN", "#d5d8dc"),
+]
+BLANK = "#ffffff"
 
 
-def _label_cell(ax, x, y, name):
-    w, h = CELL
-    ax.add_patch(Rectangle((x, y), w, h, fill=False, ec="#999", lw=0.4, ls=(0, (2, 2))))
-    ax.plot([x + w / 2, x + w / 2], [y + 1.5, y + h - 1.5], color="#bbb", lw=0.4, ls=":")
-    colour = next((c for k, c in lp.RAIL_COLOUR.items() if k in name), None)
-    if colour:
-        ax.add_patch(Rectangle((x, y), 2.2, h, fc=colour, ec="none"))
-    for hx in (x + w / 4 + 1, x + 3 * w / 4):
-        ax.text(hx, y + h / 2, name, ha="center", va="center", fontsize=7.5, weight="bold",
-                family="DejaVu Sans Mono")
+def _colour(name):
+    words = name.replace(">", " ").split()
+    # the axis decides a motor/driver wire's colour, the rail decides the rest
+    for key, c in LABEL_COLOURS[7:]:
+        if words and words[0] == key and key in ("X1", "X2", "Y"):
+            return c
+    for key, c in LABEL_COLOURS:
+        if key in words:
+            return c
+    return BLANK
+
+
+def _ink(hex_bg):
+    """Black or white, whichever contrasts more with the background (WCAG)."""
+    def lin(v):
+        v /= 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = (int(hex_bg[i:i + 2], 16) for i in (1, 3, 5))
+    L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+    return "#000000" if (L + 0.05) / 0.05 >= 1.05 / (L + 0.05) else "#ffffff"
+
+
+STRIP = (62.0, 11.0)   # one wire label: name twice, fold line between
+
+
+def _strip(ax, x, y, name, w=STRIP[0], h=STRIP[1], fold=True, size=8.0):
+    bg = _colour(name)
+    ink = _ink(bg)
+    ax.add_patch(Rectangle((x, y), w, h, fc=bg, ec="#666", lw=0.4, ls=(0, (2, 2))))
+    if fold:
+        ax.plot([x + w / 2, x + w / 2], [y + 1.2, y + h - 1.2], color=ink, lw=0.4, ls=":", alpha=.6)
+        centres = (x + w / 4, x + 3 * w / 4)
+    else:
+        centres = (x + w / 2,)
+    for cx in centres:
+        ax.text(cx, y + h / 2, name, ha="center", va="center", fontsize=size, weight="bold",
+                family="DejaVu Sans Mono", color=ink)
 
 
 def _labels(path):
-    entries = []
-    for section, names in LABELS:
-        entries.append(("section", section))
-        for n in names:
-            entries += [("label", n), ("label", n)]
+    """Wire labels, one row per wire: both copies (one per end) side by side,
+    so a row can be cut off as that wire is fitted. Then a page of labels for
+    the panels' label pockets."""
+    row_h, gap = STRIP[1] + 2.0, 6.0
+    x1 = (A4[0] - 2 * STRIP[0] - gap) / 2
+    x2 = x1 + STRIP[0] + gap
     with PdfPages(path) as pdf:
         fig, ax = _page()
-        ax.text(A4[0] / 2, 10, "Wire labels - two of each (one per end). Cut on the dashed lines. "
-                "Fold on the dotted line as a flag, or wrap and tape.", ha="center", fontsize=7.5)
-        x_l, y, col = 9.0, 16.0, 0
-        for kind, val in entries:
-            if kind == "section":
-                if col:
-                    y += CELL[1] + 1
-                    col = 0
-                if y + 6 + CELL[1] > A4[1] - 10:
+        ax.text(A4[0] / 2, 9, "Wire labels: one row per wire, one copy for each end. "
+                "Cut on the dashed lines; fold on the dotted line as a flag, or wrap and tape.",
+                ha="center", fontsize=7)
+        y = 15.0
+        for section, names in LABELS:
+            if y + 7 + row_h > A4[1] - 10:
+                pdf.savefig(fig); plt.close(fig)
+                fig, ax = _page(); y = 10.0
+            ax.text(x1, y + 3.5, section, fontsize=8, weight="bold", va="center")
+            y += 7
+            for n in names:
+                if y + row_h > A4[1] - 10:
                     pdf.savefig(fig); plt.close(fig)
                     fig, ax = _page(); y = 10.0
-                ax.text(x_l, y + 4, val, fontsize=8, weight="bold", va="center")
-                y += 7
-                continue
-            if y + CELL[1] > A4[1] - 10:
-                pdf.savefig(fig); plt.close(fig)
-                fig, ax = _page(); y, col = 10.0, 0
-            _label_cell(ax, x_l + col * (CELL[0] + 0.5), y, val)
-            col += 1
-            if col == COLS:
-                col = 0
-                y += CELL[1] + 1
+                _strip(ax, x1, y, n)
+                _strip(ax, x2, y, n)
+                ax.text(x2 + STRIP[0] + 3, y + STRIP[1] / 2, "end A | end B", fontsize=5,
+                        color="#999", va="center")
+                y += row_h
+            y += 2
         pdf.savefig(fig)
         plt.close(fig)
+        _panel_labels(pdf)
+
+
+# Labels for the panels' label pockets (lp.LABEL, 14 x 10 mm), printed a little
+# undersize so they drop in. Order follows each panel, top to bottom.
+PANEL_LABELS = [
+    ("PSU box panel", ["24V", "12V", "6V", "G1", "G2"]),
+    ("Control box receiving panel", ["24V", "12V", "6V", "G1", "G2"]),
+    ("Control box GX16 panel", ["X1", "X2", "Y", "XLIM", "YLIM", "PEN"]),
+    ("Spares", ["24V", "12V", "6V", "G1", "G2"]),
+    ("Spares", ["X1", "X2", "Y", "XLIM", "YLIM", "PEN"]),
+]
+POCKET_CLEAR = 0.3   # per side
+
+
+def _panel_labels(pdf):
+    fig, ax = _page()
+    lw_, lh = lp.LABEL[0] - 2 * POCKET_CLEAR, lp.LABEL[1] - 2 * POCKET_CLEAR
+    ax.text(A4[0] / 2, 12, "Panel labels", ha="center", fontsize=13, weight="bold")
+    ax.text(A4[0] / 2, 19, f"Each one is {lw_:.1f} x {lh:.1f} mm to drop into the "
+            f"{lp.LABEL[0]:.0f} x {lp.LABEL[1]:.0f} mm pockets. Print at 100 % (actual size). "
+            "Cut on the dashed lines; a dab of glue or double-sided tape holds them.",
+            ha="center", fontsize=7)
+    y = 30.0
+    for section, names in PANEL_LABELS:
+        ax.text(15, y, section, fontsize=8.5, weight="bold", va="top")
+        y += 6
+        for i, n in enumerate(names):
+            _strip(ax, 15 + i * (lw_ + 4), y, n, w=lw_, h=lh, fold=False, size=9.5)
+        y += lh + 10
+    _ruler(ax, (A4[0] - 100) / 2, A4[1] - 18)
+    pdf.savefig(fig)
+    plt.close(fig)
 
 
 def main():
