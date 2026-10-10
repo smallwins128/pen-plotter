@@ -24,6 +24,21 @@ over.
 `python3 hardware/parts/link_panel.py`, `python3 hardware/print_sheets.py` and
 the two sketches regenerate everything into `hardware/out/` (git-ignored).
 
+Six pages were published from this work. All are **private** — use each page's Share menu
+before sending one to anybody. Two still apply to the stainless box:
+
+| | |
+|---|---|
+| Machine, 3D | https://claude.ai/artifact/2AN2q4qFQ4fbEECBUUztsq — link-shared already |
+| DIN rail parts, explained | https://claude.ai/artifact/Ua6RjD4LC6M6x7vyRNg7eF — how a jumper comb makes a common bar, which is the same in any box |
+
+The other four describe the abandoned two-box layout and are kept for reference only:
+[power box wiring](https://claude.ai/artifact/BGLa9GLqQQn4MzRDbeGE45),
+[control box wiring](https://claude.ai/artifact/FMTWRsi1MVCqrYTcgt6NCq),
+[electronics cases in 3D](https://claude.ai/artifact/QBGDB6BF3KFNdK2vdznUtU),
+[DIN BOM](https://claude.ai/artifact/BYFjNCtQzwpjw3YpGsvE38). **Do not order from the DIN
+BOM** — its quantities are the two-box rails, not the stainless box's.
+
 ## Parts confirmed from datasheets
 
 | Part | Key numbers |
@@ -57,6 +72,13 @@ the two sketches regenerate everything into `hardware/out/` (git-ignored).
 
 ## Next: one 1 mm stainless enclosure (user to share a wireframe)
 
+**The envelope it has to fit: 524 x 600 mm of bench.** The table is 1524 x 600 and the
+machine sits hard left occupying 1000 of it, so the clear area beside it is
+`1524 - 1000 = 524` wide by the full 600 deep. `hardware/parts/table.py` computes this as
+`free_zone()`; it is the only hard dimensional constraint on the outside of the box, and
+nothing else in this file states it. Lose a little of the 600 to cable bend radius at the
+back, and leave the lid's swing or lift clear at the top.
+
 The intent, as stated:
 
 - **Shell:** 1 mm stainless sheet, with panel holes cut in.
@@ -80,3 +102,8 @@ Things that change with a metal box:
 - **The box-to-box link goes away too:** the five banana jacks, the jumper cable and the receiving panel. 24 V, 12 V and 6 V now go straight from the PSUs and buck to the distribution inside the one box.
 - **The toggle + display rows are still worth keeping** as a front "rails" panel: per-rail switch, live voltage readout, and a binding post per rail for bench use. Its jacks become test points rather than the link.
 - **Earthing:** earth stud on the shell from the IEC earth pin. DC 0 V stays off earth; stepper shields go to the 0 V star via GX16 pin 5, not the shell.
+- **Two boxes never fitted the bench flat anyway.** Two UN4412 cases are 455 x 340 each:
+  side by side needs 910 mm of a 524 mm gap, front to back needs 680 mm of a 600 mm
+  depth. Only stacking fitted, and stacking means you cannot open the lower box. This was
+  not the reason for switching — the hinge problem was — but it is a second one, and the
+  524 x 600 envelope above is inherited by whatever replaces them.
