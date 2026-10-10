@@ -353,11 +353,22 @@ IEC = (32.0, 55.0)          # fused + switched inlet module already fitted (appr
 
 # (name, kind, x, y) with x, y the top-left of the outline, measured from the
 # top-left of the lid area. "panel:<kind>" uses the plate size from _layout.
+# The two boxes sit hinge to hinge: the control box hinge is its right edge,
+# the PSU box hinge its left edge. Board and drivers live in the control box
+# BASE, panels on the LID, so wires cross the hinge in two separate bundles:
+#   motor bundle  - top-right corner, kept clear on the lid (keepout)
+#   power+signal  - mid hinge, beside the receiving jacks
+# The fan and the PEN socket's 6 V take power from the jacks on the lid.
+HINGE_CROSSINGS = {
+    "Control box (left)": [("motor bundle", 15.0, 95.0), ("power + signal", 160.0, 260.0)],
+}
+
 LIDS = {
     "Control box (left)": [
         ("GX16 panel", "panel:gx", 0.0, 0.0),
-        ("Receiving jacks", "panel:ctrl", 130.0, 0.0),   # top right: faces the PSU box
-        ("12 V fan", "fan", 21.0, 135.0),
+        ("keep\nclear", "keepout", 130.0, 0.0),
+        ("Receiving jacks", "panel:ctrl", 130.0, 110.0),  # hinge edge, beside the mid crossing
+        ("12 V fan", "fan", 21.0, 200.0),
     ],
     "PSU box (right)": [
         ("PSU panel", "panel:psu", 0.0, 0.0),            # top left: faces the control box
@@ -371,7 +382,7 @@ def _outline(kind):
     if kind.startswith("panel:"):
         w, h, _ = _layout(kind.split(":")[1])
         return w + 2 * FLANGE, h + 2 * FLANGE
-    return {"fan": (FAN, FAN), "iec": IEC}[kind]
+    return {"fan": (FAN, FAN), "iec": IEC, "keepout": (70.0, 100.0)}[kind]
 
 
 def check_lids(min_gap=5.0):
@@ -404,10 +415,10 @@ def draw_lids(path):
     SEP = 60.0
     fig, ax = plt.subplots(figsize=(9, 8.5), dpi=130)
     ax.set_xlim(-10, 2 * LW + SEP + 10)
-    ax.set_ylim(LH + 30, -25)
+    ax.set_ylim(LH + 42, -25)
     ax.set_aspect("equal")
     ax.axis("off")
-    fills = {"panel": "#2b2d2f", "fan": "#3d6f8f", "iec": "#7a7a7a"}
+    fills = {"panel": "#2b2d2f", "fan": "#3d6f8f", "iec": "#7a7a7a", "keepout": "none"}
     for i, (lid, things) in enumerate(LIDS.items()):
         ox = i * (LW + SEP)
         ax.add_patch(Rectangle((ox, 0), LW, LH, fc="#f2f3f1", ec="#444", lw=1.2, ls="--"))
@@ -418,6 +429,9 @@ def draw_lids(path):
             if base == "panel":
                 ax.add_patch(FancyBboxPatch((ox + x, y), w, h, boxstyle=f"round,pad=0,rounding_size={CORNER_R}",
                                             fc=fills[base], ec="#111"))
+            elif base == "keepout":
+                ax.add_patch(Rectangle((ox + x, y), w, h, fc="#f6d9d3", ec="#c0392b", ls="--",
+                                       hatch="//", lw=1))
             else:
                 ax.add_patch(Rectangle((ox + x, y), w, h, fc=fills[base], ec="#111", alpha=.85))
             if base == "fan":
@@ -427,15 +441,38 @@ def draw_lids(path):
                     for sy in (-1, 1):
                         ax.add_patch(Circle((cx + sx * FAN_SCREW_PITCH / 2, cy + sy * FAN_SCREW_PITCH / 2),
                                             2.2, fc="white", ec="none"))
+            if base == "keepout":
+                ax.text(ox + x + w / 2, y + h / 2, name, ha="center", va="center",
+                        color="#8e2b1f", fontsize=7, weight="bold",
+                        bbox=dict(fc="#f6d9d3", ec="none", pad=1.5))
+                continue
             if base == "iec":   # too narrow to hold its label
                 ax.text(ox + x + w + 4, y + h / 2, f"{name}\n{w:.0f} x {h:.0f}", ha="left",
                         va="center", color="#333", fontsize=7.5, weight="bold")
             else:
                 ax.text(ox + x + w / 2, y + h / 2, f"{name}\n{w:.0f} x {h:.0f}", ha="center",
                         va="center", color="white", fontsize=7.5, weight="bold")
-    ax.annotate("", xy=(LW + 4, 60), xytext=(LW + SEP - 4, 60),
+    # hinge edges: right edge of the control box, left edge of the PSU box
+    for hx in (LW, LW + SEP):
+        ax.plot([hx, hx], [0, LH], color="#1f4e79", lw=3, solid_capstyle="butt")
+    ax.text(LW + 3, LH + 8, "hinge", color="#1f4e79", fontsize=7.5, ha="left")
+    ax.text(LW + SEP - 3, LH + 8, "hinge", color="#1f4e79", fontsize=7.5, ha="right")
+    key = []
+    for lid_i, (lid, things) in enumerate(LIDS.items()):
+        for name, y0, y1 in HINGE_CROSSINGS.get(lid, []):
+            hx = lid_i * (LW + SEP) + LW
+            ax.plot([hx, hx], [y0, y1], color="#e67e22", lw=8, solid_capstyle="butt", alpha=.9)
+            key.append(name)
+            ax.text(hx + 11, (y0 + y1) / 2, str(len(key)), ha="center", va="center", fontsize=8,
+                    color="white", weight="bold",
+                    bbox=dict(boxstyle="circle,pad=0.3", fc="#e67e22", ec="none"))
+    ax.text(0, LH + 32, "Hinge crossings (orange):  " +
+            "    ".join(f"{i + 1} = {n}" for i, n in enumerate(key)) +
+            ".  Board and drivers are in the control box base.", fontsize=8, color="#a04f00")
+    jy = 165.0   # receiving jacks' upper rows, clear of the crossing markers
+    ax.annotate("", xy=(LW + 6, jy), xytext=(LW + SEP - 6, jy),
                 arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.5))
-    ax.text(LW + SEP / 2, 52, "jumper\ncable", ha="center", va="bottom", fontsize=7.5, color="#c0392b")
+    ax.text(LW + SEP / 2, jy - 6, "jumper\ncable", ha="center", va="bottom", fontsize=7.5, color="#c0392b")
     ax.text(LW + SEP / 2, LH + 18, "plotter side at the top.  IEC position is approximate (from photo).",
             ha="center", fontsize=8, color="#555")
     fig.savefig(path, bbox_inches="tight", facecolor="white")
