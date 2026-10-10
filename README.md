@@ -13,6 +13,7 @@ positional servo pen lift on D11.
 | **[docs/HANDOFF.md](docs/HANDOFF.md)** | **Start a new chat with this.** Current verified state of the machine: what works, what doesn't, the three workflow rules, and the open problem. |
 | **[docs/ARTGEN.md](docs/ARTGEN.md)** | Making the art, not just plotting it: the vsketch assessment, the browser studio, layered multi-pen work and blueprint posters. |
 | **[docs/POWER.md](docs/POWER.md)** | Control-box design: one mains inlet, one 24 V rail, one star ground, and all 19 machine wires on keyed panel connectors. Design only — nothing built yet. |
+| **[docs/ENCLOSURE_HANDOFF.md](docs/ENCLOSURE_HANDOFF.md)** | Electronics enclosure: what was built in the plastic boxes, confirmed part dimensions, power wiring decisions, and the brief for the single stainless enclosure. **Start an enclosure chat with this.** |
 | **[docs/FINDINGS.md](docs/FINDINGS.md)** | What commissioning actually taught us — the servo ground wire, the zero-work-offset crash, the EEPROM rule, servo soft-start, and what is still open. Read this before re-debugging anything. |
 | **[docs/UGS.md](docs/UGS.md)** | Driving the machine by hand from Universal Gcode Sender: connect, unlock, work zero, macros for the pen, and the UGS buttons that do the wrong thing here. Manual work only — `plot2.py` still streams the plots. |
 | **[settings/plotter.grbl.txt](settings/plotter.grbl.txt)** | Restore block for after a re-flash (which wipes EEPROM). |
