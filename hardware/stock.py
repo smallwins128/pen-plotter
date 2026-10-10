@@ -35,6 +35,8 @@ def gather():
         cut_list = getattr(module, "cut_list", None)
         if cut_list is None:
             continue
+        if not getattr(module, "LINEAR_STOCK", True):
+            continue                    # a bought case is not bar stock to cut
         for row in cut_list():
             qty, length, label = row[0], row[1], row[2]
             profile = row[3] if len(row) > 3 else "?"

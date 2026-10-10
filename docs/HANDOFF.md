@@ -3,7 +3,7 @@
 Paste this into a fresh chat to pick up where the last one left off. Everything here is
 **verified on the machine**, not assumed. Where something is unverified it says so.
 
-_Last updated: 2026-10-02 (September branches merged into main)_
+_Last updated: 2026-10-10 (two-box electronics merged as history; enclosure is now one stainless box)_
 
 > This repo is room **R04 Etch** in Allwin's Copilot harness. Room state (status, next actions,
 > tracker) lives in the Drive doc `[R04 Etch] Handoff`; this file stays the technical source of
@@ -20,6 +20,12 @@ correctly to commands, but actuating it while the machine is moving resets the c
 Cause is narrowed to supply/grounding around the servo; the fix is on order. **In the
 meantime the machine plots single-stroke artwork with the pen taped down**, which is what
 the files in `gcode/art/` are for.
+
+Separately, **the electronics enclosure is being redesigned as one 1 mm stainless box.**
+The two-plastic-box route (power box + control box) is abandoned; its layouts stay in
+`hardware/` as history. The current brief, decisions and confirmed part dimensions are in
+[`ENCLOSURE_HANDOFF.md`](ENCLOSURE_HANDOFF.md) — section 8 below says what carries over.
+The servo problem above is unaffected by it either way.
 
 ---
 
@@ -251,11 +257,66 @@ pen with ordinary Z moves. Full reasoning in [`FINDINGS.md`](FINDINGS.md) sectio
 
 ---
 
-## 8. Repo layout
+## 8. Electronics — the two-box design is history
+
+**The current plan is one 1 mm stainless enclosure. Start an enclosure chat with
+[`ENCLOSURE_HANDOFF.md`](ENCLOSURE_HANDOFF.md), not this section.** That file holds the
+power decisions as they stand: LRS-350-24 for 24 V, a separate 12 V PSU feeding the servo
+buck and the fans, G1 / G2 grounds joined only at the star, **no DC fuses**, so the 24 V
+and G1 wiring must be 1.5 mm² or heavier. [`FINDINGS.md`](FINDINGS.md) section 11 has the
+arithmetic behind the wire sizes.
+
+Before that, the electronics were designed as **two UN4412 cases** (a power box and a
+control box, 30 + 49 conductors routed individually, a DIN rail in each). That route is
+abandoned. The scripts still run and are kept as history:
+
+```
+python3 hardware/psu_layout.py     # power box: rail schedule, floor plan, every wire
+python3 hardware/ctrl_layout.py    # control box: the same
+python3 hardware/din_parts.py      # DIN order list for the two rails, and why
+python3 hardware/din_bom.py        # the same as a supplier quote sheet
+```
+
+Their power topology (RS-25-24 → LM2596 for the servo, a 5 A DC fuse, an E-stop relay on
+the driver rail, a GX16-6 box-to-box link) is **superseded** by `ENCLOSURE_HANDOFF.md`.
+Don't order from `din_bom.py` without re-deriving its quantities for the stainless box.
+
+### What carries over to the stainless box
+
+- **The layout engine.** `hardware/panel.py` knows nothing about either box: it builds a
+  duct graph from overlapping duct rectangles, routes each conductor on its own lane, and
+  refuses a layout that runs a wire through a part, lands three conductors on a two-screw
+  block, crosses on open floor, or fills a duct past 50 %. A stainless-box layout is a
+  new table file for it, not a new engine.
+- **Terminal-block rules** (FINDINGS section 11): any block used must clamp **0.25 mm²**
+  signal wire, its bridges must come from the same series, and earth blocks are commoned
+  by the rail.
+
+### Still not verified, in the order it will bite
+
+1. **The Elecrow board's 5 V regulator.** If it is a linear 7805, 24 V in at ~150 mA
+   burns 2.9 W in a TO-220 with no heatsink. Read the silkscreen beside the VIN terminal
+   before first power-up. `FINDINGS.md` section 10 has the fix if it is linear.
+2. **The Elecrow board's terminal positions are guessed** (`BRD` in `ctrl_layout.py`).
+   Its connectors are confirmed **screw terminals**; measure their pitch — on 3.5 mm
+   pitch, insulated 1.0 mm² ferrules will not sit side by side.
+3. **The TB6600 terminal order.** All twelve terminals are on one long face; the order
+   within each block is drawn as the common one, but clones reorder it. Check the
+   silkscreen.
+4. Smaller ones: `GANTRY_RISE` is an eyeballed 15 mm; the frame and cross bar are modelled
+   as T-slot and the real extrusion may be V-slot; the deck needs to be 430 ferritic if
+   magnets are ever wanted.
+
+---
+
+## 9. Repo layout
 
 ```
 firmware/     patched GRBL 1.1h source + flashable zip
 docs/         SETUP.md (8-phase build), FIRMWARE_SERVO.md, FINDINGS.md, this file
+hardware/     build123d model of the machine, panels and wire jigs. panel.py is the
+              layout engine; psu_layout.py / ctrl_layout.py are the two-box design,
+              kept as history. See section 8 and ENCLOSURE_HANDOFF.md.
 settings/     plotter.grbl.txt — live values, restore after any re-flash
 tools/        plot2.py (sender), pentest.py (servo swing sweep), servo_sweep.py
 gcode/tests/  T0-T18, in bring-up order. T14 is the 10-minute soak, T15 the pen-cycle
@@ -280,7 +341,7 @@ missing ground wire.
 
 ---
 
-## 9. Gotchas, kept
+## 10. Gotchas, kept
 
 - `$22=1` makes GRBL **boot into Alarm** and refuse everything, jogging included, until
   `$H` or `$X`.

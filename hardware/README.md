@@ -21,6 +21,10 @@ python3 hardware/profiles.py        # print + plot the frame cross-section
 python3 hardware/viewer.py          # build the interactive 3D viewer
 python3 hardware/stock.py           # what to buy, and how to cut it
 python3 hardware/bom.py             # full bill of materials
+python3 hardware/psu_layout.py      # power box: rail schedule, floor plan, every wire
+python3 hardware/ctrl_layout.py     # control box: the same, for the drivers and board
+python3 hardware/din_parts.py       # what to order for the two rails, and why
+python3 hardware/din_bom.py         # the same, as a quote sheet for a supplier
 python3 hardware/bom.py --csv       # the same, for a spreadsheet
 python3 hardware/stock.py 20x20     # just one profile
 ```
@@ -57,6 +61,11 @@ Each part exports:
 | **`preview.py`** | PNG renders. Sanity check, not a beauty shot. |
 | **`viewer.py`** + **`web/`** | The two viewers. `_common.html` is the shared core; `machine.html` and `case.html` are the pages. `export_web.py` packs the geometry. |
 | **`wiring.py`** | Routes the case harness, scores it, and searches for a better layout. |
+| **`panel.py`** | The layout engine both boxes share: duct graph, lane assignment, routing, the checks, and the drawing. Knows nothing about either box. |
+| **`psu_layout.py`** | The power box's tables: rail schedule, duct grid, where the gear sits, and all 30 conductors. |
+| **`ctrl_layout.py`** | The control box's tables: 49 conductors, three drivers and the board. |
+| **`din_parts.py`** | The DIN order list for the builder: what each part is and why. |
+| **`din_bom.py`** | The same parts as a supplier quote sheet &mdash; line refs, full ratings, no reasoning. |
 | **`bom.py`** | Bill of materials. Counts what the model knows; declares what it can't. |
 | **`stock.py`** | Groups every cut list by profile and packs the pieces onto stock bars, kerf included. |
 
@@ -162,15 +171,24 @@ the servo's 2.5 A return shares that conductor, and at 0.75 mm² it puts about
 in `FINDINGS.md` §7, and a shared thin return down 1.2 m of cable re-creates it.
 At 2.5 mm² it is a quarter of that.
 
-### Height alone doesn't tell you whether a thing can be wired
+### The bay is not a ceiling
 
-The 62 mm bay holds a 57 mm TB6600 with 5 mm over its fins — and that is fine,
-because its **terminals sit at about 28 mm**, so there is ~34 mm over the screw.
+The catalogue's internal height is **base + lid**: the UN4412's 124 mm is
+62 + 62, and when the case is closed the two halves are one cavity. A part
+standing on the floor with an empty lid above it has the whole 124 mm.
 
-A DIN terminal block is 58 mm with its screw near the **top**, which leaves
-4 mm. A screwdriver needs ~30. So the distribution here is **lever blocks, not
-DIN** — which reverses the earlier recommendation, made when the bay was 99 mm.
-At 1.7 A they are more than adequate.
+This caught me out twice. Treating the 62 mm bay as a ceiling made DIN
+terminals look unwirable (4 mm of clearance) when they actually have 66 mm,
+and would have ruled out breakers and relays entirely. Real clearances:
+
+| | Height | Clear above |
+|---|---|---|
+| DIN terminal + rail | 58 mm | 66 mm |
+| TB6600 | 57 mm | 67 mm |
+| DIN relay + socket | 80 mm | 44 mm |
+| MCB on DIN rail | 85 mm | 39 mm |
+
+The bay only *is* a ceiling where the lid has contents at the same X, Y.
 
 ### Cooling is insurance, not cooling
 
