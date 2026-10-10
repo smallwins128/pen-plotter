@@ -25,6 +25,7 @@ RELIEF = 3.0            # round relief where two bend lines meet
 HOLE_TO_BEND = 5.0      # nearest hole edge to a bend line
 RIVNUT_M3_HOLE = 5.0    # MEASURE your rivnuts
 RIVNUT_M4_HOLE = 6.0    # MEASURE your rivnuts
+SCREW_CLEAR = 3.4       # M3 clearance, panel screws (screw + nut)
 RIVNUT_FROM_WALL = 8.0  # rivnut centre from the inside face of the wall a lip folds off
 LID_CLEAR = 0.5         # lid return lip to body wall, per side
 
@@ -186,11 +187,13 @@ def lid_section(ox, oy):
     o.append(line(rx, y, wx + th + LID_CLEAR * s + th, y, RED, 1.2))
     o.append(t(rx - 4, y + 16, f"lid hole from the lid's outer edge = t + {LID_CLEAR} + t + {RIVNUT_FROM_WALL:.0f} = {off_lid:.1f}", 9, RED))
     o.append(t(rx - 4, y + 29, f"rivnut from the body's outer face = t + {RIVNUT_FROM_WALL:.0f} = {T + RIVNUT_FROM_WALL:.1f} · lid outer = body outer + 2 x {T + LID_CLEAR:.1f}", 9, GREY))
+    o.append(t(rx - 4, y + 44, "same rule on the BACK: lid back over the side-wall back lips and the base back lip,", 9, RED))
+    o.append(t(rx - 4, y + 57, "rivnuts set from inside each lip; lid-back holes offset by the same 10.5 from its edges", 9, RED))
     return "".join(o)
 
 
 def panel_section(ox, oy):
-    """A printed panel on a wall cutout, fixed into rivnuts."""
+    """A printed panel on a wall cutout: countersunk M3 screw + nut, boss locates it."""
     o = [panel_title(ox, oy - 12, "E", "Printed panel on a wall — section")]
     s = 5.0
     wx = ox + 150
@@ -202,13 +205,14 @@ def panel_section(ox, oy):
     o.append(rect(wx, oy + 52, 2 * s, 76, "#fff3c4"))
     o.append(t(wx - 120, oy + 92, "printed panel (as printed)", 9))
     o.append(t(wx - 120, oy + 105, "boss 2 mm: 1 mm pokes inside, harmless", 9, GREY))
-    # countersunk screw into rivnut set from INSIDE
+    # countersunk M3 from outside, washer + nyloc nut inside
     for yy in (oy + 38, oy + 142):
-        o.append(rect(wx - 15, yy - 2.5, 15 + th + 26, 5, "#555"))
-        o.append(rect(wx + th, yy - 7, 4, 14, "#a0a7b0")); o.append(rect(wx + th + 4, yy - 5, 22, 10, "#a0a7b0"))
-    o.append(t(wx + th + 34, oy + 150, "M3 rivnut set from INSIDE: its flange is", 9, RED))
-    o.append(t(wx + th + 34, oy + 163, "behind the wall, so the panel sits flush", 9, RED))
-    o.append(t(wx - 120, oy + 190, f"cutout = panel boss + 0.3/side · rivnut hole Ø{RIVNUT_M3_HOLE} at the panel's screw centres", 9, GREY))
+        o.append(poly([(wx - 15, yy - 5), (wx - 11, yy - 2.5), (wx - 11, yy + 2.5), (wx - 15, yy + 5)], "#555"))
+        o.append(rect(wx - 11, yy - 2.5, 11 + th + 18, 5, "#555"))
+        o.append(rect(wx + th, yy - 6, 2, 12, "#a0a7b0")); o.append(rect(wx + th + 2, yy - 5, 7, 10, "#a0a7b0"))
+    o.append(t(wx + th + 34, oy + 150, "M3 countersunk screw from outside,", 9, RED))
+    o.append(t(wx + th + 34, oy + 163, "washer + nyloc nut inside. No rivnut here.", 9, RED))
+    o.append(t(wx - 120, oy + 190, f"cutout = panel boss + 0.3/side: the 2 mm boss locates the panel snug · screw holes Ø{SCREW_CLEAR}", 9, GREY))
     return "".join(o)
 
 
@@ -240,7 +244,8 @@ def rules(ox, oy):
             ("lips", f"{LIP:.0f} mm (≥ 8 needed by the brake)"), ("bend relief", f"Ø{RELIEF:.0f} where two bends meet"),
             ("hole to bend line", f"≥ {HOLE_TO_BEND:.0f} mm, edge to bend"),
             ("rivnut to the wall it folds off", f"≥ {RIVNUT_FROM_WALL:.0f} mm (clears the bend + rivnut body)"),
-            ("M3 / M4 rivnut hole", f"Ø{RIVNUT_M3_HOLE} / Ø{RIVNUT_M4_HOLE} — MEASURE yours"),
+            ("rivnuts (lid lips, base plate)", f"M3 Ø{RIVNUT_M3_HOLE} / M4 Ø{RIVNUT_M4_HOLE} — MEASURE yours"),
+            ("panel fixings", f"M3 countersunk + nyloc nut, Ø{SCREW_CLEAR} holes"),
             ("lid to body", f"{LID_CLEAR} mm per side inside the lid's return lips")]
     o = [panel_title(ox, oy - 12, "G", "Rules every cut file follows")]
     for i, (a, b) in enumerate(rows):
@@ -252,7 +257,7 @@ def rules(ox, oy):
 def main():
     parts = [body_blank(30, 60), lid_blank(530, 60), corner_detail(30, 470), lid_section(400, 470),
              panel_section(30, 790), base_section(400, 790), rules(30, 1060)]
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1330" font-family="Helvetica, Arial, sans-serif">'
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1360" font-family="Helvetica, Arial, sans-serif">'
            f'<rect width="100%" height="100%" fill="#fff"/>'
            f'{t(30, 30, "Enclosure construction — 1 mm stainless, two boxes (low fidelity, not to scale)", 16, b=True)}'
            f'{"".join(parts)}</svg>')
