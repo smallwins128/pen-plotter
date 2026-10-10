@@ -356,8 +356,11 @@ IEC = (32.0, 55.0)          # fused + switched inlet module already fitted (appr
 # The two boxes sit hinge to hinge: the control box hinge is its right edge,
 # the PSU box hinge its left edge. Board and drivers live in the control box
 # BASE, panels on the LID, so wires cross the hinge in two separate bundles:
-#   motor bundle  - top-right corner, kept clear on the lid (keepout)
-#   power+signal  - mid hinge, beside the receiving jacks
+#   motor bundle  - top-right corner, dropping straight from behind the GX16
+#                   panel's stepper row
+#   power+signal  - mid hinge, beside the receiving jacks; the GX16 bottom row
+#                   (endstops, PEN) sits just above it
+# All connectors are in one column on the hinge edge, GX16 at the machine end.
 # The fan and the PEN socket's 6 V take power from the jacks on the lid.
 HINGE_CROSSINGS = {
     "Control box (left)": [("motor bundle", 15.0, 95.0), ("power + signal", 160.0, 260.0)],
@@ -365,10 +368,9 @@ HINGE_CROSSINGS = {
 
 LIDS = {
     "Control box (left)": [
-        ("GX16 panel", "panel:gx", 0.0, 0.0),
-        ("keep\nclear", "keepout", 130.0, 0.0),
-        ("Receiving jacks", "panel:ctrl", 130.0, 110.0),  # hinge edge, beside the mid crossing
-        ("12 V fan", "fan", 21.0, 200.0),
+        ("GX16 panel", "panel:gx", 78.0, 0.0),            # top right: machine end, hinge edge
+        ("Receiving jacks", "panel:ctrl", 130.0, 118.0),  # directly below, beside the mid crossing
+        ("12 V fan", "fan", 20.0, 200.0),
     ],
     "PSU box (right)": [
         ("PSU panel", "panel:psu", 0.0, 0.0),            # top left: faces the control box
@@ -469,7 +471,7 @@ def draw_lids(path):
     ax.text(0, LH + 32, "Hinge crossings (orange):  " +
             "    ".join(f"{i + 1} = {n}" for i, n in enumerate(key)) +
             ".  Board and drivers are in the control box base.", fontsize=8, color="#a04f00")
-    jy = 165.0   # receiving jacks' upper rows, clear of the crossing markers
+    jy = 140.0   # receiving jacks' upper rows, clear of the crossing markers
     ax.annotate("", xy=(LW + 6, jy), xytext=(LW + SEP - 6, jy),
                 arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.5))
     ax.text(LW + SEP / 2, jy - 6, "jumper\ncable", ha="center", va="bottom", fontsize=7.5, color="#c0392b")
