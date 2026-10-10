@@ -93,6 +93,16 @@ TOGGLE_THROW = "horizontal"   # "vertical": flick up/down; "horizontal": left/ri
 LABEL = (14.0, 10.0)  # label pocket, fits 9 mm Dymo tape
 LABEL_D = 0.6
 
+# GX16 aviation panel sockets for the machine cables, on the control box.
+# Every pin count uses the same 16 mm shell, so the hole is the same; the pin
+# count keys them (a 5-pin plug will not mate a 3-pin socket). The three
+# steppers are all GX16-5 and CAN be swapped, so their labels matter.
+GX_HOLE = 16.2        # GX16 panel hole (16 mm thread)
+GX_NUT = 22.0         # rear nut / front flange, for spacing
+GX_PITCH = 30.0       # centre to centre: leaves ~10 mm finger room round a plug's coupling ring
+GX_ROWS = [[("X1", "GX16-5"), ("X2", "GX16-5"), ("Y", "GX16-5")],          # steppers
+           [("XLIM", "GX16-3"), ("YLIM", "GX16-3"), ("PEN", "GX16-4")]]   # endstops, servo
+
 RAILS = ["24V", "12V", "6V"]
 GROUNDS = ["G1", "G2"]
 GROUP_GAP = 10.0      # extra space between the voltage rows and the grounds
@@ -107,6 +117,26 @@ def _toggle_footprint():
     return max(w, TOGGLE_NUT), max(h, TOGGLE_NUT)
 
 
+def _layout_gx():
+    """GX16 panel: one row per cable group, each socket with its label below."""
+    cols = max(len(r) for r in GX_ROWS)
+    row_h = GX_NUT + LABEL_GAP_GX + LABEL[1] + ROW_CLEAR
+    w = 2 * MARGIN + cols * GX_PITCH
+    h = 2 * MARGIN + len(GX_ROWS) * row_h - ROW_CLEAR
+    items = []
+    top = h - MARGIN
+    for r, row in enumerate(GX_ROWS):
+        y_gx = top - r * row_h - GX_NUT / 2
+        for c, (name, _) in enumerate(row):
+            x = MARGIN + GX_PITCH * (c + 0.5)
+            items += [("gx", x, y_gx, name),
+                      ("label", x, y_gx - GX_NUT / 2 - LABEL_GAP_GX - LABEL[1] / 2, name)]
+    return w, h, items
+
+
+LABEL_GAP_GX = 3.0    # GX16 flange to its label pocket
+
+
 def _layout(kind="psu"):
     """Cutout size and component list in cutout coordinates (0,0 = bottom-left
     of the cutout). Items are (kind, x, y, name).
@@ -115,6 +145,8 @@ def _layout(kind="psu"):
     right; the two ground jacks sit below in the jack column, after a gap.
     The "ctrl" panel (receiving end) is labels then jacks, left to right, on
     the same row pitch, so each rail sits at the same height on both panels."""
+    if kind == "gx":
+        return _layout_gx()
     tw, th = _toggle_footprint()
     row_h = max(DISP_PCB_H, JACK_NUT, th, LABEL[1]) + ROW_CLEAR
 
@@ -170,6 +202,8 @@ def build_panel(kind="psu"):
                         mode=Mode.SUBTRACT)
                     with Locations((-DISP_EAR_PITCH / 2, 0), (DISP_EAR_PITCH / 2, 0)):
                         Cylinder(DISP_SCREW_D / 2, 40, mode=Mode.SUBTRACT)
+                elif kind == "gx":
+                    Cylinder(GX_HOLE / 2, 40, mode=Mode.SUBTRACT)
                 elif kind == "jack":
                     Cylinder(JACK_HOLE / 2, 40, mode=Mode.SUBTRACT)
                 elif kind == "toggle":
@@ -204,7 +238,7 @@ def build():
     return build_panel()
 
 
-def draw_mockup(path, kinds=("psu", "ctrl")):
+def draw_mockup(path, kinds=("psu", "ctrl", "gx")):
     """True-scale front views of both panels, side by side, with parts fitted.
     Dashed outlines show what sits behind the panel, so the clear space between
     parts is visible."""
@@ -223,7 +257,8 @@ def draw_mockup(path, kinds=("psu", "ctrl")):
     ax.set_aspect("equal")
     ax.axis("off")
     behind = dict(fill=False, ec="#8a8f94", ls="--", lw=0.8)
-    titles = {"psu": "PSU box (sending)", "ctrl": "Control box (receiving)"}
+    titles = {"psu": "PSU box (sending)", "ctrl": "Control box (receiving)",
+              "gx": "Control box GX16 (machine)"}
 
     ox = 0.0
     for kind in kinds:
@@ -272,6 +307,15 @@ def _draw_panel(ax, kind, ox, behind, title):
                 ax.add_patch(Circle((x + ex, y), 1.9, fc="#b8b8b8", ec="#555"))
             volts = {"24V": "24.1", "12V": "12.0", "6V": " 6.0"}[name]
             _digits(ax, volts.strip(), x, y)
+        elif kind == "gx":
+            ax.add_patch(Circle((x, y), GX_NUT / 2, fc="#9a9ea3", ec="#555"))   # knurled flange
+            ax.add_patch(Circle((x, y), 8.0, fc="#c9ccd0", ec="#666"))         # shell
+            ax.add_patch(Circle((x, y), 6.0, fc="#1b1b1b", ec="#444"))         # insert
+            import math as _m
+            n = {nm: int(t[-1]) for row in GX_ROWS for nm, t in row}[name]
+            for i in range(n):
+                a = 2 * _m.pi * i / n + _m.pi / 2
+                ax.add_patch(Circle((x + 3.4 * _m.cos(a), y + 3.4 * _m.sin(a)), 0.7, fc="#d4af37", ec="none"))
         elif kind == "jack":
             ax.add_patch(Circle((x, y), JACK_COLLAR / 2, fc=RAIL_COLOUR[name], ec="#000"))
             ax.add_patch(Circle((x, y), 2.0, fc="#222", ec="#666"))
@@ -298,12 +342,112 @@ def _digits(ax, text, x, y):
     ax.add_patch(PathPatch(t.transform_path(tp), fc="#ff3b2f", ec="none"))
 
 
+# ---------------------------------------------------------------------------
+# Lid layouts: where each panel, fan and the IEC inlet sit on the two lids
+# ---------------------------------------------------------------------------
+
+LID_AREA = (200.0, 350.0)   # usable flat area on each lid top, w x h (measured)
+FAN = 80.0                  # 8080 fan: 80 x 80, 76 mm hole, M4 at 71.5 mm
+FAN_HOLE, FAN_SCREW_PITCH = 76.0, 71.5
+IEC = (32.0, 55.0)          # fused + switched inlet module already fitted (approx)
+
+# (name, kind, x, y) with x, y the top-left of the outline, measured from the
+# top-left of the lid area. "panel:<kind>" uses the plate size from _layout.
+LIDS = {
+    "Control box (left)": [
+        ("GX16 panel", "panel:gx", 0.0, 0.0),
+        ("Receiving jacks", "panel:ctrl", 130.0, 0.0),   # top right: faces the PSU box
+        ("12 V fan", "fan", 21.0, 135.0),
+    ],
+    "PSU box (right)": [
+        ("PSU panel", "panel:psu", 0.0, 0.0),            # top left: faces the control box
+        ("12 V fan", "fan", 110.0, 195.0),
+        ("IEC inlet (fitted)", "iec", 15.0, 285.0),
+    ],
+}
+
+
+def _outline(kind):
+    if kind.startswith("panel:"):
+        w, h, _ = _layout(kind.split(":")[1])
+        return w + 2 * FLANGE, h + 2 * FLANGE
+    return {"fan": (FAN, FAN), "iec": IEC}[kind]
+
+
+def check_lids(min_gap=5.0):
+    """Every outline inside the lid area and at least min_gap from its neighbours."""
+    problems = []
+    for lid, things in LIDS.items():
+        boxes = []
+        for name, kind, x, y in things:
+            w, h = _outline(kind)
+            if x < 0 or y < 0 or x + w > LID_AREA[0] or y + h > LID_AREA[1]:
+                problems.append(f"{lid}: {name} runs off the lid area")
+            boxes.append((name, x, y, x + w, y + h))
+        for i, a in enumerate(boxes):
+            for b in boxes[i + 1:]:
+                gx = max(a[1], b[1]) - min(a[3], b[3])
+                gy = max(a[2], b[2]) - min(a[4], b[4])
+                if max(gx, gy) < min_gap:
+                    problems.append(f"{lid}: {a[0]} and {b[0]} are {max(gx, gy):.1f} mm apart")
+    return problems
+
+
+def draw_lids(path):
+    """Both lid tops to scale, as seen from above, plotter side at the top."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Circle, FancyBboxPatch, Rectangle
+
+    LW, LH = LID_AREA
+    SEP = 60.0
+    fig, ax = plt.subplots(figsize=(9, 8.5), dpi=130)
+    ax.set_xlim(-10, 2 * LW + SEP + 10)
+    ax.set_ylim(LH + 30, -25)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    fills = {"panel": "#2b2d2f", "fan": "#3d6f8f", "iec": "#7a7a7a"}
+    for i, (lid, things) in enumerate(LIDS.items()):
+        ox = i * (LW + SEP)
+        ax.add_patch(Rectangle((ox, 0), LW, LH, fc="#f2f3f1", ec="#444", lw=1.2, ls="--"))
+        ax.text(ox + LW / 2, -8, f"{lid}  ({LW:.0f} x {LH:.0f} mm usable)", ha="center", fontsize=9)
+        for name, kind, x, y in things:
+            w, h = _outline(kind)
+            base = kind.split(":")[0]
+            if base == "panel":
+                ax.add_patch(FancyBboxPatch((ox + x, y), w, h, boxstyle=f"round,pad=0,rounding_size={CORNER_R}",
+                                            fc=fills[base], ec="#111"))
+            else:
+                ax.add_patch(Rectangle((ox + x, y), w, h, fc=fills[base], ec="#111", alpha=.85))
+            if base == "fan":
+                cx, cy = ox + x + w / 2, y + h / 2
+                ax.add_patch(Circle((cx, cy), FAN_HOLE / 2, fc="none", ec="white", lw=1))
+                for sx in (-1, 1):
+                    for sy in (-1, 1):
+                        ax.add_patch(Circle((cx + sx * FAN_SCREW_PITCH / 2, cy + sy * FAN_SCREW_PITCH / 2),
+                                            2.2, fc="white", ec="none"))
+            if base == "iec":   # too narrow to hold its label
+                ax.text(ox + x + w + 4, y + h / 2, f"{name}\n{w:.0f} x {h:.0f}", ha="left",
+                        va="center", color="#333", fontsize=7.5, weight="bold")
+            else:
+                ax.text(ox + x + w / 2, y + h / 2, f"{name}\n{w:.0f} x {h:.0f}", ha="center",
+                        va="center", color="white", fontsize=7.5, weight="bold")
+    ax.annotate("", xy=(LW + 4, 60), xytext=(LW + SEP - 4, 60),
+                arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.5))
+    ax.text(LW + SEP / 2, 52, "jumper\ncable", ha="center", va="bottom", fontsize=7.5, color="#c0392b")
+    ax.text(LW + SEP / 2, LH + 18, "plotter side at the top.  IEC position is approximate (from photo).",
+            ha="center", fontsize=8, color="#555")
+    fig.savefig(path, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
 def main(argv):
     from build123d import export_step, export_stl
 
     out = pathlib.Path(__file__).resolve().parent.parent / "out"
     out.mkdir(exist_ok=True)
-    for kind in ("psu", "ctrl"):
+    for kind in ("psu", "ctrl", "gx"):
         part = build_panel(kind)
         name = f"link_panel_{kind}"
         export_step(part, str(out / f"{name}.step"))
@@ -312,6 +456,9 @@ def main(argv):
         print(f"{name:15s} plate {w + 2 * FLANGE:.0f} x {h + 2 * FLANGE:.0f} mm   "
               f"cut the box {w:.0f} x {h:.0f} mm   {part.volume * DENSITY:.0f} g")
     draw_mockup(out / "link_panel_mockup.png")
+    draw_lids(out / "lid_layout.png")
+    for problem in check_lids():
+        print("LID LAYOUT:", problem)
     return 0
 
 
