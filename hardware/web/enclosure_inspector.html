@@ -110,14 +110,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 // ===================== design values (mm) =====================
 const P = {
   t: 1, lip: 15, clr: 0.5, rivFromWall: 8, W: 450, D: 295,
-  H: { control: 110, power: 150 },
+  H: { control: 110, power: 170 },
+  band: 20,                 // no-mount band under the lid: 20 mm below the top, 20 mm from the back edge
   standoff: 5, plateT: 2, foot: 8, rivHoleLid: 9, washer: 12,
 };
 const SPEC = [
   ["Sheet", "1 mm 304 stainless"], ["Inside W × D", `${P.W} × ${P.D}`],
   ["Control inside H", `${P.H.control}`], ["Power inside H", `${P.H.power}`],
   ["Lips", `${P.lip} mm`], ["Lid to body", `${P.clr} mm / side`],
-  ["Lid rivnut clearance", `Ø${P.rivHoleLid}`], ["Lid hole from edge", `${(P.t + P.clr + P.t + P.rivFromWall).toFixed(1)} mm`],
+  ["Lid rivnut clearance", `Ø${P.rivHoleLid}`], ["Lid hole from edge", `${(P.t + P.clr + P.t + P.rivFromWall).toFixed(1)} mm`], ["Lid fixings", "3 top + 3 back per box"],
+  ["No-mount band", `${P.band} mm under the lid`],
   ["Base plate", `440 × 285 × ${P.plateT} al`], ["Standoffs", `6 × M4 × ${P.standoff}`],
   ["Plate grid", "Ø6 · 40 rows · 20 shift"], ["Feet", `4 × Ø20 × ${P.foot} per box`],
 ];
@@ -250,6 +252,15 @@ function csScrewNut(group, x, y, z, axis, len = 10) {   // countersunk from outs
   g.traverse(o => o.userData = { name: "M3 countersunk + nyloc nut", info: "Panel and corner fixings. Plain Ø3.4 hole in the steel, no rivnut." });
   group.add(g); return g;
 }
+function rivet(group, x, y, z) {   // solid rivet through front wall + tab, domed both sides
+  const g = new THREE.Group();
+  const a = new THREE.Mesh(new THREE.SphereGeometry(2.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.washer); a.scale.y = 0.45; g.add(a);
+  const sh = cyl(1.5, 2.2, "washer", 12); sh.position.y = -1.1; g.add(sh);
+  const b = new THREE.Mesh(new THREE.SphereGeometry(2.6, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.washer); b.scale.y = -0.45; b.position.y = -2.2; g.add(b);
+  orient(g, "+z"); g.position.set(x, y, z);
+  g.traverse(o => o.userData = { name: "Solid rivet Ø3", info: "Front corner tab: Ø3.2 hole through wall and tab, set cold by hand." });
+  group.add(g);
+}
 function orient(g, axis) {   // local +Y of g points along axis
   if (axis === "+y") return; if (axis === "-y") g.rotation.x = Math.PI;
   if (axis === "+x") g.rotation.z = -Math.PI / 2; if (axis === "-x") g.rotation.z = Math.PI / 2;
@@ -278,16 +289,18 @@ function buildBox(kind) {
   const FEET = [[-W/2 + 40, -D/2 + 40], [W/2 - 40, -D/2 + 40], [-W/2 + 40, D/2 - 40], [W/2 - 40, D/2 - 40]];
   const baseHoles = [...SO.map(([x, z]) => holeCircle(x, z, 2.25)), ...FEET.map(([x, z]) => holeCircle(x, z, 2.25))];
   body.add(asFlat(sheet(-W/2 - t, W/2 + t, -D/2, D/2 + t, baseHoles, "body", `${BN} · base`, "Floor of the body blank. Standoff and feet holes Ø4.5."), t));
+  // side panels sit as high as they can while staying clear of the lid band
+  const panelY = ht => Math.min(t + H / 2, top - P.band - 2 - ht / 2);
   // ---- walls
   const front = [], left = [], right = [];
   if (kind === "control") {
     for (let i = 0; i < 6; i++) front.push(holeCircle(-10 - 75 + i * 30, t + H / 2 + 6, 8.1));
-    left.push(...fanGrille(-30, t + H / 2), holeRect(-D/2 + 230, t + H / 2 + 4, 9, 4), holeCircle(-D/2 + 255, t + H / 2 + 4, 3.3));
-    right.push(holeRect(D/2 - 146, t + H / 2, 152, 50));                 // receiving panel cutout (on its side)
+    left.push(...fanGrille(-30, t + H / 2 - 8), holeRect(-D/2 + 230, t + H / 2 + 4, 9, 4), holeCircle(-D/2 + 255, t + H / 2 + 4, 3.3));
+    right.push(holeRect(D/2 - 146, panelY(70), 152, 50));                 // receiving panel cutout (on its side)
   } else {
-    for (let r = 0; r < 3; r++) for (let i = 0; i < [7, 5, 3][r]; i++) front.push(holeSlot(W/2 - 40 - i * 34, top - 22 - r * 10, 28, 3.5, 0));
-    left.push(...fanGrille(D/2 - 50, t + 50), holeRect(D/2 - 175, t + H / 2, 130, 65), holeCircle(D/2 - 270, t + 20, 3.2));
-    right.push(holeRect(D/2 - 160, t + H / 2, 152, 120.4));               // PSU panel cutout (original panel, on its side)
+    for (let r = 0; r < 3; r++) for (let i = 0; i < [7, 5, 3][r]; i++) front.push(holeSlot(W/2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0));
+    left.push(...fanGrille(D/2 - 50, t + 50), holeRect(D/2 - 175, t + H / 2, 130, 65), holeCircle(D/2 - 260, t + 20, 3.2));
+    right.push(holeRect(D/2 - 160, panelY(140.4), 152, 120.4));               // PSU panel cutout (original panel, on its side)
   }
   body.add(asFront(sheet(-W/2 - t, W/2 + t, t, top, front, "body", `${BN} · front wall`, kind === "control" ? "GX16 row: six Ø16.2 holes." : "Retro stepped vent stripes."), D/2));
   body.add(asSide(sheet(-D/2, D/2 + t, t, top, left, "body", `${BN} · left wall`, "Fan grille cut in the steel, " + (kind === "control" ? "USB-C and antenna." : "IEC panel cutout and earth stud.")), -W/2));
@@ -301,17 +314,15 @@ function buildBox(kind) {
   body.add(box(W - 2 * lip - 8, lip, t, "lip", 0, t + lip/2, -D/2 + t/2, `${BN} · base back lip`, "Folds up off the base. The lid back screws to it."));
   // corner tabs off the side walls, inside the front wall, held by M3 screw + nut
   for (const s of [-1, 1]) {
-    body.add(box(lip, H - 2 * lip, t, "tab", s * (W/2 - lip/2), t + H / 2, D/2 - t/2, `${BN} · front corner tab`, "Folds off the side wall, laps inside the front wall. 2 × M3 screw + nut."));
-    for (const yy of [t + H * 0.3, t + H * 0.7]) csScrewNut(body, s * (W/2 - lip/2), yy, D/2 + t, "-z", 6);
+    body.add(box(lip, H - 2 * lip, t, "tab", s * (W/2 - lip/2), t + H / 2, D/2 - t/2, `${BN} · front corner tab`, "Folds off the side wall, laps inside the front wall. 2 × solid rivet, set cold by hand."));
+    for (const yy of [t + H * 0.3, t + H * 0.7]) rivet(body, s * (W/2 - lip/2), yy, D/2 + t);
   }
   // ---- lid rivnuts in the lips (flange outside), and the lid
   const lidRiv = [];
   const xr = W/2 - P.rivFromWall, zr = D/2 - P.rivFromWall;
-  for (const zz of [-D/2 + 60, 0, D/2 - 60]) for (const s of [-1, 1]) lidRiv.push(["top", s * xr, zz]);
-  for (const xx of [-W/3, 0, W/3]) lidRiv.push(["top", xx, zr]);
-  const backY = [t + lip + 20, top - 25];
-  for (const s of [-1, 1]) for (const yy of backY) lidRiv.push(["back", s * xr, yy]);
-  for (const xx of [-W/4, W/4]) lidRiv.push(["back", xx, t + lip / 2]);
+  // one fixing per lip: left, right and front top lips; left and right back lips and the base back lip
+  lidRiv.push(["top", -xr, 0], ["top", xr, 0], ["top", 0, zr]);
+  lidRiv.push(["back", -xr, t + H / 2], ["back", xr, t + H / 2], ["back", 0, t + lip / 2]);
   for (const [face, a, b] of lidRiv) {
     if (face === "top") rivnut(body, a, top, b, "+y");
     else rivnut(body, a, b, -D/2, "-z");
@@ -348,20 +359,28 @@ function buildBox(kind) {
     const f = cyl(10, P.foot, "foot"); f.position.set(x, -P.foot / 2, z); f.userData = { name: "Rubber foot Ø20 × 8", info: "M4 screw-on. Clears the standoff screw heads under the floor." }; body.add(f);
   }
   // ---- printed panels (outside the walls), countersunk screws + nuts
-  const py = t + H / 2;
+  const py0 = t + H / 2;
+  const py = py0;
+  const FEAT = [];                       // wall-mounted things, for the lid-band check: [wall, u0, u1, v0, v1, name]
+  root.userData.feat = FEAT; root.userData.top = top;
   function sidePanel(side, zc, len, ht, nm, info) {
+    const py = panelY(ht);
+    FEAT.push([side > 0 ? "right" : "left", zc - len / 2, zc + len / 2, py - ht / 2, py + ht / 2, nm]);
     const x = side * (W/2 + t + 1.5);
     const p = box(3, ht, len, "panel", x, py, zc, nm, info); panels.add(p);
     const boss = box(2, ht - 20.6, len - 20.6, "panel", side * (W/2 + t - 1), py, zc, nm + " · boss", "2 mm boss: 1 mm locates in the cutout, 1 mm pokes inside."); panels.add(boss);
     for (const a of [-1, 1]) for (const b of [-1, 1]) csScrewNut(panels, side * (W/2 + t + 3), py + b * (ht/2 - 6), zc + a * (len/2 - 6), side > 0 ? "-x" : "+x", 8);
-    return x;
+    return [x, py];
   }
   if (kind === "control") {
-    const x = sidePanel(1, D/2 - 146, 172, 70, "Receiving panel (original print)", "Mounted on its side: 172 along the wall, 70 tall. Cutout 152 × 50.");
+    const [x, pyR] = sidePanel(1, D/2 - 146, 172, 70, "Receiving panel (original print)", "Mounted on its side: 172 along the wall, 70 tall. Cutout 152 × 50.");
     [[0xc0392b, "24V"], [0xe67e22, "12V"], [0xf1c40f, "6V"], [0x111111, "G1"], [0x111111, "G2"]].forEach(([c, n], i) => {
       const j = new THREE.Mesh(new THREE.CylinderGeometry(7.25, 7.25, 20, 20), new THREE.MeshStandardMaterial({ color: c, roughness: 0.4 }));
-      j.rotation.z = -Math.PI / 2; j.position.set(x + 11.5, py + 8, D/2 - 146 - 64 + i * 32); j.userData = { name: `Jack ${n}`, info: "Binding post on the original receiving panel." }; panels.add(j);
+      j.rotation.z = -Math.PI / 2; j.position.set(x + 11.5, pyR + 8, D/2 - 146 - 64 + i * 32); j.userData = { name: `Jack ${n}`, info: "Binding post on the original receiving panel." }; panels.add(j);
     });
+    FEAT.push(["front", -10 - 106, -10 + 106, py - 33.5, py + 33.5, "GX16 rail"]);
+    FEAT.push(["left", -30 - 40, -30 + 40, t + H / 2 - 8 - 40, t + H / 2 - 8 + 40, "Fan + its screws"]);
+    FEAT.push(["left", -D/2 + 222, -D/2 + 262, py - 6, py + 12, "USB-C + antenna"]);
     // GX rail on the front
     const rail = box(212, 67, 3, "panel", -10, py, D/2 + t + 1.5, "GX16 rail (new print)", "1 × 6 GX16: X1 X2 Y XLIM YLIM PEN. Cutout 192 × 47.");
     panels.add(rail);
@@ -374,22 +393,26 @@ function buildBox(kind) {
     panels.add(box(3, 10, 16, "gx", -W/2 - t - 1.5, py + 4, -D/2 + 230, "USB-C panel adapter", "Plugs into the board's USB-C."));
     const ant = cyl(5, 105, "dark"); ant.rotation.z = 0.45; ant.position.set(-W/2 - 25, py + 45, -D/2 + 255); ant.userData = { name: "Wi-Fi antenna", info: "SMA bulkhead, Ø6.5 hole. Needed: the stainless box blocks Wi-Fi." }; panels.add(ant);
   } else {
-    const x = sidePanel(1, D/2 - 160, 172, 140.4, "PSU panel (original print)", "Mounted on its side: 172 along the wall, 140.4 tall. Cutout 152 × 120.4. Displays read sideways.");
+    const [x, pyP] = sidePanel(1, D/2 - 160, 172, 140.4, "PSU panel (original print)", "Mounted on its side: 172 along the wall, 140.4 tall. Cutout 152 × 120.4. Displays read sideways.");
     [[0xc0392b], [0xe67e22], [0xf1c40f], [0x111111], [0x111111]].forEach(([c], i) => {
       const j = new THREE.Mesh(new THREE.CylinderGeometry(7.25, 7.25, 20, 20), new THREE.MeshStandardMaterial({ color: c, roughness: 0.4 }));
-      j.rotation.z = -Math.PI / 2; j.position.set(x + 11.5, py + 55 - (i > 2 ? 30 : 0), D/2 - 160 - 64 + i * 32); panels.add(j);
+      j.rotation.z = -Math.PI / 2; j.position.set(x + 11.5, pyP + 55 - (i > 2 ? 30 : 0), D/2 - 160 - 64 + i * 32); panels.add(j);
     });
     [0, 1, 2].forEach(i => {
-      panels.add(box(7.5, 22.7, 10.4, "dark", x + 5, py + 8, D/2 - 160 - 64 + i * 32, "Voltmeter", "0.36\" 2-wire display."));
-      const tg = cyl(1.6, 16, "gx", 10); tg.rotation.z = -Math.PI / 2 + 0.35; tg.position.set(x + 9, py - 30, D/2 - 160 - 64 + i * 32); tg.userData = { name: "Toggle", info: "KN3(A)-101." }; panels.add(tg);
+      panels.add(box(7.5, 22.7, 10.4, "dark", x + 5, pyP + 8, D/2 - 160 - 64 + i * 32, "Voltmeter", "0.36\" 2-wire display."));
+      const tg = cyl(1.6, 16, "gx", 10); tg.rotation.z = -Math.PI / 2 + 0.35; tg.position.set(x + 9, pyP - 30, D/2 - 160 - 64 + i * 32); tg.userData = { name: "Toggle", info: "KN3(A)-101." }; panels.add(tg);
     });
+    FEAT.push(["left", D/2 - 175 - 75, D/2 - 175 + 75, py - 42.5, py + 42.5, "IEC panel"]);
+    FEAT.push(["left", D/2 - 50 - 40, D/2 - 50 + 40, t + 50 - 40, t + 50 + 40, "Fan + its screws"]);
+    FEAT.push(["left", D/2 - 260 - 6, D/2 - 260 + 6, t + 14, t + 26, "Earth stud"]);
+    FEAT.push(["front", W/2 - 40 - 6 * 34 - 14, W/2 - 26, top - 28 - 20 - 2, top - 28 + 2, "Front vent stripes"]);
     // IEC panel (new print) on the left
     const ix = -(W/2 + t + 1.5), iz = D/2 - 175;
     panels.add(box(3, 85, 150, "panel", ix, py, iz, "IEC panel (new print)", "C14 inlet, double-pole rocker, 5×20 fuse holder, neon lamp. 3→6 splitter on its back. Cutout 130 × 65."));
     panels.add(box(4, 22, 30, "dark", ix - 3, py + 10, iz + 40, "C14 inlet", ""));
     panels.add(box(6, 22, 15, "dark", ix - 4, py + 10, iz, "Rocker (DP)", ""));
     for (const a of [-1, 1]) for (const b of [-1, 1]) csScrewNut(panels, -(W/2 + t + 3), py + b * 36.5, iz + a * 69, "+x", 8);
-    const stud = cyl(3, 18, "washer", 12); stud.rotation.z = Math.PI / 2; stud.position.set(-W/2 - t - 6, t + 20, D/2 - 270); stud.userData = { name: "Earth stud M6", info: "IEC earth lands here first, then on to both PSUs. Bare metal, no paint." }; body.add(stud);
+    const stud = cyl(3, 18, "washer", 12); stud.rotation.z = Math.PI / 2; stud.position.set(-W/2 - t - 6, t + 20, D/2 - 260); stud.userData = { name: "Earth stud M6", info: "IEC earth lands here first, then on to both PSUs. Bare metal, no paint." }; body.add(stud);
   }
   // ---- parts inside (simplified, for clearance checks)
   const plateTop = t + P.standoff + P.plateT;
@@ -400,7 +423,7 @@ function buildBox(kind) {
       inside.add(box(61, 8, 10, "rivnut", -W/2 + 120, plateTop + 3 + 74, z, "Driver terminal block", "Wires come in from above."));
     }
     const bd = box(125, 1.6, 85, "board", 95, plateTop + 10, -40, "FluidNC 6x board", "On printed standoffs, motor edge toward the drivers."); inside.add(bd);
-    const fan = box(25, 80, 80, "fan", -W/2 + 13.5, t + H / 2, -30, "Fan 80 mm, 12 V", "Blows in, down the gaps between the drivers."); inside.add(fan);
+    const fan = box(25, 80, 80, "fan", -W/2 + 13.5, t + H / 2 - 8, -30, "Fan 80 mm, 12 V", "Blows in, down the gaps between the drivers."); inside.add(fan);
   } else {
     inside.add(box(115, 30, 215, "psu", -W/2 + 117.5, plateTop + 3 + 15, -D/2 + 147.5, "24 V PSU · LRS-350", "Terminal strip to the back."));
     inside.add(box(115, 30, 215, "psu", -W/2 + 242.5, plateTop + 3 + 15, -D/2 + 147.5, "12 V PSU", "Terminal strip to the front."));
@@ -410,6 +433,14 @@ function buildBox(kind) {
   return root;
 }
 
+function bandCheck(b) {
+  const top = b.userData.top, out = [];
+  for (const [wall, u0, u1, v0, v1, name] of b.userData.feat) {
+    const hitTop = v1 > top - P.band, hitBack = wall !== "front" && u0 < -P.D / 2 + P.band;
+    out.push([name, wall, hitTop || hitBack, (top - v1).toFixed(1)]);
+  }
+  return out;
+}
 // ===================== assemble the stack =====================
 const power = buildBox("power"), control = buildBox("control");
 const powerTop = P.t + P.H.power + P.t;        // top face of the power lid
@@ -439,6 +470,15 @@ function layout() {
 }
 layout();
 
+// lid-band report in the rail
+{
+  const rows = [];
+  for (const b of [control, power]) for (const [name, wall, bad, gap] of bandCheck(b))
+    rows.push(`<li><span>${b.userData.kind} · ${name}</span><span style="color:${bad ? "var(--accent)" : "inherit"}">${bad ? "CLASH" : gap + " mm clear"}</span></li>`);
+  const g = document.createElement("div"); g.className = "group";
+  g.innerHTML = `<div class="label">Lid band check (20 mm)</div><ul class="spec">${rows.join("")}</ul>`;
+  document.querySelector(".rail").appendChild(g);
+}
 // ===================== UI =====================
 function press(groupId, btn) { document.querySelectorAll(`#${groupId} button`).forEach(b => b.setAttribute("aria-pressed", String(b === btn))); }
 function toggle(id, fn) { const b = document.getElementById(id); b.addEventListener("click", () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", String(on)); fn(on); }); }

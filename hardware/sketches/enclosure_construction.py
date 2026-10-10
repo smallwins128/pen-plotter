@@ -121,13 +121,11 @@ def lid_blank(ox, oy):
     o += [bend(x, y, x + W, y), bend(x, y, x, y + D + H), bend(x + W, y, x + W, y + D + H), bend(x, y + D, x + W, y + D)]
     for cx, cy in [(x, y), (x + W, y), (x, y + D), (x + W, y + D)]:
         o.append(circ(cx, cy, 3.2, "#fff", RED, 1.4))
-    # screw holes: top over the side + front lips, back over the side back lips + base back lip
-    for k in range(3):
-        o.append(circ(x + 10, y + 25 + k * 50, 2.2)); o.append(circ(x + W - 10, y + 25 + k * 50, 2.2))
-        o.append(circ(x + 40 + k * 70, y + 10, 2.2))
-    for k in range(2):
-        o.append(circ(x + 10, y + D + 20 + k * 30, 2.2)); o.append(circ(x + W - 10, y + D + 20 + k * 30, 2.2))
-        o.append(circ(x + 70 + k * 80, y + D + H - 10, 2.2))
+    # one fixing per lip: top over the left, right and front lips; back over the two back lips + base lip
+    for cx, cy in [(x + 10, y + D / 2), (x + W - 10, y + D / 2), (x + W / 2, y + 10),
+                   (x + 10, y + D + H / 2), (x + W - 10, y + D + H / 2), (x + W / 2, y + D + H - 8)]:
+        o.append(circ(cx, cy, 3.6))
+    o.append(t(x + W / 2, y + D + H + 12, "6 fixings: 1 per lip · Ø9 holes clear the rivnut flanges", 8, RED, "middle"))
     o.append(t(ox, y + D + H + 26, "the lips stiffen the lid (an open L flaps) and locate it; screws land in rivnuts in the body's lips", 9, GREY))
     return "".join(o)
 
@@ -147,8 +145,8 @@ def corner_detail(ox, oy):
     for k in (0.35, 0.8):
         cx = fx + T * s * 3 + 70 * k
         o.append(line(cx, fy - T * s * 6 - 6, cx, fy + 6, RED, 1.6))
-    o.append(t(fx + 60, fy + 34, "2 x M3 screw + nyloc nut through wall and tab", 9, RED))
-    o.append(t(fx + 60, fy + 47, "(Ø3.4 holes; a TIG tack is the shop's alternative)", 9, GREY))
+    o.append(t(fx + 60, fy + 34, "2 x solid rivet Ø3, set cold by hand", 9, RED))
+    o.append(t(fx + 60, fy + 47, "(Ø3.2 holes through wall and tab)", 9, GREY))
     o.append(circ(fx + T * s * 3, fy - T * s * 3, 5, "#fff", RED, 1.4))
     o.append(t(fx - 4, fy + 34, "relief", 9, RED))
     return "".join(o)
@@ -248,7 +246,8 @@ def rules(ox, oy):
             ("panel fixings", f"M3 countersunk + nyloc nut, Ø{SCREW_CLEAR} holes"),
             ("lid to body", f"{LID_CLEAR} mm per side inside the lid's return lips"),
             ("lid holes over rivnuts", "Ø9 clearance, M3 screw + Ø12 washer"),
-            ("rubber feet", "4 per box, Ø4.5 holes, 40 mm in from each corner")]
+            ("rubber feet", "4 per box, Ø4.5 holes, 40 mm in from each corner"),
+            ("lid band", "nothing mounted within 20 mm of the top or the back edge")]
     o = [panel_title(ox, oy - 12, "G", "Rules every cut file follows")]
     for i, (a, b) in enumerate(rows):
         o.append(t(ox, oy + 14 + i * 17, a, 10, GREY)); o.append(t(ox + 210, oy + 14 + i * 17, b, 10))
@@ -259,7 +258,7 @@ def rules(ox, oy):
 def main():
     parts = [body_blank(30, 60), lid_blank(530, 60), corner_detail(30, 470), lid_section(400, 470),
              panel_section(30, 790), base_section(400, 790), rules(30, 1060)]
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1400" font-family="Helvetica, Arial, sans-serif">'
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1420" font-family="Helvetica, Arial, sans-serif">'
            f'<rect width="100%" height="100%" fill="#fff"/>'
            f'{t(30, 30, "Enclosure construction — 1 mm stainless, two boxes (low fidelity, not to scale)", 16, b=True)}'
            f'{"".join(parts)}</svg>')
