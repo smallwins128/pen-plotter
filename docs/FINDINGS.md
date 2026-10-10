@@ -280,7 +280,8 @@ roughly 5× high. Size from the load, not from the device that feeds it.
    have their 0 V rails bonded — and then there are multiple return paths between
    them. That is a ground loop, which is the *cause* of the noise that splitting
    supplies is meant to avoid. One supply with a star point at the rail is
-   strictly better, and is what `hardware/psu_layout.py` builds.
+   strictly better, and is what `ENCLOSURE_HANDOFF.md` builds (G1 / G2, joined only at
+   the star).
 2. **Regeneration.** A decelerating stepper pumps energy back into its supply. The
    LRS-350's bulk output capacitance absorbs it without noticing. A 25 W supply has
    a fraction of that capacitance and its over-voltage protection can trip. Small
@@ -292,10 +293,13 @@ roughly 5× high. Size from the load, not from the device that feeds it.
 
 ### The one separation that does earn its place
 
-The servo, which already has it: RS-25-24 → LM2596 → 6 V. An MG996R stalls near
-2.5 A, it is brushed, and its current steps are exactly what shifts a shared
-reference. That is section 2 and section 7 of this document, and it is why that
-supply is separate and its return is 2.5 mm².
+The servo, which already has it: a separate **12 V supply → buck → 6 V** (the 12 V supply
+also runs the fans). An MG996R stalls near 2.5 A, it is brushed, and its current steps are
+exactly what shifts a shared reference. That is section 2 and section 7 of this document.
+The buck is non-isolated, so its return is the 12 V supply's return (G2), and G2 meets the
+24 V return (G1) at the star point and nowhere else. See `ENCLOSURE_HANDOFF.md`.
+
+_The two-box design used an RS-25-24 → LM2596 for this; it is superseded._
 
 ### Open: what regulator the Elecrow board uses for its 5 V
 
@@ -314,6 +318,99 @@ so this has not been confirmed from the datasheet.
 TB6600s accept 9–42 V, and a higher rail means faster coil current rise and more
 torque at speed. If rapids ever need to be quicker, 36 V would help — and at that
 point the board needs its own buck regardless. A pen plotter does not need it.
+
+## 11. DC wiring and protection — sized to the supply, not the load
+
+_Worked out 2026-10-08/09 while planning the build. Arithmetic, not measurement; the
+load figures are section 10's first-principles estimates._
+
+The decision recorded in `ENCLOSURE_HANDOFF.md` is **no DC fuses**: each wire is sized to
+carry whatever its supply will deliver before the supply's own protection acts. This
+section is why that works, and what it requires.
+
+### The mains fuse does not protect the DC side
+
+The fuse in the IEC inlet sees mains current. If the LRS-350-24 delivers its full 15 A
+into a fault:
+
+| | |
+|---|---|
+| DC power | 24 V × 15 A = 360 W |
+| from the wall, at ~88 % efficiency | 360 / 0.88 ≈ 409 W |
+| mains current | 409 / 230 ≈ **1.8 A** |
+
+That never blows the inlet fuse. A dead short is not the danger — it trips the PSU's own
+over-current protection. The danger is a **partial fault** (chafed insulation on the
+frame, a failing driver) drawing, say, 8 A: below the PSU's trip point, invisible to the
+inlet fuse, and able to run for hours. With no DC fuse, the wire must carry that safely.
+
+### So the minimum wire is set by the supply's current limit
+
+| Circuit | What can flow before something trips | Minimum |
+|---|---|---|
+| **24 V and G1** (LRS-350-24) | 14.6 A rated, over-current trip above that, ~15–19 A | **1.5 mm²** |
+| **12 V and G2** | the 12 V supply's limit — **read its label**, take ~1.3 × rated | size to that |
+| **6 V** (buck output) | the buck's current limit: ~3 A for an LM2596, ~5 A for an XL4015 | 0.5 mm² / 0.75 mm² |
+| Signals (step/dir/enable, endstops, PWM) | milliamps | 0.25 mm², limited only by what the terminal will clamp |
+
+**AWG trap: 16 AWG is 1.31 mm², below 1.5.** For the 24 V and G1 runs buy metric 1.5 mm²,
+or 14 AWG (2.08 mm²). 18 AWG is 0.82 mm², 20 AWG 0.52 mm², 22 AWG 0.33 mm², 24 AWG 0.20 mm².
+
+**Fuse-and-thin-wire is the other valid scheme** — e.g. 20 AWG on 24 V behind a
+**T2A** (time-lag) 5×20 fuse at the PSU terminal: the normal 0.75 A load is 38 % of 2 A,
+and the time-lag rides through the drivers' input-capacitor inrush. It was considered and
+not chosen. **Thin wire with no fuse is the one combination that is not allowed.**
+
+### Voltage drop is not the constraint here
+
+Copper is 0.0172 Ω·mm²/m. On the servo pair (2.5 A stall, about 1 A running):
+
+- 0.75 mm² × 1.5 m return at 2.5 A: 2.5 × 1.5 × 0.023 = **86 mV**
+- 0.5 mm² × 1 m at 1 A: **33 mV**
+
+Both are trivial against a ~2.5 V logic threshold. What matters for the servo is that
+its return current does not share a conductor with the logic reference (section 2), and
+the **2200 µF at the servo end** (section 6a), which no wire size replaces.
+
+### Grounds
+
+- **A non-isolated buck's IN− and OUT− are the same copper.** Run one 0 V conductor
+  between any two points, never two in parallel — a second path is a loop through the
+  buck's board.
+- **DC 0 V stays off PE.** 0 V already reaches the building earth through the Mac's USB
+  lead; a second bond inside the box is a ground loop through that cable.
+- A supply that feeds nothing referenced to the board (e.g. one that runs only fans)
+  need not join the star at all.
+
+### Cable and termination
+
+- **Anything that moves** (servo and endstop leads on the gantry) is **high-flex** —
+  fine-stranded silicone. Ordinary multicore cracks inside within weeks.
+- **Endstops: twisted pair or screened** over 1.5 m next to motor leads, screen at the
+  box end only. Otherwise false limit trips.
+- **Ferrules by cross-section, never by colour** — two colour codes are in wide use.
+  0.25 lilac / 0.5 white / 0.75 blue / 1.0 red / 1.5 black / 2.5 grey (DIN 46228-4).
+- On **3.5 mm-pitch** board terminals, use **uninsulated** ferrules: an insulated 1.0 mm²
+  collar is ~4 mm across. Never solder-tin a wire under a screw — the solder creeps and
+  the clamp loosens.
+- **Distinct pin counts per function** (GX16-4 for the servo, GX16-3 for endstops): plug
+  6 V into an endstop socket and it lands on a 5 V logic input.
+- **Never hot-plug a stepper connector.** A TB6600 whose motor is pulled live often dies.
+
+### Parts that look interchangeable and are not
+
+- **LED drivers as supplies:** constant-**voltage** only (e.g. Mean Well LPV/HLG CV). A
+  constant-**current** driver raises its voltage until it reaches its set current — it
+  destroys a logic board.
+- **Lever splitters (PCT-22x, Wago 221 clones):** every port of one splitter is one
+  node. Fine for low-voltage commons. On mains prefer genuine Wago 221 — clone clamp
+  force and ratings vary by batch. A DIN-carrier lever splice does **not** bond to the
+  rail, so it is not an earth terminal.
+- **DIN terminal blocks:** the signal wires are 0.25 mm², so a block whose range starts
+  at 0.5 mm² cannot hold them. Seen while shopping: **JCST 2.5** (7 mm wide, 0.5–4 mm²,
+  36 A) — rejected for that reason; **Vital RM2.5U/CU** (24 A / 800 V, screw-in shorting
+  link "RM2.5") — pitch and minimum wire size unconfirmed with the seller, and the
+  catalogue has no PE block and no fuse block yet.
 
 ## 9. Method note
 

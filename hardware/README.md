@@ -155,6 +155,10 @@ frame well instead and let the rails retain it.
 
 ## The electronics: two UN4412 boxes
 
+> **History.** This design is abandoned in favour of one 1 mm stainless enclosure — see
+> `docs/ENCLOSURE_HANDOFF.md`. The section is kept because `panel.py` and the clearance
+> lessons below carry over; the power topology does not.
+
 Split from a single UN4020 so that **the box you actually open has nothing
 above 24 V in it**. Power box: IEC in, both PSUs, the servo buck, the mains
 splitter, and the single point where the two PSU 0 V rails bond. Control box:

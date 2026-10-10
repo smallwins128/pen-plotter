@@ -7,6 +7,12 @@ keyed panel connector. Written to be built in the order given; each phase ends i
 from a datasheet (marked) or arithmetic from the loads in [SETUP.md](SETUP.md). Treat the
 mechanical dimensions as a starting point, not as measured fact.
 
+> **Superseded on power protection and the servo supply (2026-10-10).** The current
+> decisions are in [ENCLOSURE_HANDOFF.md](ENCLOSURE_HANDOFF.md): **no DC fuses** (the F1 /
+> F2 below are not fitted; wire is sized to each supply's current limit instead — see
+> [FINDINGS.md §11](FINDINGS.md)), and the servo runs from a **12 V supply → buck**, not a
+> buck on the 24 V rail. The grounding argument here (one star, 0 V off PE) still stands.
+
 > **Do this after the servo reset is fixed, not before.** The open fault in
 > [HANDOFF.md §7](HANDOFF.md) is unresolved. Build an enclosure around it and you will be
 > debugging it through a lid. Cap at the servo, twist the pairs, shorten the arm, confirm

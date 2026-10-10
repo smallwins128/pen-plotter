@@ -43,6 +43,11 @@ the two sketches regenerate everything into `hardware/out/` (git-ignored).
 - **Panel wiring:** PSU -> switch -> jack. The display red goes after the switch (so it doubles as the "rail on" light), and the display black goes to that rail's own ground.
 - **Jack lugs:** insulated M4 ring terminals. Blue (1.5-2.5 mm²) for 24 V and G1, red (0.5-1.5 mm²) for 12 V, 6 V and G2.
 - **No fuses.** The PSUs current-limit, so 24 V and G1 wire must be 1.5 mm² or heavier.
+  **16 AWG is 1.31 mm² and does not meet that** — buy metric 1.5 mm² or 14 AWG. The 12 V,
+  G2 and 6 V wire is sized to the 12 V supply's and the buck's own current limits (read
+  the 12 V supply's label). Why the mains inlet fuse cannot stand in for a DC fuse, and the
+  rest of the wire-size arithmetic: [FINDINGS.md §11](FINDINGS.md). POWER.md's F1 / F2 are
+  superseded by this decision.
 
 ## Flags still open
 
