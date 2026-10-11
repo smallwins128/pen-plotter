@@ -1,5 +1,8 @@
 # Enclosure handoff — from plastic boxes to one stainless enclosure
 
+> **Current state of the stainless boxes, files, renderer and open items: `docs/ENCLOSURE_STATE.md`.**
+> This file is the original brief and background.
+
 Start a new chat with this file. It records where the electronics enclosure
 work stands, what was decided and why, and what is next.
 
