@@ -168,7 +168,7 @@ def lid_section(ox, oy):
     o.append(rect(rx - 9, top + th, 18, 4, "#a0a7b0"))
     o.append(rect(rx - 6, top + th + 4, 12, 34, "#a0a7b0"))
     o.append(t(rx - 64, top + 66, "M3 rivnut, set from OUTSIDE (top):", 9, RED))
-    o.append(t(rx - 64, top + 79, "flange proud ~0.8 → lid hole Ø9 clears it; Ø12 washer clamps", 9, GREY))
+    o.append(t(rx - 64, top + 79, "flange Ø8, proud ~0.8 → lid hole Ø10 clears it; Ø16 penny washer clamps", 9, GREY))
     # lid: top sheet on the lip, return lip outside the wall
     lt = top - th
     o.append(rect(wx - 140, lt, 140 + th + LID_CLEAR * s + th, th, "#f6e3c8"))
@@ -245,7 +245,7 @@ def rules(ox, oy):
             ("rivnuts (lid lips, base plate)", f"M3 Ø{RIVNUT_M3_HOLE} / M4 Ø{RIVNUT_M4_HOLE} — MEASURE yours"),
             ("panel fixings", f"M3 countersunk + nyloc nut, Ø{SCREW_CLEAR} holes"),
             ("lid to body", f"{LID_CLEAR} mm per side inside the lid's return lips"),
-            ("lid holes over rivnuts", "Ø9 clearance, M3 screw + Ø12 washer"),
+            ("lid holes over rivnuts", "Ø10 clearance, M3 screw + Ø16 penny washer"),
             ("rubber feet", "4 per box, Ø4.5 holes, 40 mm in from each corner"),
             ("lid band", "nothing mounted within 20 mm of the top or the back edge")]
     o = [panel_title(ox, oy - 12, "G", "Rules every cut file follows")]

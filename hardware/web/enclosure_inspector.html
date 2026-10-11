@@ -115,7 +115,7 @@ const P = {
   t: 1, lip: 15, clr: GEN.clr, tabGap: GEN.tabGap, rivFromWall: 8, W: 450, D: 295,
   H: { control: 110, power: 170 },
   band: 20,                 // no-mount band under the lid: 20 mm below the top, 20 mm from the back edge
-  standoff: 5, plateT: 2, foot: 8, rivHoleLid: GEN.lidHole, washer: 12,
+  standoff: 5, plateT: 2, foot: 8, rivHoleLid: GEN.lidHole, washer: 16,
 };
 const SPEC = [
   ["Sheet", "1 mm 304 stainless"], ["Inside W × D", `${P.W} × ${P.D}`],
@@ -243,7 +243,7 @@ function screwWasher(group, x, y, z, axis, name, info) {
   const h = cyl(2.8, 2.2, "screw"); h.position.y = 0.8 + 1.1; g.add(h);
   const sh = cyl(1.5, 8, "screw", 12); sh.position.y = -4; g.add(sh);
   orient(g, axis); g.position.set(x, y, z);
-  g.traverse(o => o.userData = { name: name || "M3 screw + Ø12 washer", info: info || `Washer bridges the Ø${P.rivHoleLid} clearance hole and clamps the lid flat onto the bare lip.` });
+  g.traverse(o => o.userData = { name: name || "M3 screw + Ø16 penny washer", info: info || `Washer bridges the Ø${P.rivHoleLid} clearance hole and clamps the lid flat onto the bare lip.` });
   group.add(g); return g;
 }
 function csScrewNut(group, x, y, z, axis, len = 10) {   // countersunk from outside, nut inside
