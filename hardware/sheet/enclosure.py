@@ -37,6 +37,8 @@ import sys
 from shapely.geometry import LineString, Point, Polygon, box as sbox
 from shapely.ops import unary_union
 
+import strokes as ST
+
 HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE.parent / "out" / "sheet"
 
@@ -163,6 +165,14 @@ def add_rect(p, face, mp, u, v, w, h, note):
     w2, h2 = abs(dx), abs(dy)
     p.holes.append(dict(kind="rect", c=(x, y), w=w2, h=h2, note=note, face=face, type="cutout",
                         geom=sbox(x - w2 / 2, y - h2 / 2, x + w2 / 2, y + h2 / 2), uv=(u, v), uvwh=(w, h)))
+
+
+def add_poly(p, face, mp, pts, note, kind="poly"):
+    """Closed polygon hole from (u, v) points on a face."""
+    xy = [mp(u, v) for u, v in pts]
+    g = Polygon(xy)
+    p.holes.append(dict(kind="poly", pts=xy, c=tuple(g.representative_point().coords[0]), r=2.0, note=note, face=face, type=kind,
+                        geom=g, uvpts=[tuple(q) for q in pts]))
 
 
 def add_slot(p, face, mp, u, v, length, width, ang, note):
@@ -358,11 +368,15 @@ def body(kind):
         panel("left", ML, -D / 2 + 242.5, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, D / 2 - 146, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
-        top = T + H[kind]
-        for r in range(3):
-            for i in range((7, 5, 3)[r]):
-                add_slot(p, "front", MF, W / 2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0.0, "vent")
-        feat.append(("front", W / 2 - 40 - 6 * 34 - 14, W / 2 - 26, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
+        # brush strokes + ETCH mark (hardware/sheet/strokes.py): slots the black prints push through
+        U = lambda pts: [(x - WO / 2, y) for x, y in pts]
+        for d in ST.strokes():
+            add_poly(p, "front", MF, U(d["outline"].exterior.coords[:-1]), "brush stroke slot", "stroke")
+        for g in ST.mark():
+            add_poly(p, "front", MF, U(g.exterior.coords[:-1]), "ETCH mark slot", "mark")
+        for name, hs in (("brush strokes", [h for h in p.holes if h["type"] == "stroke"]), ("ETCH mark", [h for h in p.holes if h["type"] == "mark"])):
+            uu = [q[0] for h in hs for q in h["uvpts"]]; vv = [q[1] for h in hs for q in h["uvpts"]]
+            feat.append(("front", min(uu) - ST.FLANGE, max(uu) + ST.FLANGE, min(vv) - ST.FLANGE, max(vv) + ST.FLANGE, name))
         fan("left", ML, *FAN[kind])
         panel("left", ML, D / 2 - 175, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
@@ -593,6 +607,14 @@ def checks(parts):
             ex, ey = max(w, h) / 2 + 10 - 6, min(w, h) / 2 + 10 - 6
             ok(abs(ex - PANEL[key]["screw"][0]) < 0.01 and abs(ey - PANEL[key]["screw"][1]) < 0.01, "panels",
                f"{key} screw pattern ±{ex:.1f} x ±{ey:.1f} matches the print")
+    # power front art: stroke slots far enough apart that their printed flanges never touch; the mark clear of them
+    pb = by["power_body"]
+    sl = [h["geom"] for h in pb.holes if h["type"] == "stroke"]; mk = [h["geom"] for h in pb.holes if h["type"] == "mark"]
+    sw = min(sl[i].distance(sl[j]) for i in range(len(sl)) for j in range(i + 1, len(sl)))
+    ok(sw >= ST.MIN_WEB, "art", f"brush-stroke slots {sw:.1f} mm apart at the closest (flanges need {ST.MIN_WEB:g})")
+    mw = min(a.distance(b) for a in mk for b in sl)
+    ok(mw >= ST.MIN_WEB, "art", f"ETCH mark {mw:.0f} mm clear of the strokes")
+    ok(all(g.is_valid and len(g.interiors) == 0 for g in sl + mk), "art", "art slots are single closed outlines (no loose steel inside)")
     # stacking: power-lid peg holes sit under the control box's foot holes, and the feet clear what lies between
     feet = sorted(h["c"] for h in by["control_body"].holes if h["note"] == "Ø4.5 locating foot")
     pegs = sorted(h["peg"] for h in by["power_lid"].holes if "peg" in h)
@@ -678,6 +700,11 @@ def write_dxf(p, path):
             pts = [(x - w / 2, y - hh / 2), (x + w / 2, y - hh / 2), (x + w / 2, y + hh / 2), (x - w / 2, y + hh / 2), (x - w / 2, y - hh / 2)]
             for a, b in zip(pts, pts[1:]):
                 line(a, b, "Visible")
+        elif k == "poly":
+            pts = list(h["pts"]) + [h["pts"][0]]
+            for a, b in zip(pts, pts[1:]):
+                if math.dist(a, b) > 1e-6:
+                    line(a, b, "Visible")
         elif k == "slot":
             (x0, y0), (x1, y1), r = h["p0"], h["p1"], h["r"]
             a = math.atan2(y1 - y0, x1 - x0); nx, ny = -math.sin(a) * r, math.cos(a) * r
@@ -894,6 +921,8 @@ def sync_inspector(parts):
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={},
+               strokes=[[[round(x - WO / 2, 2), round(y, 2), round(w, 2), round(hh, 2)] for x, y, w, hh in d["samples"]] for d in ST.strokes()],
+               mark=dict(proud=ST.MARK_PROUD, polys=[[[round(x - WO / 2, 2), round(y, 2)] for x, y in g.exterior.coords[:-1]] for g in ST.mark()]),
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
                           holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))
     gen["walls"], gen["panels"] = {}, {}
@@ -902,11 +931,13 @@ def sync_inspector(parts):
         gen["panels"][kind] = b.panels
         walls = gen["walls"][kind] = {"front": [], "left": [], "right": []}
         for h in b.holes:
-            if h["face"] not in walls or "uv" not in h or "fan" in h["note"]:
+            if h["face"] not in walls or ("uv" not in h and "uvpts" not in h) or "fan" in h["note"]:
                 continue                       # fan grille + screws: the inspector draws them from gen["fan"]
-            u, v = (round(q, 3) for q in h["uv"])
+            u, v = (round(q, 3) for q in h.get("uv", (0, 0)))
             if h["kind"] == "rect":
                 walls[h["face"]].append(["rect", u, v, *h["uvwh"]])
+            elif h["kind"] == "poly":
+                walls[h["face"]].append(["poly", [[round(a, 2), round(b, 2)] for a, b in h["uvpts"]]])
             elif h["kind"] == "slot":
                 walls[h["face"]].append(["slot", u, v, *h["uvslot"]])
             else:
