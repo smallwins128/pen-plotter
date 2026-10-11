@@ -89,44 +89,6 @@ FAN = {"control": (-30.0, T + H["control"] / 2 - 8), "power": (D / 2 - 50, T + 5
 FAN_DEPTH = 25.0
 
 
-# Power box front: hex holes that cluster in the top-left corner and ease out toward the sloped edge.
-# Outline from Allwin's sketch, in front-face mm: x from the left edge, y down from the top edge.
-HEX_REGION = [(32, 52), (36, 46), (44, 44), (52, 44), (75, 50), (93, 58.5), (117.5, 73.7), (144.6, 85.4), (169.5, 96),
-              (192, 103), (210, 107.6), (227, 113.5), (233, 118), (233, 134), (226, 140), (36, 140), (32, 136)]
-HEX_ANCHOR = (38.0, 50.0)       # where the holes are biggest
-HEX_PITCH, HEX_AF_MAX, HEX_AF_MIN = 9.0, 7.0, 2.6   # across-flats; web at the biggest hole = pitch - AF = 2.0
-
-
-def hex_field(kind):
-    """(u, v, across-flats) per hole on the power front: u from the face centre, v up from the base underside."""
-    if kind != "power":
-        return []
-    Hb = T + H[kind]
-    reg = Polygon(HEX_REGION)
-    ax, ay = HEX_ANCHOR
-    out, dy = [], HEX_PITCH * math.sqrt(3) / 2
-    y, row = 30.0, 0
-    while y < 150:
-        x = 20.0 + (HEX_PITCH / 2 if row % 2 else 0)
-        while x < 240:
-            if reg.contains(Point(x, y)):
-                ang = math.atan2(y - ay, x - ax)
-                ray = LineString([(ax, ay), (ax + 400 * math.cos(ang), ay + 400 * math.sin(ang))]).intersection(reg)
-                reach = ray.length if ray.length > 0 else 1.0
-                t = min(1.0, math.hypot(x - ax, y - ay) / reach)
-                af = HEX_AF_MAX * (1 - t) ** 0.9
-                if af >= HEX_AF_MIN:
-                    out.append((x - W / 2 - T, Hb - y, round(af, 2)))
-            x += HEX_PITCH
-        y += dy; row += 1
-    return out
-
-
-def hex_pts(u, v, af):
-    r = af / math.sqrt(3)
-    return [(u + r * math.cos(math.pi / 2 + i * math.pi / 3), v + r * math.sin(math.pi / 2 + i * math.pi / 3)) for i in range(6)]
-
-
 def panel_y(kind, ht):
     """Panel centre height above the base underside: as high as the lid band allows."""
     top = T + H[kind]
@@ -187,13 +149,6 @@ def add_rect(p, face, mp, u, v, w, h, note):
     w2, h2 = abs(dx), abs(dy)
     p.holes.append(dict(kind="rect", c=(x, y), w=w2, h=h2, note=note, face=face, type="cutout",
                         geom=sbox(x - w2 / 2, y - h2 / 2, x + w2 / 2, y + h2 / 2)))
-
-
-def add_poly(p, face, mp, pts, note, r):
-    """Closed polygon hole from (u, v) points on a face. `r` is only for the leader text offset."""
-    xy = [mp(u, v) for u, v in pts]
-    g = Polygon(xy)
-    p.holes.append(dict(kind="poly", pts=xy, c=tuple(g.centroid.coords[0]), r=r, note=note, face=face, type="vent", geom=g))
 
 
 def add_slot(p, face, mp, u, v, length, width, ang, note):
@@ -393,10 +348,6 @@ def body(kind):
             for i in range((7, 5, 3)[r]):
                 add_slot(p, "front", MF, W / 2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0.0, "vent")
         feat.append(("front", W / 2 - 40 - 6 * 34 - 14, W / 2 - 26, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
-        hv = hex_field(kind)
-        for u, v, af in hv:
-            add_poly(p, "front", MF, hex_pts(u, v, af), "hex vent", af / 2)
-        feat.append(("front", min(u for u, _, _ in hv) - 4, max(u for u, _, _ in hv) + 4, min(v for _, v, _ in hv) - 4, max(v for _, v, _ in hv) + 4, "front hex vents"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, D / 2 - 175, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
@@ -695,10 +646,6 @@ def write_dxf(p, path):
             pts = [(x - w / 2, y - hh / 2), (x + w / 2, y - hh / 2), (x + w / 2, y + hh / 2), (x - w / 2, y + hh / 2), (x - w / 2, y - hh / 2)]
             for a, b in zip(pts, pts[1:]):
                 line(a, b, "Visible")
-        elif k == "poly":
-            pts = h["pts"] + h["pts"][:1]
-            for a, b in zip(pts, pts[1:]):
-                line(a, b, "Visible")
         elif k == "slot":
             (x0, y0), (x1, y1), r = h["p0"], h["p1"], h["r"]
             a = math.atan2(y1 - y0, x1 - x0); nx, ny = -math.sin(a) * r, math.cos(a) * r
@@ -914,7 +861,7 @@ def sync_inspector(parts):
     by = {p.name: p for p in parts}
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
-               fan={k: list(v) for k, v in FAN.items()}, plate={}, hexVents=[list(h) for h in hex_field("power")])
+               fan={k: list(v) for k, v in FAN.items()}, plate={})
     for kind in ("control", "power"):
         pl = by[f"{kind}_base_plate"]
         gen["plate"][kind] = dict(outline=[[round(x, 2), round(z, 2)] for x, z in pl.outline().exterior.coords[:-1]],
