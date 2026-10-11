@@ -295,7 +295,7 @@ function buildBox(kind) {
   const front = [], left = [], right = [];
   if (kind === "control") {
     for (let i = 0; i < 6; i++) front.push(holeCircle(-10 - 75 + i * 30, t + H / 2 + 6, 8.1));
-    left.push(...fanGrille(-30, t + H / 2 - 8), holeRect(-D/2 + 230, t + H / 2 + 4, 9, 4), holeCircle(-D/2 + 255, t + H / 2 + 4, 3.3));
+    left.push(...fanGrille(-30, t + H / 2 - 8), holeRect(-D/2 + 242.5, t + H / 2, 50, 20), ...[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b]) => holeCircle(-D/2 + 242.5 + a * 29, t + H / 2 + b * 14, 1.7)));
     right.push(holeRect(D/2 - 146, panelY(70), 152, 50));                 // receiving panel cutout (on its side)
   } else {
     for (let r = 0; r < 3; r++) for (let i = 0; i < [7, 5, 3][r]; i++) front.push(holeSlot(W/2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0));
@@ -380,7 +380,7 @@ function buildBox(kind) {
     });
     FEAT.push(["front", -10 - 106, -10 + 106, py - 33.5, py + 33.5, "GX16 rail"]);
     FEAT.push(["left", -30 - 40, -30 + 40, t + H / 2 - 8 - 40, t + H / 2 - 8 + 40, "Fan + its screws"]);
-    FEAT.push(["left", -D/2 + 222, -D/2 + 262, py - 6, py + 12, "USB-C + antenna"]);
+    FEAT.push(["left", -D/2 + 207.5, -D/2 + 277.5, py - 20, py + 20, "USB/antenna panel"]);
     // GX rail on the front
     const rail = box(212, 67, 3, "panel", -10, py, D/2 + t + 1.5, "GX16 rail (new print)", "1 × 6 GX16: X1 X2 Y XLIM YLIM PEN. Cutout 192 × 47.");
     panels.add(rail);
@@ -390,8 +390,10 @@ function buildBox(kind) {
     }
     for (const a of [-1, 1]) for (const b of [-1, 1]) csScrewNut(panels, -10 + a * 100, py + b * 27.5, D/2 + t + 3, "-z", 8);
     // USB-C + antenna
-    panels.add(box(3, 10, 16, "gx", -W/2 - t - 1.5, py + 4, -D/2 + 230, "USB-C panel adapter", "Plugs into the board's USB-C."));
-    const ant = cyl(5, 105, "dark"); ant.rotation.z = 0.45; ant.position.set(-W/2 - 25, py + 45, -D/2 + 255); ant.userData = { name: "Wi-Fi antenna", info: "SMA bulkhead, Ø6.5 hole. Needed: the stainless box blocks Wi-Fi." }; panels.add(ant);
+    panels.add(box(3, 40, 70, "panel", -W/2 - t - 1.5, py, -D/2 + 242.5, "USB/antenna panel (new print)", "70 × 40 plate: USB-C adapter + SMA antenna. Cutout 50 × 20, so the parts can change without new steel."));
+    for (const a of [-1, 1]) for (const b of [-1, 1]) csScrewNut(panels, -(W/2 + t + 3), py + b * 14, -D/2 + 242.5 + a * 29, "+x", 8);
+    panels.add(box(3, 10, 16, "gx", -W/2 - t - 4.5, py, -D/2 + 230, "USB-C panel adapter", "Plugs into the board's USB-C."));
+    const ant = cyl(5, 105, "dark"); ant.rotation.z = 0.45; ant.position.set(-W/2 - 25, py + 41, -D/2 + 258); ant.userData = { name: "Wi-Fi antenna", info: "SMA bulkhead, Ø6.5 hole. Needed: the stainless box blocks Wi-Fi." }; panels.add(ant);
   } else {
     const [x, pyP] = sidePanel(1, D/2 - 160, 172, 140.4, "PSU panel (original print)", "Mounted on its side: 172 along the wall, 140.4 tall. Cutout 152 × 120.4. Displays read sideways.");
     [[0xc0392b], [0xe67e22], [0xf1c40f], [0x111111], [0x111111]].forEach(([c], i) => {

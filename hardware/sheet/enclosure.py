@@ -79,6 +79,7 @@ PANEL = {
     "psu": dict(cut=(152.0, 120.4), plate=(172.0, 140.4), screw=(80.0, 64.2)),
     "gx_rail": dict(cut=(192.0, 47.0), plate=(212.0, 67.0), screw=(100.0, 27.5)),     # new print
     "iec": dict(cut=(130.0, 65.0), plate=(150.0, 85.0), screw=(69.0, 36.5)),          # new print
+    "usb_ant": dict(cut=(50.0, 20.0), plate=(70.0, 40.0), screw=(29.0, 14.0)),        # new print: USB-C + antenna
 }
 
 
@@ -330,9 +331,7 @@ def body(kind):
     if kind == "control":
         panel("front", MF, -10.0, T + H[kind] / 2, "gx_rail", "GX16 rail")
         fan("left", ML, -30.0, T + H[kind] / 2 - 8)
-        add_rect(p, "left", ML, -D / 2 + 230, T + H[kind] / 2 + 4, 10.0, 4.5, "USB-C panel adapter (MEASURE)")
-        add_circle(p, "left", ML, -D / 2 + 255, T + H[kind] / 2 + 4, "sma")
-        feat.append(("left", -D / 2 + 222, -D / 2 + 262, T + H[kind] / 2 - 6, T + H[kind] / 2 + 12, "USB-C + antenna"))
+        panel("left", ML, -D / 2 + 242.5, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, D / 2 - 146, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
         top = T + H[kind]
