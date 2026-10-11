@@ -53,7 +53,9 @@ W, D = 450.0, 295.0                     # inside width, inside depth (front wall
 H = {"control": 110.0, "power": 170.0}  # inside height (floor to underside of the top lips)
 LIP = 15.0                              # lips, measured inside
 LIPO = LIP + T                          # lip outer leg, from the outer face of the wall it folds off
-CLR = 0.5                               # lid return lips to the body, per side
+CLR = 1.0                               # lid return lips to the body, per side (sliding fit; bends are ±0.5)
+FOLD_GAP = 2.5                          # gap between folded flanges that must not touch (rule: ≥ 2, bends are ±0.5)
+TAB_GAP = 0.5                           # side walls' front edges + corner tabs stop shy of the front wall; rivets close it
 BAND = 20.0                             # no-mount band under the lid's lips
 RIV_IN = 8.0                            # rivnut centre from the inside face of its wall
 WO = W + 2 * T                          # body outside width
@@ -66,7 +68,7 @@ HOLE = {   # name: (diameter, leader text)
     "rivet": (3.2, "Ø3.2 solid rivet"),
     "m4": (4.5, "Ø4.5 M4"),
     "fan": (4.4, "Ø4.4 fan screw"),
-    "lidclr": (9.0, "Ø9 clears rivnut flange"),
+    "lidclr": (10.0, "Ø10 clears rivnut flange"),
     "sma": (6.5, "Ø6.5 SMA antenna"),
     "stud": (6.5, "Ø6.5 M6 earth stud"),
     "grid": (6.0, "Ø6 grid (M4 rivnut)"),
@@ -81,6 +83,10 @@ PANEL = {
     "iec": dict(cut=(130.0, 65.0), plate=(150.0, 85.0), screw=(69.0, 36.5)),          # new print
     "usb_ant": dict(cut=(50.0, 20.0), plate=(70.0, 40.0), screw=(29.0, 14.0)),        # new print: USB-C + antenna
 }
+
+
+FAN = {"control": (-30.0, T + H["control"] / 2 - 8), "power": (D / 2 - 50, T + 55)}   # left wall: (z, y) centre, 80 x 80 x 25
+FAN_DEPTH = 25.0
 
 
 def panel_y(kind, ht):
@@ -211,23 +217,24 @@ def body(kind):
     # left wall: (u=z, v=y) -> X = -xe - BA - (v - S), Y = u
     ML = Map(0, -1, 1, 0, -xe - BA + S, 0)
     MR = Map(0, 1, 1, 0, xe + BA - S, 0)
-    zfi = D / 2                              # front-wall inner face = tab outer face (side walls' front mold line)
+    zfi = D / 2                              # front-wall inner face
+    zs = zfi - TAB_GAP                       # side walls' front mold line = corner tab outer face
     for side, M_, sgn in (("left", ML, -1), ("right", MR, 1)):
         x_in, x_top = M_(0, S)[0], M_(0, Hb - S)[0]         # wall face X at its bottom and top bend lines
-        face = sbox(min(x_in, x_top), yb0, max(x_in, x_top), zfi - S)
+        face = sbox(min(x_in, x_top), yb0, max(x_in, x_top), zs - S)
         p.solid.append(face); p.faces[side] = face
-        zone = sbox(min(sgn * xe, sgn * (xe + BA)), yb0, max(sgn * xe, sgn * (xe + BA)), zfi - S)   # base→wall
+        zone = sbox(min(sgn * xe, sgn * (xe + BA)), yb0, max(sgn * xe, sgn * (xe + BA)), zs - S)   # base→wall
         p.solid.append(zone)
-        add_bend(p, (sgn * (xe + BA / 2), yb0), (sgn * (xe + BA / 2), zfi - S), "Up 90° R1", zone)
+        add_bend(p, (sgn * (xe + BA / 2), yb0), (sgn * (xe + BA / 2), zs - S), "Up 90° R1", zone)
         # top lip: full wall length
         xt0, xt1 = x_top, x_top + sgn * BA
-        ztop = sbox(min(xt0, xt1), yb0, max(xt0, xt1), zfi - S)
-        lip = sbox(min(xt1, xt1 + sgn * (LIPO - S)), yb0, max(xt1, xt1 + sgn * (LIPO - S)), zfi - S)
+        ztop = sbox(min(xt0, xt1), yb0, max(xt0, xt1), zs - S)
+        lip = sbox(min(xt1, xt1 + sgn * (LIPO - S)), yb0, max(xt1, xt1 + sgn * (LIPO - S)), zs - S)
         p.solid += [ztop, lip]
-        add_bend(p, ((xt0 + xt1) / 2, yb0), ((xt0 + xt1) / 2, zfi - S), "Up 90° R1", ztop)
-        p.fold.append((f"{side} top lip", *sorted((sgn * (WO / 2), sgn * (WO / 2 - LIPO))), Hb - T, Hb, ZB + 0.0 + S, zfi - S))
+        add_bend(p, ((xt0 + xt1) / 2, yb0), ((xt0 + xt1) / 2, zs - S), "Up 90° R1", ztop)
+        p.fold.append((f"{side} top lip", *sorted((sgn * (WO / 2), sgn * (WO / 2 - LIPO))), Hb - T, Hb, ZB + 0.0 + S, zs - S))
         # back lip: y from 16.5 to Hb-3
-        vb0, vb1 = LIPO + 0.5, Hb - 3.0
+        vb0, vb1 = LIPO + FOLD_GAP, Hb - 3.0          # clear of the base back lip
         xa, xb = M_(0, vb0)[0], M_(0, vb1)[0]
         zb_zone = sbox(min(xa, xb), yb0 - BA, max(xa, xb), yb0)
         blip = sbox(min(xa, xb), yb0 - BA - (LIPO - S), max(xa, xb), yb0 - BA)
@@ -239,17 +246,17 @@ def body(kind):
         # corner tab at the front edge: y from 8 to Hb-3
         tv0, tv1 = 8.0, Hb - 3.0
         xa, xb = M_(0, tv0)[0], M_(0, tv1)[0]
-        tz = sbox(min(xa, xb), zfi - S, max(xa, xb), zfi - S + BA)
-        tab = sbox(min(xa, xb), zfi - S + BA, max(xa, xb), zfi - S + BA + (LIPO - S))
+        tz = sbox(min(xa, xb), zs - S, max(xa, xb), zs - S + BA)
+        tab = sbox(min(xa, xb), zs - S + BA, max(xa, xb), zs - S + BA + (LIPO - S))
         p.solid += [tz, tab]
-        add_bend(p, (xa, zfi - S + BA / 2), (xb, zfi - S + BA / 2), "Up 90° R1", tz)
+        add_bend(p, (xa, zs - S + BA / 2), (xb, zs - S + BA / 2), "Up 90° R1", tz)
         for xe_, away in ((xa, -sgn), (xb, sgn)):
-            relief_notch(p, (xe_, zfi - S), (away, 0), (0, -1), (0, 1))
-        p.fold.append((f"{side} corner tab", *sorted((sgn * (WO / 2 - T), sgn * (WO / 2 - LIPO))), tv0, tv1, zfi - T, zfi))
+            relief_notch(p, (xe_, zs - S), (away, 0), (0, -1), (0, 1))
+        p.fold.append((f"{side} corner tab", *sorted((sgn * (WO / 2 - T), sgn * (WO / 2 - LIPO))), tv0, tv1, zs - T, zs))
         # tab rivet holes (tab frame: u = distance in from the wall's outer face, v = y)
         MT = Map(0, -sgn, 1, 0, 0, 0)       # placeholder: holes placed directly below
         for v in (Hb * 0.3, Hb * 0.7):
-            xh = M_(0, v)[0]; yh = zfi - S + BA + (LIPO / 2 + T / 2 - S)
+            xh = M_(0, v)[0]; yh = zs - S + BA + (LIPO / 2 + T / 2 - S)
             p.holes.append(dict(kind="circle", c=(xh, yh), r=HOLE["rivet"][0] / 2, note=HOLE["rivet"][1], face=f"{side} tab",
                                 type="rivet", geom=Point(xh, yh).buffer(HOLE["rivet"][0] / 2, 48)))
         # top-lip rivnut (lip frame: distance in from the wall's outer face = T + RIV_IN)
@@ -265,7 +272,7 @@ def body(kind):
         x0, x1 = sorted((sgn * xe, sgn * (xe + BA)))
         corner_relief(p, x0, x1, yb0 - BA, yb0)
         corner_relief(p, x0, x1, yb1, yb1 + BA)
-        p.fold.append((f"{side} wall", *sorted((sgn * WO / 2, sgn * (WO / 2 - T))), 0, Hb, ZB, zfi))
+        p.fold.append((f"{side} wall", *sorted((sgn * WO / 2, sgn * (WO / 2 - T))), 0, Hb, ZB, zs))
     # --- front wall: (u=x, v=y) -> X = u, Y = yb1 + BA + (v - S)
     MF = Map(1, 0, 0, 1, 0, yb1 + BA - S)
     fz = sbox(-xe, yb1, xe, yb1 + BA)
@@ -273,7 +280,7 @@ def body(kind):
     p.solid += [fz, front]; p.faces["front"] = front
     add_bend(p, (-xe, yb1 + BA / 2), (xe, yb1 + BA / 2), "Up 90° R1", fz)
     yt = MF(0, Hb - S)[1]
-    flx = W / 2 - LIPO - 0.5
+    flx = WO / 2 - LIPO - FOLD_GAP          # front top lip ends clear of the side top lips
     ftz = sbox(-flx, yt, flx, yt + BA)
     flip = sbox(-flx, yt + BA, flx, yt + BA + (LIPO - S))
     p.solid += [ftz, flip]
@@ -292,11 +299,13 @@ def body(kind):
             p.holes.append(dict(kind="circle", c=(x, y), r=1.6, note=HOLE["rivet"][1], face="front", type="rivet",
                                 geom=Point(x, y).buffer(1.6, 48)))
     # --- base back lip
-    bx = xe - 0.5
+    bx = W / 2 - FOLD_GAP                    # ends clear of the side walls
     bz = sbox(-bx, yb0 - BA, bx, yb0)
     blip = sbox(-bx, yb0 - BA - (LIPO - S), bx, yb0 - BA)
     p.solid += [bz, blip]
     add_bend(p, (-bx, yb0 - BA / 2), (bx, yb0 - BA / 2), "Up 90° R1", bz)
+    for xe_, away in ((-bx, -1), (bx, 1)):
+        relief_notch(p, (xe_, yb0), (away, 0), (0, 1), (0, -1))
     p.fold.append(("base back lip", -bx, bx, 0, LIPO, ZB, ZB + T))
     p.fold.append(("base", -WO / 2, WO / 2, 0, T, ZB, ZF))
     xr, yr = 0.0, yb0 - BA - (T + LIP / 2 - S)
@@ -330,7 +339,7 @@ def body(kind):
         feat.append((wall, uc - 40, uc + 40, vc - 40, vc + 40, "fan + screws"))
     if kind == "control":
         panel("front", MF, -10.0, T + H[kind] / 2, "gx_rail", "GX16 rail")
-        fan("left", ML, -30.0, T + H[kind] / 2 - 8)
+        fan("left", ML, *FAN[kind])
         panel("left", ML, -D / 2 + 242.5, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, D / 2 - 146, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
@@ -339,7 +348,7 @@ def body(kind):
             for i in range((7, 5, 3)[r]):
                 add_slot(p, "front", MF, W / 2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0.0, "vent")
         feat.append(("front", W / 2 - 40 - 6 * 34 - 14, W / 2 - 26, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
-        fan("left", ML, D / 2 - 50, T + 50)
+        fan("left", ML, *FAN[kind])
         panel("left", ML, D / 2 - 175, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
         feat.append(("left", D / 2 - 266, D / 2 - 254, T + 14, T + 26, "earth stud"))
@@ -368,12 +377,17 @@ def lid(kind):
     y0, y1 = zl0 + S, zl1 - S
     top = sbox(-xe, y0, xe, y1); p.solid.append(top); p.faces["top"] = top
     # side returns, full length
+    G = FOLD_GAP - (S - T)                   # side returns stop short of the front return and the back
     for sgn in (-1, 1):
-        z = sbox(*sorted((sgn * xe, sgn * (xe + BA)))[:1], y0, sorted((sgn * xe, sgn * (xe + BA)))[1], y1)
-        lip = sbox(*sorted((sgn * (xe + BA), sgn * (xe + BA + LIPO - S)))[:1], y0, sorted((sgn * (xe + BA), sgn * (xe + BA + LIPO - S)))[1], y1)
+        x0, x1 = sorted((sgn * xe, sgn * (xe + BA)))
+        lx0, lx1 = sorted((sgn * (xe + BA), sgn * (xe + BA + LIPO - S)))
+        z = sbox(x0, y0 + G, x1, y1 - G)
+        lip = sbox(lx0, y0 + G, lx1, y1 - G)
         p.solid += [z, lip]
-        add_bend(p, (sgn * (xe + BA / 2), y0), (sgn * (xe + BA / 2), y1), "Up 90° R1", z)
-        p.fold.append((f"lid {('left','right')[sgn > 0]} return", *sorted((sgn * L, sgn * (L - T))), Hb + T - LIPO, Hb + T, zl0 + S, zl1 - S))
+        add_bend(p, (sgn * (xe + BA / 2), y0 + G), (sgn * (xe + BA / 2), y1 - G), "Up 90° R1", z)
+        relief_notch(p, (sgn * xe, y0 + G), (0, -1), (-sgn, 0), (sgn, 0))
+        relief_notch(p, (sgn * xe, y1 - G), (0, 1), (-sgn, 0), (sgn, 0))
+        p.fold.append((f"lid {('left','right')[sgn > 0]} return", *sorted((sgn * L, sgn * (L - T))), Hb + T - LIPO, Hb + T, zl0 + S + G, zl1 - S - G))
     # front return
     fz = sbox(-xe, y1, xe, y1 + BA); flip = sbox(-xe, y1 + BA, xe, y1 + BA + LIPO - S)
     p.solid += [fz, flip]
@@ -388,7 +402,7 @@ def lid(kind):
     p.fold.append(("lid top", -L, L, Hb, Hb + T, zl0, zl1))
     p.fold.append(("lid back", -L, L, Hb + T - Hl, Hb + T, zl0, zl0 + T))
     # back side returns: from 16.5 below the top's outer face to the bottom edge
-    h0 = LIPO + 0.5
+    h0 = LIPO + FOLD_GAP                     # clear of the top's side returns
     ya, yb = MBk(0, Hb + T - h0)[1], MBk(0, Hb + T - Hl)[1]
     for sgn in (-1, 1):
         x0, x1 = sorted((sgn * xe, sgn * (xe + BA)))
@@ -435,10 +449,25 @@ def lid(kind):
 # ============================================================================
 # BASE PLATE (flat, no bends)
 # ============================================================================
+PLATE_Y = (T + 5.0, T + 7.0)              # base plate underside / top, above the base underside
+
+
+def plate_notches(kind):
+    """Cut the plate clear (by FOLD_GAP) of what hangs low: the fan if it reaches below the plate's top + screw heads,
+    and the base back lip's rivnut body (Ø5 x 9 inward)."""
+    out = []
+    fz, fy = FAN[kind]
+    if fy - 40 < PLATE_Y[1] + 2.2 + FOLD_GAP:
+        out.append(sbox(-W, fz - 40 - FOLD_GAP, -W / 2 + FAN_DEPTH + FOLD_GAP, fz + 40 + FOLD_GAP))
+    out.append(sbox(-2.5 - FOLD_GAP - 1, -D, 2.5 + FOLD_GAP + 1, -D / 2 + 9 + FOLD_GAP))
+    return out
+
+
 def base_plate(kind):
     p = Part(f"{kind}_base_plate", f"{kind.upper()} BOX · BASE PLATE", "2.0 mm aluminium 5052 (or 1.5 mm 304)")
     pw, pd = 440.0, 285.0
     plate = sbox(-pw / 2, -pd / 2, pw / 2, pd / 2)
+    plate = plate.difference(unary_union(plate_notches(kind)))
     p.solid.append(plate); p.faces["plate"] = plate
     M0 = Map(1, 0, 0, 1, 0, 0)
     so = [(x, z) for x in (-(W / 2 - 20), 0.0, W / 2 - 20) for z in (-(D / 2 - 20), D / 2 - 20)]
@@ -448,7 +477,7 @@ def base_plate(kind):
     while z <= pd / 2 - 15:
         x = -pw / 2 + 20 + (20 if r % 2 else 0)
         while x <= pw / 2 - 15:
-            if all(math.hypot(x - sx, z - sz) >= 14 for sx, sz in so):
+            if all(math.hypot(x - sx, z - sz) >= 14 for sx, sz in so) and plate.buffer(-6).contains(Point(x, z)):
                 add_circle(p, "plate", M0, x, z, "grid")
             x += 40
         z += 40; r += 1
@@ -520,7 +549,7 @@ def checks(parts):
             m = [l for l in lh if l[2] == f[2] and math.hypot(l[0] - f[0], l[1] - f[1]) < 0.01]
             ok(len(m) == 1, kind, f"lid clearance hole over rivnut at {f[2]} ({f[0]:.1f}, {f[1]:.1f})")
         # rivnut flange (Ø8) inside the lid's Ø9 hole
-        ok(HOLE["lidclr"][0] - 8.0 >= 0.9, kind, "lid hole clears the rivnut flange (Ø9 over Ø8)")
+        ok((HOLE["lidclr"][0] - 8.0) / 2 >= CLR, kind, f"lid hole clears the rivnut flange by the lid play (Ø{HOLE['lidclr'][0]:g} over Ø8, ±{CLR})")
         # band check
         b = by[f"{kind}_body"]
         top = b.Hb
@@ -782,6 +811,17 @@ def main(argv):
     for okk, part, txt in res:
         if not okk:
             print(f"  FAIL  {part:16s} {txt}")
+    import assembly_check                        # whole assembly: steel gaps, fits, every part inside
+    afail, awarn, _ = assembly_check.run()
+    print(f"assembly: {len(afail)} clashes, {len(awarn)} warnings on placeholder parts")
+    for m in afail:
+        print("  CLASH", m)
+        res.append((False, "assembly", m))
+    for m in awarn:
+        print("  warn ", m)
+    res.append((not afail, "assembly", f"whole assembly: no clashes; folded flanges ≥ {assembly_check.STEEL_GAP} mm apart, "
+                                        f"lid {CLR} mm per side, tabs {TAB_GAP} mm"))
+    bad = [r for r in res if not r[0]]
     if bad:
         print("Nothing written.")
         return 1
@@ -809,7 +849,28 @@ def main(argv):
     (OUT / "summary.json").write_text(json.dumps(dict(parts=summary, checks=[[r[0], r[1], r[2]] for r in res],
                                                       bend=dict(T=T, R=R, K=K, BA=round(BA, 3), BD=round(BD, 3))), indent=1))
     print(f"wrote {OUT}")
+    sync_inspector(parts)
     return 0
+
+
+INSPECTOR = HERE.parent / "web" / "enclosure_inspector.html"
+
+
+def sync_inspector(parts):
+    """Write the generator's numbers into the 3D inspector, so the preview is the cut files, not a copy of them."""
+    by = {p.name: p for p in parts}
+    gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
+               frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
+               fan={k: list(v) for k, v in FAN.items()}, plate={})
+    for kind in ("control", "power"):
+        pl = by[f"{kind}_base_plate"]
+        gen["plate"][kind] = dict(outline=[[round(x, 2), round(z, 2)] for x, z in pl.outline().exterior.coords[:-1]],
+                                  holes=[[round(h["c"][0], 2), round(h["c"][1], 2), h["r"]] for h in pl.holes])
+    src = INSPECTOR.read_text()
+    a, b = src.index("// GEN:BEGIN"), src.index("// GEN:END")
+    INSPECTOR.write_text(src[:a] + "// GEN:BEGIN (written by hardware/sheet/enclosure.py, do not edit)\nconst GEN = "
+                         + json.dumps(gen, separators=(",", ":")) + ";\n" + src[b:])
+    print("synced", INSPECTOR.name)
 
 
 if __name__ == "__main__":

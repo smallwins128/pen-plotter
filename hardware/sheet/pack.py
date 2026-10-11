@@ -25,8 +25,8 @@ FOLDED = {
     "power_body": f"{E.WO:.0f} W × {E.ZF - E.ZB:.0f} D × {E.T + E.H['power']:.0f} H",
     "control_lid": f"{E.WO + 2 * (E.CLR + E.T):.0f} W × {(E.ZF + E.CLR + E.T) - (E.ZB - E.T):.1f} D × {E.H['control'] + E.T:.0f} H (back)",
     "power_lid": f"{E.WO + 2 * (E.CLR + E.T):.0f} W × {(E.ZF + E.CLR + E.T) - (E.ZB - E.T):.1f} D × {E.H['power'] + E.T:.0f} H (back)",
-    "control_base_plate": "flat, 440 × 285",
-    "power_base_plate": "flat, 440 × 285",
+    "control_base_plate": "flat, 440 × 285, notched",
+    "power_base_plate": "flat, 440 × 285, notched",
 }
 
 
@@ -64,7 +64,9 @@ Prepared by Allwin Tom · {datetime.date.today().isoformat()} · {VERSION}</p>
 <b>If your bend deduction for 1 mm 304 at R1 differs, tell us the number</b>: we re-issue the flats so every hole lands where it should.</li>
 <li>Bend order: small lips first (top lips, back lips, corner tabs, base back lip), then the side walls, then the front wall last.
 Lid: return lips first, then the top-to-back bend.</li>
-<li>Corner reliefs and end-of-flange reliefs are already cut into the outline.</li></ul></div>
+<li>Corner reliefs and end-of-flange reliefs are already cut into the outline.</li>
+<li><b>Deliberate gaps, please keep:</b> flange ends stop {E.FOLD_GAP} mm short of neighbouring flanges; side-wall front edges and corner tabs
+stop {E.TAB_GAP} mm short of the front wall (the rivets close it); the lid is {E.CLR} mm per side larger than the body.</li></ul></div>
 <div class=box><h3>Layers</h3><ul>
 <li><b>Visible</b> — cut (outline, holes, cutouts, vents).</li>
 <li><b>Bend Center</b> (dash-dot) and <b>Visible Narrow</b> (bend-zone edges) — bend references, <b>do not cut</b>.</li>
@@ -80,7 +82,8 @@ Lid: return lips first, then the top-to-back bend.</li>
 <li>M4 rivnuts (Ø6 grid) in the base plates as needed; M4 standoffs, rubber feet, panels, fans.</li></ul></div>
 </div>
 <p><b>Checks:</b> {n_ok} design checks passed before these files were written — holes clear of bends (≥ 5 mm), webs ≥ 1.5 mm,
-folded parts free of clashes, lid clear of the body, every lid hole over its rivnut, base-plate standoffs over the floor's, panel cutouts and
+folded parts free of clashes, folded flanges at least 2 mm apart wherever they are not meant to touch, whole assembly (fans, panels, rivnuts,
+base plate, standoffs) clear by 2 mm, lid clear of the body, every lid hole over its rivnut, base-plate standoffs over the floor's, panel cutouts and
 screw patterns matched to the printed panels. The files were then read back and re-folded from their own bend lines:</p>
 <ul>{refold}</ul>
 {pages}

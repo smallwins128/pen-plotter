@@ -1,0 +1,2 @@
+SUPERSEDED by v3 (2026-10-11). Do not send.
+v2 had: control fan clashing with the base plate, base plate clashing with the back rivnut, 0-0.5 mm gaps between folded flanges, 0.5 mm lid clearance.
