@@ -89,7 +89,10 @@ PANEL = {
 }
 
 
-FAN = {"control": (-30.0, T + H["control"] / 2 - 8), "power": (D / 2 - 50, T + 55)}   # left wall: (z, y) centre, 80 x 80 x 25
+# Stacked boxes line up: both fans in one column on the left walls, both jack panels in one column on the right
+FAN_Z = D / 2 - 68                      # fan centre along the left walls (z), both boxes; clear of the front standoffs
+JACK_Z = D / 2 - 160                    # receiving panel (control) and PSU panel (power) centre along the right walls
+FAN = {"control": (FAN_Z, T + H["control"] / 2 - 8), "power": (FAN_Z, T + 55)}   # left wall: (z, y) centre, 80 x 80 x 25
 FAN_DEPTH = 25.0
 
 
@@ -365,8 +368,8 @@ def body(kind):
     if kind == "control":
         panel("front", MF, -10.0, T + H[kind] / 2, "gx_rail", "GX16 rail")
         fan("left", ML, *FAN[kind])
-        panel("left", ML, -D / 2 + 242.5, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
-        panel("right", MR, D / 2 - 146, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
+        panel("left", ML, -30.0, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
+        panel("right", MR, JACK_Z, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
         top = T + H[kind]
         for r in range(3):
@@ -380,10 +383,10 @@ def body(kind):
         uu = [q[0] for h in hs for q in h["uvpts"]]; vv = [q[1] for h in hs for q in h["uvpts"]]
         feat.append(("front", min(uu) - ST.FLANGE, max(uu) + ST.FLANGE, min(vv) - ST.FLANGE, max(vv) + ST.FLANGE, "ETCH mark"))
         fan("left", ML, *FAN[kind])
-        panel("left", ML, D / 2 - 175, T + H[kind] / 2, "iec", "IEC panel")
+        panel("left", ML, D / 2 - 187.5, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
         feat.append(("left", D / 2 - 266, D / 2 - 254, T + 14, T + 26, "earth stud"))
-        panel("right", MR, D / 2 - 160, panel_y(kind, PANEL["psu"]["plate"][1]), "psu", "PSU panel")
+        panel("right", MR, JACK_Z, panel_y(kind, PANEL["psu"]["plate"][1]), "psu", "PSU panel")
     p.feat, p.Hb, p.panels = feat, Hb, panels
     for side in ("left", "right"):
         for f in ("top lip", "back lip", "corner tab"):
@@ -595,6 +598,12 @@ def checks(parts):
             clash_top = v1 > top - BAND
             clash_back = wall != "front" and u0 < ZB + BAND
             ok(not (clash_top or clash_back), kind, f"lid band: {name} clear ({top - v1:.1f} mm below the band line)")
+        # outside the wall: panel plates, fan screws and the stud keep 3 mm from each other
+        for i, f1 in enumerate(b.feat):
+            for f2 in b.feat[i + 1:]:
+                if f1[0] == f2[0]:
+                    g = max(f2[1] - f1[2], f1[1] - f2[2], f2[3] - f1[4], f1[3] - f2[4])
+                    ok(g >= 3.0, kind, f"{f1[0]} wall: {f1[5]} / {f2[5]} {g:.1f} mm apart outside (need 3)")
         # base plate standoff holes over the floor's
         fl = sorted(h["c"] for h in b.holes if h["note"] == "Ø4.5 standoff")
         pl = sorted(h["c"] for h in by[f"{kind}_base_plate"].holes if h["note"] == "Ø4.5 standoff")
@@ -615,6 +624,10 @@ def checks(parts):
     mw = min(a.distance(b) for a in mk for b in vt)
     ok(mw >= ST.MIN_WEB, "art", f"ETCH mark {mw:.0f} mm clear of the vents")
     ok(all(g.is_valid and len(g.interiors) == 0 for g in mk), "art", "mark letters are single closed outlines (no loose steel inside)")
+    # stacked boxes: fans in one column, jack panels in one column
+    ok(FAN["control"][0] == FAN["power"][0], "stack", f"fans line up along the left walls (z {FAN['control'][0]:g})")
+    jz = [q["u"] for b in (by["control_body"], by["power_body"]) for q in b.panels if q["key"] in ("receiving", "psu")]
+    ok(len(jz) == 2 and jz[0] == jz[1], "stack", f"jack panels line up along the right walls (z {jz[0]:g})")
     # stacking: power-lid peg holes sit under the control box's foot holes, and the feet clear what lies between
     feet = sorted(h["c"] for h in by["control_body"].holes if h["note"] == "Ø4.5 locating foot")
     pegs = sorted(h["peg"] for h in by["power_lid"].holes if "peg" in h)
