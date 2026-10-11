@@ -17,7 +17,8 @@ import zipfile
 import enclosure as E
 
 OUT = E.OUT
-NAME = f"{datetime.date.today().isoformat()} Plotter enclosure cut pack v1"
+VERSION = sys.argv[1] if len(sys.argv) > 1 else "v1"
+NAME = f"{datetime.date.today().isoformat()} Plotter enclosure cut pack {VERSION}"
 
 FOLDED = {
     "control_body": f"{E.WO:.0f} W × {E.ZF - E.ZB:.0f} D × {E.T + E.H['control']:.0f} H",
@@ -54,7 +55,7 @@ code {{ font-size: 9.5pt }}
 </style></head><body>
 <h1>Plotter enclosures · cut &amp; bend pack</h1>
 <p>Two stacked electronics boxes (control on top, power below), each a folded body + a folded lid, plus two flat base plates.
-Prepared by Allwin Tom · {datetime.date.today().isoformat()} · v1</p>
+Prepared by Allwin Tom · {datetime.date.today().isoformat()} · {VERSION}</p>
 <table><tr><th>#</th><th>File</th><th>Part</th><th>Material</th><th>Qty</th><th>Flat (mm)</th><th>Bends</th><th>Folded outside (mm)</th></tr>{rows}</table>
 <div class=cols>
 <div class=box><h3>Bending</h3><ul>
