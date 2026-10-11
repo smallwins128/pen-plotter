@@ -154,7 +154,7 @@ def add_circle(p, face, mp, u, v, kind, note=None):
     d, txt = HOLE[kind]
     x, y = mp(u, v)
     p.holes.append(dict(kind="circle", c=(x, y), r=d / 2, note=note or txt, face=face, type=kind,
-                        geom=Point(x, y).buffer(d / 2, 48)))
+                        geom=Point(x, y).buffer(d / 2, 48), uv=(u, v)))
 
 
 def add_rect(p, face, mp, u, v, w, h, note):
@@ -162,7 +162,7 @@ def add_rect(p, face, mp, u, v, w, h, note):
     dx, dy = mp.vec(w, h)
     w2, h2 = abs(dx), abs(dy)
     p.holes.append(dict(kind="rect", c=(x, y), w=w2, h=h2, note=note, face=face, type="cutout",
-                        geom=sbox(x - w2 / 2, y - h2 / 2, x + w2 / 2, y + h2 / 2)))
+                        geom=sbox(x - w2 / 2, y - h2 / 2, x + w2 / 2, y + h2 / 2), uv=(u, v), uvwh=(w, h)))
 
 
 def add_slot(p, face, mp, u, v, length, width, ang, note):
@@ -173,7 +173,7 @@ def add_slot(p, face, mp, u, v, length, width, ang, note):
     h = max(0.0, length / 2 - width / 2)
     p0 = (x - h * math.cos(a), y - h * math.sin(a)); p1 = (x + h * math.cos(a), y + h * math.sin(a))
     p.holes.append(dict(kind="slot", p0=p0, p1=p1, r=width / 2, note=note, face=face, type="vent",
-                        geom=LineString([p0, p1]).buffer(width / 2, 24)))
+                        geom=LineString([p0, p1]).buffer(width / 2, 24), uv=(u, v), uvslot=(length, width, ang)))
 
 
 def add_arc_slot(p, face, mp, u, v, r, w, a0, a1, note):
@@ -334,6 +334,7 @@ def body(kind):
         add_circle(p, "base", MB, x, z, "m4", "Ø4.5 locating foot" if kind == "control" else "Ø4.5 rubber foot")
     # --- wall features
     feat = []                                  # (wall, u0, u1, v0, v1, name) in folded wall coords, for the band check
+    panels = []                                # printed panels: where they sit, for the inspector
     def panel(wall, mp, uc, vc, key, name):
         c = PANEL[key]
         add_rect(p, wall, mp, uc, vc, c["cut"][0], c["cut"][1], f"{name} cutout {c['cut'][0]:g} x {c['cut'][1]:g}")
@@ -341,6 +342,7 @@ def body(kind):
             for b in (-1, 1):
                 add_circle(p, wall, mp, uc + a * c["screw"][0], vc + b * c["screw"][1], "m3", f"{name} screw")
         feat.append((wall, uc - c["plate"][0] / 2, uc + c["plate"][0] / 2, vc - c["plate"][1] / 2, vc + c["plate"][1] / 2, name))
+        panels.append(dict(wall=wall, key=key, name=name, u=uc, v=vc, cut=list(c["cut"]), plate=list(c["plate"]), screw=list(c["screw"])))
     def fan(wall, mp, uc, vc):
         for k, rr in enumerate((12, 20, 28, 36)):
             for i in range(4):
@@ -366,7 +368,7 @@ def body(kind):
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
         feat.append(("left", D / 2 - 266, D / 2 - 254, T + 14, T + 26, "earth stud"))
         panel("right", MR, D / 2 - 160, panel_y(kind, PANEL["psu"]["plate"][1]), "psu", "PSU panel")
-    p.feat, p.Hb = feat, Hb
+    p.feat, p.Hb, p.panels = feat, Hb, panels
     for side in ("left", "right"):
         for f in ("top lip", "back lip", "corner tab"):
             p.connect.add(frozenset((f"{side} wall", f"{side} {f}")))
@@ -894,6 +896,21 @@ def sync_inspector(parts):
                fan={k: list(v) for k, v in FAN.items()}, plate={},
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
                           holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))
+    gen["walls"], gen["panels"] = {}, {}
+    for kind in ("control", "power"):
+        b = by[f"{kind}_body"]
+        gen["panels"][kind] = b.panels
+        walls = gen["walls"][kind] = {"front": [], "left": [], "right": []}
+        for h in b.holes:
+            if h["face"] not in walls or "uv" not in h or "fan" in h["note"]:
+                continue                       # fan grille + screws: the inspector draws them from gen["fan"]
+            u, v = (round(q, 3) for q in h["uv"])
+            if h["kind"] == "rect":
+                walls[h["face"]].append(["rect", u, v, *h["uvwh"]])
+            elif h["kind"] == "slot":
+                walls[h["face"]].append(["slot", u, v, *h["uvslot"]])
+            else:
+                walls[h["face"]].append(["circle", u, v, h["r"]])
     for kind in ("control", "power"):
         pl = by[f"{kind}_base_plate"]
         gen["plate"][kind] = dict(outline=[[round(x, 2), round(z, 2)] for x, z in pl.outline().exterior.coords[:-1]],
