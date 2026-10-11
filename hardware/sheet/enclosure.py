@@ -69,6 +69,8 @@ HOLE = {   # name: (diameter, leader text)
     "m4": (4.5, "Ø4.5 M4"),
     "fan": (4.4, "Ø4.4 fan screw"),
     "lidclr": (10.0, "Ø10 clears rivnut flange"),
+    "peg": (8.0, "Ø8 locating hole"),
+    "pegclr": (10.0, "Ø10 peg clearance"),
     "sma": (6.5, "Ø6.5 SMA antenna"),
     "stud": (6.5, "Ø6.5 M6 earth stud"),
     "grid": (6.0, "Ø6 grid (M4 rivnut)"),
@@ -87,6 +89,18 @@ PANEL = {
 
 FAN = {"control": (-30.0, T + H["control"] / 2 - 8), "power": (D / 2 - 50, T + 55)}   # left wall: (z, y) centre, 80 x 80 x 25
 FAN_DEPTH = 25.0
+
+
+# Stacking: printed feet under the control box (flange = spacer, peg = locator) drop into the power lid.
+FEET_XZ = [(sx * (W / 2 - 40), sz * (D / 2 - 40)) for sx in (-1, 1) for sz in (-1, 1)]     # both boxes' foot holes
+STACK = dict(flange_d=24.0, flange_h=6.0, peg_d=7.6, peg_len=6.0,
+             lid_fix_h=1.2 + 2.4,          # penny washer + M3 pan head, proud of the power lid
+             floor_head_h=2.8,             # M4 standoff screw heads under the control floor
+             foot_screw_head_h=2.8)        # M4 screw holding each foot, head inside on the control floor
+# power-lid holes under the feet: front-left locates, front-right slot (along x) stops rotation, back two only clear
+PEG_HOLES = {(-(W / 2 - 40), D / 2 - 40): "round", (W / 2 - 40, D / 2 - 40): "slot",
+             (-(W / 2 - 40), -(D / 2 - 40)): "clear", (W / 2 - 40, -(D / 2 - 40)): "clear"}
+PEG_SLOT = (11.0, 8.0)                     # length along x, width
 
 
 def panel_y(kind, ht):
@@ -316,9 +330,8 @@ def body(kind):
     for x in (-(W / 2 - 20), 0.0, W / 2 - 20):
         for z in (-(D / 2 - 20), D / 2 - 20):
             add_circle(p, "base", MB, x, z, "m4", "Ø4.5 standoff")
-    for x in (-(W / 2 - 40), W / 2 - 40):
-        for z in (-(D / 2 - 40), D / 2 - 40):
-            add_circle(p, "base", MB, x, z, "m4", "Ø4.5 rubber foot")
+    for x, z in FEET_XZ:
+        add_circle(p, "base", MB, x, z, "m4", "Ø4.5 locating foot" if kind == "control" else "Ø4.5 rubber foot")
     # --- wall features
     feat = []                                  # (wall, u0, u1, v0, v1, name) in folded wall coords, for the band check
     def panel(wall, mp, uc, vc, key, name):
@@ -425,6 +438,13 @@ def lid(kind):
         p.holes[-1]["folded"] = (sgn * (WO / 2 - T - RIV_IN), T + H[kind] / 2, "back")
     add_circle(p, "top", MT, 0.0, ZF - T - RIV_IN, "lidclr"); p.holes[-1]["folded"] = (0.0, ZF - T - RIV_IN, "top")
     add_circle(p, "back", MBk, 0.0, T + LIP / 2, "lidclr"); p.holes[-1]["folded"] = (0.0, T + LIP / 2, "back")
+    if kind == "power":                      # locating holes for the control box's feet
+        for (x, z), how in PEG_HOLES.items():
+            if how == "slot":
+                add_slot(p, "top", MT, x, z, PEG_SLOT[0], PEG_SLOT[1], 0.0, f"{PEG_SLOT[1]:g} x {PEG_SLOT[0]:g} locating slot")
+            else:
+                add_circle(p, "top", MT, x, z, "peg" if how == "round" else "pegclr")
+            p.holes[-1]["peg"] = (x, z)
     # flow-field vents on the back, clear of the holes
     keep = [Point(h["c"]).buffer(14) for h in p.holes if h["face"] == "back"]
     seed = 2.1 if kind == "control" else 0.0
@@ -571,6 +591,16 @@ def checks(parts):
             ex, ey = max(w, h) / 2 + 10 - 6, min(w, h) / 2 + 10 - 6
             ok(abs(ex - PANEL[key]["screw"][0]) < 0.01 and abs(ey - PANEL[key]["screw"][1]) < 0.01, "panels",
                f"{key} screw pattern ±{ex:.1f} x ±{ey:.1f} matches the print")
+    # stacking: power-lid peg holes sit under the control box's foot holes, and the feet clear what lies between
+    feet = sorted(h["c"] for h in by["control_body"].holes if h["note"] == "Ø4.5 locating foot")
+    pegs = sorted(h["peg"] for h in by["power_lid"].holes if "peg" in h)
+    ok(feet == pegs and len(feet) == 4, "stack", "power-lid locating holes line up with the control box's 4 feet")
+    ok(HOLE["peg"][0] - STACK["peg_d"] >= 0.3 and PEG_SLOT[1] - STACK["peg_d"] >= 0.3 and HOLE["pegclr"][0] - STACK["peg_d"] >= 2.0,
+       "stack", f"peg Ø{STACK['peg_d']} in Ø{HOLE['peg'][0]:g} / {PEG_SLOT[1]:g} slot / Ø{HOLE['pegclr'][0]:g}")
+    ok(PEG_SLOT[0] - STACK["peg_d"] >= 2 * 1.0 + 0.4, "stack", f"slot allows ±1 mm of width error ({PEG_SLOT[0]:g} long)")
+    ok(STACK["flange_h"] - max(STACK["lid_fix_h"], STACK["floor_head_h"]) >= 2.0, "stack",
+       f"{STACK['flange_h']:g} mm flange clears the lid fixings ({STACK['lid_fix_h']:.1f}) and the floor screw heads ({STACK['floor_head_h']:g}) by 2")
+    ok(max(HOLE["peg"][0], PEG_SLOT[1], HOLE["pegclr"][0]) < 12.0, "stack", "stacking holes under 12 mm (finger probe)")
     # the lid's return lips must end inside the no-mount band, with margin
     ok(LIPO - T + 2.0 <= BAND, "fit", f"lid return lips reach {LIPO - T:.0f} mm down the walls; band is {BAND:.0f} (needs 2 mm margin)")
     # lid fits: inside of the lid's returns vs the body's outside
@@ -861,7 +891,9 @@ def sync_inspector(parts):
     by = {p.name: p for p in parts}
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
-               fan={k: list(v) for k, v in FAN.items()}, plate={})
+               fan={k: list(v) for k, v in FAN.items()}, plate={},
+               stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
+                          holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))
     for kind in ("control", "power"):
         pl = by[f"{kind}_base_plate"]
         gen["plate"][kind] = dict(outline=[[round(x, 2), round(z, 2)] for x, z in pl.outline().exterior.coords[:-1]],

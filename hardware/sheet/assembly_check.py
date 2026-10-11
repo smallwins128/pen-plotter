@@ -79,7 +79,7 @@ ALLOWED = {   # tag pairs that are meant to touch / interpenetrate
     ("sheet", "rivnut"), ("sheet", "standoff"), ("standoff", "plate"), ("sheet", "foot"),
     ("sheet", "panel_in"), ("sheet", "fan"), ("sheet", "panel_screw"), ("panel_screw", "panel_in"),
     ("sheet", "rivet"), ("plate", "part"), ("sheet", "stud"),
-    ("plate", "screw_head"), ("screw_head", "standoff"),
+    ("plate", "screw_head"), ("screw_head", "standoff"), ("sheet", "foot_screw"), ("foot", "foot_screw"),
 }
 ALLOWED = {tuple(sorted(p)) for p in ALLOWED}
 # what sticks in from each wall item, by the feature name the generator gives it
@@ -107,6 +107,11 @@ def items(kind):
         elif h["note"] == "Ø4.5 rubber foot":
             x, z = h["c"]
             out.append(Item(f"rubber foot ({x:.0f},{z:.0f})", "foot", x - 10, x + 10, -8, 0, z - 10, z + 10))
+        elif h["note"] == "Ø4.5 locating foot":     # printed flange under the floor; its M4 screw head sits inside
+            x, z = h["c"]
+            S_ = E.STACK; r = S_["flange_d"] / 2
+            out.append(Item(f"locating foot ({x:.0f},{z:.0f})", "foot", x - r, x + r, -S_["flange_h"], 0, z - r, z + r))
+            out.append(Item(f"foot screw head ({x:.0f},{z:.0f})", "foot_screw", x - 3.5, x + 3.5, T, T + S_["foot_screw_head_h"], z - 3.5, z + 3.5))
     # --- rivnut bodies inside the lips (Ø5 x 9 behind the flange), from the generator's rivnut holes
     for h in body.holes:
         if h.get("type") != "rivnut_m3":
@@ -148,6 +153,10 @@ def items(kind):
             raise SystemExit(f"assembly_check: no rule for wall feature {name!r}")
     # --- interior parts (placeholders, soft)
     pt = py1
+    if kind == "power":   # pegs of the control box's feet reaching through the power lid
+        S_ = E.STACK; r = S_["peg_d"] / 2
+        for x, z in E.FEET_XZ:
+            out.append(Item(f"stacking peg ({x:.0f},{z:.0f})", "peg", x - r, x + r, Hb + T - S_["peg_len"], Hb + T + 0.01, z - r, z + r))
     if kind == "control":
         for i in range(3):
             z = D / 2 - 60 - i * 77
@@ -169,6 +178,8 @@ def run():
         it = items(kind)
         for a, b in itertools.combinations(it, 2):
             g = gap(a, b)
+            if {a.tag, b.tag} == {"peg", "sheet"} and ("lid top" in a.name or "lid top" in b.name):
+                continue                             # the peg passes through its hole in the lid top
             if a.tag == b.tag == "sheet":
                 if a.part is b.part and frozenset((a.name.split(": ", 1)[1], b.name.split(": ", 1)[1])) in a.part.connect:
                     continue
