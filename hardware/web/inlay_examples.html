@@ -3,143 +3,92 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a marquetry maker's proof sheet. Controls on top, one card per panel, drawn to scale. */
+/* Layout: a proof sheet. Each card shows the whole panel for placement, then the corner close up. */
 :root {
-  --bg: #eceef0; --paper: #f7f8f9; --ink: #1d2226; --muted: #5b646c; --line: #c9ced3; --accent: #b4481b; --focus: #2b5fb8;
+  --bg: #eceef0; --paper: #f7f8f9; --ink: #1d2226; --muted: #5b646c; --line: #c9ced3; --accent: #9a4a22; --focus: #2b5fb8;
   --f-display: "Big Shoulders Stencil Display", "Arial Narrow", Impact, sans-serif;
   --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #ef7a45; --focus: #7aa7ff; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #e08a5c; --focus: #7aa7ff; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #ef7a45; --focus: #7aa7ff; color-scheme: dark; }
+:root[data-theme="dark"] { --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #e08a5c; --focus: #7aa7ff; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
-.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 22px; }
-header { display: grid; gap: 6px; }
-h1 { font: 800 clamp(34px, 6vw, 56px)/0.95 var(--f-display); letter-spacing: 0.02em; margin: 0; text-wrap: balance; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 20px; }
+h1 { font: 800 clamp(34px, 6vw, 54px)/0.95 var(--f-display); letter-spacing: 0.02em; margin: 0; }
 .lede { margin: 0; max-width: 70ch; color: var(--muted); }
-.controls { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; padding-block: 12px; border-block: 1px solid var(--line); }
-.group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.label { font: 500 11px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
-.seg { font: 500 13px/1 var(--f-body); padding: 8px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; border-radius: 4px; display: inline-flex; gap: 7px; align-items: center; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 12px; border-block: 1px solid var(--line); }
+.label { font: 500 11px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+.seg { font: 500 13px/1 var(--f-body); padding: 8px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; border-radius: 4px; }
 .seg[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.chips { display: inline-flex; }
-.chips i { width: 10px; height: 14px; display: block; }
 button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
-.key span { display: inline-flex; align-items: center; gap: 7px; }
-.key b { width: 22px; height: 14px; display: inline-block; border-radius: 2px; border: 1px solid var(--line); }
-.k-steel { background: linear-gradient(90deg, #c7cbcf, #e1e4e7, #b9bec3); }
-.k-flush { background: #c2582a; }
-.k-relief { background: linear-gradient(135deg, #f0a477, #c2582a 55%, #7e3416); }
-.k-open { background: #101215; }
-.section-h { font: 600 12px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 10px 0 -8px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 18px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 18px; }
 .card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
-.card h2 { font: 800 24px/1 var(--f-display); letter-spacing: 0.02em; margin: 0; }
-.card .where { font: 500 11px/1.3 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
-.card p { margin: 0; color: var(--muted); font-size: 14px; max-width: 64ch; }
+.card h2 { font: 800 26px/1 var(--f-display); letter-spacing: 0.02em; margin: 0; }
+.where { font: 500 11px/1.3 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.card p { margin: 0; color: var(--muted); font-size: 14px; }
+.ref { font: 400 12px/1.3 var(--f-mono); color: var(--muted); }
 canvas { width: 100%; display: block; }
+canvas.over { width: 62%; }
 .facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .facts li { font: 400 11.5px/1.3 var(--f-mono); border: 1px solid var(--line); padding: 3px 7px; border-radius: 3px; font-variant-numeric: tabular-nums; }
-footer { color: var(--muted); font-size: 13.5px; max-width: 82ch; display: grid; gap: 8px; }
+footer { color: var(--muted); font-size: 13.5px; max-width: 80ch; display: grid; gap: 8px; }
 footer b { color: var(--ink); }
 </style>
 
 <div class="wrap">
-  <header>
-    <h1>ETCH · INLAY STUDIES</h1>
-    <p class="lede">Marquetry in steel. The laser leaves a lattice of 2 mm stainless lines; the gaps are filled by one multi-colour print pushed in from inside. Some pieces sit flush, some stand proud as 3D relief, and some stay open as vents. The last two studies flip it: a pattern cut in the steel with a printed surface of varying height behind it. Switch the view to see the steel and the print on their own.</p>
-  </header>
+  <h1>ETCH · CORNER MARKS</h1>
+  <p class="lede">One small mark per box, black print only. The steel is cut, and a black print behind it fills the cuts or pushes pins through them.</p>
 
-  <div class="controls" role="group" aria-label="Preview options">
-    <div class="group"><span class="label">View</span>
-      <button class="seg" id="v-asm" data-v="asm" aria-pressed="true">Assembled</button>
-      <button class="seg" id="v-steel" data-v="steel" aria-pressed="false">Laser-cut steel</button>
-      <button class="seg" id="v-print" data-v="print" aria-pressed="false">Print only</button>
-    </div>
-    <div class="group"><span class="label">Palette</span>
-      <button class="seg" id="p-ember" data-p="ember" aria-pressed="true"><span class="chips"></span>Ember</button>
-      <button class="seg" id="p-forest" data-p="forest" aria-pressed="false"><span class="chips"></span>Forest</button>
-      <button class="seg" id="p-retro" data-p="retro" aria-pressed="false"><span class="chips"></span>Retro</button>
-    </div>
-  </div>
-  <div class="key"><span><b class="k-steel"></b>stainless web, 2 mm</span><span><b class="k-flush"></b>printed, flush</span><span><b class="k-relief"></b>printed, raised relief</span><span><b class="k-open"></b>open: vent</span></div>
-
-  <div class="section-h">Control box · lid top · 456 × 300 · flush only, the laptop sits here</div>
-  <div class="grid">
-    <article class="card">
-      <span class="where">Lid top · A</span><h2>Mountain range</h2>
-      <canvas data-study="mountains"></canvas>
-      <p>The classic marquetry scene: a sun, three ridgelines and a lake. The sun's rays are steel lines that tie the sun's ring to the frame, so the lattice comes out of the laser as one piece.</p>
-      <ul class="facts"><li>web 2.0</li><li>20 printed pieces</li><li>all flush</li></ul>
-    </article>
-    <article class="card">
-      <span class="where">Lid top · B</span><h2>Topographic</h2>
-      <canvas data-study="topo"></canvas>
-      <p>Contour lines in steel, each elevation band a printed piece shaded from valley to peak. Contour rings would drop out on their own, so a straight steel tie runs from each summit to the frame.</p>
-      <ul class="facts"><li>web 2.0</li><li>3 summits, 3 ties</li><li>13 bands</li></ul>
-    </article>
+  <div class="controls" role="group" aria-label="View">
+    <span class="label">View</span>
+    <button class="seg" id="v-asm" data-v="asm" aria-pressed="true">Assembled</button>
+    <button class="seg" id="v-steel" data-v="steel" aria-pressed="false">Laser-cut steel</button>
+    <button class="seg" id="v-print" data-v="print" aria-pressed="false">Black print only</button>
   </div>
 
-  <div class="section-h">Fronts · 3D relief allowed</div>
   <div class="grid">
     <article class="card">
-      <span class="where">Power front · C · 452 × 171</span><h2>Deco sunburst</h2>
-      <canvas data-study="sunburst"></canvas>
-      <p>An art-deco fan rising from the bottom edge. The open cells in the middle ring are the vents and replace the stepped slots. The sun and every other outer ray carry raised pieces.</p>
-      <ul class="facts"><li>web 2.0</li><li>4 open cells</li><li>relief ≤ 3 mm</li></ul>
+      <span class="where">Control lid · front-right corner</span><h2>A · Cell monogram</h2>
+      <span class="ref">like your brass "DF" plate</span>
+      <canvas class="over" data-study="mono" data-mode="over"></canvas>
+      <canvas data-study="mono" data-mode="zoom"></canvas>
+      <p>A 64 mm square of cells with a bold E in steel. Every cell is filled flush by one black print, so it reads as steel on black and the laptop still sits flat.</p>
+      <ul class="facts"><li>64 × 64</li><li>webs 2 · E bars 4.5</li><li>flush</li></ul>
     </article>
     <article class="card">
-      <span class="where">Control front · D · 452 × 111</span><h2>Pyramid mosaic</h2>
-      <canvas data-study="mosaic"></canvas>
-      <p>Triangle tiles either side of the GX16 plate. Some are flat colour, some are printed as little faceted pyramids, and a few stay open for air.</p>
-      <ul class="facts"><li>web 2.0</li><li>tile 16 mm</li><li>pyramid 2.5 high</li></ul>
-    </article>
-  </div>
-
-  <div class="section-h">Relief behind a pattern · the print is a 3D surface seen through the cuts</div>
-  <div class="grid">
-    <article class="card">
-      <span class="where">Control lid top · E · 456 × 300</span><h2>Crater porthole</h2>
-      <canvas data-study="crater"></canvas>
-      <p>One large porthole and a ring of small ones, all looking into the same printed moonscape 0.5 to 6 mm below the steel. The steel rim casts a real shadow into it. Nothing rises above the lid, so the laptop still sits flat.</p>
-      <ul class="facts"><li>Ø190 + 12 × Ø14</li><li>depth 0.5 – 6</li><li>surface flush max</li></ul>
+      <span class="where">Power front · bottom-right corner</span><h2>B · Hex pins</h2>
+      <span class="ref">like your hex speaker panel</span>
+      <canvas class="over" data-study="pins" data-mode="over"></canvas>
+      <canvas data-study="pins" data-mode="zoom"></canvas>
+      <p>Hex holes with black hex pins standing up to 7 mm proud, highest in the middle and fading out. The outer ring of holes stays empty and works as a small vent.</p>
+      <ul class="facts"><li>80 × 76</li><li>hex 6 AF · pitch 8.5</li><li>pins 0 – 7 proud</li></ul>
     </article>
     <article class="card">
-      <span class="where">Power front · F · 452 × 171</span><h2>Wave field</h2>
-      <canvas data-study="waves"></canvas>
-      <p>Nine wavy slots over a printed swell. Along each slot the surface rises up to 5 mm proud at the crests and sinks 3 mm at the troughs, so the pattern changes as you walk past. The deep ends of the slots double as vents.</p>
-      <ul class="facts"><li>slot 8 · pitch 13</li><li>height −3 … +5</li><li>web ≥ 5</li></ul>
+      <span class="where">Control lid · front-left corner</span><h2>C · Sunken E</h2>
+      <span class="ref">B, made safe for the laptop</span>
+      <canvas class="over" data-study="sunk" data-mode="over"></canvas>
+      <canvas data-study="sunk" data-mode="zoom"></canvas>
+      <p>The same hex holes, but the pins stay below the surface. Pins inside the E sit flush; the rest sink 3 mm into shadow, so the letter shows only when the light catches it.</p>
+      <ul class="facts"><li>64 × 64</li><li>hex 4 AF · pitch 5.8</li><li>pins 0 or −3</li></ul>
     </article>
   </div>
 
   <footer>
-    <p><b>Relief prints.</b> For E and F the print is a heightmap rather than tiles: one part whose top surface rises and falls behind the steel. Where it sits below the steel you see depth and shadow; where it rises through a cut it must be at least 0.3 mm narrower than the cut on each side, so those areas follow the cut outline exactly.</p>
-    <p><b>How it is made.</b> The laser cuts every cell out of the 1 mm steel, leaving a lattice that must stay one connected piece, so closed shapes get steel ties. The print is one multi-colour part: a 1.2 mm backer sheet, with every piece rising 1 mm through its cell (0.15 mm smaller per side) and stopping flush, or standing up to 3 mm proud on the fronts. Open cells are holes in both the steel and the backer. The backer pushes in from inside and is held by VHB tape or the screws already on that face.</p>
-    <p><b>What the print adds.</b> Colour changes happen in the backer, hidden under the steel, so each visible piece is one clean colour. The backer also seals the lid against dust and stiffens the cut area.</p>
-    <p><b>Rules every study keeps.</b> Cut area at least 7 mm in from the folded edges and clear of the lid's fixing holes, the corner rivets and the strip under the lid's front lip. Steel webs are at least 2 mm, and every piece of steel is tied to the frame.</p>
+    <p><b>The print.</b> One black part per mark: a 1.2 mm backer plate a few mm bigger than the pattern, with the fills or pins rising from it. Plugs and pins are 0.15 mm smaller than their hole on each side. Stick it on from inside with VHB tape.</p>
+    <p><b>Rules kept.</b> Each mark sits 14 mm or more from the folded edges and clear of the lid screws and corner rivets. All steel between cuts is at least 2 mm wide and joined to the panel.</p>
   </footer>
 </div>
 
 <script>
 (() => {
-  const PAL = {
-    ember:  ["#2f2420", "#6e341f", "#c2582a", "#e39a52", "#f2d6a8"],
-    forest: ["#1d2b26", "#2f5443", "#5b8a5f", "#a7bf86", "#e6e2c3"],
-    retro:  ["#1f3550", "#2d6a6a", "#c94f32", "#e9b949", "#ece0c4"],
-  };
-  const state = { view: "asm", pal: "ember" };
-  const WEB = 2.0, OPEN = "#0f1113", BACKER = "#34373b";
+  const state = { view: "asm" };
+  const BLACK = [27, 28, 30], HOLE = [9, 10, 11];
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const P = i => PAL[state.pal][i];
-  const mix = (a, b, t) => { const h = s => [1, 3, 5].map(k => parseInt(s.slice(k, k + 2), 16)), A = h(a), B = h(b);
-    return "#" + A.map((v, i) => Math.max(0, Math.min(255, Math.round(v + (B[i] - v) * t))).toString(16).padStart(2, "0")).join(""); };
   let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
-  // ---------- steel texture ----------
   const texCache = new Map();
   function brushed(w, h) {
     const k = w + "x" + h; if (texCache.has(k)) return texCache.get(k);
@@ -147,77 +96,28 @@ footer b { color: var(--ink); }
     const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, "#d4d8dc"); gr.addColorStop(0.5, "#bfc4c9"); gr.addColorStop(1, "#cfd3d7");
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
     let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < h * 1.6; i++) { const y = r() * h, a = 0.025 + r() * 0.05;
+    for (let i = 0; i < h * 1.4; i++) { const y = r() * h, a = 0.02 + r() * 0.05;
       g.strokeStyle = r() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(40,45,50,${a})`; g.lineWidth = 0.5 + r();
       g.beginPath(); const x0 = r() * w * 0.3; g.moveTo(x0, y); g.lineTo(x0 + w * (0.4 + r() * 0.7), y + (r() - 0.5)); g.stroke(); }
     texCache.set(k, c); return c;
   }
 
-  // ---------- panel ----------
-  function setup(cv, W, H) {
-    const M = 8, cw = cv.clientWidth || 440, dpr = Math.min(window.devicePixelRatio || 1, 2), s = cw / (W + 2 * M);
-    cv.width = Math.round(cw * dpr); cv.height = Math.round((H + 2 * M) * s * dpr); cv.style.height = ((H + 2 * M) * s) + "px";
+  // view = [x0, y0, w, h] of the panel (mm) shown in the canvas
+  function setup(cv, W, H, view) {
+    const [x0, y0, vw, vh] = view, cw = cv.clientWidth || 360, dpr = Math.min(window.devicePixelRatio || 1, 2), s = cw / vw;
+    cv.width = Math.round(cw * dpr); cv.height = Math.round(vh * s * dpr); cv.style.height = (vh * s) + "px";
     const g = cv.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
-    g.setTransform(dpr * s, 0, 0, dpr * s, dpr * s * M, dpr * s * M);
-    const tex = brushed(cv.width, cv.height);
-    const steel = g.createPattern(tex, "no-repeat"); steel.setTransform(new DOMMatrix([W / cv.width, 0, 0, H / cv.height, 0, 0]));
-    if (state.view === "print") {
-      g.save(); g.strokeStyle = css("--line"); g.setLineDash([3, 2]); g.lineWidth = 0.5; g.strokeRect(0, 0, W, H); g.restore();
-    } else {
-      g.save(); g.shadowColor = "rgba(0,0,0,0.28)"; g.shadowBlur = 6 * dpr; g.shadowOffsetY = 1.5; g.fillStyle = "#c4c8cc"; g.fillRect(0, 0, W, H); g.restore();
-      g.drawImage(tex, 0, 0, W, H);
+    g.setTransform(dpr * s, 0, 0, dpr * s, -dpr * s * x0, -dpr * s * y0);
+    const k = dpr * s;
+    if (state.view !== "print") {
+      g.fillStyle = "#c4c8cc"; g.fillRect(0, 0, W, H);
+      g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip(); g.drawImage(brushed(cv.width, cv.height), x0, y0, vw, vh); g.restore();
       const e = 1.8, band = (x, y, w, h, v) => { const gr = v ? g.createLinearGradient(x, 0, x + w, 0) : g.createLinearGradient(0, y, 0, y + h);
         gr.addColorStop(0, "rgba(60,66,72,0.45)"); gr.addColorStop(1, "rgba(60,66,72,0)"); g.fillStyle = gr; g.fillRect(x, y, w, h); };
       band(0, 0, W, e, 0); band(0, 0, e, H, 1); g.save(); g.translate(W, H); g.rotate(Math.PI); band(0, 0, W, e, 0); band(0, 0, e, H, 1); g.restore();
     }
-    g.fillStyle = css("--muted"); g.font = `400 3.4px ${css("--f-mono")}`; g.textAlign = "center"; g.fillText(`${W} × ${H}`, W / 2, -2.6);
-    return { g, s, dpr, steel, M, W, H };
+    return { g, k, x0, y0, cv, W, H, s, dpr };
   }
-
-  // bounds of a path builder, by recording its points
-  function boundsOf(build) {
-    const b = [1e9, 1e9, -1e9, -1e9];
-    const add = (x, y) => { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); };
-    build({ moveTo: add, lineTo: add, closePath() {}, arc: (x, y, r) => { add(x - r, y - r); add(x + r, y + r); }, rect: (x, y, w, h) => { add(x, y); add(x + w, y + h); } });
-    return b;
-  }
-  // a cell: filled with a printed piece (flush / relief) or left open
-  function cell(ctx, build, colour, kind = "flush", lightAngle = -2.3) {
-    const { g } = ctx; g.save(); g.beginPath(); build(g); g.clip();
-    if (kind === "open" || state.view === "steel") { g.fillStyle = OPEN; g.fill(); g.restore(); return; }
-    g.fillStyle = colour; g.fill();
-    g.strokeStyle = "rgba(0,0,0,0.06)"; g.lineWidth = 0.18; g.beginPath();      // FDM layer lines
-    for (let y = -600; y < 600; y += 0.6) { g.moveTo(-600, y); g.lineTo(1200, y + 300); } g.stroke();
-    if (kind === "relief") {
-      const b = boundsOf(build), cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2, r = Math.max(b[2] - b[0], b[3] - b[1]) / 2;
-      const gr = g.createLinearGradient(cx + Math.cos(lightAngle) * r, cy + Math.sin(lightAngle) * r, cx - Math.cos(lightAngle) * r, cy - Math.sin(lightAngle) * r);
-      gr.addColorStop(0, "rgba(255,255,255,0.38)"); gr.addColorStop(0.5, "rgba(255,255,255,0)"); gr.addColorStop(1, "rgba(0,0,0,0.38)");
-      g.fillStyle = gr; g.fillRect(b[0] - 2, b[1] - 2, b[2] - b[0] + 4, b[3] - b[1] + 4);
-      g.strokeStyle = "rgba(255,255,255,0.35)"; g.lineWidth = 1.2; g.beginPath(); build(g); g.stroke();
-    }
-    g.restore();
-  }
-  // steel webs along a path
-  function webs(ctx, build, w = WEB) {
-    const { g, steel } = ctx; g.save(); g.lineCap = "butt"; g.lineJoin = "round";
-    g.beginPath(); build(g);
-    if (state.view === "print") { g.strokeStyle = BACKER; g.lineWidth = w; g.stroke(); g.restore(); return; }
-    g.strokeStyle = "rgba(20,22,26,0.6)"; g.lineWidth = w + 0.45; g.stroke();
-    g.strokeStyle = steel; g.lineWidth = w; g.stroke(); g.restore();
-  }
-  // cut window: clip, draw, then seam the window edge (or the backer flange in print view)
-  function region(ctx, build, body) {
-    const { g } = ctx;
-    if (state.view === "print") { g.save(); g.beginPath(); build(g); g.strokeStyle = BACKER; g.lineWidth = 6; g.stroke(); g.restore(); }
-    g.save(); g.beginPath(); build(g); g.clip();
-    if (state.view === "print") { g.fillStyle = BACKER; g.fill(); }
-    body(); g.restore();
-    if (state.view !== "print") { g.save(); g.beginPath(); build(g); g.strokeStyle = "rgba(20,22,26,0.6)"; g.lineWidth = 0.45; g.stroke(); g.restore(); }
-  }
-  const rrect = (x, y, w, h, r) => g => { g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.arc(x + w - r, y + r, r, -Math.PI / 2, 0); g.lineTo(x + w, y + h - r);
-    g.arc(x + w - r, y + h - r, r, 0, Math.PI / 2); g.lineTo(x + r, y + h); g.arc(x + r, y + h - r, r, Math.PI / 2, Math.PI); g.lineTo(x, y + r); g.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5); g.closePath(); };
-  const poly = pts => g => { g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); };
-  const closed = pts => g => { poly(pts)(g); g.closePath(); };
   function lidFixing(g, x, y) {
     if (state.view === "print") return;
     g.fillStyle = "#e3e6e9"; g.strokeStyle = "rgba(40,45,50,0.5)"; g.lineWidth = 0.25; g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill(); g.stroke();
@@ -228,227 +128,135 @@ footer b { color: var(--ink); }
     const gr = g.createRadialGradient(x - 0.8, y - 0.8, 0.3, x, y, 2.8); gr.addColorStop(0, "#f2f4f6"); gr.addColorStop(1, "#8d949b");
     g.fillStyle = gr; g.beginPath(); g.arc(x, y, 2.8, 0, Math.PI * 2); g.fill();
   }
+  const zoomOf = (b, m) => [b[0] - m, b[1] - m, b[2] - b[0] + 2 * m, b[3] - b[1] + 2 * m];
   const lidHoles = [[11, 149.5], [445, 149.5], [228, 289]];
+  function laptopGhost(g) {
+    if (state.view === "print") return;
+    g.save(); g.strokeStyle = "rgba(40,45,50,0.35)"; g.setLineDash([3, 2]); g.lineWidth = 0.6; g.beginPath(); g.rect(76, 34, 304, 212); g.stroke(); g.restore();
+  }
 
-  // ---------- A: mountains ----------
-  function mountains(cv) {
-    const ctx = setup(cv, 456, 300), { g } = ctx;
-    const win = rrect(26, 18, 404, 252, 8);
-    const sun = [312, 90, 32];
-    const R1 = [[20, 168], [70, 138], [118, 156], [176, 108], [232, 150], [272, 132], [330, 166], [384, 124], [436, 150]];
-    const R2 = [[20, 192], [92, 164], [150, 198], [212, 170], [270, 204], [342, 172], [400, 196], [436, 184]];
-    const R3 = [[20, 216], [62, 232], [130, 206], [200, 228], [262, 214], [330, 236], [398, 210], [436, 222]];
-    const lakeY = 242, ripples = [252, 261];
-    const below = pts => closed([...pts, [436, 300], [20, 300]]);
-    const rays = []; for (let k = 0; k < 12; k++) rays.push(-Math.PI + 0.13 + k * (Math.PI * 2 / 12));
-    region(ctx, win, () => {
-      for (let k = 0; k < rays.length; k++) {          // sky in deco wedges between the rays
-        const a0 = rays[k], a1 = k === rays.length - 1 ? rays[0] + Math.PI * 2 : rays[k + 1];
-        cell(ctx, gg => { gg.moveTo(sun[0], sun[1]); gg.lineTo(sun[0] + 700 * Math.cos(a0), sun[1] + 700 * Math.sin(a0)); gg.lineTo(sun[0] + 700 * Math.cos(a1), sun[1] + 700 * Math.sin(a1)); gg.closePath(); },
-             k % 2 ? P(4) : mix(P(4), P(3), 0.35));
-      }
-      cell(ctx, gg => gg.arc(sun[0], sun[1], sun[2], 0, Math.PI * 2), P(2));
-      cell(ctx, below(R1), P(3));
-      cell(ctx, below(R2), P(1));
-      cell(ctx, below(R3), P(0));
-      cell(ctx, gg => gg.rect(0, lakeY, 456, 60), mix(P(4), P(3), 0.2));
-      cell(ctx, gg => gg.rect(0, ripples[0], 456, ripples[1] - ripples[0]), mix(P(4), P(3), 0.45));
-      if (state.view === "asm") for (const [R, a] of [[R1, 0.12], [R2, 0.1], [R3, 0.08]]) {   // facet light on the ridges
-        g.save(); g.beginPath(); below(R)(g); g.clip();
-        for (let i = 0; i < R.length - 1; i++) { const [x0, y0] = R[i], [x1, y1] = R[i + 1];
-          g.fillStyle = y1 < y0 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.lineTo(x1, y1 + 40); g.lineTo(x0, y0 + 40); g.fill(); }
+  // ---------- A: cell monogram (pixel rendered) ----------
+  const MONO = [378, 222, 442, 286];
+  function mono(cv, mode) {
+    const W = 456, H = 300, ctx = setup(cv, W, H, mode === "over" ? [0, 0, W, H] : zoomOf(MONO, 8)), { g, k, x0, y0 } = ctx;
+    if (mode === "over") laptopGhost(g);
+    const [ax, ay, bx, by] = MONO, F = 3, R = 7;
+    seed = 11; const seeds = [];
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) seeds.push([ax + F + (i + 0.2 + 0.6 * rnd()) * (bx - ax - 2 * F) / 4, ay + F + (j + 0.2 + 0.6 * rnd()) * (by - ay - 2 * F) / 4]);
+    const ex = ax + 15, ey = ay + 13, eb = 4.5, eh = 38;
+    const inE = (x, y) => (x >= ex && x <= ex + eb && y >= ey && y <= ey + eh) ||
+      (y >= ey && y <= ey + eb && x >= ex && x <= ex + 26) || (y >= ey + eh / 2 - eb / 2 && y <= ey + eh / 2 + eb / 2 && x >= ex && x <= ex + 20) ||
+      (y >= ey + eh - eb && y <= ey + eh && x >= ex && x <= ex + 26);
+    const inWin = (x, y) => { const X0 = ax + F, Y0 = ay + F, X1 = bx - F, Y1 = by - F; if (x < X0 || x > X1 || y < Y0 || y > Y1) return false;
+      const cx = Math.min(Math.max(x, X0 + R), X1 - R), cy = Math.min(Math.max(y, Y0 + R), Y1 - R); return Math.hypot(x - cx, y - cy) <= R; };
+    const cutAt = (x, y) => {
+      if (!inWin(x, y) || inE(x, y)) return false;
+      let d1 = 1e9, d2 = 1e9, i1 = 0;
+      seeds.forEach((s, i) => { const d = (x - s[0]) ** 2 + (y - s[1]) ** 2; if (d < d1) { d2 = d1; d1 = d; i1 = i; } else if (d < d2) d2 = d; });
+      let best = 1e9; seeds.forEach((s, i) => { if (i === i1) return; const s1 = seeds[i1], L = Math.hypot(s[0] - s1[0], s[1] - s1[1]);
+        const dist = (((x - s[0]) ** 2 + (y - s[1]) ** 2) - ((x - s1[0]) ** 2 + (y - s1[1]) ** 2)) / (2 * L); if (dist < best) best = dist; });
+      return best > 1.0;                            // 2 mm web on the cell borders
+    };
+    if (state.view === "print") { g.fillStyle = `rgb(${BLACK})`; g.beginPath(); g.roundRect(ax - 3, ay - 3, bx - ax + 6, by - ay + 6, 8); g.fill(); }
+    const px0 = Math.floor((ax - x0) * k), py0 = Math.floor((ay - y0) * k), pw = Math.ceil((bx - ax) * k), ph = Math.ceil((by - ay) * k);
+    const img = g.getImageData(px0, py0, pw, ph), d = img.data;
+    for (let j = 0; j < ph; j++) for (let i = 0; i < pw; i++) {
+      const x = (px0 + i) / k + x0, y = (py0 + j) / k + y0, o = (j * pw + i) * 4;
+      const c = cutAt(x, y);
+      if (state.view === "print") { if (!c) { d[o] = 40; d[o + 1] = 42; d[o + 2] = 45; } continue; }   // the steel's footprint shows as a groove in the print
+      if (!c) { if (cutAt(x + 0.3, y + 0.3) || cutAt(x - 0.3, y - 0.3)) { d[o] *= 0.5; d[o + 1] *= 0.5; d[o + 2] *= 0.5; } continue; }
+      const base = state.view === "steel" ? HOLE : BLACK, lines = state.view === "asm" ? 1 + 0.12 * Math.sin((x + y * 0.4) / 0.5 * Math.PI) : 1;
+      d[o] = base[0] * lines; d[o + 1] = base[1] * lines; d[o + 2] = base[2] * lines; d[o + 3] = 255;
+    }
+    g.putImageData(img, px0, py0);
+    lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
+  }
+
+  // ---------- hex helpers ----------
+  let AF = 6, PITCH = 8.5;
+  const hexPts = (cx, cy, af) => { const r = af / Math.sqrt(3), p = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; p.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); } return p; };
+  const pathOf = (g, p) => { g.beginPath(); g.moveTo(p[0][0], p[0][1]); for (let i = 1; i < p.length; i++) g.lineTo(p[i][0], p[i][1]); g.closePath(); };
+  function hexGrid(box) {
+    const [ax, ay, bx, by] = box, out = [], dy = PITCH * Math.sqrt(3) / 2;
+    for (let r = 0, y = ay + 5; y <= by - 5; r++, y += dy)
+      for (let x = ax + 5 + (r % 2 ? PITCH / 2 : 0); x <= bx - 5; x += PITCH) out.push([x, y]);
+    return out;
+  }
+  function hole(g, cx, cy, view) {
+    if (view === "print") return;
+    pathOf(g, hexPts(cx, cy, AF)); g.fillStyle = `rgb(${HOLE})`; g.fill();
+    if (view === "asm" || view === "steel") { g.strokeStyle = "rgba(20,22,26,0.55)"; g.lineWidth = 0.3; g.stroke(); }
+  }
+  // a pin standing h mm proud, drawn in a slight oblique so its height reads from the front
+  function pin(g, cx, cy, h, onBacker) {
+    const ox = 0.55 * h, oy = -0.55 * h, base = hexPts(cx, cy, AF - 0.3), top = base.map(([x, y]) => [x + ox, y + oy]);
+    if (!onBacker) { g.save(); g.fillStyle = "rgba(0,0,0,0.28)"; pathOf(g, base.map(([x, y]) => [x + h * 0.25, y + h * 0.3])); g.fill(); g.restore(); }
+    for (let i = 0; i < 6; i++) {
+      const a = base[i], b = base[(i + 1) % 6], c = top[(i + 1) % 6], dpt = top[i];
+      const nx = (a[1] + b[1]) / 2 - cy, ny = -((a[0] + b[0]) / 2 - cx), lit = ((a[0] + b[0]) / 2 - cx) * -0.5 + ((a[1] + b[1]) / 2 - cy) * -0.85;
+      g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(c[0], c[1]); g.lineTo(dpt[0], dpt[1]); g.closePath();
+      const v = Math.round(14 + Math.max(0, lit) * 16 + Math.max(0, -lit) * 0); g.fillStyle = `rgb(${v},${v + 1},${v + 3})`; g.fill();
+    }
+    pathOf(g, top); g.fillStyle = "rgb(58,61,65)"; g.fill();
+    g.strokeStyle = "rgba(255,255,255,0.28)"; g.lineWidth = 0.3; g.stroke();
+  }
+
+  // ---------- B: hex pins, standing proud ----------
+  const PINS = [352, 86, 432, 162];
+  function pins(cv, mode) {
+    const W = 452, H = 171, ctx = setup(cv, W, H, mode === "over" ? [0, 0, W, H] : zoomOf(PINS, 8)), { g } = ctx;
+    if (state.view !== "print") for (let r = 0; r < 3; r++) for (let i = 0; i < [7, 5, 3][r]; i++) {
+      const x = W / 2 + 185 - i * 34, y = 28 + r * 10; g.save(); g.lineCap = "round"; g.strokeStyle = "#121417"; g.lineWidth = 3.5; g.beginPath(); g.moveTo(x - 12.25, y); g.lineTo(x + 12.25, y); g.stroke(); g.restore();
+    }
+    const cx = (PINS[0] + PINS[2]) / 2, cy = (PINS[1] + PINS[3]) / 2;
+    const cells = hexGrid(PINS).map(([x, y]) => { const r = Math.hypot((x - cx) / 36, (y - cy) / 34);
+      const h = Math.max(0, 7 * Math.cos(Math.min(1, r) * Math.PI / 2) ** 1.3 + 0.8 * Math.sin(x / 6 + y / 9)) * (r < 0.98 ? 1 : 0);
+      return [x, y, h < 0.6 ? 0 : h, r]; });
+    if (state.view === "print") { g.fillStyle = `rgb(${BLACK})`; g.beginPath(); g.roundRect(PINS[0] - 3, PINS[1] - 3, PINS[2] - PINS[0] + 6, PINS[3] - PINS[1] + 6, 6); g.fill(); }
+    cells.forEach(([x, y]) => hole(g, x, y, state.view));
+    if (state.view !== "steel") cells.slice().sort((a, b) => (a[1] - a[0]) - (b[1] - b[0])).forEach(([x, y, h]) => {
+      if (h > 0) pin(g, x, y, h + (state.view === "print" ? 1.2 : 0), state.view === "print");
+      else if (state.view === "print") { /* empty position: a hole through the backer too */ pathOf(g, hexPts(x, y, AF)); g.fillStyle = css("--paper"); g.fill(); }
+    });
+    [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, H - H * f));
+  }
+
+  // ---------- C: sunken E ----------
+  const SUNK = [14, 222, 78, 286];
+  function sunk(cv, mode) {
+    const W = 456, H = 300, ctx = setup(cv, W, H, mode === "over" ? [0, 0, W, H] : zoomOf(SUNK, 8)), { g } = ctx;
+    if (mode === "over") laptopGhost(g);
+    const [ax, ay] = SUNK, ex = ax + 15, ey = ay + 10, eb = 8, eh = 44;
+    const inE = (x, y) => (x >= ex && x <= ex + eb && y >= ey && y <= ey + eh) || (y >= ey && y <= ey + eb && x >= ex && x <= ex + 33) ||
+      (y >= ey + eh / 2 - eb / 2 && y <= ey + eh / 2 + eb / 2 && x >= ex && x <= ex + 27) || (y >= ey + eh - eb && y <= ey + eh && x >= ex && x <= ex + 33);
+    AF = 4; PITCH = 5.8;
+    const cells = hexGrid(SUNK).map(([x, y]) => [x, y, inE(x, y) ? 0 : 3]);
+    if (state.view === "print") {
+      g.fillStyle = `rgb(${BLACK})`; g.beginPath(); g.roundRect(SUNK[0] - 3, SUNK[1] - 3, 70, 70, 6); g.fill();
+      cells.slice().sort((a, b) => (a[1] - a[0]) - (b[1] - b[0])).forEach(([x, y, dpt]) => pin(g, x, y, 1.2 + (3 - dpt) * 0.9, true));
+    } else {
+      for (const [x, y, dpt] of cells) {
+        hole(g, x, y, state.view);
+        if (state.view === "steel") continue;
+        // pin top seen down the hole: lit where the steel rim does not shade it
+        g.save(); pathOf(g, hexPts(x, y, AF)); g.clip();
+        g.fillStyle = dpt ? "rgb(5,6,7)" : "rgb(56,59,63)"; g.fill();
+        if (dpt) { pathOf(g, hexPts(x + dpt * 0.75, y + dpt * 0.95, AF)); g.fillStyle = "rgb(20,21,23)"; g.fill(); }
+        else { g.strokeStyle = "rgba(255,255,255,0.22)"; g.lineWidth = 0.3; pathOf(g, hexPts(x, y, AF - 0.4)); g.stroke(); }
         g.restore();
       }
-      g.save(); g.beginPath(); poly([...R1, [436, -10], [20, -10]])(g); g.closePath(); g.clip();   // rays only in the sky
-      for (const a of rays) webs(ctx, gg => { gg.moveTo(sun[0] + sun[2] * Math.cos(a), sun[1] + sun[2] * Math.sin(a)); gg.lineTo(sun[0] + 700 * Math.cos(a), sun[1] + 700 * Math.sin(a)); });
-      g.restore();
-      webs(ctx, gg => gg.arc(sun[0], sun[1], sun[2], 0, Math.PI * 2));
-      webs(ctx, poly(R1)); webs(ctx, poly(R2)); webs(ctx, poly(R3));
-      for (const y of [lakeY, ...ripples]) webs(ctx, poly([[20, y], [436, y]]));
-    });
+    }
+    AF = 6; PITCH = 8.5;
     lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
   }
 
-  // ---------- B: topographic ----------
-  function topo(cv) {
-    const ctx = setup(cv, 456, 300), { g, s, dpr, M } = ctx;
-    const X0 = 26, Y0 = 18, X1 = 430, Y1 = 270, RR = 8;
-    const peaks = [[150, 112, 1.0, 56], [322, 176, 0.85, 60], [252, 66, 0.5, 34]];
-    const f = (x, y) => { let v = 0.0007 * (x - 26) + 0.0004 * (y - 18), fx = 0.0007, fy = 0.0004;
-      for (const [px, py, a, r] of peaks) { const e = a * Math.exp(-((x - px) ** 2 + (y - py) ** 2) / (2 * r * r)); v += e; fx += -e * (x - px) / (r * r); fy += -e * (y - py) / (r * r); }
-      return [v, fx, fy]; };
-    const step = 0.09, nb = 13, ramp = i => { const t = Math.max(0, Math.min(1, i / (nb - 1))) * 4, k = Math.min(3, Math.floor(t)); return mix(P(k), P(k + 1), t - k); };
-    const L = [-0.55, -0.62, 0.56];
-    const sc = dpr * s, px0 = Math.floor((X0 + M) * sc), py0 = Math.floor((Y0 + M) * sc), pw = Math.ceil((X1 - X0) * sc), ph = Math.ceil((Y1 - Y0) * sc);
-    if (state.view === "print") { g.save(); g.beginPath(); rrect(X0, Y0, X1 - X0, Y1 - Y0, RR)(g); g.strokeStyle = BACKER; g.lineWidth = 6; g.stroke(); g.restore(); }
-    const img = g.getImageData(px0, py0, pw, ph), d = img.data, rgbCache = {};
-    const rgb = hex => rgbCache[hex] || (rgbCache[hex] = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16)));
-    const inWin = (x, y) => { if (x < X0 || x > X1 || y < Y0 || y > Y1) return false;
-      const cx = Math.min(Math.max(x, X0 + RR), X1 - RR), cy = Math.min(Math.max(y, Y0 + RR), Y1 - RR); return Math.hypot(x - cx, y - cy) <= RR; };
-    const put = (o, c) => { d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255; };
-    for (let j = 0; j < ph; j++) for (let i = 0; i < pw; i++) {
-      const x = (px0 + i) / sc - M, y = (py0 + j) / sc - M; if (!inWin(x, y)) continue;
-      const [v, fx, fy] = f(x, y), t = v / step, fr = t - Math.round(t), gm = Math.hypot(fx, fy) / step || 1e-6, dist = Math.abs(fr) / gm;
-      const o = (j * pw + i) * 4;
-      if (dist < WEB / 2) { if (state.view === "print") put(o, rgb(BACKER)); continue; }          // steel stays as drawn
-      if (dist < WEB / 2 + 0.25 && state.view !== "print") { d[o] *= 0.45; d[o + 1] *= 0.45; d[o + 2] *= 0.48; continue; }
-      if (state.view === "steel") { put(o, rgb(OPEN)); continue; }
-      const c = rgb(ramp(Math.floor(t)));
-      const nx = -fx * 70, ny = -fy * 70, nl = Math.hypot(nx, ny, 1), shade = 0.82 + 0.32 * ((nx * L[0] + ny * L[1] + L[2]) / nl);
-      const lines = 1 - 0.05 * (0.5 + 0.5 * Math.sin((x + y * 0.5) / 0.6 * Math.PI));
-      put(o, c.map(v => Math.min(255, v * shade * lines)));
-    }
-    g.putImageData(img, px0, py0);
-    const winPath = rrect(X0, Y0, X1 - X0, Y1 - Y0, RR);
-    g.save(); g.beginPath(); winPath(g); g.clip();
-    for (const tie of [[[150, 112], [26, 92]], [[322, 176], [430, 238]], [[252, 66], [262, 18]]]) webs(ctx, poly(tie));
-    g.restore();
-    if (state.view !== "print") { g.save(); g.beginPath(); winPath(g); g.strokeStyle = "rgba(20,22,26,0.6)"; g.lineWidth = 0.45; g.stroke(); g.restore(); }
-    lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
-  }
-
-  // ---------- C: sunburst ----------
-  function sunburst(cv) {
-    const W = 452, H = 171, ctx = setup(cv, W, H), { g } = ctx;
-    const win = rrect(22, 24, 408, 136, 6), cx = 226, cy = 172;
-    const radii = [56, 98, 140], n = 14, a0 = Math.PI, da = Math.PI / n;
-    const sector = (r0, r1, a, b) => gg => { gg.arc(cx, cy, r1, a, b); gg.arc(cx, cy, r0, b, a, true); gg.closePath(); };
-    region(ctx, win, () => {
-      cell(ctx, gg => gg.arc(cx, cy, radii[0], Math.PI, 0), P(3), "relief", -1.6);
-      for (let k = 0; k < n; k++) {
-        const a = a0 + k * da, b = a + da, mid = a + da / 2 + Math.PI;
-        cell(ctx, sector(radii[0], radii[1], a, b), k % 2 ? P(1) : P(2));
-        const open = k >= 3 && k <= 10 && k % 2 === 1;
-        cell(ctx, sector(radii[1], radii[2], a, b), k % 2 ? P(4) : P(0), open ? "open" : (k % 2 ? "flush" : "relief"), mid);
-        cell(ctx, sector(radii[2], 400, a, b), k % 3 === 1 ? P(2) : P(0), k % 3 === 1 ? "relief" : "flush", mid);
-      }
-      for (const r of radii) webs(ctx, gg => gg.arc(cx, cy, r, Math.PI, 0));
-      for (let k = 1; k < n; k++) { const a = a0 + k * da; webs(ctx, gg => { gg.moveTo(cx + radii[0] * Math.cos(a), cy + radii[0] * Math.sin(a)); gg.lineTo(cx + 400 * Math.cos(a), cy + 400 * Math.sin(a)); }); }
-    });
-    [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, H - H * f));
-  }
-
-  // ---------- D: pyramid mosaic ----------
-  function mosaic(cv) {
-    const W = 452, H = 111, ctx = setup(cv, W, H), { g } = ctx;
-    const px = W / 2 - 10 - 106, py = H - 56 - 33.5;
-    if (state.view !== "print") {                        // the printed GX plate and its sockets
-      g.fillStyle = "rgba(0,0,0,0.2)"; g.fillRect(px + 0.6, py + 0.9, 212, 67); g.fillStyle = "#e9e2d0"; g.fillRect(px, py, 212, 67);
-      for (let i = 0; i < 6; i++) { const x = W / 2 - 85 + i * 30, y = H - 62;
-        g.fillStyle = "#2a2d31"; g.beginPath(); g.arc(x, y, 9.5, 0, Math.PI * 2); g.fill(); g.fillStyle = "#6c737a"; g.beginPath(); g.arc(x, y, 7, 0, Math.PI * 2); g.fill();
-        g.fillStyle = "#1a1c1f"; g.beginPath(); g.arc(x, y, 5, 0, Math.PI * 2); g.fill(); }
-    }
-    const a = 16, h = a * Math.sqrt(3) / 2;
-    for (const [x0, x1] of [[18, 104], [328, 434]]) {
-      const win = rrect(x0, 24, x1 - x0, 80, 4);
-      seed = x0 * 31 + 7;
-      region(ctx, win, () => {
-        const tris = [];
-        for (let r = 0; r * h < 90; r++) for (let c = -1; c * a / 2 < x1 - x0 + a; c++) {
-          const up = ((r + c) % 2 + 2) % 2 === 0, bx = x0 + c * a / 2 - a / 2, y = 24 + r * h;
-          tris.push(up ? [[bx, y + h], [bx + a / 2, y], [bx + a, y + h]] : [[bx, y], [bx + a, y], [bx + a / 2, y + h]]);
-        }
-        for (const t of tris) {
-          const u = rnd(), col = P(Math.floor(rnd() * 5));
-          if (u < 0.16) { cell(ctx, closed(t), col, "open"); continue; }
-          if (u < 0.55 || state.view === "steel") { cell(ctx, closed(t), col); continue; }
-          const cxp = (t[0][0] + t[1][0] + t[2][0]) / 3, cyp = (t[0][1] + t[1][1] + t[2][1]) / 3;   // faceted pyramid
-          for (let k = 0; k < 3; k++) {
-            const p0 = t[k], p1 = t[(k + 1) % 3], mx = (p0[0] + p1[0]) / 2 - cxp, my = (p0[1] + p1[1]) / 2 - cyp;
-            const face = (mx * -0.6 + my * -0.8) / Math.hypot(mx, my);
-            cell(ctx, closed([p0, p1, [cxp, cyp]]), face > 0 ? mix(col, "#ffffff", 0.3 * face) : mix(col, "#000000", -0.4 * face));
-          }
-          if (state.view === "asm") { g.save(); g.strokeStyle = "rgba(255,255,255,0.25)"; g.lineWidth = 0.25; g.beginPath(); for (const p of t) { g.moveTo(cxp, cyp); g.lineTo(p[0], p[1]); } g.stroke(); g.restore(); }
-        }
-        for (const t of tris) webs(ctx, closed(t));
-      });
-    }
-    [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, H - H * f));
-  }
-
-  // ---------- relief behind a pattern: a printed heightmap seen through cut-outs ----------
-  // mask(x,y): true where the steel is cut. h(x,y): print surface in mm (0 = steel face, + proud, − below).
-  // ext(x,y): the printed part's footprint, shown in print view.
-  function relief(ctx, o) {
-    const { g, s, dpr, M } = ctx, sc = dpr * s, [bx0, by0, bx1, by1] = o.bbox;
-    const px0 = Math.floor((bx0 + M) * sc), py0 = Math.floor((by0 + M) * sc), pw = Math.ceil((bx1 - bx0) * sc), ph = Math.ceil((by1 - by0) * sc);
-    const img = g.getImageData(px0, py0, pw, ph), d = img.data;
-    const Ld = [-0.6, -0.8], L3 = [-0.45, -0.6, 0.66], e = 0.4, view = state.view;
-    const rgbCache = {}, rgb = hex => rgbCache[hex] || (rgbCache[hex] = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16)));
-    const ramp = t => { t = Math.max(0, Math.min(1, t)) * 4; const k = Math.min(3, Math.floor(t)); return rgb(mix(P(k), P(k + 1), t - k)); };
-    const put = (i, c, k = 1) => { d[i] = Math.min(255, c[0] * k); d[i + 1] = Math.min(255, c[1] * k); d[i + 2] = Math.min(255, c[2] * k); d[i + 3] = 255; };
-    for (let j = 0; j < ph; j++) for (let i = 0; i < pw; i++) {
-      const x = (px0 + i) / sc - M, y = (py0 + j) / sc - M, idx = (j * pw + i) * 4;
-      const cut = o.mask(x, y);
-      if (view === "print") { if (!o.ext(x, y)) continue; }
-      else if (!cut) {
-        if (view === "steel") continue;
-        // steel: shadow from print standing proud nearby, and a dark seam at the cut edge
-        let sh = 1;
-        for (let k = 0.5; k <= 6; k += 0.5) { const qx = x + Ld[0] * k, qy = y + Ld[1] * k; if (o.mask(qx, qy) && o.h(qx, qy) > k) { sh = 0.62; break; } }
-        if (o.mask(x + 0.25, y) || o.mask(x - 0.25, y) || o.mask(x, y + 0.25) || o.mask(x, y - 0.25)) sh = Math.min(sh, 0.45);
-        if (sh < 1) { d[idx] *= sh; d[idx + 1] *= sh; d[idx + 2] *= sh; }
-        continue;
-      }
-      if (view === "steel") { put(idx, rgb(OPEN)); continue; }
-      const hh = o.h(x, y), hx = (o.h(x + e, y) - o.h(x - e, y)) / (2 * e), hy = (o.h(x, y + e) - o.h(x, y - e)) / (2 * e);
-      const nl = Math.hypot(hx, hy, 1), lam = (-hx * L3[0] - hy * L3[1] + L3[2]) / nl;
-      let k = 0.35 + 0.85 * Math.max(0, lam);
-      if (view === "asm" && hh < 0) {             // the steel rim shades what lies below it
-        for (let t = 0.4; t < -hh; t += 0.4) if (!o.mask(x + Ld[0] * t, y + Ld[1] * t)) { k *= 0.5; break; }
-      }
-      k *= 1 - 0.045 * (0.5 + 0.5 * Math.sin((x + y * 0.5) / 0.6 * Math.PI));     // layer lines
-      put(idx, ramp((hh - o.hmin) / (o.hmax - o.hmin)), k);
-    }
-    g.putImageData(img, px0, py0);
-  }
-
-  function crater(cv) {
-    const ctx = setup(cv, 456, 300), { g } = ctx;
-    const C = [228, 140], R = 95, ring = [];
-    for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + Math.PI / 12; ring.push([C[0] + 122 * Math.cos(a), C[1] + 118 * Math.sin(a) * 0.95]); }
-    const mask = (x, y) => Math.hypot(x - C[0], y - C[1]) < R || ring.some(([px, py]) => Math.hypot(x - px, y - py) < 7);
-    const crat = (x, y, cx, cy, r, depth) => { const q = Math.hypot(x - cx, y - cy) / r;
-      return q < 1 ? -depth * (1 - q * q) + 0.9 * depth * Math.exp(-((q - 1) ** 2) / 0.02) * 0.4 : 0.9 * depth * 0.4 * Math.exp(-((q - 1) ** 2) / 0.02); };
-    const h = (x, y) => {
-      let v = -2.6 + 0.5 * Math.sin(x / 13) * Math.cos(y / 17) + 0.25 * Math.sin((x + y) / 5.5);
-      v += crat(x, y, 205, 125, 46, 3.2) + crat(x, y, 268, 172, 24, 2.2) + crat(x, y, 252, 92, 14, 1.4) + crat(x, y, 170, 182, 18, 1.6);
-      v += 1.4 * Math.exp(-((x - 205) ** 2 + (y - 125) ** 2) / 70);           // central peak
-      return Math.max(-6, Math.min(-0.5, v));
-    };
-    relief(ctx, { bbox: [C[0] - 140, C[1] - 135, C[0] + 140, C[1] + 135], mask, h, hmin: -6, hmax: -0.5,
-                  ext: (x, y) => Math.hypot(x - C[0], y - C[1]) < 132 });
-    lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
-  }
-
-  function waves(cv) {
-    const W = 452, H = 171, ctx = setup(cv, W, H), { g } = ctx;
-    const rows = []; for (let r = 0; r < 9; r++) rows.push(36 + r * 13);
-    const xa = 34, xb = 418, half = 4;
-    const centre = (x, r) => rows[r] + 2.5 * Math.sin(x / 26 + r * 0.7);
-    const mask = (x, y) => {
-      for (let r = 0; r < rows.length; r++) {
-        const cx = Math.max(xa, Math.min(xb, x)), dy = y - centre(cx, r);
-        if (Math.hypot(x - cx, dy) < half) return true;
-      }
-      return false;
-    };
-    const h = (x, y) => Math.max(-3, Math.min(5, 4.2 * Math.sin(x / 42 - y / 55) + 1.4 * Math.cos(x / 19 + y / 31) + 0.6));
-    relief(ctx, { bbox: [24, 26, 428, 152], mask, h, hmin: -3, hmax: 5, ext: (x, y) => x > 26 && x < 426 && y > 28 && y < 150 });
-    [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, H - H * f));
-  }
-
-  const studies = { mountains, topo, sunburst, mosaic, crater, waves };
-  function drawAll() { seed = 1; document.querySelectorAll("canvas[data-study]").forEach(cv => studies[cv.dataset.study](cv)); }
-
-  document.querySelectorAll("[data-p]").forEach(b => { b.querySelector(".chips").innerHTML = PAL[b.dataset.p].map(c => `<i style="background:${c}"></i>`).join(""); });
-  const bind = (sel, key, attr) => document.querySelectorAll(sel).forEach(b => b.addEventListener("click", () => {
-    document.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", String(x === b))); state[key] = b.dataset[attr]; drawAll(); }));
-  bind("[data-v]", "view", "v"); bind("[data-p]", "pal", "p");
+  const studies = { mono, pins, sunk };
+  function drawAll() { document.querySelectorAll("canvas[data-study]").forEach(cv => studies[cv.dataset.study](cv, cv.dataset.mode)); }
+  document.querySelectorAll("[data-v]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-v]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); state.view = b.dataset.v; drawAll(); }));
   let tm; window.addEventListener("resize", () => { clearTimeout(tm); tm = setTimeout(drawAll, 120); });
   try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll); } catch (e) {}
   new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   drawAll();
-  if (document.fonts && document.fonts.load) document.fonts.load('400 12px "JetBrains Mono"').then(drawAll, drawAll);
 })();
 </script>
