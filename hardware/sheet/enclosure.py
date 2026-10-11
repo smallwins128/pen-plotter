@@ -368,15 +368,17 @@ def body(kind):
         panel("left", ML, -D / 2 + 242.5, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, D / 2 - 146, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
-        # brush strokes + ETCH mark (hardware/sheet/strokes.py): slots the black prints push through
-        U = lambda pts: [(x - WO / 2, y) for x, y in pts]
-        for d in ST.strokes():
-            add_poly(p, "front", MF, U(d["outline"].exterior.coords[:-1]), "brush stroke slot", "stroke")
+        top = T + H[kind]
+        for r in range(3):
+            for i in range((7, 5, 3)[r]):
+                add_slot(p, "front", MF, W / 2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0.0, "vent")
+        feat.append(("front", W / 2 - 40 - 6 * 34 - 14, W / 2 - 26, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
+        # ETCH mark, top left (hardware/sheet/strokes.py): cut through, a black print behind embosses it
         for g in ST.mark():
-            add_poly(p, "front", MF, U(g.exterior.coords[:-1]), "ETCH mark slot", "mark")
-        for name, hs in (("brush strokes", [h for h in p.holes if h["type"] == "stroke"]), ("ETCH mark", [h for h in p.holes if h["type"] == "mark"])):
-            uu = [q[0] for h in hs for q in h["uvpts"]]; vv = [q[1] for h in hs for q in h["uvpts"]]
-            feat.append(("front", min(uu) - ST.FLANGE, max(uu) + ST.FLANGE, min(vv) - ST.FLANGE, max(vv) + ST.FLANGE, name))
+            add_poly(p, "front", MF, [(x - WO / 2, y) for x, y in g.exterior.coords[:-1]], "ETCH mark slot", "mark")
+        hs = [h for h in p.holes if h["type"] == "mark"]
+        uu = [q[0] for h in hs for q in h["uvpts"]]; vv = [q[1] for h in hs for q in h["uvpts"]]
+        feat.append(("front", min(uu) - ST.FLANGE, max(uu) + ST.FLANGE, min(vv) - ST.FLANGE, max(vv) + ST.FLANGE, "ETCH mark"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, D / 2 - 175, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
@@ -607,14 +609,12 @@ def checks(parts):
             ex, ey = max(w, h) / 2 + 10 - 6, min(w, h) / 2 + 10 - 6
             ok(abs(ex - PANEL[key]["screw"][0]) < 0.01 and abs(ey - PANEL[key]["screw"][1]) < 0.01, "panels",
                f"{key} screw pattern ±{ex:.1f} x ±{ey:.1f} matches the print")
-    # power front art: stroke slots far enough apart that their printed flanges never touch; the mark clear of them
+    # power front: the ETCH mark's printed plate stays clear of the vents, and every letter is one closed outline
     pb = by["power_body"]
-    sl = [h["geom"] for h in pb.holes if h["type"] == "stroke"]; mk = [h["geom"] for h in pb.holes if h["type"] == "mark"]
-    sw = min(sl[i].distance(sl[j]) for i in range(len(sl)) for j in range(i + 1, len(sl)))
-    ok(sw >= ST.MIN_WEB, "art", f"brush-stroke slots {sw:.1f} mm apart at the closest (flanges need {ST.MIN_WEB:g})")
-    mw = min(a.distance(b) for a in mk for b in sl)
-    ok(mw >= ST.MIN_WEB, "art", f"ETCH mark {mw:.0f} mm clear of the strokes")
-    ok(all(g.is_valid and len(g.interiors) == 0 for g in sl + mk), "art", "art slots are single closed outlines (no loose steel inside)")
+    mk = [h["geom"] for h in pb.holes if h["type"] == "mark"]; vt = [h["geom"] for h in pb.holes if h["type"] == "vent" and h["face"] == "front"]
+    mw = min(a.distance(b) for a in mk for b in vt)
+    ok(mw >= ST.MIN_WEB, "art", f"ETCH mark {mw:.0f} mm clear of the vents")
+    ok(all(g.is_valid and len(g.interiors) == 0 for g in mk), "art", "mark letters are single closed outlines (no loose steel inside)")
     # stacking: power-lid peg holes sit under the control box's foot holes, and the feet clear what lies between
     feet = sorted(h["c"] for h in by["control_body"].holes if h["note"] == "Ø4.5 locating foot")
     pegs = sorted(h["peg"] for h in by["power_lid"].holes if "peg" in h)
@@ -921,7 +921,6 @@ def sync_inspector(parts):
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={},
-               strokes=[[[round(x - WO / 2, 2), round(y, 2), round(w, 2), round(hh, 2)] for x, y, w, hh in d["samples"]] for d in ST.strokes()],
                mark=dict(proud=ST.MARK_PROUD, polys=[[[round(x - WO / 2, 2), round(y, 2)] for x, y in g.exterior.coords[:-1]] for g in ST.mark()]),
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
                           holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))

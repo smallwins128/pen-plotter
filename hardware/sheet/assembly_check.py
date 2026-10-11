@@ -147,7 +147,9 @@ def items(kind):
             wall_item("fan (80 x 80 x 25)", wall, u0, u1, v0, v1, E.FAN_DEPTH, "fan")
         elif name == "earth stud":
             wall_item("earth stud + lugs", wall, u0, u1, v0, v1, 20, "stud")
-        elif name in ("brush strokes", "ETCH mark"):     # the black prints' flanges / plate, inside the front wall
+        elif name == "front vents":
+            pass
+        elif name == "ETCH mark":                        # the black print's plate, inside the front wall
             wall_item(f"{name}: printed backing", wall, u0, u1, v0, v1, 2.5, "panel_in")
         else:
             raise SystemExit(f"assembly_check: no rule for wall feature {name!r}")
