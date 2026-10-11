@@ -116,6 +116,15 @@ def items(kind):
     for h in body.holes:
         if h.get("type") != "rivnut_m3":
             continue
+        if "wall_rivnut" in h:   # over-plate standoff rivnuts: Ø5 x 9 body behind a side or front wall
+            face, u, v = h["wall_rivnut"]
+            if face == "left":
+                out.append(Item(f"rivnut, left wall (over-plate)", "rivnut", -W / 2, -W / 2 + 9, v - 2.5, v + 2.5, u - 2.5, u + 2.5))
+            elif face == "right":
+                out.append(Item(f"rivnut, right wall (over-plate)", "rivnut", W / 2 - 9, W / 2, v - 2.5, v + 2.5, u - 2.5, u + 2.5))
+            else:
+                out.append(Item(f"rivnut, front wall (over-plate)", "rivnut", u - 2.5, u + 2.5, v - 2.5, v + 2.5, D / 2 - 9, D / 2))
+            continue
         u, v, face = h["folded"]
         if face == "top":   # (x, z) on a top lip
             out.append(Item(f"rivnut, {h['face']}", "rivnut", u - 2.5, u + 2.5, top - T - 9, top, v - 2.5, v + 2.5))

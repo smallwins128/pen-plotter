@@ -15,6 +15,7 @@ import sys
 import zipfile
 
 import enclosure as E
+import overplates as OP
 
 OUT = E.OUT
 VERSION = sys.argv[1] if len(sys.argv) > 1 else "v1"
@@ -27,6 +28,8 @@ FOLDED = {
     "power_lid": f"{E.WO + 2 * (E.CLR + E.T):.0f} W × {(E.ZF + E.CLR + E.T) - (E.ZB - E.T):.1f} D × {E.H['power'] + E.T:.0f} H (back)",
     "control_base_plate": "flat, 440 × 285, notched",
     "power_base_plate": "flat, 440 × 285, notched",
+    "saddle": f"{2 * (OP.XS + OP.SAD['t']):.0f} W over the sides × {OP.SAD['f_tail'] - OP.SAD['f_nose']:.0f} D, sides drop to the leg tips",
+    "band": f"{2 * (OP.XB + OP.BND['t']):.0f} W × {OP.BND['y1'] - OP.BND['y0']:.0f} H, wraps the front corners",
 }
 
 
@@ -54,12 +57,16 @@ th {{ background: #eee }} td.n {{ text-align: right; font-variant-numeric: tabul
 code {{ font-size: 9.5pt }}
 </style></head><body>
 <h1>Plotter enclosures · cut &amp; bend pack</h1>
-<p>Two stacked electronics boxes (control on top, power below), each a folded body + a folded lid, plus two flat base plates.
+<p>Two stacked electronics boxes (control on top, power below), each a folded body + a folded lid, plus two flat base plates,
+and two over-plates that stand off the boxes: a 1.5 mm saddle over the control box and a 1 mm bumper band round the power box's front.
 Prepared by Allwin Tom · {datetime.date.today().isoformat()} · {VERSION}</p>
 <table><tr><th>#</th><th>File</th><th>Part</th><th>Material</th><th>Qty</th><th>Flat (mm)</th><th>Bends</th><th>Folded outside (mm)</th></tr>{rows}</table>
 <div class=cols>
 <div class=box><h3>Bending</h3><ul>
-<li>Every flat is drawn from the <b>inside face</b>. Every bend is <b>UP 90°</b>, inner radius <b>R1</b>.</li>
+<li>Every flat is drawn from the <b>inside face</b>. Every bend is <b>UP</b>. Boxes and lids: 90°, inner radius <b>R1</b>.</li>
+<li><b>Over-plates:</b> each rounded corner is <b>{OP.BUMP_N} bends of {OP.BUMP_DEG:g}°</b>, {OP.BUMP_A:g} mm apart (bump bending), so it reads as a
+smooth curve. Saddle: 1.5 mm, R1.5, plus a 90° visor and back flange. Band: 1 mm, R1. <b>Please confirm {OP.BUMP_A:g} mm between bends works on your
+brake</b>; if not, tell us your minimum and we re-issue.</li>
 <li>Flats assume K {b['K']}, bend allowance {b['BA']} mm, bend deduction {b['BD']} mm per 90° bend (1 mm 304, R = t).
 <b>If your bend deduction for 1 mm 304 at R1 differs, tell us the number</b>: we re-issue the flats so every hole lands where it should.</li>
 <li>Bend order: small lips first (top lips, back lips, corner tabs, base back lip), then the side walls, then the front wall last.
@@ -74,11 +81,12 @@ stop {E.TAB_GAP} mm short of the front wall (the rivets close it); the lid is {E
 <li>DXF R12, millimetres, 1:1.</li></ul></div>
 <div class=box><h3>Finish &amp; handling</h3><ul>
 <li>304 stainless, brushed, protective film left on. Grain the same direction on all visible faces of both boxes.</li>
-<li>Deburr all edges. No paint or coating.</li>
+<li>Deburr all edges. No paint or coating. <b>Over-plates are handled: deburr and edge-round every cut edge</b> (brush or tumble).</li>
 <li>Base plates: 2 mm 5052 aluminium (1.5 mm 304 acceptable). Deburr.</li>
 <li>Tolerances: laser ±0.2 mm, bends ±0.5 mm.</li></ul></div>
 <div class=box><h3>Fitted by the customer — do not insert</h3><ul>
-<li>M3 rivnuts (Ø5 holes) in the body lips; solid rivets Ø3 (Ø3.2 holes) in the front corner tabs.</li>
+<li>M3 rivnuts (Ø5 holes) in the body lips and walls; solid rivets Ø3 (Ø3.2 holes) in the front corner tabs.</li>
+<li>Over-plates: Ø3.4 holes only; the customer fits M3 standoffs.</li>
 <li>M4 rivnuts (Ø6 grid) in the base plates as needed; M4 standoffs, rubber feet, panels, fans.</li></ul></div>
 </div>
 <p><b>Checks:</b> {n_ok} design checks passed before these files were written — holes clear of bends (≥ 5 mm), webs ≥ 1.5 mm,

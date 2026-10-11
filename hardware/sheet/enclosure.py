@@ -89,6 +89,7 @@ PANEL = {
 }
 
 
+RECV_FWD = 55.0                            # receiving panel moved forward so the saddle's window leaves the leg on (tab rivets limit it)
 FAN = {"control": (-30.0, T + H["control"] / 2 - 8), "power": (D / 2 - 50, T + 55)}   # left wall: (z, y) centre, 80 x 80 x 25
 FAN_DEPTH = 25.0
 
@@ -230,7 +231,7 @@ def corner_relief(p, x0, x1, y0, y1):
 # ============================================================================
 # BODY: base + front + two sides, top lips, back lips, base back lip, corner tabs
 # ============================================================================
-def body(kind):
+def body(kind, overplates=True):
     Hb = T + H[kind]                       # outer mold height (base underside to top of the top lips)
     p = Part(f"{kind}_body", f"{kind.upper()} BOX · BODY", "1.0 mm 304 stainless, brushed, film on")
     xe = WO / 2 - S                         # base face half-width in the flat
@@ -366,7 +367,7 @@ def body(kind):
         panel("front", MF, -10.0, T + H[kind] / 2, "gx_rail", "GX16 rail")
         fan("left", ML, *FAN[kind])
         panel("left", ML, -D / 2 + 242.5, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
-        panel("right", MR, D / 2 - 146, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
+        panel("right", MR, D / 2 - 146 + RECV_FWD, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
         top = T + H[kind]
         for r in range(3):
@@ -385,6 +386,18 @@ def body(kind):
         feat.append(("left", D / 2 - 266, D / 2 - 254, T + 14, T + 26, "earth stud"))
         panel("right", MR, D / 2 - 160, panel_y(kind, PANEL["psu"]["plate"][1]), "psu", "PSU panel")
     p.feat, p.Hb, p.panels = feat, Hb, panels
+    if overplates:                             # rivnuts for the over-plates' standoffs (hardware/sheet/overplates.py)
+        import overplates as OP
+        maps = {"left": ML, "right": MR, "front": MF}
+        for face, u, v in OP.body_rivnuts(kind):
+            add_circle(p, face, maps[face], u, v, "rivnut_m3", "M3 Rivnut (5mm), over-plate standoff")
+            p.holes[-1]["wall_rivnut"] = (face, u, v)
+        for x, z in OP.lid_top_rivnuts(kind):
+            sgn = 1 if x > 0 else -1
+            lip_x = [h for h in p.holes if h.get("folded") == (sgn * (WO / 2 - T - RIV_IN), 0.0, "top")][0]["c"][0]
+            p.holes.append(dict(kind="circle", c=(lip_x, z), r=HOLE["rivnut_m3"][0] / 2, note=HOLE["rivnut_m3"][1],
+                                face=f"{('left', 'right')[sgn > 0]} top lip", type="rivnut_m3",
+                                geom=Point(lip_x, z).buffer(HOLE["rivnut_m3"][0] / 2, 48), folded=(x, z, "top")))
     for side in ("left", "right"):
         for f in ("top lip", "back lip", "corner tab"):
             p.connect.add(frozenset((f"{side} wall", f"{side} {f}")))
@@ -455,6 +468,9 @@ def lid(kind):
         add_circle(p, "back", MBk, sgn * (WO / 2 - T - RIV_IN), T + H[kind] / 2, "lidclr")
         p.holes[-1]["folded"] = (sgn * (WO / 2 - T - RIV_IN), T + H[kind] / 2, "back")
     add_circle(p, "top", MT, 0.0, ZF - T - RIV_IN, "lidclr"); p.holes[-1]["folded"] = (0.0, ZF - T - RIV_IN, "top")
+    import overplates as OP                  # the saddle's extra top fixings
+    for x, z in OP.lid_top_rivnuts(kind):
+        add_circle(p, "top", MT, x, z, "lidclr"); p.holes[-1]["folded"] = (x, z, "top")
     add_circle(p, "back", MBk, 0.0, T + LIP / 2, "lidclr"); p.holes[-1]["folded"] = (0.0, T + LIP / 2, "back")
     if kind == "power":                      # locating holes for the control box's feet
         for (x, z), how in PEG_HOLES.items():
@@ -582,7 +598,9 @@ def checks(parts):
         ok(not hits, kind, "lid on body: no overlap " + ("" if not hits else str(hits)))
         bh = [h["folded"] for h in by[f"{kind}_body"].holes if "folded" in h]
         lh = [h["folded"] for h in by[f"{kind}_lid"].holes if "folded" in h]
-        ok(len(bh) == len(lh) == 6, kind, f"6 lid fixings on body ({len(bh)}) and lid ({len(lh)})")
+        import overplates as OP
+        nfix = 6 + len(OP.lid_top_rivnuts(kind))
+        ok(len(bh) == len(lh) == nfix, kind, f"{nfix} lid fixings on body ({len(bh)}) and lid ({len(lh)})")
         for f in bh:
             m = [l for l in lh if l[2] == f[2] and math.hypot(l[0] - f[0], l[1] - f[1]) < 0.01]
             ok(len(m) == 1, kind, f"lid clearance hole over rivnut at {f[2]} ({f[0]:.1f}, {f[1]:.1f})")
@@ -739,7 +757,7 @@ def write_dxf(p, path):
     # title block
     minx, miny, maxx, maxy = o.bounds
     ty = miny - 12
-    lines = [p.title, f"Material: {p.material}   Qty: {p.qty}   Units: mm",
+    lines = getattr(p, "title_lines", None) and [*p.title_lines, *p.notes, f"Flat size: {maxx - minx:.1f} x {maxy - miny:.1f}"] or [p.title, f"Material: {p.material}   Qty: {p.qty}   Units: mm",
              "Drawn from the INSIDE face. All bends: UP 90°, inner radius R1." if p.bends else "Flat part, no bends.",
              f"Flat assumes K {K}, bend allowance {BA:.2f}, deduction {BD:.2f} per bend. Shop's value wins: re-run if different." if p.bends else "",
              *p.notes, f"Flat size: {maxx - minx:.1f} x {maxy - miny:.1f}"]
@@ -859,12 +877,19 @@ def build():
     return parts
 
 
+def build_over():
+    import overplates as OP
+    return OP.parts()
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--report", action="store_true", help="run the checks, write nothing")
     a = ap.parse_args(argv)
+    import overplates as OP
     parts = build()
-    res = checks(parts)
+    over = build_over()
+    res = checks(parts) + OP.checks(over)
     bad = [r for r in res if not r[0]]
     print(f"{len(res)} checks, {len(bad)} failed")
     for okk, part, txt in res:
@@ -888,14 +913,15 @@ def main(argv):
         return 0
     OUT.mkdir(parents=True, exist_ok=True)
     summary = []
-    for p in parts:
+    for p in parts + over:
         dxf = OUT / f"{p.name}.dxf"
         write_dxf(p, dxf)
         v = verify_and_preview(dxf, OUT / f"{p.name}.svg")
         status = "closed" if v["open_ends"] == 0 else f"{v['open_ends']} OPEN ENDS"
         if p.bends:
             kind = p.name.split("_")[0]
-            for okk, txt in refold_check(kind, p.name, read_dxf(dxf)):
+            rf = OP.refold(p, read_dxf(dxf)) if p in over else refold_check(kind, p.name, read_dxf(dxf))
+            for okk, txt in rf:
                 print(f"      {'ok  ' if okk else 'FAIL'} {txt}")
                 res.append((okk, p.name, txt))
                 if not okk:
@@ -908,14 +934,14 @@ def main(argv):
     (OUT / "summary.json").write_text(json.dumps(dict(parts=summary, checks=[[r[0], r[1], r[2]] for r in res],
                                                       bend=dict(T=T, R=R, K=K, BA=round(BA, 3), BD=round(BD, 3))), indent=1))
     print(f"wrote {OUT}")
-    sync_inspector(parts)
+    sync_inspector(parts, over)
     return 0
 
 
 INSPECTOR = HERE.parent / "web" / "enclosure_inspector.html"
 
 
-def sync_inspector(parts):
+def sync_inspector(parts, over=()):
     """Write the generator's numbers into the 3D inspector, so the preview is the cut files, not a copy of them."""
     by = {p.name: p for p in parts}
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
@@ -945,6 +971,9 @@ def sync_inspector(parts):
         pl = by[f"{kind}_base_plate"]
         gen["plate"][kind] = dict(outline=[[round(x, 2), round(z, 2)] for x, z in pl.outline().exterior.coords[:-1]],
                                   holes=[[round(h["c"][0], 2), round(h["c"][1], 2), h["r"]] for h in pl.holes])
+    if over:
+        import overplates as OP
+        gen["over"] = OP.inspector_data()
     src = INSPECTOR.read_text()
     a, b = src.index("// GEN:BEGIN"), src.index("// GEN:END")
     INSPECTOR.write_text(src[:a] + "// GEN:BEGIN (written by hardware/sheet/enclosure.py, do not edit)\nconst GEN = "
