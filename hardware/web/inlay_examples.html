@@ -1,0 +1,390 @@
+<title>Etch Inlay Studies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@600;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a fabricator's proof sheet. Controls on top, one card per panel study, drawn to scale on steel. */
+:root {
+  --bg: #eceef0;
+  --paper: #f7f8f9;
+  --ink: #1d2226;
+  --muted: #5b646c;
+  --line: #c9ced3;
+  --accent: #c8501c;
+  --focus: #2b5fb8;
+  --f-display: "Big Shoulders Stencil Display", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #ef7a45; --focus: #7aa7ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #ef7a45; --focus: #7aa7ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 22px; }
+header { display: grid; gap: 6px; }
+h1 { font: 800 clamp(34px, 6vw, 56px)/0.95 var(--f-display); letter-spacing: 0.02em; margin: 0; text-wrap: balance; }
+.lede { margin: 0; max-width: 68ch; color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; padding-block: 12px; border-block: 1px solid var(--line); }
+.group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.label { font: 500 11px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.sw { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; padding: 0; }
+.sw[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--paper) inset; }
+.seg { font: 500 13px/1 var(--f-body); padding: 8px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; border-radius: 4px; }
+.seg[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.section-h { font: 600 12px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 10px 0 -8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 18px; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.card h2 { font: 800 24px/1 var(--f-display); letter-spacing: 0.02em; margin: 0; }
+.card .where { font: 500 11px/1.3 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.card p { margin: 0; color: var(--muted); font-size: 14px; max-width: 62ch; }
+canvas { width: 100%; display: block; border-radius: 3px; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.facts li { font: 400 11.5px/1.3 var(--f-mono); color: var(--ink); border: 1px solid var(--line); padding: 3px 7px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+footer { color: var(--muted); font-size: 13.5px; max-width: 80ch; display: grid; gap: 6px; }
+footer b { color: var(--ink); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>ETCH · INLAY STUDIES</h1>
+    <p class="lede">Six ideas for the control lid, the control front and the power front, drawn to scale on 1 mm brushed 304. Cuts go through the steel; a printed backer pushed in from inside fills them flush. Switch the finish to compare with a fiber-laser mark or open cuts.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Preview options">
+    <div class="group"><span class="label">Inlay colour</span>
+      <button class="sw" id="c-orange" data-c="#d9541c" aria-label="Signal orange" aria-pressed="true" style="background:#d9541c"></button>
+      <button class="sw" id="c-green" data-c="#1f5a44" aria-label="Racing green" aria-pressed="false" style="background:#1f5a44"></button>
+      <button class="sw" id="c-cobalt" data-c="#2c4fa0" aria-label="Cobalt" aria-pressed="false" style="background:#2c4fa0"></button>
+      <button class="sw" id="c-bone" data-c="#e6dfcf" aria-label="Bone" aria-pressed="false" style="background:#e6dfcf"></button>
+      <button class="sw" id="c-black" data-c="#1a1b1d" aria-label="Black" aria-pressed="false" style="background:#1a1b1d"></button>
+    </div>
+    <div class="group"><span class="label">Finish</span>
+      <button class="seg" id="f-inlay" data-f="inlay" aria-pressed="true">Printed inlay</button>
+      <button class="seg" id="f-mark" data-f="mark" aria-pressed="false">Laser mark</button>
+      <button class="seg" id="f-open" data-f="open" aria-pressed="false">Open cut</button>
+    </div>
+    <div class="group"><span class="label">Overlay</span>
+      <button class="seg" id="o-keep" aria-pressed="false">Keep-outs</button>
+    </div>
+  </div>
+
+  <div class="section-h">Control box · lid top · 456 × 300</div>
+  <div class="grid">
+    <article class="card">
+      <span class="where">Lid top · A</span><h2>Spirograph</h2>
+      <canvas data-study="spiro"></canvas>
+      <p>An eight-lobe hypotrochoid, the kind of figure the plotter draws. The line crosses itself, so it has 2 mm bridges every 18 mm to keep every piece of steel attached.</p>
+      <ul class="facts"><li>slot 2.5</li><li>bridges 2.0 @ 18</li><li>Ø220 field</li></ul>
+    </article>
+    <article class="card">
+      <span class="where">Lid top · B</span><h2>Hilbert curve</h2>
+      <canvas data-study="hilbert"></canvas>
+      <p>One unbroken plotter path. It never crosses or closes, so it needs no bridges, and the 8 mm webs between runs stay stiff once the backer is glued in.</p>
+      <ul class="facts"><li>slot 2.5</li><li>order 4 · 16 × 16</li><li>web 8.2</li></ul>
+    </article>
+    <article class="card">
+      <span class="where">Lid top · C</span><h2>Laptop pads</h2>
+      <canvas data-study="pads"></canvas>
+      <p>Four TPU plugs stand 0.5 mm proud where the MacBook's feet land, with plotter registration crosses at its corners. The foot positions are placeholders: measure yours.</p>
+      <ul class="facts"><li>pads Ø14 TPU</li><li>laptop 304 × 212</li><li>crosses 12, split</li></ul>
+    </article>
+  </div>
+
+  <div class="section-h">Control box · front · 452 × 111</div>
+  <div class="grid">
+    <article class="card">
+      <span class="where">Control front · D</span><h2>Port legend</h2>
+      <canvas data-study="legend"></canvas>
+      <p>Socket names in stencil type under each GX16, plus a small ETCH mark cut into the steel at the right. The names come from the handoff's socket list; the order shown is a guess.</p>
+      <ul class="facts"><li>legend cap 7</li><li>mark cap 22</li><li>clear of lid lip</li></ul>
+    </article>
+  </div>
+
+  <div class="section-h">Power box · front · 452 × 171</div>
+  <div class="grid">
+    <article class="card">
+      <span class="where">Power front · E</span><h2>Name badge</h2>
+      <canvas data-study="badge"></canvas>
+      <p>ETCH in tall stencil type, set low and left, balancing the stepped vents. A stencil face keeps the counters of E, T, C and H tied to the sheet.</p>
+      <ul class="facts"><li>cap height 46</li><li>min web 2.0</li></ul>
+    </article>
+    <article class="card">
+      <span class="where">Power front · F</span><h2>Lissajous roundel</h2>
+      <canvas data-study="roundel"></canvas>
+      <p>A 3 : 2 Lissajous figure inside a broken ring, like an oscilloscope trace. A quieter mark than lettering, and it ties to the lid's spirograph.</p>
+      <ul class="facts"><li>ring Ø76</li><li>slot 2.2</li><li>bridges 2.0 @ 16</li></ul>
+    </article>
+  </div>
+
+  <footer>
+    <p><b>How the inlay works.</b> Print each plug 0.15 mm under the cut on every side, standing 1.0 mm tall (flush), on a 2 mm backer flange that runs 3 mm past the cut all round. Hold it with VHB tape or the screws already on that face. On the lid, the backer also seals the cuts against dust and stiffens the slotted area.</p>
+    <p><b>Rules every study keeps.</b> Cuts stay 7 mm in from the folded edges, 13 mm from the lid's fixing holes, and out of the strip the lid's front lip covers. Steel webs are at least 1.5 mm. Turn on Keep-outs to see them.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const state = { colour: "#d9541c", finish: "inlay", keep: false };
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  // ---------- geometry helpers (mm) ----------
+  function polyLen(p) { let L = 0; for (let i = 1; i < p.length; i++) L += Math.hypot(p[i][0] - p[i-1][0], p[i][1] - p[i-1][1]); return L; }
+  // split a polyline into dashes: material bridges of `gap` mm every `every` mm
+  function bridged(p, every, gap) {
+    if (!every) return [p];
+    const out = []; let cur = [p[0]], run = 0, inGap = false, gapLeft = 0;
+    for (let i = 1; i < p.length; i++) {
+      let [x0, y0] = p[i-1]; const [x1, y1] = p[i];
+      let seg = Math.hypot(x1 - x0, y1 - y0);
+      while (seg > 1e-9) {
+        const need = inGap ? gapLeft : every - run;
+        const step = Math.min(need, seg), f = step / seg;
+        const xm = x0 + (x1 - x0) * f, ym = y0 + (y1 - y0) * f;
+        if (!inGap) cur.push([xm, ym]);
+        seg -= step; x0 = xm; y0 = ym;
+        if (inGap) { gapLeft -= step; if (gapLeft <= 1e-9) { inGap = false; run = 0; cur = [[xm, ym]]; } }
+        else { run += step; if (run >= every - 1e-9) { out.push(cur); inGap = true; gapLeft = gap; } }
+      }
+    }
+    if (!inGap && cur.length > 1) out.push(cur);
+    return out;
+  }
+  function hypotrochoid(R, r, d, scale, cx, cy) {
+    const gcd = (a, b) => b ? gcd(b, a % b) : a, pts = [], N = 2400, T = Math.PI * 2 * r / gcd(R, r);
+    for (let i = 0; i <= N; i++) { const t = T * i / N;
+      pts.push([cx + scale * ((R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t)), cy + scale * ((R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t))]); }
+    return pts;
+  }
+  function lissajous(a, b, rx, ry, cx, cy) {
+    const pts = [], N = 700;
+    for (let i = 0; i <= N; i++) { const t = Math.PI * 2 * i / N; pts.push([cx + rx * Math.sin(a * t + Math.PI / 2), cy + ry * Math.sin(b * t)]); }
+    return pts;
+  }
+  function circlePts(cx, cy, r, a0 = 0, a1 = Math.PI * 2, n = 120) {
+    const p = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; p.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); } return p;
+  }
+  function hilbert(order, size, cx, cy) {
+    const n = 1 << order, pts = [];
+    for (let d = 0; d < n * n; d++) {
+      let rx, ry, t = d, x = 0, y = 0;
+      for (let s = 1; s < n; s *= 2) {
+        rx = 1 & (t / 2); ry = 1 & (t ^ rx);
+        if (ry === 0) { if (rx === 1) { x = s - 1 - x; y = s - 1 - y; } [x, y] = [y, x]; }
+        x += s * rx; y += s * ry; t = Math.floor(t / 4);
+      }
+      const step = size / (n - 1);
+      pts.push([cx - size / 2 + x * step, cy - size / 2 + y * step]);
+    }
+    return pts;
+  }
+
+  // ---------- steel ----------
+  const texCache = new Map();
+  function brushed(w, h) {
+    const k = w + "x" + h; if (texCache.has(k)) return texCache.get(k);
+    const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d");
+    const grad = g.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, "#d3d7db"); grad.addColorStop(0.5, "#bfc4c9"); grad.addColorStop(1, "#cdd1d5");
+    g.fillStyle = grad; g.fillRect(0, 0, w, h);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < h * 1.6; i++) {
+      const y = rnd() * h, a = 0.025 + rnd() * 0.05;
+      g.strokeStyle = rnd() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(40,45,50,${a})`;
+      g.lineWidth = 0.5 + rnd(); g.beginPath(); const x0 = rnd() * w * 0.3; g.moveTo(x0, y); g.lineTo(x0 + w * (0.4 + rnd() * 0.7), y + (rnd() - 0.5)); g.stroke();
+    }
+    texCache.set(k, c); return c;
+  }
+
+  // ---------- drawing a study ----------
+  // panel spec: W x H mm, origin top-left of the panel; features drawn in panel mm
+  function setup(cv, W, H) {
+    const M = 10;                                  // margin in mm for dimension text
+    const cw = cv.clientWidth || 360, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const s = cw / (W + 2 * M);
+    cv.width = Math.round(cw * dpr); cv.height = Math.round((H + 2 * M) * s * dpr);
+    cv.style.height = ((H + 2 * M) * s) + "px";
+    const g = cv.getContext("2d"); g.setTransform(dpr * s, 0, 0, dpr * s, dpr * s * M, dpr * s * M);
+    g.clearRect(-M, -M, W + 2 * M, H + 2 * M);
+    // shadow + steel
+    g.save(); g.shadowColor = "rgba(0,0,0,0.28)"; g.shadowBlur = 6 * dpr; g.shadowOffsetY = 1.5;
+    g.fillStyle = "#c4c8cc"; g.fillRect(0, 0, W, H); g.restore();
+    g.drawImage(brushed(cv.width, cv.height), 0, 0, W, H);
+    // folded edge: a soft darker band where the sheet turns over
+    const e = 1.8, edge = (x, y, w, h, dir) => {
+      const gr = dir === "v" ? g.createLinearGradient(x, 0, x + w, 0) : g.createLinearGradient(0, y, 0, y + h);
+      gr.addColorStop(0, "rgba(60,66,72,0.45)"); gr.addColorStop(1, "rgba(60,66,72,0)"); g.fillStyle = gr; g.fillRect(x, y, w, h); };
+    edge(0, 0, W, e, "h"); edge(0, 0, e, H, "v");
+    g.save(); g.translate(W, H); g.rotate(Math.PI); edge(0, 0, W, e, "h"); edge(0, 0, e, H, "v"); g.restore();
+    // dimensions
+    g.fillStyle = css("--muted"); g.font = `400 3.6px ${css("--f-mono") || "monospace"}`;
+    g.textAlign = "center"; g.fillText(`${W}`, W / 2, -3.2);
+    g.save(); g.translate(-3.2, H / 2); g.rotate(-Math.PI / 2); g.fillText(`${H}`, 0, 0); g.restore();
+    return { g, s, dpr };
+  }
+
+  function cutStroke(g, paths, w) {
+    const f = state.finish;
+    g.lineCap = "round"; g.lineJoin = "round";
+    for (const p of paths) {
+      if (p.length < 2) continue;
+      g.beginPath(); g.moveTo(p[0][0], p[0][1]); for (let i = 1; i < p.length; i++) g.lineTo(p[i][0], p[i][1]);
+      if (f === "mark") { g.strokeStyle = "rgba(48,52,58,0.88)"; g.lineWidth = w * 0.55; g.stroke(); continue; }
+      g.strokeStyle = "rgba(25,28,32,0.55)"; g.lineWidth = w + 0.35; g.stroke();          // kerf seam / shadow
+      g.strokeStyle = f === "open" ? "#121417" : state.colour; g.lineWidth = w; g.stroke();
+    }
+  }
+  function cutText(g, text, x, y, size, opts = {}) {
+    const f = state.finish;
+    g.font = `${opts.weight || 800} ${size}px ${css("--f-display")}`;
+    g.textAlign = opts.align || "left"; g.textBaseline = "alphabetic";
+    if (opts.spacing) g.letterSpacing = opts.spacing + "px";
+    if (f === "mark") { g.fillStyle = "rgba(48,52,58,0.85)"; g.fillText(text, x, y); }
+    else {
+      g.lineJoin = "round"; g.strokeStyle = "rgba(25,28,32,0.55)"; g.lineWidth = 0.35; g.strokeText(text, x, y);
+      g.fillStyle = f === "open" ? "#121417" : state.colour; g.fillText(text, x, y);
+    }
+    if (opts.spacing) g.letterSpacing = "0px";
+  }
+  function hole(g, x, y, d) { g.fillStyle = "#121417"; g.beginPath(); g.arc(x, y, d / 2, 0, Math.PI * 2); g.fill(); }
+  function lidFixing(g, x, y) {            // Ø12 washer + M3 pan head over the Ø10 hole
+    g.fillStyle = "#e3e6e9"; g.strokeStyle = "rgba(40,45,50,0.5)"; g.lineWidth = 0.25;
+    g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = "#3a3f45"; g.beginPath(); g.arc(x, y, 2.75, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = "#8b9198"; g.lineWidth = 0.5; g.beginPath(); g.moveTo(x - 1.4, y); g.lineTo(x + 1.4, y); g.stroke();
+  }
+  function rivet(g, x, y) {
+    const gr = g.createRadialGradient(x - 0.8, y - 0.8, 0.3, x, y, 2.8);
+    gr.addColorStop(0, "#f2f4f6"); gr.addColorStop(1, "#8d949b");
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, 2.8, 0, Math.PI * 2); g.fill();
+  }
+  function keepouts(g, W, H, holes, bandTop) {
+    if (!state.keep) return;
+    g.save(); g.strokeStyle = "#b3261e"; g.lineWidth = 0.4; g.setLineDash([2, 1.4]);
+    g.strokeRect(7, 7, W - 14, H - 14);
+    for (const [x, y] of holes) { g.beginPath(); g.arc(x, y, 13, 0, Math.PI * 2); g.stroke(); }
+    if (bandTop) { g.setLineDash([]); g.fillStyle = "rgba(179,38,30,0.12)"; g.fillRect(0, 0, W, bandTop);
+      g.fillStyle = "#b3261e"; g.font = `500 3.4px ${css("--f-mono")}`; g.textAlign = "left"; g.fillText("under the lid's front lip", 9, bandTop - 2.5); }
+    g.restore();
+  }
+
+  // ---------- studies ----------
+  const LID = { W: 456, H: 300 };
+  // lid fixing holes in lid-top coords (origin top-left, front edge at the bottom): x = 228 ± 217, back-to-front z
+  const lidHoles = [[228 - 217, 149.5], [228 + 217, 149.5], [228, 149.5 + 139.5]];
+
+  const studies = {
+    spiro(cv) {
+      const { g } = setup(cv, LID.W, LID.H);
+      cutStroke(g, bridged(hypotrochoid(8, 5, 7.5, 110 / 10.5, 228, 140), 18, 2), 2.5);
+      lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
+      keepouts(g, LID.W, LID.H, lidHoles);
+    },
+    hilbert(cv) {
+      const { g } = setup(cv, LID.W, LID.H);
+      cutStroke(g, [hilbert(4, 160, 228, 140)], 2.5);
+      lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
+      keepouts(g, LID.W, LID.H, lidHoles);
+    },
+    pads(cv) {
+      const { g } = setup(cv, LID.W, LID.H);
+      const lw = 304.1, lh = 212.4, x0 = 228 - lw / 2, y0 = 140 - lh / 2;
+      g.save(); g.strokeStyle = "rgba(40,45,50,0.35)"; g.setLineDash([3, 2]); g.lineWidth = 0.4;
+      g.beginPath(); g.roundRect ? g.roundRect(x0, y0, lw, lh, 9) : g.rect(x0, y0, lw, lh); g.stroke(); g.restore();
+      g.fillStyle = "rgba(40,45,50,0.55)"; g.font = `400 3.6px ${css("--f-mono")}`; g.textAlign = "center";
+      g.fillText("laptop footprint (placeholder)", 228, 140);
+      const inset = [26, 22], P = [[x0 + inset[0], y0 + inset[1]], [x0 + lw - inset[0], y0 + inset[1]], [x0 + inset[0], y0 + lh - inset[1]], [x0 + lw - inset[0], y0 + lh - inset[1]]];
+      for (const [x, y] of P) {
+        if (state.finish === "inlay") { g.fillStyle = "rgba(0,0,0,0.25)"; g.beginPath(); g.arc(x + 0.5, y + 0.7, 7.2, 0, Math.PI * 2); g.fill(); }
+        cutStroke(g, [circlePts(x, y, 3.5, 0, Math.PI * 2, 60)], 7);
+      }
+      const cross = (x, y) => { const a = 6, gp = 1.2;
+        cutStroke(g, [[[x - a, y], [x - gp, y]], [[x + gp, y], [x + a, y]], [[x, y - a], [x, y - gp]], [[x, y + gp], [x, y + a]]], 1.6); };
+      cross(x0 - 10, y0 - 10); cross(x0 + lw + 10, y0 - 10); cross(x0 - 10, y0 + lh + 10); cross(x0 + lw + 10, y0 + lh + 10);
+      lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
+      keepouts(g, LID.W, LID.H, lidHoles);
+    },
+    legend(cv) {
+      const W = 452, H = 111, { g } = setup(cv, W, H);
+      const v = y => H - y;                                   // heights are from the base underside
+      // printed GX plate 212 x 67 at (-10, 56) from centre
+      const px = W / 2 - 10 - 106, py = v(56 + 33.5);
+      g.fillStyle = "rgba(0,0,0,0.2)"; g.fillRect(px + 0.6, py + 0.9, 212, 67);
+      g.fillStyle = "#e9e2d0"; g.fillRect(px, py, 212, 67);
+      g.fillStyle = "#3a3f45"; [[-100, -27.5], [100, -27.5], [-100, 27.5], [100, 27.5]].forEach(([a, b]) => { g.beginPath(); g.arc(W / 2 - 10 + a, v(56 + b), 1.7, 0, Math.PI * 2); g.fill(); });
+      const names = ["X1", "X2", "Y", "X-END", "Y-END", "PEN"];
+      names.forEach((n, i) => {
+        const x = W / 2 - 10 - 75 + i * 30, y = v(62);
+        g.fillStyle = "#2a2d31"; g.beginPath(); g.arc(x, y, 9.5, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#6c737a"; g.beginPath(); g.arc(x, y, 7, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#1a1c1f"; g.beginPath(); g.arc(x, y, 5, 0, Math.PI * 2); g.fill();
+        // legend printed in the plate (two-colour print), so it uses the inlay colour too
+        const save = state.finish; if (save === "mark") state.finish = "inlay";
+        cutText(g, n, x, v(36), n.length > 2 ? 6.2 : 7.5, { align: "center", weight: 800 });
+        state.finish = save;
+      });
+      cutText(g, "ETCH", W - 22, v(32), 22, { align: "right", spacing: 1.2 });
+      g.fillStyle = "rgba(40,45,50,0.5)"; g.font = `500 3px ${css("--f-mono")}`; g.textAlign = "right"; g.fillText("R04", W - 22, v(32) + 5);
+      [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, v(111 * f)));
+      keepouts(g, W, H, [], 16);
+    },
+    badge(cv) {
+      const W = 452, H = 171, { g } = setup(cv, W, H);
+      const v = y => H - y, top = 171;
+      for (let r = 0; r < 3; r++) for (let i = 0; i < [7, 5, 3][r]; i++) {
+        const x = W / 2 + 185 - i * 34, y = v(top - 28 - r * 10);
+        g.save(); g.lineCap = "round"; g.strokeStyle = "#121417"; g.lineWidth = 3.5; g.beginPath(); g.moveTo(x - 12.25, y); g.lineTo(x + 12.25, y); g.stroke(); g.restore();
+      }
+      cutText(g, "ETCH", 24, v(30), 62, { spacing: 3 });
+      g.fillStyle = "rgba(40,45,50,0.55)"; g.font = `500 3.6px ${css("--f-mono")}`; g.textAlign = "left";
+      g.fillText("POWER · 24 V / 12 V", 26, v(30) + 8);
+      [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, v(171 * f)));
+      keepouts(g, W, H, [], 16);
+    },
+    roundel(cv) {
+      const W = 452, H = 171, { g } = setup(cv, W, H);
+      const v = y => H - y, top = 171;
+      for (let r = 0; r < 3; r++) for (let i = 0; i < [7, 5, 3][r]; i++) {
+        const x = W / 2 + 185 - i * 34, y = v(top - 28 - r * 10);
+        g.save(); g.lineCap = "round"; g.strokeStyle = "#121417"; g.lineWidth = 3.5; g.beginPath(); g.moveTo(x - 12.25, y); g.lineTo(x + 12.25, y); g.stroke(); g.restore();
+      }
+      const cx = 72, cy = v(70);
+      const ring = []; for (let k = 0; k < 4; k++) ring.push(circlePts(cx, cy, 38, k * Math.PI / 2 + 0.06, (k + 1) * Math.PI / 2 - 0.06, 40));
+      cutStroke(g, ring, 2.2);
+      cutStroke(g, bridged(lissajous(3, 2, 27, 27, cx, cy), 16, 2), 2.2);
+      [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, v(171 * f)));
+      keepouts(g, W, H, [], 16);
+    },
+  };
+
+  function drawAll() { document.querySelectorAll("canvas[data-study]").forEach(cv => studies[cv.dataset.study](cv)); }
+
+  // ---------- controls ----------
+  document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".sw").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    state.colour = b.dataset.c; drawAll();
+  }));
+  document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-f]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    state.finish = b.dataset.f; drawAll();
+  }));
+  const kb = document.getElementById("o-keep");
+  kb.addEventListener("click", () => { state.keep = !state.keep; kb.setAttribute("aria-pressed", String(state.keep)); drawAll(); });
+
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(drawAll, 120); });
+  try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll); } catch (e) {}
+  new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  drawAll();
+  if (document.fonts && document.fonts.load) {
+    Promise.all([document.fonts.load('800 40px "Big Shoulders Stencil Display"'), document.fonts.load('400 12px "JetBrains Mono"')]).then(drawAll, drawAll);
+  }
+})();
+</script>
