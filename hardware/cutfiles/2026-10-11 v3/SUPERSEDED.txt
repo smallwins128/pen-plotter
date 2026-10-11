@@ -1,0 +1,2 @@
+SUPERSEDED by v4 (2026-10-11). Do not send.
+v4 adds the hex vent field on the power box front.
