@@ -115,6 +115,18 @@ VENT_ROWS = (145.0, 136.0, 42.0)          # power front vent rows (height of slo
 WIN = dict(gap=20.0, ang=40.0, r=3.0, h=40.0, span=330.0, band=9.0, mar=3.0, scr=5.5, cy=89.0)
 
 
+LID_WIN = dict(w=330.0, h=40.0, cz=98.0)    # control lid top: one rounded rectangle, same bezel/acrylic/R as WIN
+
+
+def lid_window():
+    """Control lid top window, (u, v) = (x, z). Returns (rounded polygon, screw points): 2 per long side, 1 per end."""
+    w, h, cz, r = LID_WIN["w"], LID_WIN["h"], LID_WIN["cz"], WIN["r"]
+    poly = sbox(-w / 2, cz - h / 2, w / 2, cz + h / 2).buffer(-r, join_style=1, quad_segs=4).buffer(r, join_style=1, quad_segs=4)
+    o = WIN["scr"]
+    scr = [(sx * w / 4, cz + sz * (h / 2 + o)) for sx in (-1, 1) for sz in (-1, 1)] + [(sx * (w / 2 + o), cz) for sx in (-1, 1)]
+    return poly, scr
+
+
 def window_panes():
     """The two window openings on the power front, (u, v) = (x, height). Returns [(rounded polygon, screw points)]."""
     w = WIN; t = math.tan(math.radians(w["ang"]))
@@ -516,6 +528,12 @@ def lid(kind):
         p.holes[-1]["folded"] = (sgn * (WO / 2 - T - RIV_IN), T + H[kind] / 2, "back")
     add_circle(p, "top", MT, 0.0, ZF - T - RIV_IN, "lidclr"); p.holes[-1]["folded"] = (0.0, ZF - T - RIV_IN, "top")
     add_circle(p, "back", MBk, 0.0, T + LIP / 2, "lidclr"); p.holes[-1]["folded"] = (0.0, T + LIP / 2, "back")
+    if kind == "control":                    # window in the top: acrylic + bezel outside, M3 screws from inside
+        poly, scr = lid_window()
+        add_poly(p, "top", MT, list(poly.exterior.coords)[:-1], "window (acrylic behind bezel)", kind="window")
+        for u, v in scr:
+            add_circle(p, "top", MT, u, v, "m3", "Ø3.4 window bezel screw")
+            p.holes[-1]["win_screw"] = (u, v)
     if kind == "control":                    # accessory holes on the top of the stack
         for x, z in ACC_LID:
             add_circle(p, "top", MT, x, z, "acc")
@@ -1005,6 +1023,10 @@ def sync_inspector(parts):
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={}, accLid=[list(q) for q in ACC_LID], accD=HOLE["acc"][0],
+               lidWindow=(lambda pl, sc: dict(open=[[round(a, 2), round(b, 2)] for a, b in list(pl.exterior.coords)[:-1]],
+                             bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
+                             acrylic=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["mar"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
+                             screws=[[round(a, 2), round(b, 2)] for a, b in sc]))(*lid_window()),
                windows=[dict(open=[[round(a, 2), round(b, 2)] for a, b in list(pl.exterior.coords)[:-1]],
                              bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
                              acrylic=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["mar"], join_style=1, quad_segs=4).exterior.coords)[:-1]],

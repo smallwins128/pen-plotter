@@ -121,6 +121,11 @@ def items(kind):
             out.append(Item(f"rivnut, {h['face']}", "rivnut", u - 2.5, u + 2.5, top - T - 9, top, v - 2.5, v + 2.5))
         else:               # (x, y) on a back lip
             out.append(Item(f"rivnut, {h['face']}", "rivnut", u - 2.5, u + 2.5, v - 2.5, v + 2.5, E.ZB, E.ZB + T + 9))
+    # --- window bezel screw tails under the control lid top (M3 + nut, 6 mm)
+    for h in lid.holes:
+        if "win_screw" in h:
+            x, z = h["win_screw"]
+            out.append(Item(f"lid window screw ({x:.0f},{z:.0f})", "panel_screw", x - 3.25, x + 3.25, top - 6, top, z - 3.25, z + 3.25))
     # --- accessory rivnuts under the control lid top
     for h in lid.holes:
         if h.get("type") == "acc":
