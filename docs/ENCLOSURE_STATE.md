@@ -53,6 +53,13 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
 3. Local check: Chromium headless shell + three@0.128.0 from npm (the CDN is blocked in the container);
    `camera` and `controls` are globals, so a script can set any view.
 
+## Later (parked)
+
+- Window lighting: status colours (12 V WS2811 strip, data from a spare FluidNC pin via a level shifter: idle /
+  plotting / alarm). Own branch off the 12 V splitter, not the servo buck's input; check the 12 V PSU's rating
+  first (est. load ~2.3 A with servo stall). Strip clips go in the bezel prints.
+- Bezel and GX plate prints (Allwin will split the long ones); nut seat for GX sockets once nut sizes are in.
+
 ## Open before cutting
 
 1. Issue cut pack v4 from the current model (`enclosure.py` then `pack.py v4`). — Claude
