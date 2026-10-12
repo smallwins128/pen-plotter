@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fabricator pack: a cover sheet (PDF) + the six DXFs, zipped.
+"""Fabricator pack: a cover sheet (PDF) + the six steel/aluminium DXFs + the window acrylic DXFs, zipped.
 
     python3 hardware/sheet/enclosure.py      # first: build + check the DXFs
     python3 hardware/sheet/pack.py           # then: cover sheet + zip
@@ -27,7 +27,23 @@ FOLDED = {
     "power_lid": f"{E.WO + 2 * (E.CLR + E.T):.0f} W × {(E.ZF + E.CLR + E.T) - (E.ZB - E.T):.1f} D × {E.H['power'] + E.T:.0f} H (back)",
     "control_base_plate": "flat, 440 × 285, notched",
     "power_base_plate": "flat, 440 × 285, notched",
+    "acrylic_power_left": "flat",
+    "acrylic_power_right": "flat",
+    "acrylic_control": "flat",
 }
+
+
+def acrylic_parts():
+    """Window acrylic: the opening + WIN['mar'] all round (the bezel covers the edge). No holes: screws pass outside it."""
+    parts = []
+    for name, title, (pl, _) in (("acrylic_power_left", "POWER FRONT · WINDOW ACRYLIC, LEFT", E.window_panes()[0]),
+                                 ("acrylic_power_right", "POWER FRONT · WINDOW ACRYLIC, RIGHT", E.window_panes()[1]),
+                                 ("acrylic_control", "CONTROL FRONT · WINDOW ACRYLIC", E.ctrl_window())):
+        p = E.Part(name, title, "3 mm clear cast acrylic, protective film on both sides")
+        p.solid = [pl.buffer(E.WIN["mar"], join_style=1, quad_segs=8)]
+        p.notes = ["Laser cut. Edges hidden under a printed bezel: no polishing needed."]
+        parts.append(p)
+    return parts
 
 
 def html(summary):
@@ -54,7 +70,8 @@ th {{ background: #eee }} td.n {{ text-align: right; font-variant-numeric: tabul
 code {{ font-size: 9.5pt }}
 </style></head><body>
 <h1>Plotter enclosures · cut &amp; bend pack</h1>
-<p>Two stacked electronics boxes (control on top, power below), each a folded body + a folded lid, plus two flat base plates.
+<p>Two stacked electronics boxes (control on top, power below), each a folded body + a folded lid, plus two flat base plates
+and three flat acrylic window pieces.
 Prepared by Allwin Tom · {datetime.date.today().isoformat()} · {VERSION}</p>
 <table><tr><th>#</th><th>File</th><th>Part</th><th>Material</th><th>Qty</th><th>Flat (mm)</th><th>Bends</th><th>Folded outside (mm)</th></tr>{rows}</table>
 <div class=cols>
@@ -76,15 +93,20 @@ stop {E.TAB_GAP} mm short of the front wall (the rivets close it); the lid is {E
 <li>304 stainless, brushed, protective film left on. Grain the same direction on all visible faces of both boxes.</li>
 <li>Deburr all edges. No paint or coating.</li>
 <li>Base plates: 2 mm 5052 aluminium (1.5 mm 304 acceptable). Deburr.</li>
+<li>Acrylic: 3 mm clear cast acrylic, laser cut, film left on both sides. Edges are hidden, no polishing.</li>
 <li>Tolerances: laser ±0.2 mm, bends ±0.5 mm.</li></ul></div>
 <div class=box><h3>Fitted by the customer — do not insert</h3><ul>
-<li>M3 rivnuts (Ø5 holes) in the body lips; solid rivets Ø3 (Ø3.2 holes) in the front corner tabs.</li>
+<li>M3 rivnuts (Ø5 holes) in the body lips, round the control-front connector openings, on the control lid top and the power front;
+solid rivets Ø3 (Ø3.2 holes) in the front corner tabs.</li>
+<li>Window bezels, connector plates and side panels are 3D printed and screwed on later (Ø3.4 holes).</li>
 <li>M4 rivnuts (Ø6 grid) in the base plates as needed; M4 standoffs, rubber feet, panels, fans.</li></ul></div>
 </div>
 <p><b>Checks:</b> {n_ok} design checks passed before these files were written — holes clear of bends (≥ 5 mm), webs ≥ 1.5 mm,
 folded parts free of clashes, folded flanges at least 2 mm apart wherever they are not meant to touch, whole assembly (fans, panels, rivnuts,
 base plate, standoffs) clear by 2 mm, lid clear of the body, every lid hole over its rivnut, base-plate standoffs over the floor's, panel cutouts and
-screw patterns matched to the printed panels. The files were then read back and re-folded from their own bend lines:</p>
+screw patterns matched to the printed panels, every bend end relieved. The files were then read back and folded in software from the DXFs alone
+(bends UP, R1): every hole lands where the design puts it, no part touches another, and with an inner radius anywhere from R0.6 to R2.5 the lid still
+fits. Re-fold from their own bend lines:</p>
 <ul>{refold}</ul>
 {pages}
 </body></html>"""
@@ -99,6 +121,13 @@ def chromium():
 
 def main():
     summary = json.loads((OUT / "summary.json").read_text())
+    for p in acrylic_parts():                       # acrylic is written here, not by enclosure.py: it is not folded or fitted
+        dxf = OUT / f"{p.name}.dxf"
+        E.write_dxf(p, dxf)
+        v = E.verify_and_preview(dxf, OUT / f"{p.name}.svg")
+        assert v["open_ends"] == 0, p.name
+        summary["parts"].append(dict(part=p.name, title=p.title, material=p.material, qty=p.qty,
+                                     flat=[round(v["size"][0], 1), round(v["size"][1], 1)], bends=0, holes=0, notes=p.notes))
     page = OUT / f"{NAME}.html"
     page.write_text(html(summary))
     pdf = OUT / f"{NAME}.pdf"

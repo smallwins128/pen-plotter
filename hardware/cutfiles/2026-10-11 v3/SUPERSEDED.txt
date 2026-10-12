@@ -1,0 +1,4 @@
+SUPERSEDED by "2026-10-12 v4". Do not cut.
+v3 body flats fold as a mirror image of the design (fan and IEC on the wrong side) when bent UP as drawn.
+v4 also adds the power-front windows and vent rows, the control-front GX openings and window, accessory holes,
+the larger USB panel, and the window acrylic.

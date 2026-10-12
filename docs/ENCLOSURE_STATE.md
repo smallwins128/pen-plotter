@@ -41,7 +41,7 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 | `hardware/sheet/fold.py` | Folds the DXFs as the shop will (real R1 bends, from the files alone), checks hole positions (no mirroring), sizes, self-collision, whole-assembly overlap, and lid/tab fit for shop radii R0.6–R2.5. Writes `out/fold/assembly.glb` + STLs for Blender. Run by `enclosure.py`; needs `pip install trimesh manifold3d mapbox_earcut scipy`. |
 | `hardware/sheet/pack.py` | Fabricator cover sheet PDF + zip: `python3 hardware/sheet/pack.py v4`. |
 | `hardware/web/enclosure_inspector.html` | **The 3D renderer.** Reads the generator's `GEN` block (walls, panels, fans, plate, stack). |
-| `hardware/cutfiles/2026-10-11 v3/` | Last released pack. **Superseded by the current model** (stacking holes, GX label text, fan/jack alignment) — issue v4 before sending. v1, v2 superseded. |
+| `hardware/cutfiles/2026-10-12 v4/` | **Released pack** (6 steel/Al parts + 3 acrylic, cover PDF, zip), shared with the vendor via Drive (R04 Outputs). v1–v3 superseded (v3 bodies folded mirrored). |
 
 ## Using the renderer in another chat
 
@@ -76,7 +76,7 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
 
 ## Open before cutting
 
-1. Issue cut pack v4 from the current model (`enclosure.py` then `pack.py v4`). — Claude
+1. ~~Issue cut pack v4~~ done 2026-10-12.
 2. Fabricator confirms bend deduction for 1 mm 304 at R1 (files assume K 0.44, BD 1.74). — Allwin
 3. Front design: Allwin draws it; plain panels (vents only) for now. Awaiting his final changes before v4.
 
