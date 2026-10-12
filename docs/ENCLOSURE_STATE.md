@@ -60,6 +60,17 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
   first (est. load ~2.3 A with servo stall). Strip clips go in the bezel prints.
 - Bezel and GX plate prints (Allwin will split the long ones); nut seat for GX sockets once nut sizes are in.
 
+## Open questions: M5Dial pendant (logged 2026-10-12)
+
+- Power the M5Dial from 12 V (it takes 6–36 V DC), not the board's 5 V. Only TX/RX come from the board.
+- Socket: GX16 on the USB panel (cutout now 80 × 30, plate 100 × 50, centred z = -45). Pin count: GX16-7 proposed,
+  so it cannot mate the servo's GX16-4. Undecided.
+- Elecrow FluidDial RJ12 protection module (diodes + series resistors) between board and socket: recommended.
+- 6x expansion-socket pinout for TX/RX: not verified.
+- Pendant box (lofi https://claude.ai/artifact/9ojddVq95ED7KYcvP6qGKG): 1 mm 304 top 90 × 110 with a 34 mm bent lip
+  holding a GX16, 3 mm Al base, 4 × M3 35 mm standoffs. Needs the M5Dial body diameter (48 is a placeholder) and its
+  back fixing points before it goes in the model.
+
 ## Open before cutting
 
 1. Issue cut pack v4 from the current model (`enclosure.py` then `pack.py v4`). — Claude

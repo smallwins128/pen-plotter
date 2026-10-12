@@ -84,7 +84,7 @@ PANEL = {
     "receiving": dict(cut=(152.0, 50.0), plate=(172.0, 70.0), screw=(80.0, 29.0)),
     "psu": dict(cut=(152.0, 120.4), plate=(172.0, 140.4), screw=(80.0, 64.2)),
     "iec": dict(cut=(130.0, 65.0), plate=(150.0, 85.0), screw=(69.0, 36.5)),          # new print
-    "usb_ant": dict(cut=(50.0, 20.0), plate=(70.0, 40.0), screw=(29.0, 14.0)),        # new print: USB-C + antenna
+    "usb_ant": dict(cut=(80.0, 30.0), plate=(100.0, 50.0), screw=(44.0, 19.0)),       # new print: USB-C + antenna + pendant GX16
 }
 
 
@@ -479,7 +479,7 @@ def body(kind):
         bb = poly.buffer(WIN["band"], join_style=1, quad_segs=4).bounds
         feat.append(("front", bb[0], bb[2], bb[1], bb[3], "window bezels"))
         fan("left", ML, *FAN[kind])
-        panel("left", ML, -30.0, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
+        panel("left", ML, -45.0, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, JACK_Z, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
         top = T + H[kind]
