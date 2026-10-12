@@ -53,6 +53,12 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
 3. Local check: Chromium headless shell + three@0.128.0 from npm (the CDN is blocked in the container);
    `camera` and `controls` are globals, so a script can set any view.
 
+## Status (2026-10-12)
+
+- Steel cut pack v4 sent to the vendor. Base plates: Allwin will get them in **1 mm 304 or 2 mm mild steel, not aluminium**
+  (model still assumes 2 mm; 1 mm SS over 205 × 255 standoff spans will flex under the PSUs; mild steel needs plating or paint).
+- Next: the 3D printed parts.
+
 ## Later (parked)
 
 - Window lighting: status colours (12 V WS2811 strip, data from a spare FluidNC pin via a level shifter: idle /
