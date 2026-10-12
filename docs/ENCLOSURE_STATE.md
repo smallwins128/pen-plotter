@@ -58,6 +58,9 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
 - Window lighting: status colours (12 V WS2811 strip, data from a spare FluidNC pin via a level shifter: idle /
   plotting / alarm). Own branch off the 12 V splitter, not the servo buck's input; check the 12 V PSU's rating
   first (est. load ~2.3 A with servo stall). Strip clips go in the bezel prints.
+- Spare 6x capabilities, ports later if needed: 3 more motor outputs (one more GX16 in a reprinted plate), 6 spare
+  inputs (feed hold / start / reset buttons, probe, lid switch), 2 × 3 A MOSFET outputs (window LEDs), microSD
+  (extension to a printed panel). Steel stays as is; a bigger USB cutout (~110 × 30) was offered and skipped.
 - Bezel and GX plate prints (Allwin will split the long ones); nut seat for GX sockets once nut sizes are in.
 
 ## Open questions: M5Dial pendant (logged 2026-10-12)
