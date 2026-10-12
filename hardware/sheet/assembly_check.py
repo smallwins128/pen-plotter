@@ -83,7 +83,7 @@ ALLOWED = {   # tag pairs that are meant to touch / interpenetrate
 }
 ALLOWED = {tuple(sorted(p)) for p in ALLOWED}
 # what sticks in from each wall item, by the feature name the generator gives it
-DEPTH = {"GX16 rail": 30, "Receiving panel": 35, "USB/antenna panel": 30, "PSU panel": 40, "IEC panel": 50}
+DEPTH = {"Receiving panel": 35, "USB/antenna panel": 30, "PSU panel": 40, "IEC panel": 50}
 
 
 def items(kind):
@@ -159,6 +159,12 @@ def items(kind):
             wall_item("earth stud + lugs", wall, u0, u1, v0, v1, 20, "stud")
         elif name == "front vents":
             pass
+        elif name.startswith("GX16 "):                   # sockets in a printed plate: Ø22 rear nut + body + cable, 30 deep
+            g = name.split(" ", 1)[1]
+            for su, sv in E.GX_GROUPS[g]:
+                wall_item(f"GX16 socket ({su:.0f},{sv:.0f})", wall, su - 11, su + 11, sv - 11, sv + 11, 30.0, "panel_in")
+            for su, sv in E.gx_openings()[g][1]:
+                wall_item(f"GX plate rivnut ({su:.0f},{sv:.0f})", wall, su - 2.5, su + 2.5, sv - 2.5, sv + 2.5, 10.0, "rivnut")
         elif name == "window bezels":                    # bezel + acrylic are outside; inside: the M3 screw tails, nothing else
             for _, scr in E.window_panes():
                 for su, sv in scr:

@@ -83,7 +83,6 @@ HOLE = {   # name: (diameter, leader text)
 PANEL = {
     "receiving": dict(cut=(152.0, 50.0), plate=(172.0, 70.0), screw=(80.0, 29.0)),
     "psu": dict(cut=(152.0, 120.4), plate=(172.0, 140.4), screw=(80.0, 64.2)),
-    "gx_rail": dict(cut=(192.0, 47.0), plate=(212.0, 67.0), screw=(100.0, 27.5)),     # new print
     "iec": dict(cut=(130.0, 65.0), plate=(150.0, 85.0), screw=(69.0, 36.5)),          # new print
     "usb_ant": dict(cut=(50.0, 20.0), plate=(70.0, 40.0), screw=(29.0, 14.0)),        # new print: USB-C + antenna
 }
@@ -113,6 +112,37 @@ ACC_FRONT = [(-(W / 2 - 40), 30.0), (0.0, 30.0), (W / 2 - 40, 30.0)]   # power f
 # M3 screws from inside into heat-set inserts in the bezel (one per side of each window, outside the acrylic)
 VENT_ROWS = (145.0, 136.0, 42.0)          # power front vent rows (height of slot centre)
 WIN = dict(gap=20.0, ang=40.0, r=3.0, h=40.0, span=330.0, band=9.0, mar=3.0, scr=5.5, cy=89.0)
+
+
+# control front: GX16 sockets live in printed plates; the steel only has one plain opening per group (6 mm play round
+# each Ø22 rear nut, so sockets can move inside a group with a reprint) and M3 rivnuts the plates screw onto from the front
+GX_NUT_R = 11.0
+GX_PLAY = 6.0
+GX_GROUPS = {"steppers": [(-173.0, 62.0), (-139.0, 62.0), (-156.0, 33.0)],     # X1, X2 top; Y below
+             "servo": [(-82.0, 47.0)],                                         # PEN
+             "endstops": [(-32.0, 47.0), (2.0, 47.0)]}                         # XLIM, YLIM
+GX_RIVNUT_OUT = 6.0                        # rivnut centre outside the opening edge
+
+
+def gx_openings():
+    """{group: (opening rect (x0, y0, x1, y1), [rivnut points])} on the control front, (u, v) = (x, height)."""
+    out = {}
+    for g, pts in GX_GROUPS.items():
+        e = GX_NUT_R + GX_PLAY
+        x0, x1 = min(p[0] for p in pts) - e, max(p[0] for p in pts) + e
+        y0, y1 = min(p[1] for p in pts) - e, max(p[1] for p in pts) + e
+        xm, ym, o = (x0 + x1) / 2, (y0 + y1) / 2, GX_RIVNUT_OUT
+        riv = [(x0 - o, ym), (x1 + o, ym), (xm, y1 + o)] if g == "steppers" else [(xm, y1 + o), (xm, y0 - o)]
+        out[g] = ((x0, y0, x1, y1), riv)
+    return out
+
+
+def gx_plate(rect, g):
+    """The inspector's plate (chamfered, after Allwin's sketch): opening + 10 (5 sideways for the two small groups)."""
+    mx = 10.0 if g == "steppers" else 5.0
+    b = sbox(rect[0] - mx, rect[1] - 10, rect[2] + mx, rect[3] + 10)
+    c = 7.0 if g == "steppers" else 5.0
+    return b.buffer(-c, join_style=2).buffer(c, join_style=3)
 
 
 LID_WIN = dict(w=330.0, h=40.0, cz=98.0)    # control lid top: one rounded rectangle, same bezel/acrylic/R as WIN
@@ -428,7 +458,12 @@ def body(kind):
                 add_circle(p, wall, mp, uc + a * 35.75, vc + b * 35.75, "fan")
         feat.append((wall, uc - 40, uc + 40, vc - 40, vc + 40, "fan + screws"))
     if kind == "control":
-        panel("front", MF, 0.0, T + H[kind] / 2, "gx_rail", "GX16 rail")
+        for g, (rect, riv) in gx_openings().items():
+            poly = sbox(*rect).buffer(-3, join_style=1, quad_segs=4).buffer(3, join_style=1, quad_segs=4)
+            add_poly(p, "front", MF, list(poly.exterior.coords)[:-1], f"GX16 {g} opening (printed plate over it)", kind="cutout")
+            for u, v in riv:
+                add_circle(p, "front", MF, u, v, "acc", "M3 rivnut (5mm), GX plate")
+            feat.append(("front", rect[0], rect[2], rect[1], rect[3], f"GX16 {g}"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, -30.0, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, JACK_Z, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
@@ -1023,6 +1058,9 @@ def sync_inspector(parts):
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={}, accLid=[list(q) for q in ACC_LID], accD=HOLE["acc"][0],
+               gx=[dict(group=g, open=[[round(a, 2), round(b, 2)] for a, b in list(sbox(*rect).buffer(-3, join_style=1, quad_segs=4).buffer(3, join_style=1, quad_segs=4).exterior.coords)[:-1]],
+                        plate=[[round(a, 2), round(b, 2)] for a, b in list(gx_plate(rect, g).exterior.coords)[:-1]],
+                        sockets=[list(q) for q in GX_GROUPS[g]], rivnuts=[list(q) for q in riv]) for g, (rect, riv) in gx_openings().items()],
                lidWindow=(lambda pl, sc: dict(open=[[round(a, 2), round(b, 2)] for a, b in list(pl.exterior.coords)[:-1]],
                              bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
                              acrylic=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["mar"], join_style=1, quad_segs=4).exterior.coords)[:-1]],

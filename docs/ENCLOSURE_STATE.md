@@ -23,6 +23,9 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Power front (2026-10-12): vent rows at 145/136/42, two acrylic windows split by a slanted bar (`WIN` in
   `enclosure.py`: 330 span, 40 tall, 40°, R3, 20 mm steel between 9 mm PETG bezels; 3 mm acrylic outside under the bezel;
   4 M3 screws per window from inside into heat-set inserts), 3 Ø5 accessory holes at 30 mm.
+- Control front (2026-10-12): no GX holes in the steel. Three plain openings (`GX_GROUPS`, 6 mm play round each Ø22
+  nut) with M3 rivnuts; printed GX plates carry the sockets (nut seat stops turning) and screw on from the front.
+  Inspector shows the chamfered plates.
 - Control lid top: one window (`LID_WIN`: 330 × 40, R3, centred 98 mm forward), same bezel/acrylic, 6 M3 screws.
 - Accessory holes: plain Ø5 (M3 rivnut set later, or a printed plug). Control lid top: 4 corners. GX16 rail centred.
 - Body flats are mirrored left-right (`mirror_x`): the shop reads the drawing from the inside face and folds UP,
