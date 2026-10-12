@@ -66,6 +66,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
         <button id="t-lids" aria-pressed="true">Lids</button>
         <button id="t-inside" aria-pressed="true">Parts inside</button>
         <button id="t-xray" aria-pressed="false">X-ray</button>
+        <button id="t-steel" aria-pressed="false">Steel only</button>
         <button id="t-laptop" aria-pressed="false">Laptop</button>
       </div>
     </div>
@@ -517,6 +518,8 @@ document.querySelectorAll("#boxes button").forEach(b => b.addEventListener("clic
 toggle("t-lids", on => [power, control].forEach(b => b.userData.parts.lidG.visible = on));
 toggle("t-inside", on => [power, control].forEach(b => b.userData.parts.inside.visible = on));
 toggle("t-laptop", on => laptop.visible = on);
+const STEEL = new Set(["body", "lid", "lip", "tab"].map(n => M[n]));   // the laser-cut, folded 304 parts
+toggle("t-steel", on => [power, control].forEach(b => b.traverse(o => { if (o.isMesh) o.visible = !on || STEEL.has(o.material); })));
 toggle("t-xray", on => SHELL.forEach(n => { M[n].transparent = on; M[n].opacity = on ? 0.22 : 1; M[n].depthWrite = !on; M[n].needsUpdate = true; }));
 const ex = document.getElementById("explode");
 ex.addEventListener("input", () => { explode = +ex.value; document.getElementById("explode-v").textContent = Math.round(explode * 100) + "%"; layout(); });
