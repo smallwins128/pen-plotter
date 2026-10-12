@@ -166,7 +166,7 @@ def items(kind):
             for su, sv in E.gx_openings()[g][1]:
                 wall_item(f"GX plate rivnut ({su:.0f},{sv:.0f})", wall, su - 2.5, su + 2.5, sv - 2.5, sv + 2.5, 10.0, "rivnut")
         elif name == "window bezels":                    # bezel + acrylic are outside; inside: the M3 screw tails, nothing else
-            for _, scr in E.window_panes():
+            for _, scr in (E.window_panes() if kind == "power" else [E.ctrl_window()]):
                 for su, sv in scr:
                     wall_item(f"window bezel screw ({su:.0f},{sv:.0f})", wall, su - 3.25, su + 3.25, sv - 3.25, sv + 3.25, 6.0, "panel_screw")
         elif name == "accessory rivnut":                 # M3 rivnut body (Ø5 x 9) + 1 mm, set later from outside

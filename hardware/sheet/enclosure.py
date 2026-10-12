@@ -157,6 +157,26 @@ def lid_window():
     return poly, scr
 
 
+CTRL_WIN = dict(w=96.0, h=30.0, cx=112.0, cy=47.0, ang=40.0)   # control front: trapezium, left end leaning, right end square
+
+
+def _quad_window(q):
+    """Rounded opening (R WIN["r"]) and one bezel screw per side, outside the acrylic. q is CCW."""
+    poly = Polygon(q).buffer(-WIN["r"], join_style=1, quad_segs=4).buffer(WIN["r"], join_style=1, quad_segs=4)
+    scr = []
+    for i in range(len(q)):
+        (ax, ay), (bx, by) = q[i], q[(i + 1) % len(q)]
+        L_ = math.hypot(bx - ax, by - ay); nx, ny = (by - ay) / L_, -(bx - ax) / L_
+        scr.append(((ax + bx) / 2 + nx * WIN["scr"], (ay + by) / 2 + ny * WIN["scr"]))
+    return poly, scr
+
+
+def ctrl_window():
+    w = CTRL_WIN; k = w["h"] / 2 * math.tan(math.radians(w["ang"]))
+    x0, x1, y0, y1 = w["cx"] - w["w"] / 2, w["cx"] + w["w"] / 2, w["cy"] - w["h"] / 2, w["cy"] + w["h"] / 2
+    return _quad_window([(x0 - k, y0), (x1, y0), (x1, y1), (x0 + k, y1)])
+
+
 def window_panes():
     """The two window openings on the power front, (u, v) = (x, height). Returns [(rounded polygon, screw points)]."""
     w = WIN; t = math.tan(math.radians(w["ang"]))
@@ -464,6 +484,12 @@ def body(kind):
             for u, v in riv:
                 add_circle(p, "front", MF, u, v, "acc", "M3 rivnut (5mm), GX plate")
             feat.append(("front", rect[0], rect[2], rect[1], rect[3], f"GX16 {g}"))
+        poly, scr = ctrl_window()
+        add_poly(p, "front", MF, list(poly.exterior.coords)[:-1], "window (acrylic behind bezel)", kind="window")
+        for u, v in scr:
+            add_circle(p, "front", MF, u, v, "m3", "Ø3.4 window bezel screw")
+        bb = poly.buffer(WIN["band"], join_style=1, quad_segs=4).bounds
+        feat.append(("front", bb[0], bb[2], bb[1], bb[3], "window bezels"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, -30.0, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, JACK_Z, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
@@ -1065,10 +1091,10 @@ def sync_inspector(parts):
                              bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
                              acrylic=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["mar"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
                              screws=[[round(a, 2), round(b, 2)] for a, b in sc]))(*lid_window()),
-               windows=[dict(open=[[round(a, 2), round(b, 2)] for a, b in list(pl.exterior.coords)[:-1]],
+               windows={k_: [dict(open=[[round(a, 2), round(b, 2)] for a, b in list(pl.exterior.coords)[:-1]],
                              bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
                              acrylic=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["mar"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
-                             screws=[[round(a, 2), round(b, 2)] for a, b in sc]) for pl, sc in window_panes()],
+                             screws=[[round(a, 2), round(b, 2)] for a, b in sc]) for pl, sc in panes] for k_, panes in (("power", window_panes()), ("control", [ctrl_window()]))},
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
                           holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))
     gen["walls"], gen["panels"] = {}, {}
