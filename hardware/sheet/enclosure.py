@@ -37,7 +37,6 @@ import sys
 from shapely.geometry import LineString, Point, Polygon, box as sbox
 from shapely.ops import unary_union
 
-import strokes as ST
 
 HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE.parent / "out" / "sheet"
@@ -376,12 +375,6 @@ def body(kind):
             for i in range((7, 5, 3)[r]):
                 add_slot(p, "front", MF, W / 2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0.0, "vent")
         feat.append(("front", W / 2 - 40 - 6 * 34 - 14, W / 2 - 26, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
-        # ETCH mark, top left (hardware/sheet/strokes.py): cut through, a black print behind embosses it
-        for g in ST.mark():
-            add_poly(p, "front", MF, [(x - WO / 2, y) for x, y in g.exterior.coords[:-1]], "ETCH mark slot", "mark")
-        hs = [h for h in p.holes if h["type"] == "mark"]
-        uu = [q[0] for h in hs for q in h["uvpts"]]; vv = [q[1] for h in hs for q in h["uvpts"]]
-        feat.append(("front", min(uu) - ST.FLANGE, max(uu) + ST.FLANGE, min(vv) - ST.FLANGE, max(vv) + ST.FLANGE, "ETCH mark"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, D / 2 - 187.5, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
@@ -618,12 +611,6 @@ def checks(parts):
             ex, ey = max(w, h) / 2 + 10 - 6, min(w, h) / 2 + 10 - 6
             ok(abs(ex - PANEL[key]["screw"][0]) < 0.01 and abs(ey - PANEL[key]["screw"][1]) < 0.01, "panels",
                f"{key} screw pattern ±{ex:.1f} x ±{ey:.1f} matches the print")
-    # power front: the ETCH mark's printed plate stays clear of the vents, and every letter is one closed outline
-    pb = by["power_body"]
-    mk = [h["geom"] for h in pb.holes if h["type"] == "mark"]; vt = [h["geom"] for h in pb.holes if h["type"] == "vent" and h["face"] == "front"]
-    mw = min(a.distance(b) for a in mk for b in vt)
-    ok(mw >= ST.MIN_WEB, "art", f"ETCH mark {mw:.0f} mm clear of the vents")
-    ok(all(g.is_valid and len(g.interiors) == 0 for g in mk), "art", "mark letters are single closed outlines (no loose steel inside)")
     # stacked boxes: fans in one column, jack panels in one column
     ok(FAN["control"][0] == FAN["power"][0], "stack", f"fans line up along the left walls (z {FAN['control'][0]:g})")
     jz = [q["u"] for b in (by["control_body"], by["power_body"]) for q in b.panels if q["key"] in ("receiving", "psu")]
@@ -934,7 +921,6 @@ def sync_inspector(parts):
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={},
-               mark=dict(proud=ST.MARK_PROUD, polys=[[[round(x - WO / 2, 2), round(y, 2)] for x, y in g.exterior.coords[:-1]] for g in ST.mark()]),
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
                           holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))
     gen["walls"], gen["panels"] = {}, {}

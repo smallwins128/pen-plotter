@@ -20,8 +20,8 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Stacking: 4 printed **locating feet** under the control box (Ø24 × 6 flange + Ø7.6 peg) drop into
   the power lid: Ø8 front-left locates, 8 × 11 slot front-right, Ø10 at the back. Power box keeps
   rubber feet.
-- Power front: original stepped vents + **ETCH** mark top left (Orbitron Black, 18 mm cap, thickened
-  0.5 mm, cut through; a black print behind embosses it 1.5 mm).
+- Power front: original stepped vents only. ETCH mark removed for the cut (2026-10-12); Allwin will
+  draw the front design himself.
 
 ## Files
 
@@ -29,10 +29,10 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 |---|---|
 | `hardware/sheet/enclosure.py` | **The single source.** Dimensions, flats, holes, folds, checks, DXF writer, and it writes the numbers into the inspector. `python3 hardware/sheet/enclosure.py` (`--report` = checks only). |
 | `hardware/sheet/assembly_check.py` | Whole-assembly clearance: steel-to-steel gaps (≥ 2 mm unless a listed contact), lid fit, parts, fans, rivnuts, plate, feet, pegs. The generator refuses to write files on any clash. |
-| `hardware/sheet/strokes.py` + `mark_etch.json` | ETCH mark outlines (rebuild with `--build-mark <Orbitron-Black.ttf>`). Also holds the rejected brush-stroke design, unused. |
+| `hardware/sheet/strokes.py` + `mark_etch.json` | ETCH mark outlines and the rejected brush strokes. **Unused** by the generator since 2026-10-12. |
 | `hardware/sheet/pack.py` | Fabricator cover sheet PDF + zip: `python3 hardware/sheet/pack.py v4`. |
-| `hardware/web/enclosure_inspector.html` | **The 3D renderer.** Reads the generator's `GEN` block (walls, panels, fans, plate, stack, mark). |
-| `hardware/cutfiles/2026-10-11 v3/` | Last released pack. **Superseded by the current model** (stacking holes, ETCH, GX label text) — issue v4 before sending. v1, v2 superseded. |
+| `hardware/web/enclosure_inspector.html` | **The 3D renderer.** Reads the generator's `GEN` block (walls, panels, fans, plate, stack). |
+| `hardware/cutfiles/2026-10-11 v3/` | Last released pack. **Superseded by the current model** (stacking holes, GX label text, fan/jack alignment) — issue v4 before sending. v1, v2 superseded. |
 
 ## Using the renderer in another chat
 
@@ -48,7 +48,7 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
 
 1. Issue cut pack v4 from the current model (`enclosure.py` then `pack.py v4`). — Claude
 2. Fabricator confirms bend deduction for 1 mm 304 at R1 (files assume K 0.44, BD 1.74). — Allwin
-3. Control box top: Allwin had an idea; undecided. ETCH height vs the vents' top row: optional tweak.
+3. Front design: Allwin draws it; plain panels (vents only) for now. Awaiting his final changes before v4.
 
 Still unmeasured: M4 rivnut hole (Ø6 assumed). Placeholder interior layout (drivers, PSUs) is soft:
 one warning remains (GX rail parts 1.5 mm from driver D1) — move the driver when wiring.
