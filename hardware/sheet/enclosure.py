@@ -108,7 +108,31 @@ PEG_HOLES = {(-(W / 2 - 40), D / 2 - 40): "round", (W / 2 - 40, D / 2 - 40): "sl
 PEG_SLOT = (11.0, 8.0)                     # length along x, width
 # accessory holes: plain Ø5, take an M3 rivnut (set later, from outside) or a printed plug
 ACC_LID = [(sx * (W / 2 - 40), sz * (D / 2 - 40)) for sx in (-1, 1) for sz in (-1, 1)]   # control lid top corners (over the power lid's peg holes)
-ACC_FRONT = [(-(W / 2 - 40), 30.0), (0.0, 30.0), (W / 2 - 40, 30.0), (-(W / 2 - 40), 80.0), (W / 2 - 40, 80.0)]   # power front (x, height)
+ACC_FRONT = [(-(W / 2 - 40), 30.0), (0.0, 30.0), (W / 2 - 40, 30.0)]   # power front (x, height)
+# power front: two acrylic windows split by a slanted steel bar. 3 mm acrylic outside, black printed bezel over it,
+# M3 screws from inside into heat-set inserts in the bezel (one per side of each window, outside the acrylic)
+VENT_ROWS = (145.0, 136.0, 42.0)          # power front vent rows (height of slot centre)
+WIN = dict(gap=20.0, ang=40.0, r=3.0, h=40.0, span=330.0, band=9.0, mar=3.0, scr=5.5, cy=89.0)
+
+
+def window_panes():
+    """The two window openings on the power front, (u, v) = (x, height). Returns [(rounded polygon, screw points)]."""
+    w = WIN; t = math.tan(math.radians(w["ang"]))
+    y0, y1 = w["cy"] - w["h"] / 2, w["cy"] + w["h"] / 2
+    wg = (w["gap"] + 2 * w["band"]) / math.cos(math.radians(w["ang"]))     # horizontal gap between the openings
+    xl = lambda y: -wg / 2 + (y - w["cy"]) * t
+    xr = lambda y: wg / 2 + (y - w["cy"]) * t
+    s = w["span"] / 2
+    out = []
+    for q in ([(-s, y0), (xl(y0), y0), (xl(y1), y1), (-s, y1)], [(xr(y0), y0), (s, y0), (s, y1), (xr(y1), y1)]):
+        poly = Polygon(q).buffer(-w["r"], join_style=1, quad_segs=4).buffer(w["r"], join_style=1, quad_segs=4)
+        scr = []
+        for i in range(4):
+            (ax, ay), (bx, by) = q[i], q[(i + 1) % 4]
+            L_ = math.hypot(bx - ax, by - ay); nx, ny = (by - ay) / L_, -(bx - ax) / L_      # outward (quad is CCW)
+            scr.append(((ax + bx) / 2 + nx * w["scr"], (ay + by) / 2 + ny * w["scr"]))
+        out.append((poly, scr))
+    return out
 
 
 def panel_y(kind, ht):
@@ -398,11 +422,20 @@ def body(kind):
         panel("right", MR, JACK_Z, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
         top = T + H[kind]
-        n, xv = 12, W / 2 - 40                    # 3 full-width rows of 12, centred, pitch ~33.6
-        for r in range(3):
+        n, xv = 12, W / 2 - 40                    # full-width rows of 12, centred, pitch ~33.6
+        for vr in VENT_ROWS:
             for i in range(n):
-                add_slot(p, "front", MF, xv - i * 2 * xv / (n - 1), top - 28 - r * 10, 28, 3.5, 0.0, "vent")
-        feat.append(("front", -xv - 14, xv + 14, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
+                add_slot(p, "front", MF, xv - i * 2 * xv / (n - 1), vr, 28, 3.5, 0.0, "vent")
+        feat.append(("front", -xv - 14, xv + 14, VENT_ROWS[1] - 3.75, VENT_ROWS[0] + 3.75, "front vents"))
+        feat.append(("front", -xv - 14, xv + 14, VENT_ROWS[2] - 3.75, VENT_ROWS[2] + 3.75, "front vents"))
+        bez = []
+        for poly, scr in window_panes():
+            add_poly(p, "front", MF, list(poly.exterior.coords)[:-1], "window (acrylic behind bezel)", kind="window")
+            for u, v in scr:
+                add_circle(p, "front", MF, u, v, "m3", "Ø3.4 window bezel screw")
+            bez.append(poly.buffer(WIN["band"], join_style=1, quad_segs=4))
+        bb = unary_union(bez).bounds
+        feat.append(("front", bb[0], bb[2], bb[1], bb[3], "window bezels"))
         for u, v in ACC_FRONT:
             add_circle(p, "front", MF, u, v, "acc")
             feat.append(("front", u - 4, u + 4, v - 4, v + 4, "accessory rivnut"))
@@ -972,6 +1005,10 @@ def sync_inspector(parts):
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={}, accLid=[list(q) for q in ACC_LID], accD=HOLE["acc"][0],
+               windows=[dict(open=[[round(a, 2), round(b, 2)] for a, b in list(pl.exterior.coords)[:-1]],
+                             bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
+                             acrylic=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["mar"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
+                             screws=[[round(a, 2), round(b, 2)] for a, b in sc]) for pl, sc in window_panes()],
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
                           holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))
     gen["walls"], gen["panels"] = {}, {}

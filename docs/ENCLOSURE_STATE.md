@@ -20,8 +20,10 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Stacking: 4 printed **locating feet** under the control box (Ø24 × 6 flange + Ø7.6 peg) drop into
   the power lid: Ø8 front-left locates, 8 × 11 slot front-right, Ø10 at the back. Power box keeps
   rubber feet.
-- Power front: 3 rows of vents, 12 per row across the full width (2026-10-12). No mark; Allwin will
-  draw the front design himself.
+- Power front (2026-10-12): vent rows at 145/136/42, two acrylic windows split by a slanted bar (`WIN` in
+  `enclosure.py`: 330 span, 40 tall, 40°, R3, 20 mm steel between 9 mm PETG bezels; 3 mm acrylic outside under the bezel;
+  4 M3 screws per window from inside into heat-set inserts), 3 Ø5 accessory holes at 30 mm.
+- Accessory holes: plain Ø5 (M3 rivnut set later, or a printed plug). Control lid top: 4 corners. GX16 rail centred.
 - Body flats are mirrored left-right (`mirror_x`): the shop reads the drawing from the inside face and folds UP,
   which mirrors the design frame. Found 2026-10-12 by `fold.py`; v1–v3 body DXFs would have folded mirrored.
 

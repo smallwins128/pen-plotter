@@ -154,6 +154,10 @@ def items(kind):
             wall_item("earth stud + lugs", wall, u0, u1, v0, v1, 20, "stud")
         elif name == "front vents":
             pass
+        elif name == "window bezels":                    # bezel + acrylic are outside; inside: the M3 screw tails, nothing else
+            for _, scr in E.window_panes():
+                for su, sv in scr:
+                    wall_item(f"window bezel screw ({su:.0f},{sv:.0f})", wall, su - 3.25, su + 3.25, sv - 3.25, sv + 3.25, 6.0, "panel_screw")
         elif name == "accessory rivnut":                 # M3 rivnut body (Ø5 x 9) + 1 mm, set later from outside
             wall_item(f"{name} ({(u0 + u1) / 2:.0f},{(v0 + v1) / 2:.0f})", wall, u0 + 1.5, u1 - 1.5, v0 + 1.5, v1 - 1.5, 10.0, "rivnut")
         elif name == "ETCH mark":                        # the black print's plate, inside the front wall

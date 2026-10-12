@@ -335,8 +335,9 @@ def main():
     names = list(solids)
     for i in range(len(names)):
         for j in range(i + 1, len(names)):
-            v = (solids[names[i]] ^ solids[names[j]]).volume()
-            ok(v < 0.5, f"assembly: {names[i]} / {names[j]} do not intersect" + ("" if v < 0.5 else f" ({v:.1f} mm³ overlap)"))
+            x = solids[names[i]] ^ solids[names[j]]
+            th = _thickness(x)                     # surfaces resting on each other give zero-thickness slivers
+            ok(th < 0.05, f"assembly: {names[i]} / {names[j]} do not intersect" + ("" if th < 0.05 else f" ({x.volume():.1f} mm³, {th:.2f} mm thick)"))
     scene.export(DST / "assembly.glb")
     report.append("")
     report.append("bend tolerance: the shop's inner radius (flats drawn for R%g, K %g)" % (R, E.K))
@@ -389,6 +390,15 @@ def _tab_gap(b):
         if z1 - z0 < 1.5 and x1 - x0 > 400 and z0 > 0:           # the front wall
             front_inner = z0
     return min(front_inner - z for z in zs) if zs else 99.0
+
+
+def _thickness(x):
+    """Thickest piece of an intersection, by its smallest bounding-box side (0 = faces only touching)."""
+    if x.is_empty() or x.volume() < 1e-6:
+        return 0.0
+    mm = x.to_mesh()
+    t = trimesh.Trimesh(mm.vert_properties[:, :3], mm.tri_verts, process=False)
+    return max(float(min(c.bounds[1] - c.bounds[0])) for c in t.split(only_watertight=False))
 
 
 def _solid(m):
