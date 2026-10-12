@@ -121,6 +121,11 @@ def items(kind):
             out.append(Item(f"rivnut, {h['face']}", "rivnut", u - 2.5, u + 2.5, top - T - 9, top, v - 2.5, v + 2.5))
         else:               # (x, y) on a back lip
             out.append(Item(f"rivnut, {h['face']}", "rivnut", u - 2.5, u + 2.5, v - 2.5, v + 2.5, E.ZB, E.ZB + T + 9))
+    # --- accessory rivnuts under the control lid top
+    for h in lid.holes:
+        if h.get("type") == "acc":
+            x, z = h["acc_at"]
+            out.append(Item(f"accessory rivnut, lid top ({x:.0f},{z:.0f})", "rivnut", x - 2.5, x + 2.5, top - 10, top, z - 2.5, z + 2.5))
     # --- tab rivets: dome inside the tab
     for s in (-1, 1):
         for v in (Hb * 0.3, Hb * 0.7):
@@ -149,6 +154,8 @@ def items(kind):
             wall_item("earth stud + lugs", wall, u0, u1, v0, v1, 20, "stud")
         elif name == "front vents":
             pass
+        elif name == "accessory rivnut":                 # M3 rivnut body (Ø5 x 9) + 1 mm, set later from outside
+            wall_item(f"{name} ({(u0 + u1) / 2:.0f},{(v0 + v1) / 2:.0f})", wall, u0 + 1.5, u1 - 1.5, v0 + 1.5, v1 - 1.5, 10.0, "rivnut")
         elif name == "ETCH mark":                        # the black print's plate, inside the front wall
             wall_item(f"{name}: printed backing", wall, u0, u1, v0, v1, 2.5, "panel_in")
         else:

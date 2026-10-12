@@ -64,6 +64,7 @@ ZF, ZB = D / 2 + T, -D / 2 - T          # body front outer face, back-lip outer 
 
 HOLE = {   # name: (diameter, leader text)
     "rivnut_m3": (5.0, "M3 Rivnut (5mm)"),
+    "acc": (5.0, "Ø5 accessory (M3 rivnut or plug)"),
     "rivnut_m4": (6.0, "M4 Rivnut (6mm)"),
     "m3": (3.4, "Ø3.4 M3 screw"),
     "rivet": (3.2, "Ø3.2 solid rivet"),
@@ -105,6 +106,9 @@ STACK = dict(flange_d=24.0, flange_h=6.0, peg_d=7.6, peg_len=6.0,
 PEG_HOLES = {(-(W / 2 - 40), D / 2 - 40): "round", (W / 2 - 40, D / 2 - 40): "slot",
              (-(W / 2 - 40), -(D / 2 - 40)): "clear", (W / 2 - 40, -(D / 2 - 40)): "clear"}
 PEG_SLOT = (11.0, 8.0)                     # length along x, width
+# accessory holes: plain Ø5, take an M3 rivnut (set later, from outside) or a printed plug
+ACC_LID = [(sx * (W / 2 - 40), sz * (D / 2 - 40)) for sx in (-1, 1) for sz in (-1, 1)]   # control lid top corners (over the power lid's peg holes)
+ACC_FRONT = [(-(W / 2 - 40), 30.0), (0.0, 30.0), (W / 2 - 40, 30.0), (-(W / 2 - 40), 80.0), (W / 2 - 40, 80.0)]   # power front (x, height)
 
 
 def panel_y(kind, ht):
@@ -388,7 +392,7 @@ def body(kind):
                 add_circle(p, wall, mp, uc + a * 35.75, vc + b * 35.75, "fan")
         feat.append((wall, uc - 40, uc + 40, vc - 40, vc + 40, "fan + screws"))
     if kind == "control":
-        panel("front", MF, -10.0, T + H[kind] / 2, "gx_rail", "GX16 rail")
+        panel("front", MF, 0.0, T + H[kind] / 2, "gx_rail", "GX16 rail")
         fan("left", ML, *FAN[kind])
         panel("left", ML, -30.0, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
         panel("right", MR, JACK_Z, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
@@ -399,6 +403,9 @@ def body(kind):
             for i in range(n):
                 add_slot(p, "front", MF, xv - i * 2 * xv / (n - 1), top - 28 - r * 10, 28, 3.5, 0.0, "vent")
         feat.append(("front", -xv - 14, xv + 14, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
+        for u, v in ACC_FRONT:
+            add_circle(p, "front", MF, u, v, "acc")
+            feat.append(("front", u - 4, u + 4, v - 4, v + 4, "accessory rivnut"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, D / 2 - 187.5, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
@@ -476,6 +483,10 @@ def lid(kind):
         p.holes[-1]["folded"] = (sgn * (WO / 2 - T - RIV_IN), T + H[kind] / 2, "back")
     add_circle(p, "top", MT, 0.0, ZF - T - RIV_IN, "lidclr"); p.holes[-1]["folded"] = (0.0, ZF - T - RIV_IN, "top")
     add_circle(p, "back", MBk, 0.0, T + LIP / 2, "lidclr"); p.holes[-1]["folded"] = (0.0, T + LIP / 2, "back")
+    if kind == "control":                    # accessory holes on the top of the stack
+        for x, z in ACC_LID:
+            add_circle(p, "top", MT, x, z, "acc")
+            p.holes[-1]["acc_at"] = (x, z)
     if kind == "power":                      # locating holes for the control box's feet
         for (x, z), how in PEG_HOLES.items():
             if how == "slot":
@@ -960,7 +971,7 @@ def sync_inspector(parts):
     by = {p.name: p for p in parts}
     gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
-               fan={k: list(v) for k, v in FAN.items()}, plate={},
+               fan={k: list(v) for k, v in FAN.items()}, plate={}, accLid=[list(q) for q in ACC_LID], accD=HOLE["acc"][0],
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],
                           holes=[[x, z, how] for (x, z), how in PEG_HOLES.items()]))
     gen["walls"], gen["panels"] = {}, {}
