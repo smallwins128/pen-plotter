@@ -20,8 +20,10 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Stacking: 4 printed **locating feet** under the control box (Ø24 × 6 flange + Ø7.6 peg) drop into
   the power lid: Ø8 front-left locates, 8 × 11 slot front-right, Ø10 at the back. Power box keeps
   rubber feet.
-- Power front: original stepped vents only. ETCH mark removed for the cut (2026-10-12); Allwin will
+- Power front: 3 rows of vents, 12 per row across the full width (2026-10-12). No mark; Allwin will
   draw the front design himself.
+- Body flats are mirrored left-right (`mirror_x`): the shop reads the drawing from the inside face and folds UP,
+  which mirrors the design frame. Found 2026-10-12 by `fold.py`; v1–v3 body DXFs would have folded mirrored.
 
 ## Files
 
@@ -30,6 +32,7 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 | `hardware/sheet/enclosure.py` | **The single source.** Dimensions, flats, holes, folds, checks, DXF writer, and it writes the numbers into the inspector. `python3 hardware/sheet/enclosure.py` (`--report` = checks only). |
 | `hardware/sheet/assembly_check.py` | Whole-assembly clearance: steel-to-steel gaps (≥ 2 mm unless a listed contact), lid fit, parts, fans, rivnuts, plate, feet, pegs. The generator refuses to write files on any clash. |
 | `hardware/sheet/strokes.py` + `mark_etch.json` | ETCH mark outlines and the rejected brush strokes. **Unused** by the generator since 2026-10-12. |
+| `hardware/sheet/fold.py` | Folds the DXFs as the shop will (real R1 bends, from the files alone), checks hole positions (no mirroring), sizes, self-collision, whole-assembly overlap, and lid/tab fit for shop radii R0.6–R2.5. Writes `out/fold/assembly.glb` + STLs for Blender. Run by `enclosure.py`; needs `pip install trimesh manifold3d mapbox_earcut scipy`. |
 | `hardware/sheet/pack.py` | Fabricator cover sheet PDF + zip: `python3 hardware/sheet/pack.py v4`. |
 | `hardware/web/enclosure_inspector.html` | **The 3D renderer.** Reads the generator's `GEN` block (walls, panels, fans, plate, stack). |
 | `hardware/cutfiles/2026-10-11 v3/` | Last released pack. **Superseded by the current model** (stacking holes, GX label text, fan/jack alignment) — issue v4 before sending. v1, v2 superseded. |
@@ -62,6 +65,8 @@ one warning remains (GX rail parts 1.5 mm from driver D1) — move the driver wh
   one slot, the rest clearance.
 - **One model.** The inspector drifted (round GX holes, wrong USB height) while it kept its own
   numbers. Everything it draws now comes from the generator.
+- **Fold the files, not the model.** Every check passed on the model while the body DXFs folded mirrored. Now `fold.py` folds the DXFs and compares.
+- **Every bend end needs a relief** (checked; mutation-tested by removing the reliefs).
 - **Mutation-test the checks:** break a value on purpose and confirm the gate fails.
 
 ## Learnings (working with Allwin on this)

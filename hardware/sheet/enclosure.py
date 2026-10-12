@@ -229,6 +229,29 @@ def corner_relief(p, x0, x1, y0, y1):
     p.relief.append(sbox(x0 - 0.5, y0 - 0.5, x1 + 0.5, y1 + 0.5))
 
 
+def mirror_x(p):
+    """Mirror a part's flat left-right. The body is built in the design frame (x right, seen from outside); the
+    shop reads the drawing from the INSIDE face and folds UP, which mirrors it. Flipping the flat makes the folded
+    body come out as designed (fold.py checks this from the DXF)."""
+    from shapely.affinity import scale
+    fx = lambda q: (-q[0], q[1])
+    m = lambda g: scale(g, -1, 1, origin=(0, 0))
+    p.solid = [m(g) for g in p.solid]; p.relief = [m(g) for g in p.relief]
+    p.faces = {k: m(g) for k, g in p.faces.items()}
+    for b in p.bends:
+        b["line"] = tuple(fx(q) for q in b["line"]); b["zone"] = m(b["zone"])
+    for h in p.holes:
+        h["geom"] = m(h["geom"])
+        for k in ("c", "p0", "p1"):
+            if k in h:
+                h[k] = fx(h[k])
+        if "pts" in h:
+            h["pts"] = [fx(q) for q in h["pts"]]
+        if h["kind"] == "arc_slot":                      # angle a -> pi - a, and the CCW sweep runs the other way
+            h["a0"], h["a1"] = math.pi - h["a1"], math.pi - h["a0"]
+    return p
+
+
 # ============================================================================
 # BODY: base + front + two sides, top lips, back lips, base back lip, corner tabs
 # ============================================================================
@@ -297,7 +320,7 @@ def body(kind):
         # corner reliefs: base corners
         x0, x1 = sorted((sgn * xe, sgn * (xe + BA)))
         corner_relief(p, x0, x1, yb0 - BA, yb0)
-        corner_relief(p, x0, x1, yb1, yb1 + BA)
+        corner_relief(p, x0, x1, zs - S, yb1 + BA)      # from the wall bend's front end (it stops short for the tab) to past the front bend
         p.fold.append((f"{side} wall", *sorted((sgn * WO / 2, sgn * (WO / 2 - T))), 0, Hb, ZB, zs))
     # --- front wall: (u=x, v=y) -> X = u, Y = yb1 + BA + (v - S)
     MF = Map(1, 0, 0, 1, 0, yb1 + BA - S)
@@ -371,10 +394,11 @@ def body(kind):
         panel("right", MR, JACK_Z, panel_y(kind, PANEL["receiving"]["plate"][1]), "receiving", "Receiving panel")
     else:
         top = T + H[kind]
+        n, xv = 12, W / 2 - 40                    # 3 full-width rows of 12, centred, pitch ~33.6
         for r in range(3):
-            for i in range((7, 5, 3)[r]):
-                add_slot(p, "front", MF, W / 2 - 40 - i * 34, top - 28 - r * 10, 28, 3.5, 0.0, "vent")
-        feat.append(("front", W / 2 - 40 - 6 * 34 - 14, W / 2 - 26, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
+            for i in range(n):
+                add_slot(p, "front", MF, xv - i * 2 * xv / (n - 1), top - 28 - r * 10, 28, 3.5, 0.0, "vent")
+        feat.append(("front", -xv - 14, xv + 14, top - 28 - 20 - 2, top - 28 + 2, "front vents"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, D / 2 - 187.5, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
@@ -388,7 +412,7 @@ def body(kind):
     p.connect |= {frozenset(("front wall", "base")), frozenset(("front wall", "front top lip")), frozenset(("base", "base back lip"))}
     p.notes = [f"Folded outside: {WO:.0f} W x {ZF - ZB:.0f} D x {Hb:.0f} H (body, lips in)",
                f"Inside: {W:.0f} x {D:.0f} x {H[kind]:.0f}"]
-    return p
+    return mirror_x(p)
 
 
 # ============================================================================
@@ -545,6 +569,16 @@ def checks(parts):
                     continue
                 d = hs[i].distance(hs[j]); worst = min(worst, d)
         ok(worst >= 1.5, p.name, f"narrowest web between holes {worst:.2f} mm (min 1.5)")
+        # every bend ends in free air (a relief or the part edge) for R + T either side: material past a bend's end tears or bulges
+        for b in p.bends:
+            (ax, ay), (cx, cy) = b["line"]; L_ = math.hypot(cx - ax, cy - ay)
+            dx, dy = (cx - ax) / L_, (cy - ay) / L_; nx, ny = -dy, dx
+            for ex, ey, sx in ((ax, ay, -1), (cx, cy, 1)):
+                k_ = BA / 2 + 0.25  # across the zone and R + T into the faces either side
+                q = Polygon([(ex + nx * k_, ey + ny * k_), (ex - nx * k_, ey - ny * k_),
+                             (ex - nx * k_ + sx * dx * 0.5, ey - ny * k_ + sx * dy * 0.5),
+                             (ex + nx * k_ + sx * dx * 0.5, ey + ny * k_ + sx * dy * 0.5)])
+                ok(g.intersection(q).area < 1e-3, p.name, f"bend relieved at its end ({ex:.1f}, {ey:.1f})")
         # bend lines lie on the part and inside their zone
         for b in p.bends:
             ln = LineString(b["line"])
@@ -598,8 +632,8 @@ def checks(parts):
                     g = max(f2[1] - f1[2], f1[1] - f2[2], f2[3] - f1[4], f1[3] - f2[4])
                     ok(g >= 3.0, kind, f"{f1[0]} wall: {f1[5]} / {f2[5]} {g:.1f} mm apart outside (need 3)")
         # base plate standoff holes over the floor's
-        fl = sorted(h["c"] for h in b.holes if h["note"] == "Ø4.5 standoff")
-        pl = sorted(h["c"] for h in by[f"{kind}_base_plate"].holes if h["note"] == "Ø4.5 standoff")
+        fl = sorted(h["uv"] for h in b.holes if h["note"] == "Ø4.5 standoff")
+        pl = sorted(h.get("uv", h["c"]) for h in by[f"{kind}_base_plate"].holes if h["note"] == "Ø4.5 standoff")
         ok(fl == pl, kind, "base plate standoff holes line up with the floor's")
     # panel cutouts against the original printed panels in link_panel.py
     lp = _link_panel()
@@ -616,7 +650,7 @@ def checks(parts):
     jz = [q["u"] for b in (by["control_body"], by["power_body"]) for q in b.panels if q["key"] in ("receiving", "psu")]
     ok(len(jz) == 2 and jz[0] == jz[1], "stack", f"jack panels line up along the right walls (z {jz[0]:g})")
     # stacking: power-lid peg holes sit under the control box's foot holes, and the feet clear what lies between
-    feet = sorted(h["c"] for h in by["control_body"].holes if h["note"] == "Ø4.5 locating foot")
+    feet = sorted(h["uv"] for h in by["control_body"].holes if h["note"] == "Ø4.5 locating foot")
     pegs = sorted(h["peg"] for h in by["power_lid"].holes if "peg" in h)
     ok(feet == pegs and len(feet) == 4, "stack", "power-lid locating holes line up with the control box's 4 feet")
     ok(HOLE["peg"][0] - STACK["peg_d"] >= 0.3 and PEG_SLOT[1] - STACK["peg_d"] >= 0.3 and HOLE["pegclr"][0] - STACK["peg_d"] >= 2.0,
@@ -909,7 +943,13 @@ def main(argv):
                                                       bend=dict(T=T, R=R, K=K, BA=round(BA, 3), BD=round(BD, 3))), indent=1))
     print(f"wrote {OUT}")
     sync_inspector(parts)
-    return 0
+    try:                                         # fold the DXFs as the shop will and compare with the design
+        import fold
+    except ImportError as ex:
+        print(f"fold check skipped ({ex.name} missing: pip install trimesh manifold3d mapbox_earcut scipy)")
+        return 0
+    print("fold check (from the DXFs):")
+    return fold.main()
 
 
 INSPECTOR = HERE.parent / "web" / "enclosure_inspector.html"
