@@ -1,10 +1,10 @@
-"""Window panels for the three front openings (power left, power right, control): a bolted strip + snap-on panels.
+"""Window panels for the three front openings (power left, power right, control): a bolted bezel + magnetic panels.
 
-Each window gets a bezel strip that stays on: it follows the opening, 11 mm wide and 6 mm tall, held by M3 bolts
-through the 4 holes already cut in the steel (heads countersunk in the strip, nuts inside). Its outer edge has a
-45° groove all round. Panels cover the strip and snap onto it: a skirt round the strip carries 4 latches (thin
-walls joined to the panel only at their ends, so they bow out) whose barbs click into the groove, and pull off by
-hand. A panel's front can be any shape. Barb size comes from fit-kit coupon I.
+Each window gets a thin bezel that stays on: it follows the opening, 11 mm wide and 2.5 mm thick, held by M3 bolts
+through the 4 holes already cut in the steel (button heads sunk flush, nuts inside). It carries 4 Ø6 × 1.5 disc
+magnets glued flush (N out), 2 on the top edge and 2 on the bottom. Every panel has 4 matching magnets glued flush
+in its back (S in) and a 1 mm lip that drops just inside the opening, so it locates and pulls off by hand. A panel's
+front can be any shape. Magnet pocket size comes from fit-kit coupon I.
 
     python3 hardware/parts/window_inserts.py           # writes hardware/out/window_inserts/*.stl + card templates (.svg)
     python3 hardware/parts/window_inserts.py fast      # skip the reliefs (they take minutes)
@@ -17,8 +17,7 @@ import math
 import pathlib
 import sys
 
-from build123d import (Align, BuildPart, BuildSketch, Cylinder, Face, Plane, Polygon as BPolygon, Pos, Vector, Wire,
-                       export_stl, extrude)
+from build123d import Align, Cylinder, Face, Pos, Vector, Wire, export_stl, extrude
 from shapely.geometry import MultiPolygon, Point, Polygon, box as sbox
 from shapely.ops import unary_union
 
@@ -27,40 +26,39 @@ import enclosure as E  # noqa: E402
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "out" / "window_inserts"
 
-# strip: outer edge offset from the opening, by height above the steel (w). 45° groove, 1 mm deep, centre w = 3.1
-STRIP_H = 6.0
-STRIP_EDGE = [(0.0, 11.0), (1.6, 11.0), (2.6, 10.0), (3.6, 10.0), (4.6, 11.0), (5.4, 11.0), (6.0, 10.4)]
+# bezel
+BEZEL_W, BEZEL_T = 11.0, 2.5
 CLEAR, CB_D, CB_H = 3.4, 6.2, 1.8             # M3 clearance; counterbore for a button head (Ø5.7 × 1.65)
+MAG_POCKET, MAG_DEPTH = 6.05, 1.6             # Ø6 × 1.5 magnets, glued 0.1 under the face: pocket from coupon I
+MAG_OFF = 6.5                                 # magnet centres this far out from the opening edge
+MAG_BOLT_CLEAR = 12.0                         # magnet centre to bolt centre, at least
 
 # panels
-PANEL_Z = STRIP_H + 0.4                       # underside of the panel plate (0.4 over the strip)
-PLATE_T = 3.0
-SKIRT = (11.2, 12.8)                          # skirt inner / outer offset from the opening (0.2 off the strip)
-PANEL_OFF = 14.3                              # panel edge offset for contour panels (skirt + 1.5 rim)
-STEEL_GAP = 0.4                               # skirt bottom above the steel
-LATCH_L, LATCH_GAP, BARB_L, BARB_ZC = 30.0, 0.7, 20.0, 3.1
-BARB = 0.8                                    # barb proud of the skirt: set from coupon I (0.6 / 0.8 / 1.0)
+PANEL_Z = BEZEL_T                             # panels sit on the bezel
+PLATE_T = 2.6                                 # 1.6 magnet pocket + 1.0 front skin
+PANEL_OFF = 12.5                              # contour panels: bezel + 1.5 rim
+LIP_IN, LIP_W, LIP_H = 0.3, 1.2, 1.5          # locating lip just inside the opening edge
 MID_GAP = 0.5                                 # rectangular power panels stop this far short of the bar's centre line
 
 # relief
 RIB_H = 1.2
-# acrylic panel: 3 mm acrylic = opening + 3 (vendor DXFs), in a pocket in the back of a 5 mm plate
-ACR_PLATE, ACR_POCKET, ACR_MAR = 5.0, 3.2, 3.0
+# acrylic panel: 3 mm acrylic = opening + 3 (vendor DXFs), in a pocket in the back of the frame, on the bezel
+ACR_POCKET, ACR_MAR, ACR_LIP = 3.2, 3.0, 1.2
 # card panel: rectangular; card sits in a 1 mm slot in front of the plate, behind a glued-on front frame
 CARD_SLOT, CARD_FRAME_T, CARD_RIM, CARD_MAR = 1.0, 1.8, 9.0, 3.0
 
 # pen rack: slotted bars at the window's slant, 15 mm proud. Pens go in capped and lean on the downhill wall of
 # their slot, so any size sits at the same angle. The marker slot is cut through the plate (its back sits just
-# over the strip / inside the window) so a Ø15 marker fits under the same 15 mm bars.
+# over the bezel / inside the window) so a Ø15 marker fits under the same bars.
 RACK_ANG = math.radians(E.WIN["ang"])
-RACK_PROUD = 15.0
+RACK_PROUD = 15.7
 RACK_FRONT = 2.0
 RACK_BAND = 14.0                              # bar height
 RACK_FLOOR = 3.0                              # floor under the bottom slots
 RACK_WALL = 3.0                               # between slots, along u
 RACK_SIDE = 2.5                               # round the outside
 RACK_SLOTS = [16.5, 13.0, 13.0, 13.0]         # widths square to the pen: marker (<= Ø15), 3 pens (<= Ø12)
-MARKER_BACK = PANEL_Z + 0.2                   # marker slot back face (over the strip top at 6.0)
+MARKER_BACK = BEZEL_T + 0.3                   # marker slot back face (clears the bezel where it crosses it)
 MARKER_WALL = 2.0                             # back wall under the marker, inside the window
 
 
@@ -103,15 +101,6 @@ def slab(poly, w0, w1):
     return out
 
 
-def prism_uv(pts_vw, u0, u1):
-    """Prism from a (v, w) outline, running along u from u0 to u1."""
-    with BuildPart() as p:
-        with BuildSketch(Plane.YZ.offset(u0)):
-            BPolygon(*pts_vw, align=None)
-        extrude(amount=u1 - u0)
-    return p.part
-
-
 def rounded(poly, r):
     return poly.buffer(-r, join_style=1).buffer(r, join_style=1)
 
@@ -124,62 +113,58 @@ def straight_edge(op, top):
     return min(us), max(us)
 
 
-# ---------------------------------------------------------------- the strip
-def strip(name, op, screws):
-    """Bolted strip: ring round the opening, groove on the outer edge (stacked slabs; 45° faces in 0.25 mm steps)."""
-    clip = side_clip(name)
-    def ring(off):
-        r = op.buffer(off, join_style=1, quad_segs=8).difference(op)
-        return r.intersection(clip) if clip is not None else r
-    z, parts = 0.0, []
-    for (z0, o0), (z1, o1) in zip(STRIP_EDGE, STRIP_EDGE[1:]):
-        n = 1 if abs(o1 - o0) < 1e-9 else max(1, round((z1 - z0) / 0.25))
-        for k in range(n):
-            za, zb = z0 + (z1 - z0) * k / n, z0 + (z1 - z0) * (k + 1) / n
-            parts.append((za, zb, o0 + (o1 - o0) * (k + 0.5) / n))
-    part = None
-    for za, zb, off in parts:
-        s = slab(ring(off), za, zb)
-        part = s if part is None else part + s
-    for u, v in screws:
-        part -= Pos(u, v, -1) * Cylinder(CLEAR / 2, STRIP_H + 2, align=(Align.CENTER, Align.CENTER, Align.MIN))
-        part -= Pos(u, v, STRIP_H - CB_H) * Cylinder(CB_D / 2, 5, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    return part
+# ---------------------------------------------------------------- magnets, bezel, panel base
+_MAGS = {}
 
 
-# ---------------------------------------------------------------- the snap base every panel shares
-def latch_spots(op, avoid=None):
-    """Latch centres: 2 on the straight top edge, 2 on the straight bottom edge (1 if the edge is short).
-    Slid along the edge to keep clear of `avoid` (u ranges the plate is cut through at that edge)."""
+def magnets(name):
+    """The window's 4 magnet centres, shared by its bezel and every panel: 2 on the straight top edge, 2 on the
+    bottom, as far apart as they go, clear of the bolts and (pen windows) of where the marker slot crosses the top."""
+    if name in _MAGS:
+        return _MAGS[name]
+    op, screws, _ = openings()[name]
+    x0, y0, x1, y1 = op.bounds
+    avoid = []
+    if name in ("power_right", "control"):
+        p = pen_layout(name)[3][0][2]
+        b = p.intersection(sbox(-1e3, y1 + MAG_OFF - 4, 1e3, y1 + MAG_OFF + 4)).bounds
+        if b:
+            avoid.append((b[0] - 4, b[2] + 4))
     out = []
     for top in (True, False):
+        v = y1 + MAG_OFF if top else y0 - MAG_OFF
         a, b = straight_edge(op, top)
-        a, b = a + LATCH_L / 2 + 3, b - LATCH_L / 2 - 3
-        cs = [(a + b) / 2] if b - a < LATCH_L + 10 else [a + (b - a) / 4, a + 3 * (b - a) / 4]
-        for c in cs:
-            for d in [0] + [s * k for k in range(1, 200) for s in (1, -1)]:
-                cc = c + d * 0.5
-                if a <= cc <= b and not any(lo - 2 < cc + LATCH_L / 2 and cc - LATCH_L / 2 < hi + 2 for lo, hi in (avoid or {}).get(top, [])):
-                    out.append((top, cc)); break
+        ok = [a + 3 + 0.5 * i for i in range(int((b - a - 6) / 0.5) + 1)]
+        ok = [u for u in ok if all(math.hypot(u - su, v - sv) >= MAG_BOLT_CLEAR for su, sv in screws)
+              and not (top and any(lo <= u <= hi for lo, hi in avoid))]
+        out += [(min(ok), v), (max(ok), v)]
+    _MAGS[name] = out
     return out
 
 
-def snap_base(name, op, outline, plate_t=PLATE_T, avoid=None):
-    """Plate over the strip + skirt round it with 4 latches. Returns (part, plate top w)."""
-    clip = side_clip(name)
-    x0, y0, x1, y1 = op.bounds
-    ring = op.buffer(SKIRT[1], join_style=1, quad_segs=8).difference(op.buffer(SKIRT[0], join_style=1, quad_segs=8))
-    if clip is not None:
-        ring = ring.intersection(clip)
-    spots = latch_spots(op, avoid)
-    gaps = [sbox(c - LATCH_L / 2, (y1 if top else y0 - 20), c + LATCH_L / 2, (y1 + 20 if top else y0)) for top, c in spots]
-    skirt = slab(ring, STEEL_GAP, PANEL_Z - LATCH_GAP) + slab(ring.difference(unary_union(gaps)), PANEL_Z - LATCH_GAP - 0.01, PANEL_Z + 0.01)
-    part = skirt + slab(outline, PANEL_Z, PANEL_Z + plate_t)
-    for top, c in spots:                                     # barbs on the skirt's inner face, pointing at the groove
-        vf = y1 + SKIRT[0] if top else y0 - SKIRT[0]
-        s = -1 if top else 1
-        pts = [(vf - s * 0.01, BARB_ZC - 0.5 - BARB), (vf + s * BARB, BARB_ZC - 0.5), (vf + s * BARB, BARB_ZC + 0.5), (vf - s * 0.01, BARB_ZC + 0.5 + BARB)]
-        part += prism_uv(pts, c - BARB_L / 2, c + BARB_L / 2)
+def mag_pockets(name, w0, w1):
+    return unary_union([Point(u, v).buffer(MAG_POCKET / 2, 48) for u, v in magnets(name)]), w0, w1
+
+
+def bezel(name, op, screws):
+    """Bolted bezel round the opening; magnet pockets open on the front."""
+    part = slab(op.buffer(BEZEL_W, join_style=1, quad_segs=8).difference(op), 0, BEZEL_T)
+    for u, v in screws:
+        part -= Pos(u, v, -1) * Cylinder(CLEAR / 2, BEZEL_T + 2, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        part -= Pos(u, v, BEZEL_T - CB_H) * Cylinder(CB_D / 2, 5, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    m, _, _ = mag_pockets(name, 0, 0)
+    return part - slab(m, BEZEL_T - MAG_DEPTH, BEZEL_T + 1)
+
+
+def base(name, op, outline, plate_t=PLATE_T, lip=True):
+    """Panel plate on the bezel: magnet pockets open on the back, locating lip inside the opening.
+    Returns (part, plate front w)."""
+    part = slab(outline, PANEL_Z, PANEL_Z + plate_t)
+    m, _, _ = mag_pockets(name, 0, 0)
+    part -= slab(m, PANEL_Z - 1, PANEL_Z + MAG_DEPTH)
+    if lip:
+        ring = op.buffer(-LIP_IN, join_style=1).difference(op.buffer(-LIP_IN - LIP_W, join_style=1))
+        part += slab(ring, PANEL_Z - LIP_H, PANEL_Z + 0.01)
     return part, PANEL_Z + plate_t
 
 
@@ -200,7 +185,7 @@ def rect(name, op, extra_right=0.0):
 def relief_panel(name, op, seed_shift):
     """Contour panel with raised topographic ribs."""
     outline = contour(name, op)
-    part, top = snap_base(name, op, outline)
+    part, top = base(name, op, outline)
     c = Point(op.centroid.x + seed_shift, op.centroid.y - 2)
     ribs = []
     for k in range(1, 40):
@@ -214,9 +199,10 @@ def relief_panel(name, op, seed_shift):
 
 
 def acrylic_panel(name, op):
-    """Contour frame, 5 mm: the acrylic (opening + 3) sits in a pocket in its back, against the strip."""
+    """Contour frame: the acrylic (opening + 3) sits in a pocket in its back, on the bezel; 1.2 mm lip in front.
+    No locating lip: the acrylic covers the opening edge."""
     outline = contour(name, op)
-    part, top = snap_base(name, op, outline, ACR_PLATE)
+    part, top = base(name, op, outline, ACR_POCKET + ACR_LIP, lip=False)
     part -= slab(op, PANEL_Z - 1, top + 1)
     part -= slab(op.buffer(ACR_MAR + 0.2, join_style=1, quad_segs=8), PANEL_Z - 1, PANEL_Z + ACR_POCKET)
     return part
@@ -226,7 +212,7 @@ def card_panel(name, op, open_side):
     """Rectangular. Back: plate + skirt + a spacer that leaves a 1 mm card slot, open on one side. Front: a thin
     frame, printed flat and glued on once. The card slides in from the side."""
     outline = rect(name, op)
-    part, top = snap_base(name, op, outline)
+    part, top = base(name, op, outline)
     x0, y0, x1, y1 = outline.bounds
     aperture = rounded(sbox(x0 + CARD_RIM, y0 + CARD_RIM, x1 - CARD_RIM, y1 - CARD_RIM), 2.0)
     if name == "power_left":                                  # keep the frame rim even along the slanted cut
@@ -279,25 +265,34 @@ def rack_layout(F, slots, deep_ok, op):
     return (vb0, vb1, vt0, vt1), fl, [(ur, wc, para(ur, wc, fl, vt1 + 40)) for ur, wc in zip(urs, wcs)]
 
 
+_PENS = {}
+
+
+def pen_layout(name):
+    """Rectangular outline (widened on the right until the 4 slots fit) and the slot layout."""
+    if name not in _PENS:
+        op = openings()[name][0]
+        deep_ok = op.buffer(-(MARKER_WALL + 0.5), join_style=1)   # marker back wall stays inside the window
+        for ext in range(0, 61, 2):
+            outline = rect(name, op, ext)
+            bars, fl, slots = rack_layout(outline, RACK_SLOTS, deep_ok, op)
+            if len(slots) == len(RACK_SLOTS):
+                break
+        _PENS[name] = (outline, bars, fl, slots)
+    return _PENS[name]
+
+
 def pen_panel(name, op):
-    """Rectangular panel, two slotted bars 15 mm proud; marker slot first (left), cut through the plate."""
-    ext = 20.0 if name == "control" else 0.0                 # control: 20 mm more on the right for the 3rd pen
-    outline = rect(name, op, ext)
-    deep_ok = op.buffer(-(MARKER_WALL + 0.5), join_style=1)  # marker back wall stays inside the window
-    (vb0, vb1, vt0, vt1), fl, slots = rack_layout(outline, RACK_SLOTS, deep_ok, op)
-    marker = slots[0][2]
-    x0, y0, x1, y1 = op.bounds
-    # where the marker's plate cut crosses the panel's top and bottom edges: keep latches away from it
-    cut_top = marker.intersection(sbox(-1e3, y1 + SKIRT[0] - 1, 1e3, y1 + SKIRT[1] + 1)).bounds
-    avoid = {True: [(cut_top[0], cut_top[2])] if cut_top else [], False: []}
-    part, top = snap_base(name, op, outline, avoid=avoid)
+    """Rectangular panel, two slotted bars; marker slot first (left), cut through the plate."""
+    outline, (vb0, vb1, vt0, vt1), fl, slots = pen_layout(name)
+    part, top = base(name, op, outline)
     front = top + RACK_PROUD
-    bands = outline.intersection(sbox(-1e3, vb0, 1e3, vb1)).union(outline.intersection(sbox(-1e3, vt0, 1e3, vt1)))
-    part += slab(bands, top - 0.01, front)
+    bars = outline.intersection(sbox(-1e3, vb0, 1e3, vb1)).union(outline.intersection(sbox(-1e3, vt0, 1e3, vt1)))
+    part += slab(bars, top - 0.01, front)
     cell_front = front - RACK_FRONT
     for i, (ur, wc, p) in enumerate(slots):
         if i == 0:                                           # through the plate; back walls under the bars, in the window
-            part -= slab(p.intersection(outline.buffer(1)), PANEL_Z - 0.01, cell_front)
+            part -= slab(p.intersection(outline.buffer(1)), PANEL_Z - LIP_H - 0.5, cell_front)
             pb = p.buffer(MARKER_WALL, join_style=2)
             back = unary_union([pb.intersection(sbox(-1e3, fl - MARKER_WALL, 1e3, vb1)), pb.intersection(sbox(-1e3, vt0, 1e3, vt1))])
             part += slab(back.intersection(op.buffer(-0.5)), MARKER_BACK - MARKER_WALL, MARKER_BACK)
@@ -321,7 +316,7 @@ def build(fast=False):
     ops = openings()
     out, info = {}, {}
     for name, (op, screws, kind) in ops.items():
-        out[f"strip_{name}"] = strip(name, op, screws)
+        out[f"bezel_{name}"] = bezel(name, op, screws)
         out[f"acrylic_{name}"] = acrylic_panel(name, op)
         if not fast:
             out[f"relief_{name}"] = relief_panel(name, op, {"power_left": 30, "power_right": -30, "control": 20}[name])
@@ -346,7 +341,8 @@ def main():
         export_stl(part, str(OUT / f"{name}.stl"))
         bb = part.bounding_box()
         print(f"{name:26s} {bb.size.X:6.1f} x {bb.size.Y:5.1f} x {bb.size.Z:5.1f}  {part.volume / 1000:5.1f} cm3")
-    meta = {"racks": {}, "card_front_w": {}, "cards": {}}
+    meta = {"racks": {}, "card_front_w": {}, "cards": {}, "magnets": {n: [[round(u, 2), round(v, 2)] for u, v in magnets(n)] for n in openings()},
+            "acrylic_w": PANEL_Z + 0.05}
     for k, v in info.items():
         if k.startswith("card_"):
             card_svg(OUT / f"{k}_template.svg", v)

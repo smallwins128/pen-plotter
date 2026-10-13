@@ -15,9 +15,9 @@ and the size that fits becomes the number every real part uses (FIT below).
                         snap plugs for the Ø5 accessory holes in 1 mm steel: 4.6/4.8/5.0
   G  LED strip holder   clamps under a bezel screw inside; channel for 8 mm and 10 mm strip
   H  cable holders      cable-tie mount and two snap saddles (Ø6, Ø9), all on a 5.8 peg for 2 mm plate
-  I  snap-on panels     80 mm of bezel strip (11 × 6, 45° groove on the outer edge) and three panel strips with one
-                        30 mm latch each, barb 0.6/0.8/1.0 proud of the skirt. Bolt the strip to anything, push each
-                        panel on and pull it off: pick the one that clicks on firmly and still pulls off by hand
+  I  magnet panels     bezel section (11 × 2.5, 2 bolt holes) and panel section (2.6, lip), 3 pockets each for
+                        Ø6 × 1.5 magnets: Ø5.95 / 6.05 / 6.15 × 1.6 deep. Press magnets in (bezel N out, panel S
+                        in): the tightest pocket that doesn't crack sets the size; then feel the pull
 """
 import math
 import pathlib
@@ -31,13 +31,11 @@ ENGRAVE = 0.5
 
 # the numbers the real parts will use, until the kit says otherwise
 FIT = dict(m3_clear=3.4, insert_bore=4.2, rivnut_recess=9.0, gx16=16.2, led=12.2, stop=22.3,
-           acrylic_pocket=3.2, peg=5.8, plug=4.8, selftap_pilot=2.6, latch_barb=0.8)
+           acrylic_pocket=3.2, peg=5.8, plug=4.8, selftap_pilot=2.6, magnet_pocket=6.05)
 
-# snap-on panel system (coupon I): bezel strip section (y across, 0 = window edge; z up from the steel)
-STRIP_W, STRIP_H = 11.0, 6.0
-STRIP_PROFILE = [(0, 0), (11, 0), (11, 1.6), (10, 2.6), (10, 3.6), (11, 4.6), (11, 5.4), (10.4, 6), (0, 6)]
-SKIRT_GAP, SKIRT_T, STEEL_GAP, PLATE_GAP, PANEL_T = 0.2, 1.6, 0.4, 0.4, 3.0
-LATCH_L, LATCH_TOP_GAP, BARB_L = 30.0, 0.7, 20.0
+# magnetic window panels (coupon I): Ø6 × 1.5 disc magnets glued flush, bezel 11 × 2.5, panel 2.6
+MAG_D, MAG_T, MAG_DEPTH = 6.0, 1.5, 1.6
+BEZEL_W, BEZEL_T, PANEL_T = 11.0, 2.5, 2.6
 
 
 def label(part, text, x, y, top_z, size=TXT):
@@ -193,43 +191,32 @@ def coupon_h_saddle(d):
     return p.part
 
 
-def _profile(pts, length):
-    """Prism from a (y, z) outline, length along x, centred."""
+def coupon_i_bezel(length=70.0):
+    """Bezel section (y = 0 is the window edge): 2 bolt holes with counterbores, 3 magnet pockets Ø5.95/6.05/6.15."""
     with BuildPart() as p:
-        with BuildSketch(Plane.YZ.offset(-length / 2)):
-            Polygon(*pts, align=None)
-        extrude(amount=length)
+        Box(length, BEZEL_W, BEZEL_T, align=(Align.CENTER, Align.MIN, Align.MIN))
+        for x in (-length / 2 + 6, length / 2 - 6):
+            with Locations((x, 5.5, 0)):
+                Cylinder(1.7, BEZEL_T, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+            with Locations((x, 5.5, BEZEL_T - 1.8)):
+                Cylinder(3.1, 1.8, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+        for i, d in enumerate((5.95, 6.05, 6.15)):
+            with Locations((-17 + i * 17, 6.5, BEZEL_T - MAG_DEPTH)):
+                Cylinder(d / 2, MAG_DEPTH, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+            label(p, f"{d:.2f}"[1:], -17 + i * 17, 1.7, BEZEL_T, size=2.2)
     return p.part
 
 
-def coupon_i_strip(length=80.0):
-    """Bezel strip section: sits on the steel (z = 0), groove on the outer edge (y = 11), M3 countersunk-ish counterbores."""
-    part = _profile(STRIP_PROFILE, length)
-    for x in (-length / 2 + 12, length / 2 - 12):
-        part -= Pos(x, 5.0, -1) * Cylinder(1.7, 10, align=(Align.CENTER, Align.CENTER, Align.MIN))
-        part -= Pos(x, 5.0, STRIP_H - 1.8) * Cylinder(3.1, 5, align=(Align.CENTER, Align.CENTER, Align.MIN))
+def coupon_i_panel(length=70.0):
+    """Matching panel section, printed face down: pockets on the back over the bezel's, 1 mm lip on the window side."""
     with BuildPart() as p:
-        add(part)
-        label(p, "I strip", 0, 3.6, STRIP_H, size=3.0)
-    return p.part
-
-
-def coupon_i_panel(barb, length=80.0):
-    """Panel strip: 3 mm plate over the strip, skirt round its outer edge, one 30 mm latch (skirt freed from the plate,
-    joined at its ends) with a barb `barb` proud of the skirt's inner face. Assembled frame (z up from the steel);
-    print it plate-down."""
-    y0 = STRIP_W + SKIRT_GAP                                   # skirt inner face
-    zp = STRIP_H + PLATE_GAP                                   # underside of the plate
-    part = Pos(0, (y0 + SKIRT_T + 1.5 - 2) / 2, zp) * Box(length, y0 + SKIRT_T + 1.5 + 2, PANEL_T, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    part += Pos(0, y0 + SKIRT_T / 2, STEEL_GAP) * Box(length, SKIRT_T, zp - STEEL_GAP + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    part -= Pos(0, y0 + SKIRT_T / 2, zp - LATCH_TOP_GAP) * Box(LATCH_L, SKIRT_T + 0.02, LATCH_TOP_GAP + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    zc = 3.1                                                   # groove centre; tip 1 mm tall, 45° faces
-    barb_pts = [(y0 + 0.01, zc - 0.5 - barb), (y0 - barb, zc - 0.5), (y0 - barb, zc + 0.5), (y0 + 0.01, zc + 0.5 + barb)]
-    part += _profile(barb_pts, BARB_L)
-    with BuildPart() as p:
-        add(part)
-        label(p, f"{barb:.1f}", 0, 5.0, zp + PANEL_T, size=4.0)
-        label(p, "I", -length / 2 + 6, 5.0, zp + PANEL_T, size=4.0)
+        Box(length, BEZEL_W + 1.5, PANEL_T, align=(Align.CENTER, Align.MIN, Align.MIN))
+        with Locations((0, -1.5, 0)):
+            Box(length, 1.2, 1.5, align=(Align.CENTER, Align.MIN, Align.MAX))     # lip, drops inside the window edge
+        for i, d in enumerate((5.95, 6.05, 6.15)):
+            with Locations((-17 + i * 17, 6.5, 0)):
+                Cylinder(d / 2, MAG_DEPTH, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+            label(p, f"{d:.2f}"[1:], -17 + i * 17, 10.0, PANEL_T, size=2.2)
     return p.part
 
 
@@ -254,10 +241,7 @@ def build():
 
 
 def build_i():
-    parts = {"I_strip": coupon_i_strip()}
-    for b in (0.6, 0.8, 1.0):
-        parts[f"I_panel_barb_{b:.1f}"] = coupon_i_panel(b)
-    return parts
+    return {"I_magnet_bezel": coupon_i_bezel(), "I_magnet_panel": coupon_i_panel()}
 
 
 def main():
