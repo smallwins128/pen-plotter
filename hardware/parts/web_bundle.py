@@ -31,7 +31,8 @@ def main():
         off += len(v) + len(i)
         if off % 4:
             blobs.append(b"\0" * (4 - off % 4)); off += 4 - off % 4
-    h = json.dumps(dict(q=Q, parts=head)).encode()
+    racks = json.loads((SRC / "penrack.json").read_text()) if (SRC / "penrack.json").exists() else {}
+    h = json.dumps(dict(q=Q, parts=head, racks=racks)).encode()
     h += b" " * (-len(h) % 4)
     DST.write_bytes(base64.b64encode(struct.pack("<I", len(h)) + h + b"".join(blobs)))
     print(f"{len(head)} parts -> {DST.relative_to(HW.parent)} ({DST.stat().st_size / 1e6:.2f} MB)")

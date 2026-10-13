@@ -4,10 +4,12 @@ Every insert shares one mount: a flange on the outside of the steel with 4 M3 bu
 (counterbored), into captive nuts in a printed nut frame stuck to the inside of the steel (VHB tape). So any insert
 swaps from the front without opening the box. The openings and the 4 Ø3.4 holes round each are fixed (steel is cut).
 
-    python3 hardware/parts/window_inserts.py     # writes hardware/out/window_inserts/*.stl + card templates (.svg)
+    python3 hardware/parts/window_inserts.py           # writes hardware/out/window_inserts/*.stl + card templates (.svg)
+    python3 hardware/parts/window_inserts.py penrack   # pen racks only (fast)
 
 Frame: u = x across the front, v = height above the base underside, w = out of the steel (steel outer face w = 0).
 """
+import json
 import math
 import pathlib
 import sys
@@ -35,10 +37,17 @@ ACRYLIC_T, ACRYLIC_POCKET, ACRYLIC_MAR = 3.0, 3.2, 3.0
 BEZEL_T = 5.0
 CARD_SLOT, CARD_MAR = 0.8, 3.0   # card slot depth, card beyond the window
 
-# pens (assumed until measured): body Ø, cap Ø, length; how much stands out of the face
-PEN_D, CAP_D, PEN_L = 11.0, 12.5, 140.0
-PEN_OUT = 45.0
-PEN_FLOOR = E.PLATE_Y[1] + 8.0   # pen tips stay this high above the base underside
+# pen rack: two slotted bands (the insert's top and bottom), slots at the window's slant. Pens go in capped and
+# lean on the downhill wall of each slot, so any diameter sits at the same angle. Leftmost slot takes a marker.
+RACK_ANG = math.radians(E.WIN["ang"])
+RACK_BAND = 16.0       # band height (top and bottom of the insert)
+RACK_FLOOR = 4.0       # floor under the bottom slots
+RACK_CELL_D = 17.0     # slot depth out of the face (Ø15 marker + clearance)
+RACK_FRONT = 2.0       # closed front wall
+RACK_SIDE = 2.5        # wall round the outside of the band
+RACK_WALL = 3.0        # wall between slots, measured across (u)
+RACK_SLOTS = [16.5] + [13.0] * 8    # slot widths square to the pen: marker (<= Ø15), then pens up to Ø12
+RACK_ACCESS = 7.0      # driver hole through the band front over each screw
 
 
 def openings():
@@ -142,33 +151,52 @@ def card_frame(poly, screws, open_side):
     return back_part, front_part, card
 
 
-def pen_garage(poly, screws, kind, n):
-    """Pens stand in angled tubes: tips into the box, caps up and out of the face, leaning back at the top.
-    The angle is the steepest that keeps the pen tips above PEN_FLOOR. A slit snap ring at the bottom of each tube
-    clicks round the pen body."""
+def rack_layout(poly):
+    """Slots placed left to right, as many as fit, then spread to use the width. Each slot is
+    (u of the downhill wall at floor height, width along u, bottom-band polygon, top-band polygon)."""
     F = flange_outline(poly)
-    x0, y0, x1, y1 = poly.bounds
-    v_in = (y0 + y1) / 2 + 4                       # where the pen axis crosses the steel face
-    L_in = PEN_L - PEN_OUT
-    a = math.acos(min(1.0, (v_in - PEN_FLOOR) / L_in))   # from vertical
-    rot = 90 + math.degrees(a)                     # Rot X: +Z -> (0, -cos a, -sin a), down and into the box
-    usable = poly.buffer(-(PEN_D / 2 + 3))
-    span = usable.intersection(sbox(-1e3, v_in - 0.01, 1e3, v_in + 0.01)).bounds
-    pitch = (span[2] - span[0]) / max(1, n - 1)
-    xs = [span[0] + i * pitch for i in range(n)]
-    tube_len = min(L_in - 10, 60.0)
-    part = slab(F, 0, FLANGE) + slab(poly.buffer(-PLUG_GAP), -STEEL, 0)
-    keep = slab(F.buffer(60), -200, FLANGE - 0.05)          # nothing proud of the flange face
-    for x in xs:
-        at = Pos(x, v_in, FLANGE) * Rot(rot, 0, 0)
-        tube = at * Pos(0, 0, -10) * Cylinder(PEN_D / 2 + 1.9, tube_len + 10, align=(Align.CENTER, Align.CENTER, Align.MIN))
-        part = part + (tube & keep)
-    for x in xs:
-        at = Pos(x, v_in, FLANGE) * Rot(rot, 0, 0)
-        part = part - at * Pos(0, 0, -20) * Cylinder(PEN_D / 2 + 0.3, tube_len + 40, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    part = screw_cuts(part, screws, FLANGE)
-    return part, dict(angle_from_vertical=round(math.degrees(a), 1), pens=len(xs), pitch=round(pitch, 1),
-                      into_box=round(L_in * math.sin(a), 1), tip_height=round(v_in - L_in * math.cos(a), 1))
+    x0, y0, x1, y1 = F.bounds
+    vb, vt, fl = y0 + RACK_BAND, y1 - RACK_BAND, y0 + RACK_FLOOR
+    t = math.tan(RACK_ANG)
+    inner = F.buffer(-RACK_SIDE)
+    top_out = sbox(-1e3, y1 - RACK_SIDE - 0.5, 1e3, y1 + 50)     # top slots break out through the top edge
+
+    def para(ur, wc, v0, v1):
+        return Polygon([(ur - wc + (v0 - fl) * t, v0), (ur + (v0 - fl) * t, v0), (ur + (v1 - fl) * t, v1), (ur - wc + (v1 - fl) * t, v1)])
+
+    def fits(ur, wc):
+        return (para(ur, wc, fl, vb + 0.5).difference(inner).area < 1e-3
+                and para(ur, wc, vt - 0.5, y1 + 2).difference(inner.union(top_out)).area < 1e-3)
+
+    urs, wcs, prev = [], [], -1e9
+    for wp in RACK_SLOTS:
+        wc = wp / math.cos(RACK_ANG)
+        ur = max(x0, prev + RACK_WALL + wc)
+        while ur < x1 + 60 and not fits(ur, wc):
+            ur += 0.25
+        if ur >= x1 + 60:
+            break
+        urs.append(ur); wcs.append(wc); prev = ur
+    slack = 0.0                                              # spread the slots: last one as far right as it goes
+    while fits(urs[-1] + slack + 0.25, wcs[-1]):
+        slack += 0.25
+    n = len(urs)
+    urs = [ur + slack * i / max(1, n - 1) for i, ur in enumerate(urs)]
+    return F, (vb, vt, fl), [(ur, wc, para(ur, wc, fl, vb + 0.5), para(ur, wc, vt - 0.5, y1 + 2)) for ur, wc in zip(urs, wcs)]
+
+
+def pen_rack(poly, screws):
+    F, (vb, vt, fl), slots = rack_layout(poly)
+    top_w = FLANGE + RACK_CELL_D + RACK_FRONT
+    bands = F.intersection(sbox(-1e3, -1e3, 1e3, vb)).union(F.intersection(sbox(-1e3, vt, 1e3, 1e3)))
+    part = slab(F, 0, FLANGE) + slab(poly.buffer(-PLUG_GAP), -STEEL, 0) + slab(bands, FLANGE - 0.01, top_w)
+    part = part - slab(unary_union([p for s in slots for p in s[2:]]), FLANGE, FLANGE + RACK_CELL_D)
+    for u, v in screws:
+        part = part - Pos(u, v, -50) * Cylinder(CLEAR / 2, 100, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        part = part - Pos(u, v, FLANGE - CB_H) * Cylinder(RACK_ACCESS / 2, 40, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    info = dict(slots=[dict(u=round(ur, 2), width=round(wc * math.cos(RACK_ANG), 1)) for ur, wc, *_ in slots],
+                floor_v=round(fl, 2), ang=round(math.degrees(RACK_ANG), 1), w_back=FLANGE, cell_d=RACK_CELL_D)
+    return part, info
 
 
 def card_svg(path, card):
@@ -180,9 +208,15 @@ def card_svg(path, card):
                     f'<polygon points="{pts}" fill="none" stroke="#000" stroke-width="0.2"/></svg>')
 
 
-def build():
+def build(only=None):
+    """All parts, or only the families named in `only` (e.g. {"penrack"}): the reliefs take minutes."""
     ops = openings()
     out, info = {}, {}
+    if only:
+        for name in ("power_right", "control"):
+            poly, screws, kind = ops[name]
+            out[f"penrack_{name}"], info[f"penrack_{name}"] = pen_rack(poly, screws)
+        return out, info
     for name, (poly, screws, kind) in ops.items():
         out[f"nutframe_{name}"] = nut_frame(poly, screws)
         out[f"relief_{name}"] = relief(poly, screws, {"power_left": 30, "power_right": -30, "control": 20}[name])
@@ -192,15 +226,15 @@ def build():
         back, front, card = card_frame(poly, screws, side)
         out[f"cardframe_{name}_back"], out[f"cardframe_{name}_front"] = back, front
         info[f"card_{name}"] = card
-    for name, n in (("power_right", 5), ("control", 4)):  # pens per opening
+    for name in ("power_right", "control"):
         poly, screws, kind = ops[name]
-        out[f"pengarage_{name}"], info[f"pengarage_{name}"] = pen_garage(poly, screws, kind, n)
+        out[f"penrack_{name}"], info[f"penrack_{name}"] = pen_rack(poly, screws)
     return out, info
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    parts, info = build()
+    parts, info = build(set(sys.argv[1:]) or None)
     for name, part in parts.items():
         export_stl(part, str(OUT / f"{name}.stl"))
         bb = part.bounding_box()
@@ -211,6 +245,9 @@ def main():
             print(f"{k}: card {v.bounds[2] - v.bounds[0]:.1f} x {v.bounds[3] - v.bounds[1]:.1f} mm -> {k}_template.svg")
         else:
             print(k, v)
+    racks = {k[len("penrack_"):]: v for k, v in info.items() if k.startswith("penrack_")}
+    if racks:                                   # slot positions, for the inspector's demo pens
+        (OUT / "penrack.json").write_text(json.dumps(racks, indent=1))
 
 
 if __name__ == "__main__":

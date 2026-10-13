@@ -179,6 +179,8 @@ mat("plate", 0xd9dfe4, { metalness: 0.5, roughness: 0.45 });
 mat("foot", 0x222222, { roughness: 0.9, metalness: 0 });
 mat("rib", 0x141516, { roughness: 0.42, metalness: 0.05 });
 mat("petg", 0x1b1c1e, { roughness: 0.55, metalness: 0.02, flatShading: true });
+mat("pen", 0xf2c94c, { roughness: 0.5, metalness: 0 });
+mat("pencap", 0x95bfbf, { roughness: 0.5, metalness: 0 });
 mat("card", 0xf3efe6, { roughness: 0.9, metalness: 0 });
 mat("part", 0x7fa7cc, { roughness: 0.7, metalness: 0.05 });
 mat("psu", 0xc9ccd0, { metalness: 0.5, roughness: 0.5 });
@@ -541,14 +543,14 @@ toggle("t-xray", on => SHELL.forEach(n => { M[n].transparent = on; M[n].opacity 
 
 // ---------- window inserts: options per window, meshes from window_inserts.bin ----------
 const INS_OPTS = { power_left: ["none", "acrylic", "relief", "card"], power_right: ["none", "acrylic", "relief", "pen"], control: ["none", "acrylic", "relief", "card", "pen"] };
-const INS_LABEL = { none: "Open", acrylic: "Acrylic", relief: "Relief", card: "Card", pen: "Pens" };
+const INS_LABEL = { none: "Open", acrylic: "Acrylic", relief: "Relief", card: "Card", pen: "Pen rack" };
 const INS_PICK = { power_left: "card", power_right: "pen", control: "pen" };
 const INS_INFO = {
   nutframe: ["Nut frame (inside)", "Black PETG, 4 mm, behind the steel. Hex pockets hold the M3 nuts; VHB keeps it in place so any insert swaps from the front."],
   acrylic_bezel: ["Acrylic bezel", "Black PETG, 5 mm. Pocket holds the 3 mm acrylic; M3 countersunk screws from the front into the nut frame."],
   relief: ["Contour relief", "Black PETG. Raised contour lines fill the window; screws from the front."],
   cardframe: ["Card frame", "Black PETG back plate + thin front frame. The card slips in from the open side."],
-  pengarage: ["Pen garage", "Black PETG. Angled tubes reach into the box; pens drop in nib first. Pen size assumed (Ø11 × 140), not yet confirmed."],
+  penrack: ["Pen rack", "Black PETG. Slotted bands top and bottom at the window's 40° slant; pens go in capped and lean on the downhill wall, so any size sits at the same angle. Leftmost slot takes a marker up to Ø15, the rest pens up to Ø12. Driver holes through the bands reach the screws."],
 };
 function applyInserts() {
   for (const s of INSERT_SLOTS) { const pick = INS_PICK[s.userData.slot];
@@ -581,7 +583,17 @@ fetch("window_inserts.b64.txt").then(r => { if (!r.ok) throw new Error(r.status)
     for (const o of ["acrylic", "relief", "card", "pen"]) add(O[o], `nutframe_${k}`, "nutframe");
     add(O.acrylic, `acrylic_bezel_${k}`, "acrylic_bezel"); add(O.relief, `relief_${k}`, "relief");
     add(O.card, `cardframe_${k}_back`, "cardframe"); add(O.card, `cardframe_${k}_front`, "cardframe", 2.8);   // front frame is modelled flat; it sits on the 0.8 mm card slot
-    add(O.pen, `pengarage_${k}`, "pengarage");
+    add(O.pen, `penrack_${k}`, "penrack");
+    const R = H.racks && H.racks[k];                 // demo pens, capped, leaning on the downhill wall of each slot
+    if (R) R.slots.forEach((sl, j) => {
+      const a = R.ang * Math.PI / 180, d = j ? (j % 2 ? 10 : 12) : 15, L = 140, h = d / 2 * Math.sin(a);
+      const u = sl.u - d / 2 / Math.cos(a) + h * Math.tan(a), v = R.floor_v + h;    // axis point at the capped end
+      const pen = new THREE.Group(); pen.position.set(u, v, R.w_back + d / 2); pen.rotation.z = -a;
+      const body = cyl(d / 2, L - 35, "pen", 20); body.position.y = 35 + (L - 35) / 2;
+      const cap = cyl(d / 2 + 0.3, 35, j ? "pencap" : "dark", 20); cap.position.y = 17.5;
+      body.userData = cap.userData = { name: `Demo pen Ø${d} (capped)`, info: "Illustration only: sizes are typical, not measured." };
+      pen.add(body, cap); O.pen.add(pen);
+    });
   }
   if (document.getElementById("t-steel").getAttribute("aria-pressed") === "true") INSERT_SLOTS.forEach(s => s.traverse(o => { if (o.isMesh) o.visible = false; }));
   document.getElementById("ins-note").textContent = "All three swap from the front: screws into a nut frame behind the steel.";
