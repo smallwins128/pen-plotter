@@ -151,10 +151,9 @@ def card_frame(poly, screws, open_side):
     return back_part, front_part, card
 
 
-def rack_layout(poly):
-    """Slots placed left to right, as many as fit, then spread to use the width. Each slot is
-    (u of the downhill wall at floor height, width along u, bottom-band polygon, top-band polygon)."""
-    F = flange_outline(poly)
+def rack_layout(F, slots=RACK_SLOTS):
+    """Slots in outline F, placed left to right (as many of `slots` as fit), then spread to use the width. Each slot
+    is (u of the downhill wall at floor height, width along u, bottom-band polygon, top-band polygon)."""
     x0, y0, x1, y1 = F.bounds
     vb, vt, fl = y0 + RACK_BAND, y1 - RACK_BAND, y0 + RACK_FLOOR
     t = math.tan(RACK_ANG)
@@ -169,16 +168,16 @@ def rack_layout(poly):
                 and para(ur, wc, vt - 0.5, y1 + 2).difference(inner.union(top_out)).area < 1e-3)
 
     urs, wcs, prev = [], [], -1e9
-    for wp in RACK_SLOTS:
+    for wp in slots:
         wc = wp / math.cos(RACK_ANG)
         ur = max(x0, prev + RACK_WALL + wc)
-        while ur < x1 + 60 and not fits(ur, wc):
+        while ur < x1 + 80 and not fits(ur, wc):
             ur += 0.25
-        if ur >= x1 + 60:
+        if ur >= x1 + 80:
             break
         urs.append(ur); wcs.append(wc); prev = ur
     slack = 0.0                                              # spread the slots: last one as far right as it goes
-    while fits(urs[-1] + slack + 0.25, wcs[-1]):
+    while slack < x1 - x0 and fits(urs[-1] + slack + 0.25, wcs[-1]):
         slack += 0.25
     n = len(urs)
     urs = [ur + slack * i / max(1, n - 1) for i, ur in enumerate(urs)]
@@ -186,7 +185,7 @@ def rack_layout(poly):
 
 
 def pen_rack(poly, screws):
-    F, (vb, vt, fl), slots = rack_layout(poly)
+    F, (vb, vt, fl), slots = rack_layout(flange_outline(poly))
     top_w = FLANGE + RACK_CELL_D + RACK_FRONT
     bands = F.intersection(sbox(-1e3, -1e3, 1e3, vb)).union(F.intersection(sbox(-1e3, vt, 1e3, 1e3)))
     part = slab(F, 0, FLANGE) + slab(poly.buffer(-PLUG_GAP), -STEEL, 0) + slab(bands, FLANGE - 0.01, top_w)
