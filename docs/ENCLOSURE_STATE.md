@@ -70,6 +70,14 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
   placeholder (~60 mm from the wall): re-check when the PSUs are placed.
 - Lofi: https://claude.ai/artifact/ALg9yatCVH13EWULpcy4EN
 
+## Printed parts: fit kit (2026-10-13)
+
+`hardware/parts/fit_kit.py` writes 23 small test prints to `hardware/out/fit_kit/` (A screws/inserts/rivnut recess,
+B GX16 holes, C IEC frames, D LED/stop holes, E bezel corners, F base-plate pegs + accessory plugs, G LED strip holder,
+H cable tie mount + saddles). `FIT` at the top holds the numbers every real part uses; update it from the results.
+- Found: window bezel screws sit 5.5 mm out from the window (fixed by the cut steel) and the acrylic ends 3 mm out, so a
+  Ø4.2 heat-set bore would leave 0.4 mm of plastic. Bezels use self-tapping M3 into a Ø2.6 pilot instead (E tests it).
+
 ## Later (parked)
 
 - Window lighting: status colours (12 V WS2811 strip, data from a spare FluidNC pin via a level shifter: idle /
