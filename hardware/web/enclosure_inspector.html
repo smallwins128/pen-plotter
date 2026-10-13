@@ -22,6 +22,8 @@ body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); }
 h1 { font-size: 17px; margin: 0; letter-spacing: .01em; text-wrap: balance; }
 .sub { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 .group { display: flex; flex-direction: column; gap: 8px; }
+.ins-row { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.note { font-size: 12px; opacity: 0.7; }
 .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
 button, .chip { font: 13px var(--f-ui); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
@@ -69,6 +71,13 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
         <button id="t-steel" aria-pressed="false">Steel only</button>
         <button id="t-laptop" aria-pressed="false">Laptop</button>
       </div>
+    </div>
+    <div class="group">
+      <div class="label">Window inserts (swappable)</div>
+      <div class="ins-row"><span>Power left</span><div class="seg" id="ins-power_left"></div></div>
+      <div class="ins-row"><span>Power right</span><div class="seg" id="ins-power_right"></div></div>
+      <div class="ins-row"><span>Control</span><div class="seg" id="ins-control"></div></div>
+      <div class="note" id="ins-note">Loading parts…</div>
     </div>
     <div class="group">
       <div class="label">Explode</div>
@@ -169,6 +178,8 @@ mat("standoff", 0x9aa3ab, { metalness: 0.8, roughness: 0.3 });
 mat("plate", 0xd9dfe4, { metalness: 0.5, roughness: 0.45 });
 mat("foot", 0x222222, { roughness: 0.9, metalness: 0 });
 mat("rib", 0x141516, { roughness: 0.42, metalness: 0.05 });
+mat("petg", 0x1b1c1e, { roughness: 0.55, metalness: 0.02, flatShading: true });
+mat("card", 0xf3efe6, { roughness: 0.9, metalness: 0 });
 mat("part", 0x7fa7cc, { roughness: 0.7, metalness: 0.05 });
 mat("psu", 0xc9ccd0, { metalness: 0.5, roughness: 0.5 });
 mat("board", 0x2f7a46, { roughness: 0.6 });
@@ -177,8 +188,9 @@ mat("gx", 0xd8dbe0, { metalness: 0.85, roughness: 0.2 });
 mat("dark", 0x18191b, { roughness: 0.6 });
 mat("laptop", 0x9ea3a9, { metalness: 0.4, roughness: 0.35 });
 const SHELL = ["body", "lid", "lip", "tab"];
+const INSERT_SLOTS = [];        // filled by buildBox, one per window
 
-const KEY = [["body", "body sheet"], ["lid", "lid sheet"], ["lip", "lips"], ["tab", "corner tabs"], ["panel", "printed panels"],
+const KEY = [["body", "body sheet"], ["lid", "lid sheet"], ["lip", "lips"], ["tab", "corner tabs"], ["panel", "printed panels"], ["petg", "window inserts (black PETG)"],
              ["rivnut", "rivnuts (lid fixings, plate)"], ["screw", "screws"], ["washer", "washers / nuts"], ["standoff", "standoffs"],
              ["plate", "base plate"], ["foot", "rubber feet"]];
 document.getElementById("key").innerHTML = KEY.map(([m, l]) =>
@@ -376,16 +388,21 @@ function buildBox(kind) {
   root.userData.feat = FEAT; root.userData.top = top;
   // printed panels, placed from the cut files: 3 mm plate outside, 2 mm boss in the cutout, M3 countersunk + nut
   const PN = {};
-  if (GEN.windows && GEN.windows[kind]) for (const w of GEN.windows[kind]) {     // acrylic windows: 3 mm acrylic + black bezel outside
+  // window inserts: one swappable printed part per window (STL meshes arrive later from window_inserts.bin)
+  const WSLOT = kind === "power" ? ["power_left", "power_right"] : ["control"];
+  if (GEN.windows && GEN.windows[kind]) GEN.windows[kind].forEach((w, i) => {
+    const slot = new THREE.Group(); slot.position.z = D/2 + t;       // insert frame: w = 0 on the steel's outer face
+    slot.userData = { slot: WSLOT[i], opt: {} };
     const shape = pts => { const sh = new THREE.Shape(); pts.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath(); return sh; };
+    for (const o of ["acrylic", "relief", "card", "pen"]) { const g = new THREE.Group(); g.visible = false; slot.userData.opt[o] = g; slot.add(g); }
     const ac = new THREE.Mesh(new THREE.ExtrudeGeometry(shape(w.acrylic), { depth: 3, bevelEnabled: false }), M.acrylic);
-    ac.position.z = D/2 + t; ac.userData = { name: "Window acrylic, 3 mm clear", info: "Sits on the steel, 3 mm bigger than the opening all round. The bezel clamps it." };
-    panels.add(ac);
-    const bs = shape(w.bezel); bs.holes.push(holePoly(w.open));
-    const bz = new THREE.Mesh(new THREE.ExtrudeGeometry(bs, { depth: 5, bevelEnabled: false }), M.rib);
-    bz.position.z = D/2 + t; bz.userData = { name: "Window bezel, black PETG", info: `9 mm frame over the acrylic. ${w.screws.length} M3 screws from inside, through the steel, into heat-set inserts.` };
-    panels.add(bz);
-  }
+    ac.userData = { name: "Window acrylic, 3 mm clear", info: "Sits on the steel, 3 mm bigger than the opening all round. The bezel clamps it." };
+    slot.userData.opt.acrylic.add(ac);
+    const cd = new THREE.Mesh(new THREE.ExtrudeGeometry(shape(w.acrylic), { depth: 0.3, bevelEnabled: false }), M.card);
+    cd.position.z = 2.2; cd.userData = { name: "Plot card (your plot, on card)", info: "Slides in from the side between the back plate and the front frame." };
+    slot.userData.opt.card.add(cd);
+    panels.add(slot); INSERT_SLOTS.push(slot);
+  });
   for (const q of GEN.panels[kind]) {
     const [pw, ph] = q.plate, [cw, ch] = q.cut, [sx, sy] = q.screw, bw = cw - 0.6, bh = ch - 0.6;
     const info = `Plate ${pw} × ${ph} × 3 outside; boss ${bw.toFixed(1)} × ${bh.toFixed(1)} × 2 in a ${cw} × ${ch} cutout. M3 countersunk + nut.`;
@@ -521,6 +538,54 @@ toggle("t-laptop", on => laptop.visible = on);
 const STEEL = new Set(["body", "lid", "lip", "tab"].map(n => M[n]));   // the laser-cut, folded 304 parts
 toggle("t-steel", on => [power, control].forEach(b => b.traverse(o => { if (o.isMesh) o.visible = !on || STEEL.has(o.material); })));
 toggle("t-xray", on => SHELL.forEach(n => { M[n].transparent = on; M[n].opacity = on ? 0.22 : 1; M[n].depthWrite = !on; M[n].needsUpdate = true; }));
+
+// ---------- window inserts: options per window, meshes from window_inserts.bin ----------
+const INS_OPTS = { power_left: ["none", "acrylic", "relief", "card"], power_right: ["none", "acrylic", "relief", "pen"], control: ["none", "acrylic", "relief", "card", "pen"] };
+const INS_LABEL = { none: "Open", acrylic: "Acrylic", relief: "Relief", card: "Card", pen: "Pens" };
+const INS_PICK = { power_left: "card", power_right: "pen", control: "pen" };
+const INS_INFO = {
+  nutframe: ["Nut frame (inside)", "Black PETG, 4 mm, behind the steel. Hex pockets hold the M3 nuts; VHB keeps it in place so any insert swaps from the front."],
+  acrylic_bezel: ["Acrylic bezel", "Black PETG, 5 mm. Pocket holds the 3 mm acrylic; M3 countersunk screws from the front into the nut frame."],
+  relief: ["Contour relief", "Black PETG. Raised contour lines fill the window; screws from the front."],
+  cardframe: ["Card frame", "Black PETG back plate + thin front frame. The card slips in from the open side."],
+  pengarage: ["Pen garage", "Black PETG. Angled tubes reach into the box; pens drop in nib first. Pen size assumed (Ø11 × 140), not yet confirmed."],
+};
+function applyInserts() {
+  for (const s of INSERT_SLOTS) { const pick = INS_PICK[s.userData.slot];
+    for (const [o, g] of Object.entries(s.userData.opt)) g.visible = o === pick; }
+}
+for (const [slot, opts] of Object.entries(INS_OPTS)) {
+  const seg = document.getElementById(`ins-${slot}`);
+  for (const o of opts) {
+    const b = document.createElement("button"); b.textContent = INS_LABEL[o]; b.setAttribute("aria-pressed", String(o === INS_PICK[slot]));
+    b.addEventListener("click", () => { press(`ins-${slot}`, b); INS_PICK[slot] = o; applyInserts(); });
+    seg.appendChild(b);
+  }
+}
+applyInserts();
+fetch("window_inserts.b64.txt").then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }).then(b64 => {
+  const buf = Uint8Array.from(atob(b64.trim()), c => c.charCodeAt(0)).buffer;
+  const hl = new DataView(buf).getUint32(0, true), H = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, hl))), base = 4 + hl;
+  const geo = {};
+  for (const p of H.parts) {
+    const v = new Int16Array(buf.slice(base + p.v, base + p.v + p.nv * 6)), pos = new Float32Array(v.length);
+    for (let k = 0; k < v.length; k++) pos[k] = v[k] / H.q;
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(buf.slice(base + p.i, base + p.i + p.nt * 12)), 1));
+    g.computeVertexNormals(); geo[p.name] = g;
+  }
+  const add = (g, name, key, dz = 0) => { if (!geo[name]) return; const m = new THREE.Mesh(geo[name], M.petg); m.position.z = dz; const [n, i] = INS_INFO[key];
+    m.userData = { name: `${n} · ${name.replace(/^[a-z]+_/, "").replace(/_/g, " ")}`, info: i }; g.add(m); };
+  for (const s of INSERT_SLOTS) {
+    const k = s.userData.slot, O = s.userData.opt;
+    for (const o of ["acrylic", "relief", "card", "pen"]) add(O[o], `nutframe_${k}`, "nutframe");
+    add(O.acrylic, `acrylic_bezel_${k}`, "acrylic_bezel"); add(O.relief, `relief_${k}`, "relief");
+    add(O.card, `cardframe_${k}_back`, "cardframe"); add(O.card, `cardframe_${k}_front`, "cardframe", 2.8);   // front frame is modelled flat; it sits on the 0.8 mm card slot
+    add(O.pen, `pengarage_${k}`, "pengarage");
+  }
+  if (document.getElementById("t-steel").getAttribute("aria-pressed") === "true") INSERT_SLOTS.forEach(s => s.traverse(o => { if (o.isMesh) o.visible = false; }));
+  document.getElementById("ins-note").textContent = "All three swap from the front: screws into a nut frame behind the steel.";
+}).catch(e => { document.getElementById("ins-note").textContent = "Insert parts did not load (" + e.message + ")."; });
 const ex = document.getElementById("explode");
 ex.addEventListener("input", () => { explode = +ex.value; document.getElementById("explode-v").textContent = Math.round(explode * 100) + "%"; layout(); });
 
