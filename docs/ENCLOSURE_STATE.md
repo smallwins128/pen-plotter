@@ -59,6 +59,17 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
   (model still assumes 2 mm; 1 mm SS over 205 × 255 standoff spans will flex under the PSUs; mild steel needs plating or paint).
 - Next: the 3D printed parts.
 
+## Mains panel (power box left wall, printed 150 × 85 over the 130 × 65 cut) — parts chosen 2026-10-13
+
+- 3-in-1 IEC C14 module (inlet + 5×20 fuse + lit rocker), snap-in, flange 50 × 30, cutout ~47.5 × 27.5 (confirm by
+  coupon); clips want a 1–2 mm panel, so the print thins to 1.5 mm round it. Check the rocker is double-pole; fit a
+  slow-blow T3.15–T4 A fuse.
+- 2 × 12 mm 12–24 V green metal LEDs (Ø12 holes), stacked: one on 24 V, one on 12 V.
+- LA38-11ZS latching stop: Ø22 hole, Ø29.6 head, 50.7 deep behind the face, block 42 × 29.5; NC contact in series with
+  mains after the switch. Check its AC rating covers both supplies (~2–2.5 A at 230 V). Depth may touch the 24 V PSU
+  placeholder (~60 mm from the wall): re-check when the PSUs are placed.
+- Lofi: https://claude.ai/artifact/ALg9yatCVH13EWULpcy4EN
+
 ## Later (parked)
 
 - Window lighting: status colours (12 V WS2811 strip, data from a spare FluidNC pin via a level shifter: idle /
