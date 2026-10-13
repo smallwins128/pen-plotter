@@ -4,6 +4,7 @@ Each coupon tests one interface in a few sizes. Print them all (PETG, 0.2 mm lay
 and the size that fits becomes the number every real part uses (FIT below).
 
     python3 hardware/parts/fit_kit.py          # writes hardware/out/fit_kit/*.stl + a preview PNG
+    python3 hardware/parts/fit_kit.py I        # coupon I only
 
   A  screws + inserts   M3 clearance 3.2/3.4/3.6 · heat-set bores 4.0/4.2/4.4 · rivnut flange recess Ø8.5/9.0 × 1
   B  GX16               panel holes 16.0/16.2/16.4 in a 3 mm plate
@@ -14,12 +15,15 @@ and the size that fits becomes the number every real part uses (FIT below).
                         snap plugs for the Ø5 accessory holes in 1 mm steel: 4.6/4.8/5.0
   G  LED strip holder   clamps under a bezel screw inside; channel for 8 mm and 10 mm strip
   H  cable holders      cable-tie mount and two snap saddles (Ø6, Ø9), all on a 5.8 peg for 2 mm plate
+  I  snap-on panels     80 mm of bezel strip (11 × 6, 45° groove on the outer edge) and three panel strips with one
+                        30 mm latch each, barb 0.6/0.8/1.0 proud of the skirt. Bolt the strip to anything, push each
+                        panel on and pull it off: pick the one that clicks on firmly and still pulls off by hand
 """
 import math
 import pathlib
 
 from build123d import (Align, Axis, Box, BuildPart, BuildSketch, Cylinder, Locations, Mode, Plane, Pos, Rectangle,
-                       RegularPolygon, Rot, SlotOverall, Text, add, chamfer, export_stl, extrude, fillet)
+                       Polygon, RegularPolygon, Rot, SlotOverall, Text, add, chamfer, export_stl, extrude, fillet)
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "out" / "fit_kit"
 TXT = 3.2            # label height
@@ -27,7 +31,13 @@ ENGRAVE = 0.5
 
 # the numbers the real parts will use, until the kit says otherwise
 FIT = dict(m3_clear=3.4, insert_bore=4.2, rivnut_recess=9.0, gx16=16.2, led=12.2, stop=22.3,
-           acrylic_pocket=3.2, peg=5.8, plug=4.8, selftap_pilot=2.6)
+           acrylic_pocket=3.2, peg=5.8, plug=4.8, selftap_pilot=2.6, latch_barb=0.8)
+
+# snap-on panel system (coupon I): bezel strip section (y across, 0 = window edge; z up from the steel)
+STRIP_W, STRIP_H = 11.0, 6.0
+STRIP_PROFILE = [(0, 0), (11, 0), (11, 1.6), (10, 2.6), (10, 3.6), (11, 4.6), (11, 5.4), (10.4, 6), (0, 6)]
+SKIRT_GAP, SKIRT_T, STEEL_GAP, PLATE_GAP, PANEL_T = 0.2, 1.6, 0.4, 0.4, 3.0
+LATCH_L, LATCH_TOP_GAP, BARB_L = 30.0, 0.7, 20.0
 
 
 def label(part, text, x, y, top_z, size=TXT):
@@ -183,6 +193,46 @@ def coupon_h_saddle(d):
     return p.part
 
 
+def _profile(pts, length):
+    """Prism from a (y, z) outline, length along x, centred."""
+    with BuildPart() as p:
+        with BuildSketch(Plane.YZ.offset(-length / 2)):
+            Polygon(*pts, align=None)
+        extrude(amount=length)
+    return p.part
+
+
+def coupon_i_strip(length=80.0):
+    """Bezel strip section: sits on the steel (z = 0), groove on the outer edge (y = 11), M3 countersunk-ish counterbores."""
+    part = _profile(STRIP_PROFILE, length)
+    for x in (-length / 2 + 12, length / 2 - 12):
+        part -= Pos(x, 5.0, -1) * Cylinder(1.7, 10, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        part -= Pos(x, 5.0, STRIP_H - 1.8) * Cylinder(3.1, 5, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    with BuildPart() as p:
+        add(part)
+        label(p, "I strip", 0, 3.6, STRIP_H, size=3.0)
+    return p.part
+
+
+def coupon_i_panel(barb, length=80.0):
+    """Panel strip: 3 mm plate over the strip, skirt round its outer edge, one 30 mm latch (skirt freed from the plate,
+    joined at its ends) with a barb `barb` proud of the skirt's inner face. Assembled frame (z up from the steel);
+    print it plate-down."""
+    y0 = STRIP_W + SKIRT_GAP                                   # skirt inner face
+    zp = STRIP_H + PLATE_GAP                                   # underside of the plate
+    part = Pos(0, (y0 + SKIRT_T + 1.5 - 2) / 2, zp) * Box(length, y0 + SKIRT_T + 1.5 + 2, PANEL_T, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    part += Pos(0, y0 + SKIRT_T / 2, STEEL_GAP) * Box(length, SKIRT_T, zp - STEEL_GAP + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    part -= Pos(0, y0 + SKIRT_T / 2, zp - LATCH_TOP_GAP) * Box(LATCH_L, SKIRT_T + 0.02, LATCH_TOP_GAP + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    zc = 3.1                                                   # groove centre; tip 1 mm tall, 45° faces
+    barb_pts = [(y0 + 0.01, zc - 0.5 - barb), (y0 - barb, zc - 0.5), (y0 - barb, zc + 0.5), (y0 + 0.01, zc + 0.5 + barb)]
+    part += _profile(barb_pts, BARB_L)
+    with BuildPart() as p:
+        add(part)
+        label(p, f"{barb:.1f}", 0, 5.0, zp + PANEL_T, size=4.0)
+        label(p, "I", -length / 2 + 6, 5.0, zp + PANEL_T, size=4.0)
+    return p.part
+
+
 def build():
     parts = {"A_screws_inserts_rivnut": coupon_a(), "B_gx16": coupon_b(), "D_led_stop": coupon_d()}
     for i, (cw, ch) in enumerate(((47.0, 27.0), (47.5, 27.5), (48.0, 28.0))):
@@ -199,12 +249,21 @@ def build():
     parts["H_tie_mount"] = coupon_h_tie()
     for d in (6, 9):
         parts[f"H_saddle_{d}mm"] = coupon_h_saddle(d)
+    parts.update(build_i())
+    return parts
+
+
+def build_i():
+    parts = {"I_strip": coupon_i_strip()}
+    for b in (0.6, 0.8, 1.0):
+        parts[f"I_panel_barb_{b:.1f}"] = coupon_i_panel(b)
     return parts
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for name, part in build().items():
+    import sys
+    for name, part in (build_i() if sys.argv[1:] == ["I"] else build()).items():
         export_stl(part, str(OUT / f"{name}.stl"))
         bb = part.bounding_box()
         print(f"{name:34s} {bb.size.X:6.1f} x {bb.size.Y:5.1f} x {bb.size.Z:4.1f}  vol {part.volume / 1000:5.2f} cm3")
