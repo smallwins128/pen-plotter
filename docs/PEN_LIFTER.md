@@ -6,14 +6,18 @@ _Started 2026-10-14. Lofi layout agreed for inspection, nothing printed yet._
 
 The reference is a build Allwin shared (photos, not in the repo). On Etch's flat bed it works like this:
 
-- **Flexure, not a slide.** A printed parallel-leaf flexure (two pairs of leaves, top and bottom) carries a
-  shuttle straight up and down. The pen stays square to the paper, and there is nothing to bind or wear.
+- **A loop spring in line with the lift.** Three printed oval loops are stacked on top of the shuttle, joined
+  only at their middles, under a shelf on the bracket. Lifting the pen squashes them by 4 mm; they spring back
+  and put the pen on the paper. The shuttle runs in a printed vertical guide on the bracket, which keeps the pen
+  about 37 mm from the carriage face.
+  (A first draft used horizontal parallel leaves. That pushed the pen ~85 mm out on four thin cantilevers, and
+  the spring did not act along the lift. Dropped.)
 - **Pick face and pen plate.** The shuttle carries a pick face. Each pen is clamped by a grub screw into its own
   pen plate. Every plate has the same outline and hangs on the pick face by 4 × Ø6 magnets, and two 90° ridges in
   an L locate it in X and Z.
 - **Servo lifts, never holds a stop.** The servo arm lifts the shuttle by a tab from below. At pen down the arm
-  drops 1.2 mm clear of the tab, so the pen lands under its own weight plus the flexure, and the servo holds
-  nothing. At pen up it holds only the flexure and the plate. There is no hard stop anywhere in its travel,
+  drops 1.2 mm clear of the tab, so the pen lands on the spring and its own weight, and the servo holds
+  nothing. At pen up it holds only the squashed spring and the plate. There is no hard stop anywhere in its travel,
   which is the FINDINGS 7b rule.
 - **Switch reads, never stops.** A microswitch reads pen up from a second tab. The tab meets the lever 0.5 mm
   before full lift, and the lever's over-travel takes the rest.
@@ -28,18 +32,19 @@ changes.
 | Quantity | Value | Source |
 |---|---|---|
 | Lift | 4 mm | chosen |
-| Flexure leaves | 8 leaves, 10 wide × 40 long, 0.6 / 0.8 / 1.0 thick | coupon J picks |
-| Flexure stiffness | 0.22 / 0.51 / 1.0 N/mm, i.e. 88 / 209 / 408 g at 4 mm | **estimate**, PETG E ≈ 2 GPa |
-| Leaf strain at 4 mm | 0.45–0.75 % | estimate; PETG is comfortable under 1 % |
-| Servo torque at 4 mm, 8 mm arm | 0.07–0.33 kg·cm, plus the plate and pen | estimate; an MG90S is rated ~1.8 kg·cm |
+| Spring | 3 loops, 40 long × 8 high × 8 deep, 0.6 / 0.8 / 1.0 thick, 30 mm free height | coupon J picks |
+| Force at 4 mm squash | 0.6: 30–115 g · 0.8: 70–270 g · 1.0: 130–530 g | **estimate**, PETG E ≈ 2 GPa; loop ends somewhere between pinned and fixed, hence the range |
+| Loop strain at 4 mm | 0.2–0.4 % | estimate; PETG is comfortable under 1 % |
+| Servo torque at 4 mm, 8 mm arm | up to ~0.4 kg·cm with 1.0 loops, plus the plate and pen | estimate; an MG90S is rated ~1.8 kg·cm |
+| Pen-down force | plate + pen + shuttle weight; add preload by lowering the shelf | to tune on paper |
 
-That last row is the point of the design: the old lift carried a ~400 g Ender carriage on a 30 mm crank and
+The servo torque row is the point of the design: the old lift carried a ~400 g Ender carriage on a 30 mm crank and
 needed ~1.2 kg·cm. Less torque means less servo current, and current is what resets the board.
 
 ## Fit kit coupons (hardware/parts/fit_kit.py, `python3 hardware/parts/fit_kit.py P`)
 
-- **J flexure 0.6 / 0.8 / 1.0.** Stand it on the fixed block's foot on a kitchen scale and press the shuttle down.
-  The reading just before the foot lands is the force at 4 mm. Pick the thinnest one that feels steady sideways.
+- **J spring 0.6 / 0.8 / 1.0.** Stand it on a kitchen scale and press the top bar down. The reading just before
+  the bar lands on its two stop posts is the force at 4 mm of squash. It should spring straight back.
 - **K pick face + pen plate.** Press magnets in using coupon I's pocket size, N out on the face and S out on the
   plate. Check it seats with no rock, and hang weights to find the pull-off force.
 - **L channel 0.2 / 0.3 / 0.4.** Slide the K plate's flange in. Pick the tightest that runs free by hand.
@@ -56,4 +61,4 @@ The page is generic: point its `parts-data` meta at any bundle that `web_bundle.
 - ACRO or the current frame: only the mount bracket depends on it.
 - Servo: MG90S-class (small current, the point of the design) or the MG996R already fitted.
 - Pen capping in the dock, so parked pens don't dry out.
-- Plate weight, i.e. the pen-down force: the flexure adds some and the plate sets the rest.
+- Plate weight, i.e. the pen-down force: the spring adds preload if the shelf is lowered, and the plate sets the rest.

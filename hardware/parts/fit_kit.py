@@ -18,6 +18,12 @@ and the size that fits becomes the number every real part uses (FIT below).
   I  magnet panels     bezel section (11 × 2.5, 2 bolt holes) and panel section (2.6, lip), 3 pockets each for
                         Ø6 × 1.5 magnets: Ø5.95 / 6.05 / 6.15 × 1.6 deep. Press magnets in (bezel N out, panel S
                         in): the tightest pocket that doesn't crack sets the size; then feel the pull
+  J  pen-lift spring    three-loop spring, loops 0.6/0.8/1.0 thick; press it on a kitchen scale until the top bar
+                        lands on its stop posts (4 mm of squash) and read the force
+  K  pick face + plate  4 magnets on an 18 mm square, two 90 deg ridges in an L; check it seats without rocking
+  L  dock channel       flange slot 2.2/2.3/2.4 for K's 2.0 flange; the tightest that runs free by hand
+
+    python3 hardware/parts/fit_kit.py P        # pen-lifter coupons (J, K, L) only
 """
 import math
 import pathlib
@@ -221,37 +227,56 @@ def coupon_i_panel(length=70.0):
 
 
 # ---------------------------------------------------------------------------
-# Pen lifter (docs/PEN_LIFTER.md): flexure, pick face + pen plate, dock channel
+# Pen lifter (docs/PEN_LIFTER.md): loop spring, pick face + pen plate, dock channel
 # ---------------------------------------------------------------------------
 
-# Parallel-leaf flexure: 4 leaves (two pairs), L long, H tall, printed standing on the bed.
-FLEX_L, FLEX_H = 40.0, 8.0
-FLEX_TRAVEL = 4.0          # the shuttle's nose stands this far below the fixed block's foot
+# Loop spring: three oval loops stacked along the lift, joined only at their middles by short pads. Lifting the pen
+# squashes the loops; they spring back and put the pen on the paper. Printed flat (profile in XY), DEPTH deep.
+SPRING_L, SPRING_LOOP_H, SPRING_PAD, SPRING_PAD_W, SPRING_DEPTH, SPRING_LOOPS = 40.0, 8.0, 1.5, 4.0, 8.0, 3
+SPRING_H = SPRING_LOOPS * SPRING_LOOP_H + (SPRING_LOOPS + 1) * SPRING_PAD     # free height, pad to pad
+SPRING_TRAVEL = 4.0         # the coupon's stop posts land after this much squash
 PICK = 32.0                # pick face / pen plate, square
 PICK_MAG = 9.0             # magnet pockets on a 2 x 9 = 18 mm square
 RIDGE_H = 1.5              # 90 deg locating ridges on the pick face; the plate's grooves are cut 0.2 shallower
 FLANGE_T, FLANGE_W = 2.0, 3.0   # pen-plate side flange that slides into the dock channel
 
 
-def coupon_j(t):
-    """Flexure: fixed block, two pairs of leaves t thick, shuttle. Stand it on the fixed block's foot on a kitchen
-    scale and press down: the shuttle's nose touches first and the reading just before the foot lands is the force
-    at FLEX_TRAVEL."""
-    blk, h_tot = 14.0, 30.0
+def loop_spring(t, depth=SPRING_DEPTH):
+    """The spring alone, u along the loops, v = 0 at the bottom pad's foot up to SPRING_H, z = 0..depth."""
     with BuildPart() as p:
         with BuildSketch():
-            with Locations((-blk / 2, h_tot / 2)):
-                Rectangle(blk, h_tot)                                   # fixed block, foot = its bottom edge
-            with Locations((FLEX_L + blk / 2, h_tot / 2 + 1.0)):
-                Rectangle(blk, h_tot - 2.0)                             # shuttle
-            with Locations((FLEX_L + blk / 2, -FLEX_TRAVEL / 2 + 1.0)):
-                Rectangle(6.0, FLEX_TRAVEL + 2.0)                       # nose, FLEX_TRAVEL below the foot
-            for yc in (5.0, h_tot - 5.0):                               # two pairs, each 5 mm apart
-                for dy in (-2.5, 2.5):
-                    with Locations((FLEX_L / 2, yc + dy)):
-                        Rectangle(FLEX_L + 0.2, t)
-        extrude(amount=FLEX_H)
-        label(p, f"J{t:.1f}", -blk / 2, h_tot / 2, FLEX_H, size=3.0)
+            v = 0.0
+            for i in range(SPRING_LOOPS):
+                with Locations((0, v + SPRING_PAD / 2)):
+                    Rectangle(SPRING_PAD_W, SPRING_PAD + 0.2)
+                v += SPRING_PAD
+                with Locations((0, v + SPRING_LOOP_H / 2)):
+                    SlotOverall(SPRING_L, SPRING_LOOP_H)
+                    SlotOverall(SPRING_L - 2 * t, SPRING_LOOP_H - 2 * t, mode=Mode.SUBTRACT)
+                v += SPRING_LOOP_H
+            with Locations((0, v + SPRING_PAD / 2)):
+                Rectangle(SPRING_PAD_W, SPRING_PAD + 0.2)
+        extrude(amount=depth)
+    return p.part
+
+
+def coupon_j(t):
+    """Loop spring between a base and a top bar. Stand it on a kitchen scale and press the top bar down: the
+    reading just before the bar lands on the two stop posts is the force at SPRING_TRAVEL of squash."""
+    w, bar = SPRING_L + 12.0, 4.0
+    with BuildPart() as p:
+        with BuildSketch():
+            with Locations((0, bar / 2)):
+                Rectangle(w, bar)                                       # base
+            with Locations((0, bar + SPRING_H + bar / 2)):
+                Rectangle(w, bar)                                       # top bar
+            post = SPRING_H - SPRING_TRAVEL
+            for x in (-w / 2 + 2.0, w / 2 - 2.0):
+                with Locations((x, bar + post / 2)):
+                    Rectangle(4.0, post)                                # stop posts
+        extrude(amount=SPRING_DEPTH)
+        add(loop_spring(t).moved(Pos(0, bar, 0)))
+        label(p, f"J{t:.1f}", 0, bar / 2, SPRING_DEPTH, size=2.6)
     return p.part
 
 
@@ -316,7 +341,7 @@ def coupon_l(c):
 
 
 def build_pen():
-    parts = {f"J_flexure_{t:.1f}": coupon_j(t) for t in (0.6, 0.8, 1.0)}
+    parts = {f"J_spring_{t:.1f}": coupon_j(t) for t in (0.6, 0.8, 1.0)}
     parts["K_pick_face"] = coupon_k_face()
     parts["K_pen_plate"] = coupon_k_plate()
     parts.update({f"L_channel_{c:.1f}": coupon_l(c) for c in (0.2, 0.3, 0.4)})
