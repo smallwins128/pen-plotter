@@ -12,7 +12,10 @@ _Started 2026-10-14. Lofi layout in the inspector, nothing printed yet._
   per side, a couple of tenths of a millimetre at the pen tip.
 - **Gravity puts the pen down.** No spring. The pen-down force is the weight of shuttle, bearings, pick face,
   plate and pen, about 50 g (estimate; weigh it). To press harder, add weight to the plate.
-- **The servo only lifts.** An MG90S-size servo lies on its side above the top ear, between the rods. It
+- **The servo only lifts, and it is swappable.** The servo bay sits above the rod tips (the rods stay 79 mm).
+  Either servo (MG90S or MG996R) drops into its own printed cradle. Both cradles put the horn face on the same
+  shaft point and bolt on with the same two M3, so the crank, window and switch never move. To swap: unplug, two
+  screws, and fit that servo's crank, since each has its own spline. The servo It
   turns a 3.5 mm toggle crank whose pin sits in a window on the shuttle:
   - at pen down (−30°) the pin hangs 1.1 mm clear of the window's top edge, so the servo holds nothing
     (FINDINGS 7b)
@@ -24,7 +27,8 @@ _Started 2026-10-14. Lofi layout in the inspector, nothing printed yet._
   4 × Ø6 magnets, and two 90° ridges in an L. Docks catch the plate's flanges; the head slides a plate in along
   X at pen-up height and backs off in −Y.
 
-The head is 48 mm wide, and the pen sits 41 mm from the carriage face. It bolts to the ACRO front plate's 31 mm
+The head is 48 mm wide at the shuttle. The bay is 56 mm wide with the MG996R fitted, and its top stands ~170 mm
+above the paper. The pen sits 41 mm from the carriage face. It bolts to the ACRO front plate's 31 mm
 M3 square if ACRO goes ahead; otherwise only the bracket's back changes.
 
 ### How we got here (2026-10-14)
@@ -34,6 +38,17 @@ M3 square if ACRO goes ahead; otherwise only the bracket's back changes.
 3. A folded-beam suspension (frictionless, no play) made the head 114 mm wide. Dropped as too wide.
 4. **Rods + gravity + lift-only servo (this).** Narrowest, proven, and no spring for the servo to fight.
    Then sized to Allwin's rods: 28 mm apart so the servo fits between them, printed bushings instead of LM4UU.
+
+### Which servo when
+
+| | MG90S | MG996R |
+|---|---|---|
+| Size, weight (catalogue) | 22.8 × 12.2 × 28.5 mm, ~13 g | 40.7 × 19.7 × 42.9 mm, ~55 g |
+| Start-up current spike (FINDINGS 6a) | ~0.7 A | ~2.5 A |
+| Use it | as the default | after the power fixes (2200 µF at the servo, regulator on the carriage), or for the T15 load test |
+
+Each servo needs its own pen-up and pen-down S values: the same pulse gives a different angle on each.
+Servo sizes in the model are catalogue figures. Measure both before printing the cradles.
 
 ## Numbers (estimates until measured)
 
@@ -60,7 +75,7 @@ current, and current is what resets the board.
 ## To buy
 
 - Rods: have them (2 × Ø3.92 × 79)
-- 1 × MG90S (metal gear) servo
+- Servos: have both (MG90S, MG996R)
 - 1 × mini microswitch with lever
 
 ## Inspector

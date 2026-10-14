@@ -162,13 +162,14 @@ function setScene(s) {
   current = s;
   for (const b of $("scenes").children) b.setAttribute("aria-pressed", b.dataset.s === s);
   $("rig").hidden = s !== "assembly";
-  const groups = new Map();
+  const groups = new Map();                                     // group -> [colour, starts hidden]
   for (const m of meshes) {
-    m.visible = m.userData.scene === s;
-    if (m.visible && !groups.has(m.userData.group)) groups.set(m.userData.group, m.userData.color);
+    const inScene = m.userData.scene === s;
+    m.visible = inScene && !m.userData.hidden;
+    if (inScene && !groups.has(m.userData.group)) groups.set(m.userData.group, [m.userData.color, !!m.userData.hidden]);
   }
-  $("layers").innerHTML = [...groups].map(([g, c], i) =>
-    `<label><input type="checkbox" id="layer${i}" data-g="${g}" checked><span class="sw" style="background:${c}"></span>${g}</label>`).join("");
+  $("layers").innerHTML = [...groups].map(([g, [c, off]], i) =>
+    `<label><input type="checkbox" id="layer${i}" data-g="${g}"${off ? "" : " checked"}><span class="sw" style="background:${c}"></span>${g}</label>`).join("");
   select(null); pose(); view("iso");
 }
 
