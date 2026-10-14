@@ -18,8 +18,8 @@ and the size that fits becomes the number every real part uses (FIT below).
   I  magnet panels     bezel section (11 × 2.5, 2 bolt holes) and panel section (2.6, lip), 3 pockets each for
                         Ø6 × 1.5 magnets: Ø5.95 / 6.05 / 6.15 × 1.6 deep. Press magnets in (bezel N out, panel S
                         in): the tightest pocket that doesn't crack sets the size; then feel the pull
-  J  rod fits          for Ø3.92 rods: block bores 3.95/4.00/4.05/4.10 (rod slides through under its own weight,
-                        no rattle) and carrier/bridge press holes 3.80/3.85/3.90 (rod presses in by hand and stays)
+  J  rod fits          for Ø3.92 rods: wing bores 3.95/4.00/4.05/4.10 (rod slides through under its own weight,
+                        no rattle) and guide end-wall press holes 3.80/3.85/3.90 (rod presses in by hand and stays)
   K  pick face + plate  4 magnets on an 18 mm square, two 90 deg ridges in an L; check it seats without rocking
   L  dock channel       flange slot 2.2/2.3/2.4 for K's 2.0 flange; the tightest that runs free by hand
 

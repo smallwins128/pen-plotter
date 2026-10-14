@@ -3,22 +3,24 @@
     python3 hardware/parts/pen_lifter.py      # -> hardware/out/pen_lifter/*.stl + meta.json
                                               #    -> hardware/web/pen_lifter.b64.txt (parts inspector data)
 
-The idea (docs/PEN_LIFTER.md), after the AxiDraw pen lift:
-  * the moving stage is a pen carrier at the bottom and a bridge at the top, joined by Allwin's two rods
-    (Ø3.92 x 79, measured). The rods slide through a fixed block on the bracket: a round bore on one rod locates
-    the stage, a slot on the other only stops it turning, so the stage cannot bind
-  * gravity puts the pen down: the pen force is the stage's weight. No spring
-  * the servo only lifts. A 9 g servo (SG90 or MG90S, same body) lies on top of the block between the rods; its
-    stock horn lifts a lip that hangs down from the bridge. At pen down the horn sits HORN_DROP below the lip, so
-    the servo holds nothing (FINDINGS 7b)
-  * the carrier holds a pick face; the pen plate (pen clamped by a grub screw) hangs on it by 4 magnets and
+The idea (docs/PEN_LIFTER.md): Allwin's pen guide + holder (hardware/ref/pen_guide/, as downloaded) with Etch's
+swappable magnetic pen plate in place of the holder's pen clamp.
+  * the guide bolts flat to the carriage. Its two end walls hold two rods, 30 apart, 23 out from the carriage;
+    Allwin's rods are Ø3.92 x 79, so they jut 9 mm out of the top wall
+  * the holder rides the rods on two 5 mm thick wings 40 apart: a round bore on one rod, a slot on the other, so
+    it cannot bind. The guide gives it ~9 mm of free travel; the pen uses 4
+  * gravity puts the pen down. No spring
+  * a 9 g servo (SG90 or MG90S) sits in the guide's open-sided pocket, tabs screwed to the guide's side, body
+    sticking out the side; its stock horn lifts a tab under the holder. At pen down the horn sits HORN_DROP below
+    the tab, so the servo holds nothing (FINDINGS 7b)
+  * the holder's front is the pick face; the pen plate (pen clamped by a grub screw) hangs on it by 4 magnets and
     locates on two 90 deg ridges, so pens swap
-  * a microswitch over the bridge reads "pen up". Sensor only, never a stop
+  * a microswitch beside the top of the guide reads "pen up". Sensor only, never a stop
   * docks hold parked plates by their flanges; the head slides a plate in along X and backs off in -Y
 
 Frame (mm): x along the head, y out of the carriage (carriage face at y = 0), z up, paper at z = 0, pen tip on
 the paper at pen down. The carriage is the ACRO front plate Allwin printed (hardware/ref/acro/), shown for
-context only: ACRO is not decided yet, and only the bracket's back changes if it isn't.
+context only: ACRO is not decided yet, and only the guide's mounting holes change if it isn't.
 
 Everything here is a placeholder size unless the fit kit (coupons J, K, L) has measured it.
 """
@@ -40,37 +42,43 @@ DATA = HW / "web" / "pen_lifter.b64.txt"
 
 LIFT = 4.0                # pen travel
 PEN_D = 9.0               # placeholder barrel; the plate's clamp bore is per pen
-Z0 = 40.0                 # bottom of the carrier at pen down
-H = 32.0                  # carrier / pick face / plate height (= PICK)
+Z0 = 40.0                 # bottom of the pick face / pen plate at pen down
+H = 32.0                  # pick face / plate height (= PICK)
 
-# y stations, carriage face outwards: bracket back plate, carrier back, carrier front, pick face's mating face
-Y_BACK, Y_SHUT0, Y_SHUT = 5.0, 6.0, 24.0
-Y_FACE = Y_SHUT + 5.0
-X_SHUT = 18.0             # carrier / block / bridge half width
+# Guide, from Allwin's pen_guide.stl (measured): 40 wide, 70 long (along the rods), 28 deep; base 5; end walls
+# 7.9 thick with the rod holes 30 apart at 23 from the base; blocks 17 high under the wings at each end; an open
+# 23 mm pocket between them for the servo, tab pilot holes 28 apart in the side faces at 11 from the base.
+G_W, G_L, G_D, G_BASE, G_WALL, G_BLOCK = 40.0, 70.0, 28.0, 5.0, 7.9, 17.0
+G_POCKET = (27.0, 50.0)                                # along the rods, from the guide's bottom
+ROD_X, ROD_Y = 15.0, 23.0
+# Holder, from Allwin's pen_holder.stl: two wings 40 wide x 12 deep x 5 thick, 40 apart (45 overall), riding the
+# rods; here the wings carry the pick face instead of the pen clamp.
+HOLD_L, WING_T, WING_Y = 45.0, 5.0, (18.0, 30.0)
+Y_SHUT = WING_Y[1]                                     # pick face back (on the wings)
+Y_FACE = Y_SHUT + 5.0                                  # pick face's mating face
+X_SHUT = G_W / 2
+Z_HOLD = Z0 - (HOLD_L - H) / 2                         # holder bottom at pen down: pick face centred on it
+Z_GUIDE = Z_HOLD - G_WALL - 3.0                        # guide bottom: 3 mm under the lower wing at pen down
 
-# rods: Allwin's, measured 2026-10-14. They move with the stage, pressed into the carrier and the bridge
+# rods: Allwin's, measured 2026-10-14. Pressed into the guide's end walls; the holder slides on them
 ROD_D, ROD_LEN = 3.92, 79.0
-ROD_X, ROD_Y = 14.0, 11.0             # 28 apart, near the back so the servo's mounting tabs clear them
-BUSH_D, BUSH_SLOT = 4.05, 6.0         # block bores: round on +x, slot BUSH_SLOT long in x on -x (coupon J)
+ROD_PRESS = 3.85                      # end-wall holes (coupon J)
+BUSH_D, BUSH_SLOT = 4.05, 6.0         # wing bores: round on +x, slot on -x (coupon J)
+Z_ROD = (Z_GUIDE, Z_GUIDE + ROD_LEN)  # stand on the guide's bottom, jut out of the top wall
 
-# z stack at pen down: carrier, gap (lift + 1), fixed block, servo on the block, bridge just over the servo
-Z_BLOCK = (Z0 + H + LIFT + 1.0, Z0 + H + LIFT + 1.0 + 25.0)
-SERVO = dict(lx=22.8, wz=12.2, hy=22.7, shaft_x=5.9, spline=4.0, tabs=32.5, tab_y=15.9)   # 9 g class, catalogue
-Z_SERVO = Z_BLOCK[1] + 0.5                             # body bottom
-SHAFT = (-SERVO["lx"] / 2 + SERVO["shaft_x"], Y_BACK + SERVO["hy"] + SERVO["spline"], Z_SERVO + SERVO["wz"] / 2)
-HORN_R, HORN_T, HORN_W = 10.0, 1.8, 4.0               # stock single-arm horn: contact radius, thickness, width
-HORN_DROP = 1.5                                        # horn tip below the lip at pen down (AxiDraw: 1-2 mm)
+# servo: 9 g class (catalogue). Tabs on the guide's -x side face, body sticking out; shaft along +x
+SERVO = dict(hx=22.7, wy=12.2, lz=22.8, shaft_z=5.9, spline=4.0, tabs=32.5, tab_from_top=6.8)
+X_TABS = -G_W / 2                                      # tab plane: the guide's side face
+X_TOP = X_TABS + 2.5 + SERVO["tab_from_top"]           # body face the shaft comes out of
+SHAFT = (X_TOP + SERVO["spline"], G_BASE + SERVO["wy"] / 2 + 0.1, Z_GUIDE + G_POCKET[1] - SERVO["shaft_z"])
+HORN_R, HORN_T, HORN_W = 8.0, 1.8, 4.0               # stock single-arm horn, pointing out (+y) at contact
+HORN_DROP = 1.5                                        # horn tip below the tab at pen down (AxiDraw: 1-2 mm)
 PHI_REST, PHI_CONTACT = -math.degrees(math.asin(HORN_DROP / HORN_R)), 0.0
 PHI_UP = math.degrees(math.asin(LIFT / HORN_R))
-Z_LIP = SHAFT[2] + HORN_W / 2                          # lip underside at pen down: on the level horn's top edge
-Z_BRIDGE = Z_SERVO + SERVO["wz"] + 1.3                 # bridge underside at pen down
-BRIDGE_T = 6.0
-Z_ROD = (Z_BRIDGE + BRIDGE_T - ROD_LEN, Z_BRIDGE + BRIDGE_T)   # rods end flush with the bridge top
-X_LIP = (-X_SHUT, -X_SHUT + 8.0)                       # the lip hangs down at the -x end, over the horn tip
-Y_LIP = (SHAFT[1] - 3.7, SHAFT[1] + HORN_T + 2.5)
-Z_SQUARE = Z0 + 30.0                                   # centre of the ACRO plate's 31 mm M3 square
+Z_TAB = SHAFT[2] + HORN_W / 2                          # tab underside at pen down: on the level horn's top edge
+Z_SQUARE = Z_GUIDE + G_L / 2                           # ACRO 31 mm M3 square, centred on the guide
 
-MOVING_N = 0.7            # carrier + rods (~15 g) + bridge + pick face + plate + pen, ~70 g: ESTIMATE, weigh it
+MOVING_N = 0.45           # holder + pick face + plate + pen, ~45 g: an ESTIMATE, weigh it
 
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -94,78 +102,96 @@ def zcyl(x, y, z0, z1, d):
     return c.part
 
 
-def bracket():
-    """Back plate on the ACRO 31 mm square, and the fixed block the rods slide through: round bore on +x, slot
-    on -x."""
-    top = Z_BRIDGE + BRIDGE_T + LIFT + 14.0
-    back = box(-X_SHUT - 4, X_SHUT + 4, 0, Y_BACK, Z0 - 6, top)
+def guide():
+    """Allwin's guide, re-drawn: base on the carriage (4 M3 on the ACRO 31 mm square added), end walls with the
+    rod holes, blocks under the wings, the open servo pocket between them."""
+    zg = Z_GUIDE
+    base = box(-X_SHUT, X_SHUT, 0, G_BASE, zg, zg + G_L)
+    walls = [box(-X_SHUT, X_SHUT, 0, G_D, z, z + G_WALL) for z in (zg, zg + G_L - G_WALL)]
+    blocks = [box(-X_SHUT, X_SHUT, 0, G_BLOCK, zg + G_WALL, zg + G_POCKET[0]),
+              box(-X_SHUT, X_SHUT, 0, G_BLOCK, zg + G_POCKET[1], zg + G_L - G_WALL)]
+    g = union(base, *walls, *blocks)
+    for sx in (-1, 1):
+        g = g - zcyl(sx * ROD_X, ROD_Y, zg - 1, zg + G_L + 1, ROD_PRESS)
     with BuildPart() as holes:
         for x in (-15.5, 15.5):
             for dz in (-15.5, 15.5):
-                with Locations((x, Y_BACK / 2, Z_SQUARE + dz)):
-                    Cylinder(1.7, Y_BACK, rotation=(90, 0, 0))
-    block = box(-X_SHUT, X_SHUT, Y_BACK, Y_SHUT, *Z_BLOCK)
-    block = block - zcyl(ROD_X, ROD_Y, Z_BLOCK[0] - 1, Z_BLOCK[1] + 1, BUSH_D)
-    half = (BUSH_SLOT - BUSH_D) / 2
-    slot = box(-ROD_X - half, -ROD_X + half, ROD_Y - BUSH_D / 2, ROD_Y + BUSH_D / 2, Z_BLOCK[0] - 1, Z_BLOCK[1] + 1)
-    for dx in (-half, half):
-        slot = slot + zcyl(-ROD_X + dx, ROD_Y, Z_BLOCK[0] - 1, Z_BLOCK[1] + 1, BUSH_D)
-    return union(back - holes.part, block - slot)
+                with Locations((x, G_BASE / 2, Z_SQUARE + dz)):
+                    Cylinder(1.7, G_BASE, rotation=(90, 0, 0))
+    return g - holes.part
 
 
 def rods():
     return union(*[zcyl(sx * ROD_X, ROD_Y, *Z_ROD, ROD_D) for sx in (-1, 1)])
 
 
-def carrier():
-    """Bottom of the moving stage: rods pressed in from above, pick face on its front."""
-    c = box(-X_SHUT, X_SHUT, Y_SHUT0, Y_SHUT, Z0, Z0 + H)
-    for sx in (-1, 1):
-        c = c - zcyl(sx * ROD_X, ROD_Y, Z_ROD[0], Z0 + H + 1, ROD_D)
-    return c
-
-
-def bridge():
-    """Top of the moving stage: rods pressed in, a lip hanging down in front of the servo for the horn to lift,
-    and a tab for the pen-up switch."""
-    b = box(-X_SHUT, X_SHUT, Y_SHUT0, Y_SHUT, Z_BRIDGE, Z_BRIDGE + BRIDGE_T)
-    reach = box(X_LIP[0], X_LIP[1], Y_SHUT, Y_LIP[1], Z_BRIDGE, Z_BRIDGE + BRIDGE_T)      # forward over the servo
-    lip = box(X_LIP[0], X_LIP[1], Y_LIP[0], Y_LIP[1], Z_LIP, Z_BRIDGE)                    # down to the horn
-    for sx in (-1, 1):
-        b = b - zcyl(sx * ROD_X, ROD_Y, Z_BRIDGE - 1, Z_BRIDGE + BRIDGE_T + 1, ROD_D)
-    return union(b, reach, lip)
+def holder():
+    """Allwin's holder, re-drawn: two wings on the rods (round bore +x, slot -x), joined by the pick face's back
+    plate, and a tab under it at the servo side for the horn to lift."""
+    wings = [box(-X_SHUT, X_SHUT, *WING_Y, z, z + WING_T) for z in (Z_HOLD, Z_HOLD + HOLD_L - WING_T)]
+    back = box(-X_SHUT, X_SHUT, WING_Y[1] - 4.0, Y_SHUT, Z_HOLD, Z_HOLD + HOLD_L)
+    tab = box(SHAFT[0] - 1.0, SHAFT[0] + HORN_T + 3.0, G_BLOCK + 0.5, Y_SHUT, Z_TAB, Z_TAB + 4.0)   # clears the blocks
+    h = union(*wings, back, tab)
+    for z in (Z_HOLD, Z_HOLD + HOLD_L - WING_T):
+        h = h - zcyl(ROD_X, ROD_Y, z - 1, z + WING_T + 1, BUSH_D)
+        half = (BUSH_SLOT - BUSH_D) / 2
+        slot = box(-ROD_X - half, -ROD_X + half, ROD_Y - BUSH_D / 2, ROD_Y + BUSH_D / 2, z - 1, z + WING_T + 1)
+        for dx in (-half, half):
+            slot = slot + zcyl(-ROD_X + dx, ROD_Y, z - 1, z + WING_T + 1, BUSH_D)
+        h = h - slot
+    return h
 
 
 def servo():
-    """9 g servo lying on the block: length along x, shaft out along +y, mounting tabs clear of the rods."""
+    """9 g servo in the guide's pocket: tabs on the -x side face, body out the side, shaft along +x."""
     d = SERVO
-    x0, y1 = -d["lx"] / 2, Y_BACK + d["hy"]
-    body = box(x0, x0 + d["lx"], Y_BACK, y1, Z_SERVO, Z_SERVO + d["wz"])
-    ext = (d["tabs"] - d["lx"]) / 2
-    tabs = box(x0 - ext, x0 + d["lx"] + ext, Y_BACK + d["tab_y"], Y_BACK + d["tab_y"] + 2.5, Z_SERVO, Z_SERVO + d["wz"])
+    zb = SHAFT[2] + d["shaft_z"] - d["lz"]                         # shaft near the body's upper end
+    y0, y1 = SHAFT[1] - d["wy"] / 2, SHAFT[1] + d["wy"] / 2
+    body = box(X_TOP - d["hx"], X_TOP, y0, y1, zb, zb + d["lz"])
+    ext = (d["tabs"] - d["lz"]) / 2
+    tabs = box(X_TABS - 2.5, X_TABS, y0, y1, zb - ext, zb + d["lz"] + ext)
     with BuildPart() as sp:
-        with Locations((SHAFT[0], y1, SHAFT[2])):
-            Cylinder(2.4, d["spline"], rotation=(-90, 0, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
+        with Locations((X_TOP, SHAFT[1], SHAFT[2])):
+            Cylinder(2.4, d["spline"], rotation=(0, 90, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
     return body + tabs + sp.part
 
 
 def horn():
-    """Stock single-arm horn, modelled level with the arm towards -x. The inspector turns it about the shaft (y)."""
+    """Stock single-arm horn, modelled level pointing out (+y). The inspector turns it about the shaft (x)."""
     with BuildPart() as h:
         with Locations(SHAFT):
-            Cylinder(3.5, HORN_T, rotation=(-90, 0, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
-    arm = box(SHAFT[0] - HORN_R, SHAFT[0], SHAFT[1], SHAFT[1] + HORN_T, SHAFT[2] - HORN_W / 2, SHAFT[2] + HORN_W / 2)
+            Cylinder(3.5, HORN_T, rotation=(0, 90, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
+    arm = box(SHAFT[0], SHAFT[0] + HORN_T, SHAFT[1], SHAFT[1] + HORN_R, SHAFT[2] - HORN_W / 2, SHAFT[2] + HORN_W / 2)
     return h.part + arm
 
 
 def switch():
-    """Mini microswitch over the bridge, between the rods. The bridge meets the lever 0.5 mm before full lift and
-    the lever's over-travel takes the rest: it reads pen up, it never stops the stage."""
-    zb = Z_BRIDGE + BRIDGE_T + LIFT - 0.5
-    body = box(-2.0, 10.8, Y_SHUT0 + 2, Y_SHUT0 + 7.8, zb + 3.0, zb + 9.5)
-    lever = box(0.0, 9.0, Y_SHUT0 + 3, Y_SHUT0 + 6.8, zb, zb + 3.0)
-    post = box(-2.0, 10.8, Y_BACK, Y_SHUT0 + 2, zb + 3.0, zb + 9.5)
+    """Mini microswitch on the guide's +x side over a tab on the upper wing. The tab meets the lever 0.5 mm before
+    full lift and the lever's over-travel takes the rest: it reads pen up, it never stops the holder."""
+    zt = Z_HOLD + HOLD_L                                           # upper wing top at pen down
+    zb = zt + LIFT - 0.5
+    body = box(X_SHUT + 1.0, X_SHUT + 7.5, WING_Y[0], WING_Y[0] + 12.8, zb + 3.0, zb + 9.5)
+    lever = box(X_SHUT + 2.0, X_SHUT + 6.5, WING_Y[0] + 2.0, WING_Y[0] + 10.0, zb, zb + 3.0)
+    post = box(X_SHUT, X_SHUT + 1.0, 0, WING_Y[0] + 12.8, zb + 3.0, zb + 9.5)
     return union(body, lever, post)
+
+
+def switch_tab():
+    zt = Z_HOLD + HOLD_L
+    return box(X_SHUT - 1.0, X_SHUT + 7.0, WING_Y[0] + 2.0, WING_Y[0] + 10.0, zt - 3.0, zt)
+
+
+def reference():
+    """Allwin's two STLs as downloaded, placed where the re-drawn parts are: a check that the re-draw matches."""
+    g = trimesh.load(HW / "ref" / "pen_guide" / "pen_guide.stl")
+    h = trimesh.load(HW / "ref" / "pen_guide" / "pen_holder.stl")
+    to_ours = trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0])   # (x, y, z) -> (x, -z, y)
+    for m in (g, h):
+        m.apply_transform(to_ours)
+        m.apply_transform(trimesh.transformations.scale_matrix(-1, [0, 0, 0], [0, 1, 0]))   # y back to +out
+    g.apply_translation([-G_W / 2, 0, Z_GUIDE])
+    h.apply_translation([-G_W / 2 + 10.0, 28.0, Z_HOLD])
+    return g + h
 
 
 def pick_face():
@@ -243,27 +269,30 @@ PARTS = {
     "carriage_acro_front": (carriage, "Context", "context", None,
                             "ACRO X carriage front plate, from Allwin's print. Context only: ACRO not decided."),
     "paper": (paper, "Context", "paper", None, "Paper at z = 0."),
-    "bracket": (bracket, "Head (fixed)", "fixed", None,
-                f"Back plate on the 31 mm M3 square, and the fixed block the rods slide through: round "
-                f"\u00d8{BUSH_D} bore on the right, {BUSH_SLOT:.0f} mm slot on the left, {Z_BLOCK[1] - Z_BLOCK[0]:.0f} long."),
-    "rods": (rods, "Moving stage", "steel", "lift",
-             f"Allwin's rods, \u00d8{ROD_D} x {ROD_LEN:.0f} (measured), {2 * ROD_X:.0f} apart. Pressed into the "
-             f"carrier and the bridge; they move with the pen."),
-    "carrier": (carrier, "Moving stage", "shuttle", "lift", "Bottom of the moving stage; the pick face is on its front."),
-    "bridge": (bridge, "Moving stage", "shuttle", "lift",
-               f"Top of the moving stage. Its lip hangs down in front of the servo; the horn lifts it."),
+    "guide": (guide, "Guide (fixed)", "fixed", None,
+              f"Allwin's pen guide, re-drawn: {G_W:.0f} x {G_L:.0f} x {G_D:.0f}, rods {2 * ROD_X:.0f} apart; "
+              f"4 M3 on the ACRO 31 mm square added; rod holes \u00d8{ROD_PRESS} press fit."),
+    "rods": (rods, "Guide (fixed)", "steel", None,
+             f"Allwin's rods, \u00d8{ROD_D} x {ROD_LEN:.0f} (measured), pressed into the end walls, jutting "
+             f"{Z_ROD[1] - Z_GUIDE - G_L:.0f} mm out of the top."),
+    "holder": (holder, "Holder (moving)", "shuttle", "lift",
+               f"Allwin's holder, re-drawn: two wings on the rods (round \u00d8{BUSH_D} bore right, slot left), "
+               f"carrying the pick face instead of the pen clamp. Lift tab under it for the horn."),
+    "switch_tab": (switch_tab, "Holder (moving)", "shuttle", "lift", "Tab that trips the pen-up switch."),
     "pick_face": (pick_face, "Pen plate + pick face", "pick", "lift",
                   "4 magnet pockets on an 18 mm square, two 90 deg ridges in an L. Coupon K."),
     "pen_plate": (plate, "Pen plate + pick face", "plate", "lift",
                   "Same outline for every pen; clamp bore per pen, grub screw on top. Flanges ride the dock rails."),
     "pen": (pen, "Pen plate + pick face", "pen", "lift", f"Placeholder pen, \u00d8{PEN_D:.0f}."),
     "servo": (servo, "Servo + switch", "servo", None,
-              "9 g servo (SG90 or MG90S, same body; catalogue size), lying on the block between the rods."),
+              "9 g servo (SG90 / MG90S; catalogue size) in the guide's pocket, tabs on its side, body out the side."),
     "servo_horn": (horn, "Servo + switch", "arm", "crank",
                    f"Stock single-arm horn, {HORN_R:.0f} mm to the contact. Pen down {PHI_REST:.0f} deg "
-                   f"({HORN_DROP} mm under the lip), pen up {PHI_UP:.0f} deg."),
+                   f"({HORN_DROP} mm under the tab), pen up {PHI_UP:.0f} deg."),
     "pen_up_switch": (switch, "Servo + switch", "switch", None,
-                      "Bridge meets the lever 0.5 mm before full lift; over-travel takes the rest. Sensor only."),
+                      "Tab meets the lever 0.5 mm before full lift; over-travel takes the rest. Sensor only."),
+    "reference_as_downloaded": (reference, "Reference: Allwin's STLs", "ref", None,
+                                "pen_guide.stl and pen_holder.stl exactly as downloaded, placed over the re-draw."),
     "dock": (dock, "Dock", "dock", None,
              "One dock. Rails with lips hold the flanges; slide in along +x, head backs off in -y."),
     "dock_parked_plate": (lambda: plate(LIFT, DOCK_X), "Dock", "plate", None, "A parked plate, at pen-up height."),
@@ -271,12 +300,13 @@ PARTS = {
 }
 
 # where each part goes when the inspector explodes the head (mm at full explode)
-EXPLODE = dict(carriage_acro_front=(0, -30, 0), bracket=(0, -14, 0), rods=(0, 0, 25), bridge=(0, 0, 40),
-               carrier=(0, 6, -10), pick_face=(0, 18, -10), pen_plate=(0, 40, -10), pen=(0, 40, -10),
-               servo=(0, 0, 22), servo_horn=(0, 12, 22), pen_up_switch=(0, 0, 55))
+EXPLODE = dict(carriage_acro_front=(0, -30, 0), guide=(0, -12, 0), rods=(0, -6, 40), holder=(0, 10, 0),
+               switch_tab=(0, 10, 0), pick_face=(0, 22, 0), pen_plate=(0, 42, 0), pen=(0, 42, 0),
+               servo=(-30, 0, 0), servo_horn=(-30, 10, 0), pen_up_switch=(25, 0, 0))
 
 COLOURS = dict(context="#9aa3a8", paper="#f4f4f0", fixed="#e9ecee", pick="#2f2f33", plate="#e9ecee", pen="#f2a33a",
-               servo="#2c4a7a", arm="#f2f2f2", switch="#3b3b3b", dock="#e9ecee", shuttle="#2fa25a", steel="#8f989e")
+               servo="#2c4a7a", arm="#f2f2f2", switch="#3b3b3b", dock="#e9ecee", shuttle="#2fa25a", steel="#8f989e",
+               ref="#d9480f")
 
 
 def export_assembly():
@@ -291,7 +321,8 @@ def export_assembly():
         else:
             export_stl(part, str(OUT / f"{name}.stl"))
         meta[name] = dict(scene="assembly", group=group, color=COLOURS[col], anim=anim, note=note,
-                          opacity=0.35 if name == "carriage_acro_front" else 1.0, explode=EXPLODE.get(name))
+                          opacity=0.35 if name in ("carriage_acro_front", "reference_as_downloaded") else 1.0,
+                          explode=EXPLODE.get(name), hidden=name == "reference_as_downloaded")
     return meta
 
 
@@ -320,7 +351,7 @@ def export_fit_kit():
 def main():
     meta = export_assembly()
     meta.update(export_fit_kit())
-    rig = dict(lift=LIFT, shaft=SHAFT, crank_axis="y", crank_r=HORN_R, phi_rest=PHI_REST, phi_contact=PHI_CONTACT,
+    rig = dict(lift=LIFT, shaft=SHAFT, crank_axis="x", crank_r=HORN_R, phi_rest=PHI_REST, phi_contact=PHI_CONTACT,
                phi_up=PHI_UP, k_est=0.0, moving_n=MOVING_N, compare_arm=HORN_R)
     (OUT / "meta.json").write_text(json.dumps(dict(meta=meta, rig=rig, title="Pen lifter, lofi"), indent=1))
     pack(OUT, DATA)
