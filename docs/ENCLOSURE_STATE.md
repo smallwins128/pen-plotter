@@ -23,8 +23,10 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Windows (v5, 2026-10-14): three identical **143 × 50 rectangles, R5** (`WIN`, `WIN_X` in `enclosure.py`): control
   front right of the GX plates, power front at both edges (u ±53.5…±196.5). 4 M3 rivnuts per window, one per side, 7 mm
   out from the edge. Panels (bezel 13 + rim 1.5) stay 15 mm from the box edges and the GX plates (corner tabs inside
-  are 15 wide). Printed: a bolted bezel (13 × 3.5, 4 Ø6 × 1.5 magnets glued flush, N out) stays on; panels (relief,
-  acrylic frame, card holder, pen garage) carry 4 magnets (S in) + a 1 mm locating lip and pull off from the front.
+  are 15 wide). Printed (`hardware/parts/window_inserts.py`): a bolted bezel (13 × 3.5, 4 Ø6 × 1.5 magnets glued
+  flush, N out) stays on; panels carry 4 magnets (S in) and pull off from the front: **inlay** (3 mm pocket: the window
+  acrylic, or a 149 × 56 card on a printed backer), **relief**, **pen cup** (one open cup, 70 % of the card height,
+  22 deep). Logo spine + plate modelled too (`logo_parts`).
 - Power front (v5): vent rows at 145 and 42 (middle top row dropped), 3 Ø5 accessory holes at 30 mm, and a **logo
   keyhole slot** in the middle (`LOGO`: 4.2 slot with two 13 × 13 entries; a printed spine's 2 dovetail lugs go out
   through the entries from inside and drop 15; a 48 × 79 logo plate slides down onto them, a hidden spring finger clicks

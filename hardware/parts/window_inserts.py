@@ -48,19 +48,14 @@ ACR_POCKET, ACR_MAR, ACR_LIP = 3.2, 3.0, 1.2
 # card panel: rectangular; card sits in a 1 mm slot in front of the plate, behind a glued-on front frame
 CARD_T = 0.4                                  # card inlay: card stock on a printed backer, 3 mm together
 
-# pen rack: slotted bars at the window's slant, 15 mm proud. Pens go in capped and lean on the downhill wall of
-# their slot, so any size sits at the same angle. The marker slot is cut through the plate (its back sits just
-# over the bezel / inside the window) so a Ø15 marker fits under the same bars.
-RACK_ANG = math.radians(40.0)
-RACK_PROUD = 15.7
-RACK_FRONT = 2.0
-RACK_BAND = 14.0                              # bar height
-RACK_FLOOR = 3.0                              # floor under the bottom slots
-RACK_WALL = 3.0                               # between slots, along u
-RACK_SIDE = 2.5                               # round the outside
-RACK_SLOTS = [16.5, 13.0, 13.0, 13.0]         # widths square to the pen: marker (<= Ø15), 3 pens (<= Ø12)
-MARKER_BACK = BEZEL_T + 0.3                   # marker slot back face (clears the bezel where it crosses it)
-MARKER_WALL = 2.0                             # back wall under the marker, inside the window
+# pen cup: one open-top pocket across the bottom of the panel; pens drop in and lean on the plate
+CUP_H_FRAC = 0.7                               # cup height = 70 % of the card height
+CUP_DEPTH, CUP_WALL, CUP_FLOOR, CUP_SIDE = 22.0, 2.0, 3.0, 3.0
+
+# logo mount (power front centre): spine through the keyhole slot, logo plate slides down onto it (E.LOGO)
+LOGO_T, LOGO_SKIN, LOGO_GAP = 4.4, 1.1, 0.2   # plate thickness, solid front skin, plate off the steel
+LUG = dict(h=12.0, narrow=7.2, wide=10.0, t=2.5, neck=4.0)
+SPINE_PLATE = (30.0, 2.5)
 
 
 def openings():
@@ -95,6 +90,16 @@ def slab(poly, w0, w1):
     return out
 
 
+def prism_wu(pts_uw, v0, v1):
+    """Prism from a (u, w) outline, running along v from v0 to v1."""
+    from build123d import BuildPart, BuildSketch, Plane, Polygon as BPolygon
+    with BuildPart() as p:
+        with BuildSketch(Plane.XZ.offset(-v0)):
+            BPolygon(*pts_uw, align=None)
+        extrude(amount=-(v1 - v0))
+    return p.part
+
+
 def rounded(poly, r):
     return poly.buffer(-r, join_style=1).buffer(r, join_style=1)
 
@@ -113,17 +118,12 @@ _MAGS = {}
 
 def magnets(name):
     """The window's 4 magnet centres, shared by its bezel and every panel: 2 on the straight top edge, 2 on the
-    bottom, as far apart as they go, clear of the bolts and (pen windows) of where the marker slot crosses the top."""
+    bottom, as far apart as they go, clear of the rivnuts."""
     if name in _MAGS:
         return _MAGS[name]
     op, screws, _ = openings()[name]
     x0, y0, x1, y1 = op.bounds
     avoid = []
-    if name in ("power_right", "control"):
-        p = pen_layout(name)[3][0][2]
-        b = p.intersection(sbox(-1e3, y1 + MAG_OFF - 4, 1e3, y1 + MAG_OFF + 4)).bounds
-        if b:
-            avoid.append((b[0] - 4, b[2] + 4))
     out = []
     for top in (True, False):
         v = y1 + MAG_OFF if top else y0 - MAG_OFF
@@ -213,81 +213,56 @@ def card_backer(op):
     return slab(inlay_outline(op), PANEL_Z + 0.05, PANEL_Z + ACR_POCKET - CARD_T)
 
 
-def rack_layout(F, slots, deep_ok, op):
-    """Slots placed left to right inside outline F, then spread to use the width. The bars sit across the window
-    rows (so the marker slot, cut through the plate, has the window behind it); deep_ok: where the marker slot may
-    sit. Returns (bars (vb0, vb1, vt0, vt1), floor v, slots), each slot (u of the downhill wall at floor height,
-    width along u, polygon from the floor up past the top bar)."""
-    x0, y0, x1, y1 = F.bounds
-    t = math.tan(RACK_ANG)
-    inner = F.buffer(-RACK_SIDE)
-    oy0, oy1 = op.bounds[1], op.bounds[3]
-    fl = oy0 + MARKER_WALL + 0.5
-    vb0, vb1 = fl - RACK_FLOOR, fl - RACK_FLOOR + RACK_BAND
-    vt1 = oy1 - MARKER_WALL - 0.5
-    vt0 = vt1 - RACK_BAND
-
-    def para(ur, wc, v0, v1):
-        return Polygon([(ur - wc + (v0 - fl) * t, v0), (ur + (v0 - fl) * t, v0), (ur + (v1 - fl) * t, v1), (ur - wc + (v1 - fl) * t, v1)])
-
-    def fits(i, ur, wc):
-        region = deep_ok if i == 0 else inner
-        return (para(ur, wc, fl, vb1).difference(region).area < 1e-3
-                and para(ur, wc, vt0, vt1).difference(region).area < 1e-3)
-
-    urs, wcs, prev = [], [], -1e9
-    for i, wp in enumerate(slots):
-        wc = wp / math.cos(RACK_ANG)
-        ur = max(x0, prev + RACK_WALL + wc)
-        while ur < x1 + 80 and not fits(i, ur, wc):
-            ur += 0.25
-        if ur >= x1 + 80:
-            break
-        urs.append(ur); wcs.append(wc); prev = ur
-    slack = 0.0                                              # spread the pen slots: last one as far right as it goes
-    while slack < x1 - x0 and fits(len(urs) - 1, urs[-1] + slack + 0.25, wcs[-1]):
-        slack += 0.25
-    n = len(urs)
-    urs = urs[:1] + [ur + slack * i / max(1, n - 1) for i, ur in enumerate(urs) if i]
-    return (vb0, vb1, vt0, vt1), fl, [(ur, wc, para(ur, wc, fl, vt1 + 40)) for ur, wc in zip(urs, wcs)]
-
-
-_PENS = {}
-
-
-def pen_layout(name):
-    """Rectangular outline (widened on the right until the 4 slots fit) and the slot layout."""
-    if name not in _PENS:
-        op = openings()[name][0]
-        deep_ok = op.buffer(-(MARKER_WALL + 0.5), join_style=1)   # marker back wall stays inside the window
-        for ext in range(0, 61, 2):
-            outline = rect(name, op, ext)
-            bars, fl, slots = rack_layout(outline, RACK_SLOTS, deep_ok, op)
-            if len(slots) == len(RACK_SLOTS):
-                break
-        _PENS[name] = (outline, bars, fl, slots)
-    return _PENS[name]
-
-
-def pen_panel(name, op):
-    """Rectangular panel, two slotted bars; marker slot first (left), cut through the plate."""
-    outline, (vb0, vb1, vt0, vt1), fl, slots = pen_layout(name)
+def cup_panel(name, op):
+    """Rounded panel with one open-top cup across its bottom: 70 % of the card height, 22 mm deep inside."""
+    outline = contour(name, op)
     part, top = base(name, op, outline)
-    front = top + RACK_PROUD
-    bars = outline.intersection(sbox(-1e3, vb0, 1e3, vb1)).union(outline.intersection(sbox(-1e3, vt0, 1e3, vt1)))
-    part += slab(bars, top - 0.01, front)
-    cell_front = front - RACK_FRONT
-    for i, (ur, wc, p) in enumerate(slots):
-        if i == 0:                                           # through the plate; back walls under the bars, in the window
-            part -= slab(p.intersection(outline.buffer(1)), PANEL_Z - LIP_H - 0.5, cell_front)
-            pb = p.buffer(MARKER_WALL, join_style=2)
-            back = unary_union([pb.intersection(sbox(-1e3, fl - MARKER_WALL, 1e3, vb1)), pb.intersection(sbox(-1e3, vt0, 1e3, vt1))])
-            part += slab(back.intersection(op.buffer(-0.5)), MARKER_BACK - MARKER_WALL, MARKER_BACK)
-        else:
-            part -= slab(p.intersection(outline.buffer(1)), top, cell_front)
-    info = dict(slots=[dict(u=round(ur, 2), width=round(wc * math.cos(RACK_ANG), 1), w_back=round(MARKER_BACK if i == 0 else top, 2))
-                       for i, (ur, wc, _) in enumerate(slots)], floor_v=round(fl, 2), ang=round(math.degrees(RACK_ANG), 1))
+    x0, y0, x1, y1 = outline.bounds
+    card_h = op.bounds[3] - op.bounds[1] + 2 * ACR_MAR
+    v0 = op.bounds[1] - ACR_MAR
+    v1 = v0 + CUP_H_FRAC * card_h
+    outer = sbox(x0 + CUP_SIDE, v0, x1 - CUP_SIDE, v1).intersection(outline.buffer(-1.0))
+    inner = sbox(x0 + CUP_SIDE + CUP_WALL, v0 + CUP_FLOOR, x1 - CUP_SIDE - CUP_WALL, v1 + 1)
+    part += slab(outer, top - 0.01, top + CUP_DEPTH + CUP_WALL)
+    part -= slab(inner, top, top + CUP_DEPTH)
+    ib = inner.bounds
+    info = dict(u0=round(ib[0], 2), u1=round(ib[2], 2), floor_v=round(v0 + CUP_FLOOR, 2), top_v=round(v1, 2),
+                w_back=round(top, 2), w_front=round(top + CUP_DEPTH, 2))
     return part, info
+
+
+def logo_parts():
+    """Spine (fits from inside: lugs out through the keyhole entries, then drops) and the logo plate (slides down
+    from above; a hidden spring finger in its back clicks under the bottom lug). Assembled positions."""
+    L = E.LOGO
+    cx, (s0, s1) = L["cx"], L["slot"]
+    lugs = [(v - L["drop"] - LUG["h"] / 2, v - L["drop"] + LUG["h"] / 2) for v in L["entries"]]   # seated lug spans
+    STEEL = E.T
+    # --- spine: inside plate behind the steel, neck through the slot, 2 dovetail lugs outside
+    pw, pt = SPINE_PLATE
+    rv0, rv1 = lugs[0][0], lugs[1][1]
+    spine = slab(sbox(cx - pw / 2, rv0 - 6, cx + pw / 2, rv1 + 6).buffer(-3).buffer(3), -STEEL - pt, -STEEL)
+    spine += slab(sbox(cx - LUG["neck"] / 2, rv0, cx + LUG["neck"] / 2, rv1), -STEEL - 0.01, LOGO_GAP + 0.01)
+    for a, b in lugs:
+        n, wd = LUG["narrow"] / 2, LUG["wide"] / 2
+        spine += prism_wu([(cx - n, LOGO_GAP), (cx + n, LOGO_GAP), (cx + wd, LOGO_GAP + LUG["t"]), (cx - wd, LOGO_GAP + LUG["t"])], a, b)
+    # --- logo plate
+    W_, H_ = L["plate"]
+    pv0, pv1 = L["cy"] - H_ / 2, L["cy"] + H_ / 2
+    w0, w1 = LOGO_GAP, LOGO_GAP + LOGO_T
+    plate = slab(sbox(cx - W_ / 2, pv0, cx + W_ / 2, pv1).buffer(-6).buffer(6), w0, w1)
+    c = 0.2                                                   # dovetail channel: lug + 0.2, open at the bottom, stop above the top lug
+    n, wd, dt = LUG["narrow"] / 2 + c, LUG["wide"] / 2 + c, LUG["t"] + c
+    plate -= prism_wu([(cx - n, w0 - 1), (cx + n, w0 - 1), (cx + wd, w0 + dt), (cx - wd, w0 + dt)], pv0 - 1, lugs[1][1] + c)
+    # spring finger beside the channel (+u side), root at its top end: cut free by a slit and a gap under the skin;
+    # its nose sits under the seated bottom lug
+    fu0, fu1, fv1 = cx + wd, cx + wd + 1.6, pv0 + 18.0
+    plate -= slab(sbox(fu1, pv0 - 1, fu1 + 1.0, fv1), w0 - 1, w1 - LOGO_SKIN)                 # slit (back layer only)
+    plate -= slab(sbox(cx + n, pv0 - 1, fu1 + 1.0, fv1), w0 + dt, w1 - LOGO_SKIN)             # gap between finger and skin
+    lb = lugs[0][0]                                            # seated bottom lug's underside
+    nose = Polygon([(fu0 + 0.2, lb - 4.2), (cx + n - 1.2, lb - 2.2), (cx + n - 1.2, lb - 2.0), (fu0 + 0.2, lb)])
+    plate += slab(nose, w0, w0 + dt)
+    return spine, plate
 
 
 def card_svg(path, card):
@@ -311,8 +286,9 @@ def build(fast=False):
         out[f"cardbacker_{name}"] = card_backer(op)
         info[f"card_{name}"] = inlay_outline(op)
         info[f"cardfront_{name}"] = round(PANEL_Z + ACR_POCKET - CARD_T, 2)
-    for name in ("power_right", "control"):
-        out[f"pens_{name}"], info[f"pens_{name}"] = pen_panel(name, ops[name][0])
+    for name, (op, _, _) in ops.items():
+        out[f"cup_{name}"], info[f"cup_{name}"] = cup_panel(name, op)
+    out["logo_spine"], out["logo_plate"] = logo_parts()
     return out, info
 
 
@@ -327,7 +303,7 @@ def main():
         export_stl(part, str(OUT / f"{name}.stl"))
         bb = part.bounding_box()
         print(f"{name:26s} {bb.size.X:6.1f} x {bb.size.Y:5.1f} x {bb.size.Z:5.1f}  {part.volume / 1000:5.1f} cm3")
-    meta = {"racks": {}, "card_front_w": {}, "cards": {}, "magnets": {n: [[round(u, 2), round(v, 2)] for u, v in magnets(n)] for n in openings()},
+    meta = {"cups": {}, "card_front_w": {}, "cards": {}, "magnets": {n: [[round(u, 2), round(v, 2)] for u, v in magnets(n)] for n in openings()},
             "acrylic_w": PANEL_Z + 0.05}
     for k, v in info.items():
         if k.startswith("card_"):
@@ -337,7 +313,7 @@ def main():
         elif k.startswith("cardfront_"):
             meta["card_front_w"][k[len("cardfront_"):]] = v
         else:
-            meta["racks"][k[len("pens_"):]] = v
+            meta["cups"][k[len("cup_"):]] = v
             print(k, v)
     (OUT / "meta.json").write_text(json.dumps(meta, indent=1))
 
