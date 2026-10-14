@@ -46,7 +46,7 @@ RIB_H = 1.2
 # acrylic panel: 3 mm acrylic = opening + 3 (vendor DXFs), in a pocket in the back of the frame, on the bezel
 ACR_POCKET, ACR_MAR, ACR_LIP = 3.2, 3.0, 1.2
 # card panel: rectangular; card sits in a 1 mm slot in front of the plate, behind a glued-on front frame
-CARD_SLOT, CARD_FRAME_T, CARD_RIM, CARD_MAR = 1.0, 1.8, 9.0, 3.0
+CARD_T = 0.4                                  # card inlay: card stock on a printed backer, 3 mm together
 
 # pen rack: slotted bars at the window's slant, 15 mm proud. Pens go in capped and lean on the downhill wall of
 # their slot, so any size sits at the same angle. The marker slot is cut through the plate (its back sits just
@@ -193,32 +193,24 @@ def relief_panel(name, op, seed_shift):
     return part
 
 
-def acrylic_panel(name, op):
-    """Contour frame: the acrylic (opening + 3) sits in a pocket in its back, on the bezel; 1.2 mm lip in front.
-    No locating lip: the acrylic covers the opening edge."""
+def inlay_panel(name, op):
+    """Frame with a 3 mm inlay in a pocket in its back: the window acrylic (opening + 3, the vendor DXF) or a card on
+    a printed backer, same outline. The inlay sits on the bezel; pull the panel off to swap it. No locating lip: the
+    inlay covers the opening edge."""
     outline = contour(name, op)
     part, top = base(name, op, outline, ACR_POCKET + ACR_LIP, lip=False)
     part -= slab(op, PANEL_Z - 1, top + 1)
-    part -= slab(op.buffer(ACR_MAR + 0.2, join_style=1, quad_segs=8), PANEL_Z - 1, PANEL_Z + ACR_POCKET)
+    part -= slab(inlay_outline(op).buffer(0.2, join_style=1, quad_segs=8), PANEL_Z - 1, PANEL_Z + ACR_POCKET)
     return part
 
 
-def card_panel(name, op, open_side):
-    """Rectangular. Back: plate + skirt + a spacer that leaves a 1 mm card slot, open on one side. Front: a thin
-    frame, printed flat and glued on once. The card slides in from the side."""
-    outline = rect(name, op)
-    part, top = base(name, op, outline)
-    x0, y0, x1, y1 = outline.bounds
-    aperture = rounded(sbox(x0 + CARD_RIM, y0 + CARD_RIM, x1 - CARD_RIM, y1 - CARD_RIM), E.WIN["r"] + PANEL_OFF - CARD_RIM)
-    if name == "power_left":                                  # keep the frame rim even along the slanted cut
-        aperture = aperture.intersection(outline.buffer(-CARD_RIM))
-    card = aperture.buffer(CARD_MAR, join_style=1, quad_segs=8)
-    cx0, cy0, cx1, cy1 = card.bounds
-    run = sbox(x0 - 1, cy0 - 0.3, cx0 + 1, cy1 + 0.3) if open_side == "left" else sbox(cx1 - 1, cy0 - 0.3, x1 + 1, cy1 + 0.3)
-    slot = unary_union([card.buffer(0.3, join_style=2), run])
-    part += slab(outline.difference(slot), top - 0.01, top + CARD_SLOT)
-    front = slab(outline.difference(aperture), 0, CARD_FRAME_T)     # modelled flat, sits at w = top + CARD_SLOT
-    return part, front, card, top + CARD_SLOT
+def inlay_outline(op):
+    return op.buffer(ACR_MAR, join_style=1, quad_segs=8)
+
+
+def card_backer(op):
+    """Printed backer for a card inlay: inlay outline, 3 mm less the card (card ~0.3 sits in front of it)."""
+    return slab(inlay_outline(op), PANEL_Z + 0.05, PANEL_Z + ACR_POCKET - CARD_T)
 
 
 def rack_layout(F, slots, deep_ok, op):
@@ -312,14 +304,13 @@ def build(fast=False):
     out, info = {}, {}
     for name, (op, screws, kind) in ops.items():
         out[f"bezel_{name}"] = bezel(name, op, screws)
-        out[f"acrylic_{name}"] = acrylic_panel(name, op)
+        out[f"inlay_{name}"] = inlay_panel(name, op)
         if not fast:
             out[f"relief_{name}"] = relief_panel(name, op, {"power_left": 30, "power_right": -30, "control": 20}[name])
-    for name, side in (("power_left", "left"), ("control", "right")):
-        back, front, card, w_front = card_panel(name, ops[name][0], side)
-        out[f"card_{name}_back"], out[f"card_{name}_front"] = back, front
-        info[f"card_{name}"] = card
-        info[f"cardfront_{name}"] = round(w_front, 2)
+    for name, (op, _, _) in ops.items():
+        out[f"cardbacker_{name}"] = card_backer(op)
+        info[f"card_{name}"] = inlay_outline(op)
+        info[f"cardfront_{name}"] = round(PANEL_Z + ACR_POCKET - CARD_T, 2)
     for name in ("power_right", "control"):
         out[f"pens_{name}"], info[f"pens_{name}"] = pen_panel(name, ops[name][0])
     return out, info

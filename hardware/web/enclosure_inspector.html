@@ -539,14 +539,14 @@ toggle("t-steel", on => [power, control].forEach(b => b.traverse(o => { if (o.is
 toggle("t-xray", on => SHELL.forEach(n => { M[n].transparent = on; M[n].opacity = on ? 0.22 : 1; M[n].depthWrite = !on; M[n].needsUpdate = true; }));
 
 // ---------- window inserts: options per window, meshes from window_inserts.bin ----------
-const INS_OPTS = { power_left: ["none", "acrylic", "relief", "card"], power_right: ["none", "acrylic", "relief", "pen"], control: ["none", "acrylic", "relief", "card", "pen"] };
+const INS_OPTS = { power_left: ["none", "acrylic", "card", "relief"], power_right: ["none", "acrylic", "card", "relief", "pen"], control: ["none", "acrylic", "card", "relief", "pen"] };
 const INS_LABEL = { none: "Bezel only", acrylic: "Acrylic", relief: "Relief", card: "Card", pen: "Pens" };
-const INS_PICK = { power_left: "card", power_right: "pen", control: "pen" };
+const INS_PICK = { power_left: "card", power_right: "acrylic", control: "pen" };
 const INS_INFO = {
   bezel: ["Bezel (stays on)", "Black PETG, 13 × 3.5 mm round the opening. 4 M3 screws into rivnuts in the steel, heads sunk flush. 4 Ø6 × 1.5 magnets glued flush, N out."],
-  acrylic: ["Acrylic panel", "Black PETG frame, 4.4 mm; the 3 mm acrylic sits in a pocket in its back, on the bezel. 4 magnets (S in)."],
+  inlay: ["Inlay panel", "Black PETG frame, 4.4 mm, 4 magnets (S in). A 3 mm inlay sits in a pocket in its back, on the bezel: the window acrylic, or a card on a printed backer. Pull the panel off to swap it."],
+  backer: ["Card backer", "Printed, 2.6 mm, same outline as the acrylic. The card (149 × 56) sits in front of it."],
   relief: ["Contour relief panel", "Black PETG, 2.6 mm plate + raised contour lines. 4 magnets (S in), 1 mm lip locates it in the opening."],
-  card: ["Card panel", "Black PETG. Back + a thin front frame glued on once; the card slides in from the side. 4 magnets (S in)."],
   pens: ["Pen garage panel", "Black PETG. Two slotted bars at 40°; pens go in capped and lean on the downhill wall. Left slot: marker up to Ø15 (cut through the plate); 3 slots for pens up to Ø12. 4 magnets (S in)."],
 };
 function applyInserts() {
@@ -578,12 +578,12 @@ fetch("window_inserts.b64.txt").then(r => { if (!r.ok) throw new Error(r.status)
   for (const s of INSERT_SLOTS) {
     const k = s.userData.slot, O = s.userData.opt;
     add(s, `bezel_${k}`, "bezel");                    // the bezel stays on whatever panel is picked
-    add(O.acrylic, `acrylic_${k}`, "acrylic"); add(O.relief, `relief_${k}`, "relief");
-    add(O.card, `card_${k}_back`, "card"); add(O.card, `card_${k}_front`, "card", (H.card_front_w || {})[k] || 0);   // front frame is modelled flat
+    add(O.acrylic, `inlay_${k}`, "inlay"); add(O.relief, `relief_${k}`, "relief");
+    add(O.card, `inlay_${k}`, "inlay"); add(O.card, `cardbacker_${k}`, "backer");
     if (H.cards && H.cards[k]) {
       const sh = new THREE.Shape(); H.cards[k].forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath();
       const cd = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false }), M.card);
-      cd.position.z = H.card_front_w[k] - 0.6; cd.userData = { name: "Plot card (your plot, on card)", info: "Slides in from the side into the 1 mm slot behind the front frame." };
+      cd.position.z = H.card_front_w[k] + 0.02; cd.userData = { name: "Plot card (your plot, 149 × 56)", info: "On the printed backer, in the inlay panel's 3 mm pocket. Template: card_*_template.svg." };
       O.card.add(cd);
     }
     add(O.pen, `pens_${k}`, "pens");
