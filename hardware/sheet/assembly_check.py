@@ -103,7 +103,8 @@ def items(kind):
         if h["note"] == "Ø4.5 standoff":
             x, z = h["uv"]
             out.append(Item(f"standoff ({x:.0f},{z:.0f})", "standoff", x - 3.5, x + 3.5, T, py0, z - 3.5, z + 3.5))
-            out.append(Item(f"plate screw head ({x:.0f},{z:.0f})", "screw_head", x - 3.8, x + 3.8, py1, py1 + 2.2, z - 3.8, z + 3.8))
+            # M4 x 12 up from under the floor through the F-F standoff and the plate; M4 nut (3.2) + thread on top
+            out.append(Item(f"plate nut ({x:.0f},{z:.0f})", "screw_head", x - 3.8, x + 3.8, py1, py1 + 4.0, z - 3.8, z + 3.8))
         elif h["note"] == "Ø4.5 rubber foot":
             x, z = h["uv"]
             out.append(Item(f"rubber foot ({x:.0f},{z:.0f})", "foot", x - 10, x + 10, -8, 0, z - 10, z + 10))

@@ -645,7 +645,7 @@ def base_plate(kind):
                 add_circle(p, "plate", M0, x, z, "grid")
             x += 40
         z += 40; r += 1
-    p.notes = ["Flat, no bends. Sits on 6 x M4 standoffs, 5 mm.", "Grid: 40 mm rows, every other row shifted 20 mm"]
+    p.notes = ["Flat, no bends. Sits on 6 x M4 x 5 F-F standoffs: M4 x 12 up from under the floor, nut on top of the plate.", "Grid: 40 mm rows, every other row shifted 20 mm"]
     return p
 
 
