@@ -4,70 +4,58 @@ _Started 2026-10-14. Lofi layout in the inspector, nothing printed yet._
 
 ## The idea
 
-- **Two smooth rods, printed bushings.** Allwin's rods (Ø3.92 × 79, measured) stand 28 mm apart. They press
-  snug into an 8 mm bottom ear, pass through the top ear, and jut 33 mm above it. The bushings are printed into
-  the shuttle and run its full 32 mm height, so it can't rock. One rod gets a round bore, which locates the
-  shuttle. The other gets a slot, which only stops it turning, so rods that aren't perfectly parallel can't bind
-  it. LM4UU bearings were dropped: they're made for 4.00 mm shafts, and on 3.92 rods they'd have ~0.04 mm play
-  per side, a couple of tenths of a millimetre at the pen tip.
-- **Gravity puts the pen down.** No spring. The pen-down force is the weight of shuttle, bearings, pick face,
-  plate and pen, about 50 g (estimate; weigh it). To press harder, add weight to the plate.
-- **The servo only lifts, and it is swappable.** The servo bay sits above the rod tips (the rods stay 79 mm).
-  Either servo (MG90S or MG996R) drops into its own printed cradle. Both cradles put the horn face on the same
-  shaft point and bolt on with the same two M3, so the crank, window and switch never move. To swap: unplug, two
-  screws, and fit that servo's crank, since each has its own spline. The servo It
-  turns a 3.5 mm toggle crank whose pin sits in a window on the shuttle:
-  - at pen down (−30°) the pin hangs 1.1 mm clear of the window's top edge, so the servo holds nothing
-    (FINDINGS 7b)
-  - it meets the edge at −10° and lifts 4 mm by +80°
-  - at pen up the pin is nearly over the shaft, so the weight it holds has only 0.6 mm of lever
-- **Switch reads, never stops.** A microswitch sits over the window plate. The plate meets the lever 0.5 mm
-  before full lift, and the lever's over-travel takes the rest.
-- **Pick face, pen plate, docks.** Unchanged. Every pen gets a plate with the same outline: a grub-screw clamp,
-  4 × Ø6 magnets, and two 90° ridges in an L. Docks catch the plate's flanges; the head slides a plate in along
-  X at pen-up height and backs off in −Y.
+Modelled on the AxiDraw pen lift (gravity down, servo only lifts, stock horn under a lip, moving rods through a
+fixed block), with Etch's swappable magnetic pen plate added.
 
-The head is 48 mm wide at the shuttle. The bay is 56 mm wide with the MG996R fitted, and its top stands ~170 mm
-above the paper. The pen sits 41 mm from the carriage face. It bolts to the ACRO front plate's 31 mm
-M3 square if ACRO goes ahead; otherwise only the bracket's back changes.
+- **Moving rods, fixed block.** The moving stage is a pen carrier at the bottom and a bridge at the top, joined by
+  Allwin's two rods (Ø3.92 × 79, measured, 28 mm apart). The rods press into the carrier and the bridge. They
+  slide through a 25 mm fixed block on the bracket: a round bore on one rod locates the stage, and a slot on the
+  other only stops it turning, so rods that aren't perfectly parallel can't bind it. A gravity-only stage must
+  never bind.
+- **Gravity puts the pen down.** No spring. The pen-down force is the stage's weight, about 70 g (estimate; weigh
+  it). Add weight to a plate for pens that need more, or a light spring for ballpoints, as AxiDraw's brushless
+  kit does.
+- **A 9 g servo only lifts.** An SG90 or MG90S (same body, one cradle) lies on top of the block between the rods,
+  shaft facing out. Its stock single-arm horn sits 1.5 mm under a lip that hangs down from the bridge at pen
+  down (AxiDraw recommends 1–2 mm), so the servo holds nothing. Turning about 32° lifts the stage 4 mm. The MG996R
+  is out: it doesn't fit, and its ~2.5 A start-up spike is what the board can't take.
+- **Switch reads, never stops.** A microswitch over the bridge, between the rods. The bridge meets its lever
+  0.5 mm before full lift, and the lever's over-travel takes the rest.
+- **Pick face, pen plate, docks.** Every pen gets a plate with the same outline: a grub-screw clamp, 4 × Ø6
+  magnets, and two 90° ridges in an L. Docks catch the plate's flanges; the head slides a plate in along X at
+  pen-up height and backs off in −Y.
+
+The head is 44 mm wide and its top stands ~140 mm above the paper. The pen sits 41 mm from the carriage face. It
+bolts to the ACRO front plate's 31 mm M3 square if ACRO goes ahead; otherwise only the bracket's back changes.
 
 ### How we got here (2026-10-14)
 
 1. A horizontal parallel-leaf flexure pushed the pen ~85 mm out on four thin cantilevers. Dropped.
 2. A vertical stack of printed loop springs was liked, but the spring force loads the servo at pen up.
 3. A folded-beam suspension (frictionless, no play) made the head 114 mm wide. Dropped as too wide.
-4. **Rods + gravity + lift-only servo (this).** Narrowest, proven, and no spring for the servo to fight.
-   Then sized to Allwin's rods: 28 mm apart so the servo fits between them, printed bushings instead of LM4UU.
-
-### Which servo when
-
-| | MG90S | MG996R |
-|---|---|---|
-| Size, weight (catalogue) | 22.8 × 12.2 × 28.5 mm, ~13 g | 40.7 × 19.7 × 42.9 mm, ~55 g |
-| Start-up current spike (FINDINGS 6a) | ~0.7 A | ~2.5 A |
-| Use it | as the default | after the power fixes (2200 µF at the servo, regulator on the carriage), or for the T15 load test |
-
-Each servo needs its own pen-up and pen-down S values: the same pulse gives a different angle on each.
-Servo sizes in the model are catalogue figures. Measure both before printing the cradles.
+4. Fixed rods, a shuttle on printed bushings, and a toggle crank, then a swappable MG90S/MG996R bay. The bay
+   above the rod tips made the head ~170 mm tall.
+5. **AxiDraw-style (this).** Moving rods through a fixed block, a stock horn under a lip, and one 9 g servo.
+   Compact again, and the servo sits where AxiDraw puts it.
 
 ## Numbers (estimates until measured)
 
 | Quantity | Value | Source |
 |---|---|---|
 | Lift | 4 mm | chosen |
-| Moving weight = pen-down force | ~50 g | **estimate**: weigh shuttle + plate + pen |
-| Servo torque, mid-lift peak | ~0.02 kg·cm | estimate: 0.5 N × 3.5 mm |
-| Servo torque, pen up | ~0.003 kg·cm | estimate: 0.5 N × 0.6 mm |
-| MG90S rating | ~1.8 kg·cm | catalogue |
+| Moving weight = pen-down force | ~70 g | **estimate**: carrier, rods (~15 g), bridge, plate, pen. Weigh it |
+| Servo torque while lifting | ~0.07 kg·cm | estimate: 0.7 N × 10 mm horn |
+| 9 g servo rating | ~1.6–1.8 kg·cm | catalogue |
+| Horn gap at pen down | 1.5 mm | AxiDraw forum: 1–2 mm |
 
 The old lift carried a ~400 g Ender carriage on a 30 mm crank: about 1.2 kg·cm. Less torque means less servo
 current, and current is what resets the board.
 
 ## Fit kit coupons (hardware/parts/fit_kit.py, `python3 hardware/parts/fit_kit.py P`)
 
-- **J rod fits (for the Ø3.92 rods).** Bushing bores at 3.95 / 4.00 / 4.05 / 4.10, 12 deep: stand a rod upright,
-  drop the coupon over it, and pick the tightest bore that slides down under its own weight with no rattle. Ear
-  holes at 3.80 / 3.85 / 3.90: pick the tightest a rod presses into by hand and stays in.
+- **J rod fits (for the Ø3.92 rods).** Block bores at 3.95 / 4.00 / 4.05 / 4.10, 12 deep: hold the coupon level,
+  drop a rod into each, and pick the tightest it slides through under its own weight with no rattle. Press holes
+  at 3.80 / 3.85 / 3.90 for the carrier and bridge: pick the tightest a rod presses into by hand and stays in.
 - **K pick face + pen plate.** Press magnets in using coupon I's pocket size, N out on the face and S out on the
   plate. Check it seats with no rock, and hang weights to find the pull-off force.
 - **L channel 0.2 / 0.3 / 0.4.** Slide the K plate's flange in. Pick the tightest that runs free by hand.
@@ -75,7 +63,7 @@ current, and current is what resets the board.
 ## To buy
 
 - Rods: have them (2 × Ø3.92 × 79)
-- Servos: have both (MG90S, MG996R)
+- Servo: a 9 g SG90 or MG90S (have an MG90S? measure it; the cradle is sized from catalogue figures)
 - 1 × mini microswitch with lever
 
 ## Inspector

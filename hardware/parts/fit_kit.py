@@ -18,8 +18,8 @@ and the size that fits becomes the number every real part uses (FIT below).
   I  magnet panels     bezel section (11 × 2.5, 2 bolt holes) and panel section (2.6, lip), 3 pockets each for
                         Ø6 × 1.5 magnets: Ø5.95 / 6.05 / 6.15 × 1.6 deep. Press magnets in (bezel N out, panel S
                         in): the tightest pocket that doesn't crack sets the size; then feel the pull
-  J  rod fits          for Ø3.92 rods: bushing bores 3.95/4.00/4.05/4.10 (slides under its own weight, no rattle)
-                        and ear holes 3.80/3.85/3.90 (rod presses in by hand and stays)
+  J  rod fits          for Ø3.92 rods: block bores 3.95/4.00/4.05/4.10 (rod slides through under its own weight,
+                        no rattle) and carrier/bridge press holes 3.80/3.85/3.90 (rod presses in by hand and stays)
   K  pick face + plate  4 magnets on an 18 mm square, two 90 deg ridges in an L; check it seats without rocking
   L  dock channel       flange slot 2.2/2.3/2.4 for K's 2.0 flange; the tightest that runs free by hand
 
@@ -237,9 +237,10 @@ FLANGE_T, FLANGE_W = 2.0, 3.0   # pen-plate side flange that slides into the doc
 
 
 def coupon_j():
-    """Rod fits for the pen lifter, for Allwin's Ø3.92 rods. Top row: printed bushings, 12 deep: stand a rod
-    upright, drop the coupon over it, pick the tightest bore that slides down under its own weight with no rattle.
-    Bottom row: ear holes: pick the tightest a rod presses into by hand and stays."""
+    """Rod fits for the pen lifter, for Allwin's Ø3.92 rods. Top row: the fixed block's bores, 12 deep: hold the
+    coupon level, drop a rod into each bore, and pick the tightest the rod slides through under its own weight
+    with no rattle. Bottom row: press holes for the carrier and bridge: the tightest a rod presses into by hand and
+    stays."""
     w, h, t = 58.0, 34.0, 12.0
     with BuildPart() as p:
         Box(w, h, t, align=(Align.CENTER, Align.CENTER, Align.MIN))
