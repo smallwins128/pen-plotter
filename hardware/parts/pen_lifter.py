@@ -202,18 +202,24 @@ def pick_face():
 
 
 def plate(zoff=0.0, xoff=0.0):
-    """Pen plate: body, top and bottom flanges along X (they ride the dock rails), clamp block, grub screw boss."""
+    """Pen plate: body, top and bottom flanges along X (they ride the dock rails), clamp block, and a clamp boss on
+    the FRONT: an M3 x 12 socket head goes in square to the pen and threads into an M3 nut dropped into a slot in the
+    boss (open at the top). No heat-set insert: the wall to the pen is ~3 mm and each pen stays in its own plate."""
     y0 = Y_FACE + 0.2                                                   # 0.2 face gap: ridges seat on their flanks
     yb = y0 + 4.0
+    zc = Z0 + H / 2
     p = union(box(-PICK / 2, PICK / 2, y0, yb, Z0, Z0 + H),
               box(-PICK / 2, PICK / 2, yb - FLANGE_T, yb, Z0 - FLANGE_W, Z0),
               box(-PICK / 2, PICK / 2, yb - FLANGE_T, yb, Z0 + H, Z0 + H + FLANGE_W),
               box(-10, 10, yb, yb + 16, Z0, Z0 + H),
-              box(-3, 3, yb + 5, yb + 11, Z0 + H, Z0 + H + 3))          # grub screw boss
-    with BuildPart() as bore:
+              box(-5, 5, yb + 16, yb + 22, zc - 5, zc + 5))             # clamp boss on the front
+    with BuildPart() as cut:
         with Locations((0, yb + 8, Z0 - 1)):
-            Cylinder(PEN_D / 2 + 0.25, H + 6, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    return (p - bore.part).moved(Pos(xoff, 0, zoff))
+            Cylinder(PEN_D / 2 + 0.25, H + 6, align=(Align.CENTER, Align.CENTER, Align.MIN))     # pen bore
+        with Locations((0, yb + 2, zc)):
+            Cylinder(1.7, 21.0, rotation=(-90, 0, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))  # M3 clearance
+    nut = box(-2.9, 2.9, yb + 18.2, yb + 20.8, zc - 3.2, zc + 6)          # M3 nut slot (5.5 AF x 2.4), open on top
+    return (p - cut.part - nut).moved(Pos(xoff, 0, zoff))
 
 
 def pen(zoff=0.0, xoff=0.0):
@@ -237,7 +243,7 @@ def dock():
     z = Z0 + LIFT
     yb = Y_FACE + 0.2 + 4.0
     y_lip0, y_lip1 = Y_FACE - 0.5, yb - FLANGE_T - 0.3
-    y_back = yb + 5.0
+    y_back = yb + 0.5                     # rails stop just past the flange: the parked pen hangs down in front of them
     xs = (DOCK_X - PICK / 2 - 4.0, DOCK_X + PICK / 2 + 2.0)
     parts = []
     for zf0, zf1, sgn in ((z - FLANGE_W, z, -1), (z + H, z + H + FLANGE_W, 1)):
@@ -282,7 +288,7 @@ PARTS = {
     "pick_face": (pick_face, "Pen plate + pick face", "pick", "lift",
                   "4 magnet pockets on an 18 mm square, two 90 deg ridges in an L. Coupon K."),
     "pen_plate": (plate, "Pen plate + pick face", "plate", "lift",
-                  "Same outline for every pen; clamp bore per pen, grub screw on top. Flanges ride the dock rails."),
+                  "Same outline for every pen; clamp bore per pen. M3 x 12 socket head from the front into a nut slot. Flanges ride the dock rails."),
     "pen": (pen, "Pen plate + pick face", "pen", "lift", f"Placeholder pen, \u00d8{PEN_D:.0f}."),
     "servo": (servo, "Servo + switch", "servo", None,
               "9 g servo (SG90 / MG90S; catalogue size) in the guide's pocket, tabs on its side, body out the side."),

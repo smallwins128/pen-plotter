@@ -61,6 +61,14 @@ current, and current is what resets the board.
   the coupon level, drop a rod into each, and pick the tightest it slides through under its own weight with no
   rattle. Press holes at 3.80 / 3.85 / 3.90 for the guide's end walls: pick the tightest a rod presses into by
   hand and stays in. (The original STLs use 4.3 in the holder and 4.2 in the guide: loose on 3.92 rods.)
+
+## Fasteners
+
+- Guide to the ACRO front plate: 4 × M3 × 10 countersunk from behind, into M3 heat-set inserts in the guide's back
+  face. Countersink the plate's 4 back holes so the heads sit flush next to the X extrusion.
+- Pen clamp: M3 × 12 socket head in from the front of each pen plate, square to the pen, into an M3 nut in a slot in
+  the plate's boss. No heat-set insert: the wall to the pen is ~3 mm and each pen stays in its own plate.
+- Docks: the rails stop 0.5 mm past the plate's flange so a parked pen hangs down clear of them.
 - **K pick face + pen plate.** Press magnets in using coupon I's pocket size, N out on the face and S out on the
   plate. Check it seats with no rock, and hang weights to find the pull-off force.
 - **L channel 0.2 / 0.3 / 0.4.** Slide the K plate's flange in. Pick the tightest that runs free by hand.
