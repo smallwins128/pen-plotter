@@ -91,6 +91,11 @@ H cable tie mount + saddles). `FIT` at the top holds the numbers every real part
 
 ## Later (parked)
 
+- Interior light (2026-10-14): 12 V warm-white 5730 3-LED modules (1.5 W, 60 × 10), 1 in the control box, 2 in the
+  power box, on the front wall aimed at the back so the windows show a glow, not the LEDs. Optional printed angled clip.
+- Fan / light switches (2026-10-14): 2 mini toggles (MTS-102, Ø6 hole) per box, either on a window panel (needs a
+  plug inside) or on the IEC / USB side panels. Fan switch only for idle quiet.
+
 - Window lighting: status colours (12 V WS2811 strip, data from a spare FluidNC pin via a level shifter: idle /
   plotting / alarm). Own branch off the 12 V splitter, not the servo buck's input; check the 12 V PSU's rating
   first (est. load ~2.3 A with servo stall). Strip clips go in the bezel prints.
