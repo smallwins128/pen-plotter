@@ -64,7 +64,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   <aside class="rail">
     <div>
       <h1 id="title">Pen lifter, lofi</h1>
-      <p class="sub">Loop-spring head, magnetic pen plate and dock for Etch. Blocks show positions only; sizes are placeholders until the fit kit measures them.</p>
+      <p class="sub">Folded-beam suspension, toggle crank, magnetic pen plate and dock for Etch. Blocks show positions only; sizes are placeholders until the fit kit measures them.</p>
     </div>
     <div class="group">
       <span class="label">Scene</span>
@@ -178,32 +178,41 @@ $("layers").addEventListener("change", e => {
 });
 
 function pose() {
-  const r = rig, drop = r.arm_drop ?? 0, lift = r.lift ?? 0;
-  const h = -drop + (state.servo / 100) * (lift + drop);          // arm tip height over the tab contact
-  const z = Math.max(0, h), ex = state.explode / 100;
+  // Servo slider sweeps the crank from rest (pin clear of the tab) to pen up. Lift = how far the pin has pushed the
+  // tab above its pen-down height. Torque is an estimate: suspension rate x lift + moving weight, times the crank's
+  // lever on that force (R cos phi), against what a level arm of compare_arm mm would need for the same force.
+  const r = rig, lift = r.lift ?? 0, rad = Math.PI / 180;
+  const phi = (r.phi_rest + (state.servo / 100) * (r.phi_up - r.phi_rest)) * rad;
+  const reach = r.crank_r * (Math.sin(phi) - Math.sin(r.phi_contact * rad));
+  const z = Math.max(0, reach), ex = state.explode / 100;
   for (const m of meshes) {
-    const d = m.userData, M = new THREE.Matrix4();
-    if (d.scene === "assembly") {
-      if (d.anim === "lift") M.makeTranslation(0, 0, z);
-      else if (d.anim === "squash") {                              // spring shortens towards its top shelf
-        const s = (r.spring_h - z) / r.spring_h; M.set(1,0,0,0, 0,1,0,0, 0,0,s,(1 - s) * r.spring_top, 0,0,0,1);
-      }
-      else if (d.anim === "arm") {
-        const [sx, , sz] = r.shaft, phi = Math.asin(Math.max(-1, Math.min(1, h / r.arm_r)));
+    const d = m.userData, M = new THREE.Matrix4(), a = typeof d.anim === "string" ? { type: d.anim } : d.anim;
+    if (d.scene === "assembly" && a) {
+      if (a.type === "lift") M.makeTranslation(0, 0, z * (a.f ?? 1));
+      else if (a.type === "shear") {                              // beam ends follow their neighbours
+        const kx = z * (a.f1 - a.f0) / (a.x1 - a.x0);
+        M.set(1,0,0,0, 0,1,0,0, kx,0,1,z * a.f0 - kx * a.x0, 0,0,0,1);
+      } else if (a.type === "crank") {
+        const [sx, , sz] = r.shaft;
         M.makeTranslation(sx, 0, sz).multiply(new THREE.Matrix4().makeRotationY(phi)).multiply(new THREE.Matrix4().makeTranslation(-sx, 0, -sz));
       }
-      if (d.explode) M.premultiply(new THREE.Matrix4().makeTranslation(d.explode[0] * ex, d.explode[1] * ex, d.explode[2] * ex));
     }
+    if (d.scene === "assembly" && d.explode) M.premultiply(new THREE.Matrix4().makeTranslation(d.explode[0] * ex, d.explode[1] * ex, d.explode[2] * ex));
     m.matrix.copy(M); m.matrixWorldNeedsUpdate = true;
   }
   $("servoOut").textContent = `${state.servo}%`;
   $("explodeOut").textContent = `${state.explode}%`;
-  const swOn = lift && z >= lift - 0.5;
-  const chip = h < 0 ? `<span class="chip ok">Pen down · servo unloaded</span>`
-             : z < lift ? `<span class="chip warn">Lifting</span>` : `<span class="chip ok">Pen up</span>`;
-  $("hud").innerHTML = current !== "assembly" ? `<span>Bambu A1 mini bed, 180 × 180 mm</span>` :
-    `${chip}<span>lift ${z.toFixed(1)} / ${lift} mm</span><span>arm ${h < 0 ? (-h).toFixed(1) + " mm clear of tab" : "on tab"}</span>` +
-    `<span>switch ${swOn ? "made" : "open"}</span>`;
+  if (current !== "assembly") { $("hud").innerHTML = `<span>Bambu A1 mini bed, 180 × 180 mm</span>`; return; }
+  const touching = reach >= 0, swOn = lift && z >= lift - 0.5;
+  const force = touching ? (r.k_est ?? 0) * z + (r.moving_n ?? 0) : 0;          // N
+  const lever = r.crank_r * Math.cos(phi);                                     // mm
+  const kgcm = n_mm => (n_mm / 98.07).toFixed(2);
+  const chip = !touching ? `<span class="chip ok">Pen down · servo unloaded</span>`
+             : z < lift - 0.05 ? `<span class="chip warn">Lifting</span>` : `<span class="chip ok">Pen up</span>`;
+  $("hud").innerHTML = `${chip}<span>lift ${z.toFixed(1)} / ${lift} mm</span>` +
+    (touching ? `<span>servo torque ≈ ${kgcm(force * lever)} kg·cm (level ${r.compare_arm} mm arm: ${kgcm(force * r.compare_arm)})</span>`
+              : `<span>pin ${(-reach).toFixed(1)} mm clear of the tab</span>`) +
+    `<span>switch ${swOn ? "made" : "open"}</span><span>estimates</span>`;
 }
 
 for (const id of ["servo", "explode"]) $(id).addEventListener("input", e => { state[id] = +e.target.value; pose(); });
