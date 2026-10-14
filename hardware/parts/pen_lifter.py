@@ -4,10 +4,12 @@
                                               #    -> hardware/web/pen_lifter.b64.txt (parts inspector data)
 
 The idea (docs/PEN_LIFTER.md):
-  * the shuttle rides two vertical smooth rods (Ø4, 20 apart, inside the shuttle's own width) on four LM4UU
-    linear ball bearings, two per rod: rolling, so next to no friction, and two per rod so it cannot rock
+  * the shuttle rides Allwin's two smooth rods (Ø3.92 x 79, measured), 28 apart, on bushings printed into it:
+    a round bore on one rod locates it, a slot on the other only stops it turning, so two rods that are not
+    perfectly parallel cannot bind it. Each bore runs the shuttle's full 32 mm height, so it cannot rock. The rods
+    press snug into a thick bottom ear, pass through the top ear and jut out above it
   * gravity puts the pen down: the pen force is the weight of shuttle + plate + pen. No spring
-  * the servo only lifts. It lies above the shuttle, inside the head's width, and turns a short toggle crank whose
+  * the servo only lifts. It lies above the shuttle, between the rods, and turns a short toggle crank whose
     pin sits in a window on the shuttle. The pin pushes the window's top edge up; at pen down it drops clear, so
     the servo holds nothing (FINDINGS 7b). At pen up the pin is nearly over the shaft, so even the weight it
     holds has almost no lever
@@ -44,27 +46,29 @@ Z0 = 40.0                 # bottom of the moving stack at pen down
 H = 32.0                  # shuttle / pick face / plate height (= PICK)
 
 # y stations, carriage face outwards: bracket back plate, shuttle back, shuttle front, pick face's mating face
-Y_BACK, Y_SHUT0, Y_SHUT = 5.0, 6.0, 20.0
+Y_BACK, Y_SHUT0, Y_SHUT = 5.0, 6.0, 24.0
 Y_FACE = Y_SHUT + 5.0
-X_SHUT = 16.0             # shuttle half width: the head is this wide plus the window plate on one side
+X_SHUT = 18.0             # shuttle half width: the head is this wide plus the window plate on one side
 
-# rods and bearings: LM4UU is Ø4 bore, Ø8 OD, 12 long (catalogue size; check the ones bought)
-ROD_D, ROD_X, ROD_Y = 4.0, 10.0, (Y_SHUT0 + Y_SHUT) / 2
-BRG_D, BRG_L = 8.0, 12.0
-BRG_Z = (Z0 + 2.0, Z0 + H - 2.0 - BRG_L)               # two per rod, as far apart as the shuttle allows
-EAR_T = 5.0
-Z_EAR_LO = Z0 - 1.0 - EAR_T                            # bottom ear under the shuttle at pen down
+# rods: Allwin's, measured 2026-10-14. Bores are placeholders until coupon J picks them
+ROD_D, ROD_LEN = 3.92, 79.0
+ROD_X, ROD_Y = 14.0, 19.5             # 28 apart so the servo fits between them; forward of the servo's body
+ROD_PRESS = 3.85                      # bottom and top ear holes: snug press on the rod
+BUSH_D, BUSH_SLOT = 4.05, 6.0         # shuttle bores: round on +x, slot BUSH_SLOT long in x on -x
+EAR_LO_T, EAR_T = 8.0, 5.0
+Z_EAR_LO = Z0 - 1.0 - EAR_LO_T                         # bottom ear under the shuttle at pen down
 Z_EAR_HI = Z0 + H + LIFT + 1.0                         # top ear over it at pen up
+Z_ROD_TOP = Z_EAR_LO + ROD_LEN                         # rods stand on the bottom ear's underside, jut out above
 
 # servo lies above the top ear, shaft along +x; toggle crank turns in the YZ plane
 CRANK_R, PIN_R = 3.5, 1.5
 PHI_REST, PHI_CONTACT, PHI_UP = -30.0, -10.0, 80.0
-SHAFT = (6.7, Y_BACK + 6.1, Z_EAR_HI + EAR_T + 4.7 + 5.9 + 0.5)
+SHAFT = (22.7 / 2, Y_BACK + 6.1, Z_EAR_HI + EAR_T + 4.7 + 5.9 + 0.5)   # body centred between the rods
 X_WIN = (X_SHUT + 0.5, X_SHUT + 3.5)                   # window plate, beside the top ear
 Z_WIN = SHAFT[2] + CRANK_R * math.sin(math.radians(PHI_CONTACT)) + PIN_R   # window's top inner edge, pen down
 Z_SQUARE = Z0 + 20.0                                   # centre of the ACRO plate's 31 mm M3 square
 
-MOVING_N = 0.5            # shuttle + 4 bearings + pick face + plate + pen, ~50 g: an ESTIMATE, weigh it
+MOVING_N = 0.5            # shuttle + pick face + plate + pen, ~50 g: an ESTIMATE, weigh it
 
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -89,38 +93,36 @@ def zcyl(x, y, z0, z1, d):
 
 
 def bracket():
-    """Back plate on the ACRO 31 mm square, bottom and top ears that clamp the rods."""
+    """Back plate on the ACRO 31 mm square; a thick bottom ear and a top ear that the rods press snug into."""
     top = SHAFT[2] + 22.0
-    back = box(-20, 24, 0, Y_BACK, Z_EAR_LO - 2, top)
+    back = box(-X_SHUT - 4, X_SHUT + 8, 0, Y_BACK, Z_EAR_LO - 2, top)
     with BuildPart() as holes:
         for x in (-15.5, 15.5):
             for dz in (-15.5, 15.5):
                 with Locations((x, Y_BACK / 2, Z_SQUARE + dz)):
                     Cylinder(1.7, Y_BACK, rotation=(90, 0, 0))
-    ears = [box(-X_SHUT, X_SHUT, Y_BACK, Y_SHUT - 1, z, z + EAR_T) for z in (Z_EAR_LO, Z_EAR_HI)]
+    ears = [box(-X_SHUT, X_SHUT, Y_BACK, Y_SHUT - 1, Z_EAR_LO, Z_EAR_LO + EAR_LO_T),
+            box(-X_SHUT, X_SHUT, Y_BACK, Y_SHUT - 1, Z_EAR_HI, Z_EAR_HI + EAR_T)]
     p = union(back - holes.part, *ears)
     for sx in (-1, 1):
-        p = p - zcyl(sx * ROD_X, ROD_Y, Z_EAR_LO - 1, Z_EAR_HI + EAR_T + 1, ROD_D)
+        p = p - zcyl(sx * ROD_X, ROD_Y, Z_EAR_LO - 1, Z_EAR_HI + EAR_T + 1, ROD_PRESS)
     return p
 
 
 def rods():
-    return union(*[zcyl(sx * ROD_X, ROD_Y, Z_EAR_LO, Z_EAR_HI + EAR_T, ROD_D) for sx in (-1, 1)])
-
-
-def bearings():
-    out = []
-    for sx in (-1, 1):
-        for z in BRG_Z:
-            out.append(zcyl(sx * ROD_X, ROD_Y, z, z + BRG_L, BRG_D) - zcyl(sx * ROD_X, ROD_Y, z - 1, z + BRG_L + 1, ROD_D))
-    return union(*out)
+    return union(*[zcyl(sx * ROD_X, ROD_Y, Z_EAR_LO, Z_ROD_TOP, ROD_D) for sx in (-1, 1)])
 
 
 def shuttle():
-    """Body with the bearing bores, and the window plate that rises beside the top ear to the crank pin."""
+    """Body with the printed bushings (round bore on +x, slot on -x), and the window plate that rises beside the
+    top ear to the crank pin."""
     body = box(-X_SHUT, X_SHUT, Y_SHUT0, Y_SHUT, Z0, Z0 + H)
-    for sx in (-1, 1):
-        body = body - zcyl(sx * ROD_X, ROD_Y, Z0 - 1, Z0 + H + 1, BRG_D)
+    body = body - zcyl(ROD_X, ROD_Y, Z0 - 1, Z0 + H + 1, BUSH_D)
+    slot = box(-ROD_X - (BUSH_SLOT - BUSH_D) / 2, -ROD_X + (BUSH_SLOT - BUSH_D) / 2, ROD_Y - BUSH_D / 2,
+               ROD_Y + BUSH_D / 2, Z0 - 1, Z0 + H + 1)
+    for dx in (-(BUSH_SLOT - BUSH_D) / 2, (BUSH_SLOT - BUSH_D) / 2):
+        slot = slot + zcyl(-ROD_X + dx, ROD_Y, Z0 - 1, Z0 + H + 1, BUSH_D)
+    body = body - slot
     bridge = box(X_SHUT - 1.0, X_WIN[1], Y_SHUT0, Y_SHUT, Z0 + H - 6.0, Z0 + H)
     win = box(*X_WIN, Y_SHUT0, Y_SHUT, Z0 + H - 6.0, Z_WIN + 3.0)
     hole = box(X_WIN[0] - 1, X_WIN[1] + 1, SHAFT[1] - 2.0, SHAFT[1] + CRANK_R + PIN_R + 2.5,
@@ -237,18 +239,17 @@ PARTS = {
     "bracket": (bracket, "Head (fixed)", "fixed", None,
                 "Back plate on the 31 mm M3 square; bottom and top ears clamp the two rods."),
     "rods": (rods, "Head (fixed)", "steel", None,
-             f"Two \u00d8{ROD_D:.0f} smooth rods, {2 * ROD_X:.0f} apart, {Z_EAR_HI + EAR_T - Z_EAR_LO:.0f} long."),
-    "bearings": (bearings, "Shuttle", "steel", "lift",
-                 f"4 x LM4UU (\u00d8{ROD_D:.0f} x \u00d8{BRG_D:.0f} x {BRG_L:.0f}), two per rod, "
-                 f"{BRG_Z[1] - BRG_Z[0]:.0f} mm apart."),
+             f"Allwin's rods, \u00d8{ROD_D} x {ROD_LEN:.0f} (measured), {2 * ROD_X:.0f} apart. Snug in both ears, "
+             f"jut {Z_ROD_TOP - Z_EAR_HI - EAR_T:.0f} mm above the top ear."),
     "shuttle": (shuttle, "Shuttle", "shuttle", "lift",
-                "Bearing bores, and the window plate the crank pin lifts by its top edge."),
+                f"Printed bushings, full {H:.0f} mm height: round \u00d8{BUSH_D} bore on the right rod, "
+                f"{BUSH_SLOT:.0f} mm slot on the left (no binding). Window plate for the crank pin."),
     "pick_face": (pick_face, "Pen plate + pick face", "pick", "lift",
                   "4 magnet pockets on an 18 mm square, two 90 deg ridges in an L. Coupon K."),
     "pen_plate": (plate, "Pen plate + pick face", "plate", "lift",
                   "Same outline for every pen; clamp bore per pen, grub screw on top. Flanges ride the dock rails."),
     "pen": (pen, "Pen plate + pick face", "pen", "lift", f"Placeholder pen, \u00d8{PEN_D:.0f}."),
-    "servo": (servo, "Servo + switch", "servo", None, "MG90S-sized, lying over the top ear, shaft along +x."),
+    "servo": (servo, "Servo + switch", "servo", None, "MG90S-sized, lying over the top ear between the rods, shaft along +x."),
     "servo_crank": (crank, "Servo + switch", "arm", "crank",
                     f"Toggle crank, pin at {CRANK_R} mm. {PHI_REST:.0f} deg pen down (pin clear), contact at "
                     f"{PHI_CONTACT:.0f}, pen up at {PHI_UP:.0f}: lever on the weight only "
@@ -262,7 +263,7 @@ PARTS = {
 }
 
 # where each part goes when the inspector explodes the head (mm at full explode)
-EXPLODE = dict(carriage_acro_front=(0, -30, 0), bracket=(0, -14, 0), rods=(0, -7, 0), bearings=(0, 0, 0),
+EXPLODE = dict(carriage_acro_front=(0, -30, 0), bracket=(0, -14, 0), rods=(0, -7, 0),
                shuttle=(0, 8, 0), pick_face=(0, 18, 0), pen_plate=(0, 40, 0), pen=(0, 40, 0), servo=(0, 0, 30),
                servo_crank=(12, 0, 30), pen_up_switch=(0, 0, 45))
 
@@ -289,7 +290,7 @@ def export_assembly():
 def export_fit_kit():
     """The pen-lifter coupons, laid out on the A1 mini's 180 mm bed."""
     meta, x, y, row_h = {}, -80.0, -80.0, 0.0
-    names = {"J": "rod + bearing fits", "K": "pick face + plate", "L": "dock channel"}
+    names = {"J": "rod fits", "K": "pick face + plate", "L": "dock channel"}
     for name, part in build_pen().items():
         bb = part.bounding_box()
         if x + bb.size.X > 85:

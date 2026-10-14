@@ -18,7 +18,8 @@ and the size that fits becomes the number every real part uses (FIT below).
   I  magnet panels     bezel section (11 × 2.5, 2 bolt holes) and panel section (2.6, lip), 3 pockets each for
                         Ø6 × 1.5 magnets: Ø5.95 / 6.05 / 6.15 × 1.6 deep. Press magnets in (bezel N out, panel S
                         in): the tightest pocket that doesn't crack sets the size; then feel the pull
-  J  rod + bearing      LM4UU bores 7.9/8.0/8.1 (press fit) and Ø4 rod holes 3.9/4.0/4.1 (rods clamped in the ears)
+  J  rod fits          for Ø3.92 rods: bushing bores 3.95/4.00/4.05/4.10 (slides under its own weight, no rattle)
+                        and ear holes 3.80/3.85/3.90 (rod presses in by hand and stays)
   K  pick face + plate  4 magnets on an 18 mm square, two 90 deg ridges in an L; check it seats without rocking
   L  dock channel       flange slot 2.2/2.3/2.4 for K's 2.0 flange; the tightest that runs free by hand
 
@@ -226,7 +227,7 @@ def coupon_i_panel(length=70.0):
 
 
 # ---------------------------------------------------------------------------
-# Pen lifter (docs/PEN_LIFTER.md): rod + bearing fits, pick face + pen plate, dock channel
+# Pen lifter (docs/PEN_LIFTER.md): rod fits, pick face + pen plate, dock channel
 # ---------------------------------------------------------------------------
 
 PICK = 32.0                # pick face / pen plate, square
@@ -236,22 +237,18 @@ FLANGE_T, FLANGE_W = 2.0, 3.0   # pen-plate side flange that slides into the doc
 
 
 def coupon_j():
-    """Rod + bearing fits for the pen lifter: three LM4UU bores (press fit, 12 deep) and three Ø4 rod holes (the
-    ears clamp the rods). Push a bearing into each bore: the tightest that goes in by thumb without cracking. Push
-    a rod through each hole: the tightest that slides in by hand."""
-    w, h, t = 64.0, 30.0, 12.0
+    """Rod fits for the pen lifter, for Allwin's Ø3.92 rods. Top row: printed bushings, 12 deep: stand a rod
+    upright, drop the coupon over it, pick the tightest bore that slides down under its own weight with no rattle.
+    Bottom row: ear holes: pick the tightest a rod presses into by hand and stays."""
+    w, h, t = 58.0, 34.0, 12.0
     with BuildPart() as p:
         Box(w, h, t, align=(Align.CENTER, Align.CENTER, Align.MIN))
-        for i, d in enumerate((7.9, 8.0, 8.1)):
-            x = -22 + i * 11
-            with Locations((x, 4, 0)):
-                Cylinder(d / 2, t, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
-            label(p, f"{d:.1f}", x, -6.5, t, 2.4)
-        for i, d in enumerate((3.9, 4.0, 4.1)):
-            x = 12 + i * 9
-            with Locations((x, 4, 0)):
-                Cylinder(d / 2, t, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
-            label(p, f"{d:.1f}", x, -6.5, t, 2.4)
+        for row, (y, sizes) in enumerate(((8.0, (3.95, 4.00, 4.05, 4.10)), (-8.0, (3.80, 3.85, 3.90)))):
+            for i, d in enumerate(sizes):
+                x = -21 + i * 14 + (7 if row else 0)
+                with Locations((x, y, 0)):
+                    Cylinder(d / 2, t, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
+                label(p, f"{d:.2f}"[1:], x, y - 5.2, t, 2.2)
     return p.part
 
 
@@ -316,7 +313,7 @@ def coupon_l(c):
 
 
 def build_pen():
-    parts = {"J_rod_bearing": coupon_j()}
+    parts = {"J_rod_fits": coupon_j()}
     parts["K_pick_face"] = coupon_k_face()
     parts["K_pen_plate"] = coupon_k_plate()
     parts.update({f"L_channel_{c:.1f}": coupon_l(c) for c in (0.2, 0.3, 0.4)})

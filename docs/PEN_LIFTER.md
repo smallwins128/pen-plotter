@@ -4,13 +4,15 @@ _Started 2026-10-14. Lofi layout in the inspector, nothing printed yet._
 
 ## The idea
 
-- **Two smooth rods, rolling bearings.** The shuttle rides two vertical Ø4 rods, 20 mm apart, inside its own
-  32 mm width. Four LM4UU linear ball bearings carry it, two per rod and 6 mm apart. Rolling means next to no
-  friction, and two bearings per rod mean it can't rock. The rods are clamped in a bottom and a top ear on the
-  bracket.
+- **Two smooth rods, printed bushings.** Allwin's rods (Ø3.92 × 79, measured) stand 28 mm apart. They press
+  snug into an 8 mm bottom ear, pass through the top ear, and jut 33 mm above it. The bushings are printed into
+  the shuttle and run its full 32 mm height, so it can't rock. One rod gets a round bore, which locates the
+  shuttle. The other gets a slot, which only stops it turning, so rods that aren't perfectly parallel can't bind
+  it. LM4UU bearings were dropped: they're made for 4.00 mm shafts, and on 3.92 rods they'd have ~0.04 mm play
+  per side, a couple of tenths of a millimetre at the pen tip.
 - **Gravity puts the pen down.** No spring. The pen-down force is the weight of shuttle, bearings, pick face,
   plate and pen, about 50 g (estimate; weigh it). To press harder, add weight to the plate.
-- **The servo only lifts.** An MG90S-size servo lies on its side above the top ear, inside the head's width. It
+- **The servo only lifts.** An MG90S-size servo lies on its side above the top ear, between the rods. It
   turns a 3.5 mm toggle crank whose pin sits in a window on the shuttle:
   - at pen down (−30°) the pin hangs 1.1 mm clear of the window's top edge, so the servo holds nothing
     (FINDINGS 7b)
@@ -22,7 +24,7 @@ _Started 2026-10-14. Lofi layout in the inspector, nothing printed yet._
   4 × Ø6 magnets, and two 90° ridges in an L. Docks catch the plate's flanges; the head slides a plate in along
   X at pen-up height and backs off in −Y.
 
-The head is 44 mm wide, and the pen sits 37 mm from the carriage face. It bolts to the ACRO front plate's 31 mm
+The head is 48 mm wide, and the pen sits 41 mm from the carriage face. It bolts to the ACRO front plate's 31 mm
 M3 square if ACRO goes ahead; otherwise only the bracket's back changes.
 
 ### How we got here (2026-10-14)
@@ -31,6 +33,7 @@ M3 square if ACRO goes ahead; otherwise only the bracket's back changes.
 2. A vertical stack of printed loop springs was liked, but the spring force loads the servo at pen up.
 3. A folded-beam suspension (frictionless, no play) made the head 114 mm wide. Dropped as too wide.
 4. **Rods + gravity + lift-only servo (this).** Narrowest, proven, and no spring for the servo to fight.
+   Then sized to Allwin's rods: 28 mm apart so the servo fits between them, printed bushings instead of LM4UU.
 
 ## Numbers (estimates until measured)
 
@@ -47,16 +50,16 @@ current, and current is what resets the board.
 
 ## Fit kit coupons (hardware/parts/fit_kit.py, `python3 hardware/parts/fit_kit.py P`)
 
-- **J rod + bearing.** LM4UU bores at 7.9 / 8.0 / 8.1: pick the tightest a bearing goes into by thumb without
-  cracking. Ø4 rod holes at 3.9 / 4.0 / 4.1: pick the tightest a rod slides through by hand.
+- **J rod fits (for the Ø3.92 rods).** Bushing bores at 3.95 / 4.00 / 4.05 / 4.10, 12 deep: stand a rod upright,
+  drop the coupon over it, and pick the tightest bore that slides down under its own weight with no rattle. Ear
+  holes at 3.80 / 3.85 / 3.90: pick the tightest a rod presses into by hand and stays in.
 - **K pick face + pen plate.** Press magnets in using coupon I's pocket size, N out on the face and S out on the
   plate. Check it seats with no rock, and hang weights to find the pull-off force.
 - **L channel 0.2 / 0.3 / 0.4.** Slide the K plate's flange in. Pick the tightest that runs free by hand.
 
 ## To buy
 
-- 2 × Ø4 mm smooth rod, ~50 mm (cut from a longer length)
-- 4 × LM4UU linear bearings
+- Rods: have them (2 × Ø3.92 × 79)
 - 1 × MG90S (metal gear) servo
 - 1 × mini microswitch with lever
 
