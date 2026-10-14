@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fabricator pack: a cover sheet (PDF) + the six steel/aluminium DXFs + the window acrylic DXFs, zipped.
+"""Fabricator pack: a cover sheet (PDF) + the six steel DXFs + the window acrylic DXFs, zipped, plus combined drawings.
 
     python3 hardware/sheet/enclosure.py      # first: build + check the DXFs
     python3 hardware/sheet/pack.py           # then: cover sheet + zip
@@ -92,7 +92,7 @@ stop {E.TAB_GAP} mm short of the front wall (the rivets close it); the lid is {E
 <div class=box><h3>Finish &amp; handling</h3><ul>
 <li>304 stainless, brushed, protective film left on. Grain the same direction on all visible faces of both boxes.</li>
 <li>Deburr all edges. No paint or coating.</li>
-<li>Base plates: 2 mm 5052 aluminium (1.5 mm 304 acceptable). Deburr.</li>
+<li>Base plates: 2 mm mild steel, deburred; plate or paint after cutting.</li>
 <li>Acrylic: 3 mm clear cast acrylic, laser cut, film left on both sides. Edges are hidden, no polishing.</li>
 <li>Tolerances: laser ±0.2 mm, bends ±0.5 mm.</li></ul></div>
 <div class=box><h3>Fitted by the customer — do not insert</h3><ul>
@@ -171,10 +171,17 @@ def main():
         subprocess.run([ch, "--headless", "--no-sandbox", "--disable-gpu", "--no-pdf-header-footer",
                         f"--print-to-pdf={pdf}", page.as_uri()], check=True, capture_output=True)
         print("wrote", pdf)
-    steel = [p for p in summary["parts"] if not p["part"].startswith("acrylic")]
-    acr = [p for p in summary["parts"] if p["part"].startswith("acrylic")]
-    combined = [combined_dxf(steel, OUT / "ALL_STEEL_PARTS.dxf", f"{NAME} · all steel parts (1 mm 304; base plates per order)"),
-                combined_dxf(acr, OUT / "ALL_ACRYLIC_PARTS.dxf", f"{NAME} · all acrylic parts (3 mm clear cast)")]
+    ps = summary["parts"]
+    ss = [p for p in ps if "304" in p["material"]]
+    ms = [p for p in ps if "mild steel" in p["material"]]
+    acr = [p for p in ps if p["part"].startswith("acrylic")]
+    assert len(ss) + len(ms) + len(acr) == len(ps), "every part in exactly one material drawing"
+    for old in OUT.glob("ALL_*.dxf"):
+        old.unlink()
+    combined = [combined_dxf(ss, OUT / "ALL_SS304.dxf", f"{NAME} · all stainless parts: 1 mm 304 (mm)"),
+                combined_dxf(ms, OUT / "ALL_MS.dxf", f"{NAME} · all mild steel parts: 2 mm (mm)"),
+                combined_dxf(acr, OUT / "ALL_ACRYLIC.dxf", f"{NAME} · all acrylic parts: 3 mm clear cast (mm)"),
+                combined_dxf(ps, OUT / "ALL_PARTS.dxf", f"{NAME} · every part, all materials (mm)")]
     for c in combined:
         print("wrote", c)
     zp = OUT / f"{NAME}.zip"

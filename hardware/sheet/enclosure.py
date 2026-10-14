@@ -628,7 +628,7 @@ def plate_notches(kind):
 
 
 def base_plate(kind):
-    p = Part(f"{kind}_base_plate", f"{kind.upper()} BOX · BASE PLATE", "2.0 mm aluminium 5052 (or 1.5 mm 304)")
+    p = Part(f"{kind}_base_plate", f"{kind.upper()} BOX · BASE PLATE", "2.0 mm mild steel (plate or paint after cutting)")
     pw, pd = 440.0, 285.0
     plate = sbox(-pw / 2, -pd / 2, pw / 2, pd / 2)
     plate = plate.difference(unary_union(plate_notches(kind)))
