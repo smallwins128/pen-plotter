@@ -1,7 +1,7 @@
 """Window panels for the three front openings (power left, power right, control): a bolted bezel + magnetic panels.
 
-Each window gets a thin bezel that stays on: it follows the opening, 11 mm wide and 2.5 mm thick, held by M3 bolts
-through the 4 holes already cut in the steel (button heads sunk flush, nuts inside). It carries 4 Ø6 × 1.5 disc
+Each window gets a thin bezel that stays on: it follows the opening, 13 mm wide and 3.5 mm thick, held by M3 screws
+into the 4 rivnuts in the steel (button heads sunk flush, a recess in its back over each rivnut flange). It carries 4 Ø6 × 1.5 disc
 magnets glued flush (N out), 2 on the top edge and 2 on the bottom. Every panel has 4 matching magnets glued flush
 in its back (S in) and a 1 mm lip that drops just inside the opening, so it locates and pulls off by hand. A panel's
 front can be any shape. Magnet pocket size comes from fit-kit coupon I.
@@ -26,17 +26,18 @@ import enclosure as E  # noqa: E402
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "out" / "window_inserts"
 
-# bezel
-BEZEL_W, BEZEL_T = 11.0, 2.5
+# bezel (sizes come from the steel: E.WIN band = bezel width)
+BEZEL_W, BEZEL_T = E.WIN["band"], 3.5
+FLANGE_REC = (9.0, 1.0)                       # recess in the bezel's back over each rivnut's Ø8 flange
 CLEAR, CB_D, CB_H = 3.4, 6.2, 1.8             # M3 clearance; counterbore for a button head (Ø5.7 × 1.65)
 MAG_POCKET, MAG_DEPTH = 6.05, 1.6             # Ø6 × 1.5 magnets, glued 0.1 under the face: pocket from coupon I
 MAG_OFF = 6.5                                 # magnet centres this far out from the opening edge
-MAG_BOLT_CLEAR = 12.0                         # magnet centre to bolt centre, at least
+MAG_BOLT_CLEAR = 14.0                         # magnet centre to rivnut centre, at least
 
 # panels
 PANEL_Z = BEZEL_T                             # panels sit on the bezel
 PLATE_T = 2.6                                 # 1.6 magnet pocket + 1.0 front skin
-PANEL_OFF = 12.5                              # contour panels: bezel + 1.5 rim
+PANEL_OFF = E.WIN["band"] + E.WIN["rim"]      # panel edge: bezel + rim
 LIP_IN, LIP_W, LIP_H = 0.3, 1.2, 1.5          # locating lip just inside the opening edge
 MID_GAP = 0.5                                 # rectangular power panels stop this far short of the bar's centre line
 
@@ -50,7 +51,7 @@ CARD_SLOT, CARD_FRAME_T, CARD_RIM, CARD_MAR = 1.0, 1.8, 9.0, 3.0
 # pen rack: slotted bars at the window's slant, 15 mm proud. Pens go in capped and lean on the downhill wall of
 # their slot, so any size sits at the same angle. The marker slot is cut through the plate (its back sits just
 # over the bezel / inside the window) so a Ø15 marker fits under the same bars.
-RACK_ANG = math.radians(E.WIN["ang"])
+RACK_ANG = math.radians(40.0)
 RACK_PROUD = 15.7
 RACK_FRONT = 2.0
 RACK_BAND = 14.0                              # bar height
@@ -70,15 +71,8 @@ def openings():
 
 
 def side_clip(name):
-    """Half-plane a power panel must stay in: its own side of the slanted bar between the two windows."""
-    if name == "control":
-        return None
-    t, cy, s = math.tan(RACK_ANG), E.WIN["cy"], 1 if name == "power_right" else -1
-    big = 1e3
-    line = lambda v: (v - cy) * t
-    if s > 0:
-        return Polygon([(line(-big) + MID_GAP, -big), (big, -big), (big, big), (line(big) + MID_GAP, big)])
-    return Polygon([(-big, -big), (line(-big) - MID_GAP, -big), (line(big) - MID_GAP, big), (-big, big)])
+    """Rectangular windows sit 30 mm apart or more: no panel needs clipping."""
+    return None
 
 
 # ---------------------------------------------------------------- shapely -> build123d
@@ -152,6 +146,7 @@ def bezel(name, op, screws):
     for u, v in screws:
         part -= Pos(u, v, -1) * Cylinder(CLEAR / 2, BEZEL_T + 2, align=(Align.CENTER, Align.CENTER, Align.MIN))
         part -= Pos(u, v, BEZEL_T - CB_H) * Cylinder(CB_D / 2, 5, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        part -= Pos(u, v, -1) * Cylinder(FLANGE_REC[0] / 2, FLANGE_REC[1] + 1, align=(Align.CENTER, Align.CENTER, Align.MIN))
     m, _, _ = mag_pockets(name, 0, 0)
     return part - slab(m, BEZEL_T - MAG_DEPTH, BEZEL_T + 1)
 

@@ -1,0 +1,5 @@
+SUPERSEDED by "2026-10-14 v5". Do not cut.
+v5 makes all three windows the same 143 x 50 rectangle (R5 corners): one on the control front right of the GX plates,
+two at the edges of the power front, each with 4 M3 rivnut holes (Ø5). It adds a keyhole slot for a logo mount in the
+middle of the power front, drops the middle row of top vents, moves the IEC and USB side-panel holes to M3 rivnuts (Ø5),
+and makes the three acrylic pieces identical.

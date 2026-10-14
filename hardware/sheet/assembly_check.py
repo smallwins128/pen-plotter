@@ -114,8 +114,8 @@ def items(kind):
             out.append(Item(f"foot screw head ({x:.0f},{z:.0f})", "foot_screw", x - 3.5, x + 3.5, T, T + S_["foot_screw_head_h"], z - 3.5, z + 3.5))
     # --- rivnut bodies inside the lips (Ø5 x 9 behind the flange), from the generator's rivnut holes
     for h in body.holes:
-        if h.get("type") != "rivnut_m3":
-            continue
+        if h.get("type") != "rivnut_m3" or "folded" not in h:
+            continue                                    # wall rivnuts (windows, side panels) come from the feature rules
         u, v, face = h["folded"]
         if face == "top":   # (x, z) on a top lip
             out.append(Item(f"rivnut, {h['face']}", "rivnut", u - 2.5, u + 2.5, top - T - 9, top, v - 2.5, v + 2.5))
@@ -147,7 +147,10 @@ def items(kind):
             for a in (-1, 1):
                 for b in (-1, 1):
                     su, sv = uc + a * c["screw"][0], vc + b * c["screw"][1]
-                    wall_item(f"{name}: screw + nut", wall, su - 3.25, su + 3.25, sv - 3.25, sv + 3.25, 6.0, "panel_screw")
+                    if c.get("rivnut"):                  # M3 rivnut body Ø5 x 9, crimp bulge Ø7, + 1 mm
+                        wall_item(f"{name}: rivnut ({su:.0f},{sv:.0f})", wall, su - 3.5, su + 3.5, sv - 3.5, sv + 3.5, 10.0, "rivnut")
+                    else:
+                        wall_item(f"{name}: screw + nut", wall, su - 3.25, su + 3.25, sv - 3.25, sv + 3.25, 6.0, "panel_screw")
         elif name.startswith("fan"):
             wall_item("fan (80 x 80 x 25)", wall, u0, u1, v0, v1, E.FAN_DEPTH, "fan")
         elif name == "earth stud":
@@ -160,10 +163,13 @@ def items(kind):
                 wall_item(f"GX16 socket ({su:.0f},{sv:.0f})", wall, su - 11, su + 11, sv - 11, sv + 11, 30.0, "panel_in")
             for su, sv in E.gx_openings()[g][1]:
                 wall_item(f"GX plate rivnut ({su:.0f},{sv:.0f})", wall, su - 2.5, su + 2.5, sv - 2.5, sv + 2.5, 10.0, "rivnut")
-        elif name == "window bezels":                    # bezel + acrylic are outside; inside: the M3 screw tails, nothing else
+        elif name == "window bezels":                    # bezel + panel are outside; inside: the 4 rivnut bodies (Ø7 crimp, 10 deep)
             for _, scr in (E.window_panes() if kind == "power" else [E.ctrl_window()]):
                 for su, sv in scr:
-                    wall_item(f"window bezel screw ({su:.0f},{sv:.0f})", wall, su - 3.25, su + 3.25, sv - 3.25, sv + 3.25, 6.0, "panel_screw")
+                    if u0 <= su <= u1 and v0 <= sv <= v1:
+                        wall_item(f"window bezel rivnut ({su:.0f},{sv:.0f})", wall, su - 3.5, su + 3.5, sv - 3.5, sv + 3.5, 10.0, "rivnut")
+        elif name == "logo":                             # spine's inside plate (2.5) behind the keyhole slot
+            wall_item("logo spine: inside plate", wall, -16.0, 16.0, E.LOGO["slot"][0] - 4 - E.LOGO["drop"] * 0, E.LOGO["slot"][1] + 4, 2.5, "panel_in")
         elif name == "accessory rivnut":                 # M3 rivnut body (Ø5 x 9) + 1 mm, set later from outside
             wall_item(f"{name} ({(u0 + u1) / 2:.0f},{(v0 + v1) / 2:.0f})", wall, u0 + 1.5, u1 - 1.5, v0 + 1.5, v1 - 1.5, 10.0, "rivnut")
         elif name == "ETCH mark":                        # the black print's plate, inside the front wall

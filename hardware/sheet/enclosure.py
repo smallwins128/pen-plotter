@@ -83,8 +83,9 @@ HOLE = {   # name: (diameter, leader text)
 PANEL = {
     "receiving": dict(cut=(152.0, 50.0), plate=(172.0, 70.0), screw=(80.0, 29.0)),
     "psu": dict(cut=(152.0, 120.4), plate=(172.0, 140.4), screw=(80.0, 64.2)),
-    "iec": dict(cut=(130.0, 65.0), plate=(150.0, 85.0), screw=(69.0, 36.5)),          # new print
-    "usb_ant": dict(cut=(80.0, 30.0), plate=(100.0, 50.0), screw=(44.0, 19.0)),       # new print: USB-C + antenna + pendant GX16
+    # new prints, on M3 rivnuts: rivnut centres 7 out from the cutout (room to set), plate 5 past them
+    "iec": dict(cut=(130.0, 65.0), plate=(154.0, 89.0), screw=(72.0, 39.5), rivnut=True),
+    "usb_ant": dict(cut=(80.0, 30.0), plate=(104.0, 54.0), screw=(47.0, 22.0), rivnut=True),  # USB-C + antenna + pendant GX16
 }
 
 
@@ -108,10 +109,17 @@ PEG_SLOT = (11.0, 8.0)                     # length along x, width
 # accessory holes: plain Ø5, take an M3 rivnut (set later, from outside) or a printed plug
 ACC_LID = [(sx * (W / 2 - 40), sz * (D / 2 - 40)) for sx in (-1, 1) for sz in (-1, 1)]   # control lid top corners (over the power lid's peg holes)
 ACC_FRONT = [(-(W / 2 - 40), 30.0), (0.0, 30.0), (W / 2 - 40, 30.0)]   # power front (x, height)
-# power front: two acrylic windows split by a slanted steel bar. 3 mm acrylic outside, black printed bezel over it,
-# M3 screws from inside into heat-set inserts in the bezel (one per side of each window, outside the acrylic)
-VENT_ROWS = (145.0, 136.0, 42.0)          # power front vent rows (height of slot centre)
-WIN = dict(gap=20.0, ang=40.0, r=3.0, h=40.0, span=330.0, band=9.0, mar=3.0, scr=5.5, cy=89.0)
+# windows: three identical rectangles (R5), one on the control front right of the GX plates, two on the power front at
+# its edges. A printed bezel is bolted round each into 4 M3 rivnuts (one per side), panels snap onto the bezel with
+# magnets. Clearance: the panel (bezel + rim) stays 15 mm from the box edge and from the GX plates; rivnut centres 7 mm
+# out from the opening edge (room for the rivnut to set, and its flange)
+VENT_ROWS = (145.0, 42.0)                 # power front vent rows (height of slot centre); the middle top row is gone
+WIN = dict(w=143.0, h=50.0, r=5.0, band=13.0, rim=1.5, mar=3.0, scr=7.0, edge=15.0,
+           cy={"control": 46.5, "power": 93.5})
+WIN_X = (53.5, 196.5)                      # opening u range: right window (and the control window); left = mirror
+# logo mount, power front centre: keyhole slot for a printed spine (2 dovetail lugs pass the entries from inside,
+# then drop 15); a logo plate slides down onto the lugs from above
+LOGO = dict(cx=0.0, slot_w=4.2, slot=(62.0, 121.5), entry=13.0, entries=(85.0, 115.0), drop=15.0, plate=(48.0, 79.0), cy=93.5)
 
 
 # control front: GX16 sockets live in printed plates; the steel only has one plain opening per group (6 mm play round
@@ -145,44 +153,32 @@ def gx_plate(rect, g):
     return b.buffer(-c, join_style=2).buffer(c, join_style=3)
 
 
-CTRL_WIN = dict(w=96.0, h=40.0, cx=112.0, cy=47.0, ang=40.0)   # control front: trapezium, left end leaning, right end square
-
-
-def _quad_window(q):
-    """Rounded opening (R WIN["r"]) and one bezel screw per side, outside the acrylic. q is CCW."""
-    poly = Polygon(q).buffer(-WIN["r"], join_style=1, quad_segs=4).buffer(WIN["r"], join_style=1, quad_segs=4)
-    scr = []
-    for i in range(len(q)):
-        (ax, ay), (bx, by) = q[i], q[(i + 1) % len(q)]
-        L_ = math.hypot(bx - ax, by - ay); nx, ny = (by - ay) / L_, -(bx - ax) / L_
-        scr.append(((ax + bx) / 2 + nx * WIN["scr"], (ay + by) / 2 + ny * WIN["scr"]))
-    return poly, scr
+def _rect_window(x0, x1, cy):
+    """Rounded rectangular opening and its 4 rivnut points (one per side, WIN["scr"] out from the edge)."""
+    w = WIN
+    y0, y1 = cy - w["h"] / 2, cy + w["h"] / 2
+    poly = sbox(x0, y0, x1, y1).buffer(-w["r"], join_style=1, quad_segs=8).buffer(w["r"], join_style=1, quad_segs=8)
+    xm, s_ = (x0 + x1) / 2, w["scr"]
+    return poly, [(xm, y0 - s_), (x1 + s_, cy), (xm, y1 + s_), (x0 - s_, cy)]
 
 
 def ctrl_window():
-    w = CTRL_WIN; k = w["h"] / 2 * math.tan(math.radians(w["ang"]))
-    x0, x1, y0, y1 = w["cx"] - w["w"] / 2, w["cx"] + w["w"] / 2, w["cy"] - w["h"] / 2, w["cy"] + w["h"] / 2
-    return _quad_window([(x0 - k, y0), (x1, y0), (x1, y1), (x0 + k, y1)])
+    return _rect_window(WIN_X[0], WIN_X[1], WIN["cy"]["control"])
 
 
 def window_panes():
-    """The two window openings on the power front, (u, v) = (x, height). Returns [(rounded polygon, screw points)]."""
-    w = WIN; t = math.tan(math.radians(w["ang"]))
-    y0, y1 = w["cy"] - w["h"] / 2, w["cy"] + w["h"] / 2
-    wg = (w["gap"] + 2 * w["band"]) / math.cos(math.radians(w["ang"]))     # horizontal gap between the openings
-    xl = lambda y: -wg / 2 + (y - w["cy"]) * t
-    xr = lambda y: wg / 2 + (y - w["cy"]) * t
-    s = w["span"] / 2
-    out = []
-    for q in ([(-s, y0), (xl(y0), y0), (xl(y1), y1), (-s, y1)], [(xr(y0), y0), (s, y0), (s, y1), (xr(y1), y1)]):
-        poly = Polygon(q).buffer(-w["r"], join_style=1, quad_segs=4).buffer(w["r"], join_style=1, quad_segs=4)
-        scr = []
-        for i in range(4):
-            (ax, ay), (bx, by) = q[i], q[(i + 1) % 4]
-            L_ = math.hypot(bx - ax, by - ay); nx, ny = (by - ay) / L_, -(bx - ax) / L_      # outward (quad is CCW)
-            scr.append(((ax + bx) / 2 + nx * w["scr"], (ay + by) / 2 + ny * w["scr"]))
-        out.append((poly, scr))
-    return out
+    """The two window openings on the power front, (u, v) = (x, height). Returns [(rounded polygon, rivnut points)]."""
+    cy = WIN["cy"]["power"]
+    return [_rect_window(-WIN_X[1], -WIN_X[0], cy), _rect_window(WIN_X[0], WIN_X[1], cy)]
+
+
+def logo_slot():
+    """Keyhole slot for the logo spine, (u, v) on the power front."""
+    L = LOGO
+    parts = [sbox(L["cx"] - L["slot_w"] / 2, L["slot"][0], L["cx"] + L["slot_w"] / 2, L["slot"][1])]
+    parts += [sbox(L["cx"] - L["entry"] / 2, v - L["entry"] / 2, L["cx"] + L["entry"] / 2, v + L["entry"] / 2) for v in L["entries"]]
+    u = unary_union(parts)
+    return u.buffer(-1.5, join_style=1, quad_segs=8).buffer(1.5, join_style=1, quad_segs=8)
 
 
 def panel_y(kind, ht):
@@ -453,7 +449,10 @@ def body(kind):
         add_rect(p, wall, mp, uc, vc, c["cut"][0], c["cut"][1], f"{name} cutout {c['cut'][0]:g} x {c['cut'][1]:g}")
         for a in (-1, 1):
             for b in (-1, 1):
-                add_circle(p, wall, mp, uc + a * c["screw"][0], vc + b * c["screw"][1], "m3", f"{name} screw")
+                if c.get("rivnut"):
+                    add_circle(p, wall, mp, uc + a * c["screw"][0], vc + b * c["screw"][1], "rivnut_m3", f"M3 rivnut (5mm), {name}")
+                else:
+                    add_circle(p, wall, mp, uc + a * c["screw"][0], vc + b * c["screw"][1], "m3", f"{name} screw")
         feat.append((wall, uc - c["plate"][0] / 2, uc + c["plate"][0] / 2, vc - c["plate"][1] / 2, vc + c["plate"][1] / 2, name))
         panels.append(dict(wall=wall, key=key, name=name, u=uc, v=vc, cut=list(c["cut"]), plate=list(c["plate"]), screw=list(c["screw"])))
     def fan(wall, mp, uc, vc):
@@ -473,10 +472,10 @@ def body(kind):
                 add_circle(p, "front", MF, u, v, "acc", "M3 rivnut (5mm), GX plate")
             feat.append(("front", rect[0], rect[2], rect[1], rect[3], f"GX16 {g}"))
         poly, scr = ctrl_window()
-        add_poly(p, "front", MF, list(poly.exterior.coords)[:-1], "window (acrylic behind bezel)", kind="window")
+        add_poly(p, "front", MF, list(poly.exterior.coords)[:-1], "window (printed bezel + snap-on panel)", kind="window")
         for u, v in scr:
-            add_circle(p, "front", MF, u, v, "m3", "Ø3.4 window bezel screw")
-        bb = poly.buffer(WIN["band"], join_style=1, quad_segs=4).bounds
+            add_circle(p, "front", MF, u, v, "rivnut_m3", "M3 rivnut (5mm), window bezel")
+        bb = poly.buffer(WIN["band"] + WIN["rim"], join_style=1, quad_segs=4).bounds
         feat.append(("front", bb[0], bb[2], bb[1], bb[3], "window bezels"))
         fan("left", ML, *FAN[kind])
         panel("left", ML, -45.0, panel_y(kind, PANEL["usb_ant"]["plate"][1]), "usb_ant", "USB/antenna panel")
@@ -487,21 +486,23 @@ def body(kind):
         for vr in VENT_ROWS:
             for i in range(n):
                 add_slot(p, "front", MF, xv - i * 2 * xv / (n - 1), vr, 28, 3.5, 0.0, "vent")
-        feat.append(("front", -xv - 14, xv + 14, VENT_ROWS[1] - 3.75, VENT_ROWS[0] + 3.75, "front vents"))
-        feat.append(("front", -xv - 14, xv + 14, VENT_ROWS[2] - 3.75, VENT_ROWS[2] + 3.75, "front vents"))
-        bez = []
+        for vr in VENT_ROWS:
+            feat.append(("front", -xv - 14, xv + 14, vr - 3.75, vr + 3.75, "front vents"))
         for poly, scr in window_panes():
-            add_poly(p, "front", MF, list(poly.exterior.coords)[:-1], "window (acrylic behind bezel)", kind="window")
+            add_poly(p, "front", MF, list(poly.exterior.coords)[:-1], "window (printed bezel + snap-on panel)", kind="window")
             for u, v in scr:
-                add_circle(p, "front", MF, u, v, "m3", "Ø3.4 window bezel screw")
-            bez.append(poly.buffer(WIN["band"], join_style=1, quad_segs=4))
-        bb = unary_union(bez).bounds
-        feat.append(("front", bb[0], bb[2], bb[1], bb[3], "window bezels"))
+                add_circle(p, "front", MF, u, v, "rivnut_m3", "M3 rivnut (5mm), window bezel")
+            bb = poly.buffer(WIN["band"] + WIN["rim"], join_style=1, quad_segs=4).bounds
+            feat.append(("front", bb[0], bb[2], bb[1], bb[3], "window bezels"))
+        ls = logo_slot()
+        add_poly(p, "front", MF, list(ls.exterior.coords)[:-1], "logo keyhole slot (printed spine)", kind="cutout")
+        pw, ph = LOGO["plate"]
+        feat.append(("front", LOGO["cx"] - pw / 2, LOGO["cx"] + pw / 2, LOGO["cy"] - ph / 2, LOGO["cy"] + ph / 2, "logo"))
         for u, v in ACC_FRONT:
             add_circle(p, "front", MF, u, v, "acc")
             feat.append(("front", u - 4, u + 4, v - 4, v + 4, "accessory rivnut"))
         fan("left", ML, *FAN[kind])
-        panel("left", ML, D / 2 - 187.5, T + H[kind] / 2, "iec", "IEC panel")
+        panel("left", ML, D / 2 - 188.5, T + H[kind] / 2, "iec", "IEC panel")
         add_circle(p, "left", ML, D / 2 - 260, T + 20, "stud")
         feat.append(("left", D / 2 - 266, D / 2 - 254, T + 14, T + 26, "earth stud"))
         panel("right", MR, JACK_Z, panel_y(kind, PANEL["psu"]["plate"][1]), "psu", "PSU panel")
@@ -1070,7 +1071,7 @@ def sync_inspector(parts):
                         plate=[[round(a, 2), round(b, 2)] for a, b in list(gx_plate(rect, g).exterior.coords)[:-1]],
                         sockets=[list(q) for q in GX_GROUPS[g]], rivnuts=[list(q) for q in riv]) for g, (rect, riv) in gx_openings().items()],
                windows={k_: [dict(open=[[round(a, 2), round(b, 2)] for a, b in list(pl.exterior.coords)[:-1]],
-                             bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
+                             bezel=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["band"], join_style=1, quad_segs=8).exterior.coords)[:-1]],
                              acrylic=[[round(a, 2), round(b, 2)] for a, b in list(pl.buffer(WIN["mar"], join_style=1, quad_segs=4).exterior.coords)[:-1]],
                              screws=[[round(a, 2), round(b, 2)] for a, b in sc]) for pl, sc in panes] for k_, panes in (("power", window_panes()), ("control", [ctrl_window()]))},
                stack=dict(**STACK, slot=list(PEG_SLOT), peg_hole=HOLE["peg"][0], peg_clear=HOLE["pegclr"][0],

@@ -96,9 +96,11 @@ stop {E.TAB_GAP} mm short of the front wall (the rivets close it); the lid is {E
 <li>Acrylic: 3 mm clear cast acrylic, laser cut, film left on both sides. Edges are hidden, no polishing.</li>
 <li>Tolerances: laser ±0.2 mm, bends ±0.5 mm.</li></ul></div>
 <div class=box><h3>Fitted by the customer — do not insert</h3><ul>
-<li>M3 rivnuts (Ø5 holes) in the body lips, round the control-front connector openings, on the control lid top and the power front;
+<li>M3 rivnuts (Ø5 holes) in the body lips, round the control-front connector openings, round all three windows, round the IEC and
+USB side-panel cutouts, on the control lid top and the power front;
 solid rivets Ø3 (Ø3.2 holes) in the front corner tabs.</li>
-<li>Window bezels, connector plates and side panels are 3D printed and screwed on later (Ø3.4 holes).</li>
+<li>Window bezels, connector plates and side panels are 3D printed and screwed on later: into the rivnuts, except the receiving and
+PSU panels (Ø3.4 holes, screw + nut). The keyhole slot in the middle of the power front takes a printed logo mount.</li>
 <li>M4 rivnuts (Ø6 grid) in the base plates as needed; M4 standoffs, rubber feet, panels, fans.</li></ul></div>
 </div>
 <p><b>Checks:</b> {n_ok} design checks passed before these files were written — holes clear of bends (≥ 5 mm), webs ≥ 1.5 mm,

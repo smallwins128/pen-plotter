@@ -20,12 +20,18 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Stacking: 4 printed **locating feet** under the control box (Ø24 × 6 flange + Ø7.6 peg) drop into
   the power lid: Ø8 front-left locates, 8 × 11 slot front-right, Ø10 at the back. Power box keeps
   rubber feet.
-- Power front (2026-10-12): vent rows at 145/136/42, two acrylic windows split by a slanted bar (`WIN` in
-  `enclosure.py`: 330 span, 40 tall, 40°, R3, 20 mm steel between 9 mm PETG bezels; 3 mm acrylic outside under the bezel;
-  4 M3 screws per window from inside into heat-set inserts), 3 Ø5 accessory holes at 30 mm.
+- Windows (v5, 2026-10-14): three identical **143 × 50 rectangles, R5** (`WIN`, `WIN_X` in `enclosure.py`): control
+  front right of the GX plates, power front at both edges (u ±53.5…±196.5). 4 M3 rivnuts per window, one per side, 7 mm
+  out from the edge. Panels (bezel 13 + rim 1.5) stay 15 mm from the box edges and the GX plates (corner tabs inside
+  are 15 wide). Printed: a bolted bezel (13 × 3.5, 4 Ø6 × 1.5 magnets glued flush, N out) stays on; panels (relief,
+  acrylic frame, card holder, pen garage) carry 4 magnets (S in) + a 1 mm locating lip and pull off from the front.
+- Power front (v5): vent rows at 145 and 42 (middle top row dropped), 3 Ø5 accessory holes at 30 mm, and a **logo
+  keyhole slot** in the middle (`LOGO`: 4.2 slot with two 13 × 13 entries; a printed spine's 2 dovetail lugs go out
+  through the entries from inside and drop 15; a 48 × 79 logo plate slides down onto them, a hidden spring finger clicks
+  under the bottom lug).
 - Control front (2026-10-12): no GX holes in the steel. Three plain openings (`GX_GROUPS`, 6 mm play round each Ø22
   nut) with M3 rivnuts; printed GX plates carry the sockets (nut seat stops turning) and screw on from the front.
-  Inspector shows the chamfered plates. Small trapezium window (`CTRL_WIN`: 96 × 40, left end 40°, right end square).
+  Inspector shows the chamfered plates. Window: see Windows.
 - Control lid top: no window (removed 2026-10-12); 4 corner accessory holes only.
 - Accessory holes: plain Ø5 (M3 rivnut set later, or a printed plug). Control lid top: 4 corners. GX16 rail centred.
 - Body flats are mirrored left-right (`mirror_x`): the shop reads the drawing from the inside face and folds UP,
@@ -39,9 +45,9 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 | `hardware/sheet/assembly_check.py` | Whole-assembly clearance: steel-to-steel gaps (≥ 2 mm unless a listed contact), lid fit, parts, fans, rivnuts, plate, feet, pegs. The generator refuses to write files on any clash. |
 | `hardware/sheet/strokes.py` + `mark_etch.json` | ETCH mark outlines and the rejected brush strokes. **Unused** by the generator since 2026-10-12. |
 | `hardware/sheet/fold.py` | Folds the DXFs as the shop will (real R1 bends, from the files alone), checks hole positions (no mirroring), sizes, self-collision, whole-assembly overlap, and lid/tab fit for shop radii R0.6–R2.5. Writes `out/fold/assembly.glb` + STLs for Blender. Run by `enclosure.py`; needs `pip install trimesh manifold3d mapbox_earcut scipy`. |
-| `hardware/sheet/pack.py` | Fabricator cover sheet PDF + zip: `python3 hardware/sheet/pack.py v4`. |
+| `hardware/sheet/pack.py` | Fabricator cover sheet PDF + zip: `python3 hardware/sheet/pack.py v5`. |
 | `hardware/web/enclosure_inspector.html` | **The 3D renderer.** Reads the generator's `GEN` block (walls, panels, fans, plate, stack). |
-| `hardware/cutfiles/2026-10-12 v4/` | **Released pack** (6 steel/Al parts + 3 acrylic, cover PDF, zip), shared with the vendor via Drive (R04 Outputs). v1–v3 superseded (v3 bodies folded mirrored). |
+| `hardware/cutfiles/2026-10-14 v5/` | **Released pack** (6 steel parts + 3 acrylic, cover PDF, zip). v4 superseded before cutting (vendor had not cut); only the two bodies and the acrylic changed. v1–v3 superseded. |
 
 ## Using the renderer in another chat
 
@@ -55,7 +61,10 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
 
 ## Status (2026-10-12)
 
-- Steel cut pack v4 sent to the vendor. Base plates: Allwin will get them in **1 mm 304 or 2 mm mild steel, not aluminium**
+- Cut pack v5 issued 2026-10-14 (v4 had not been cut): rectangular windows, logo slot, IEC/USB panels on M3 rivnuts
+  (rivnut centres 7 out from the cutouts; IEC plate now 154 × 89, USB 104 × 54). Receiving and PSU panels are already
+  printed: their Ø3.4 holes and cutouts stay.
+- Steel cut pack v4 was sent to the vendor. Base plates: Allwin will get them in **1 mm 304 or 2 mm mild steel, not aluminium**
   (model still assumes 2 mm; 1 mm SS over 205 × 255 standoff spans will flex under the PSUs; mild steel needs plating or paint).
 - Next: the 3D printed parts.
 
@@ -101,7 +110,7 @@ H cable tie mount + saddles). `FIT` at the top holds the numbers every real part
 
 ## Open before cutting
 
-1. ~~Issue cut pack v4~~ done 2026-10-12.
+1. ~~Issue cut pack v4~~ done 2026-10-12. ~~v5~~ done 2026-10-14: send it to the vendor, tell them to discard v4.
 2. Fabricator confirms bend deduction for 1 mm 304 at R1 (files assume K 0.44, BD 1.74). — Allwin
 3. Front design: Allwin draws it; plain panels (vents only) for now. Awaiting his final changes before v4.
 
