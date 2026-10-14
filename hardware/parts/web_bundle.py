@@ -1,6 +1,7 @@
 """Pack the window-insert STLs into one small binary for the enclosure inspector.
 
     python3 hardware/parts/web_bundle.py      # after window_inserts.py
+    pack(src_dir, dst_file)                   # any other set of STLs (+ optional meta.json), e.g. pen_lifter.py
 
 Layout of hardware/web/window_inserts.b64.txt (base64 of): uint32 header length, JSON header (padded to 4 bytes),
 then per part: int16 xyz in 0.01 mm (shared vertices) and uint32 triangle indices.
@@ -20,8 +21,12 @@ Q = 100.0   # 0.01 mm steps; ±327 mm fits int16
 
 
 def main():
+    pack(SRC, DST)
+
+
+def pack(src, dst):
     head, blobs, off = [], [], 0
-    for f in sorted(SRC.glob("*.stl")):
+    for f in sorted(src.glob("*.stl")):
         m = trimesh.load(f)
         m.merge_vertices()
         v = np.round(m.vertices * Q).astype(np.int16).tobytes()
@@ -31,11 +36,11 @@ def main():
         off += len(v) + len(i)
         if off % 4:
             blobs.append(b"\0" * (4 - off % 4)); off += 4 - off % 4
-    meta = json.loads((SRC / "meta.json").read_text()) if (SRC / "meta.json").exists() else {}
+    meta = json.loads((src / "meta.json").read_text()) if (src / "meta.json").exists() else {}
     h = json.dumps(dict(q=Q, parts=head, **meta)).encode()
     h += b" " * (-len(h) % 4)
-    DST.write_bytes(base64.b64encode(struct.pack("<I", len(h)) + h + b"".join(blobs)))
-    print(f"{len(head)} parts -> {DST.relative_to(HW.parent)} ({DST.stat().st_size / 1e6:.2f} MB)")
+    dst.write_bytes(base64.b64encode(struct.pack("<I", len(h)) + h + b"".join(blobs)))
+    print(f"{len(head)} parts -> {dst.relative_to(HW.parent)} ({dst.stat().st_size / 1e6:.2f} MB)")
 
 
 if __name__ == "__main__":

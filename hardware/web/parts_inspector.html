@@ -1,0 +1,250 @@
+<title>Etch Parts Inspector</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="parts-data" content="pen_lifter.b64.txt">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the same workbench as the enclosure inspector. The model fills the stage, a control rail on the right
+   (below the stage on phones). Data comes from a <name>.b64.txt bundle written by hardware/parts/web_bundle.py. */
+:root {
+  --bg: #eef0f1; --panel: #ffffff; --ink: #1d2226; --muted: #5d676f; --line: #d3d8dc;
+  --accent: #c2410c; --accent-ink: #ffffff; --stage: #e2e6e9; --ok: #15803d; --warn: #b45309;
+  --f-ui: "Archivo", "Helvetica Neue", Arial, sans-serif; --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15191c; --panel: #1d2226; --ink: #e8ecef; --muted: #9aa5ad; --line: #333b41;
+  --accent: #fb923c; --accent-ink: #1d2226; --stage: #101315; --ok: #4ade80; --warn: #fbbf24; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15191c; --panel: #1d2226; --ink: #e8ecef; --muted: #9aa5ad; --line: #333b41;
+  --accent: #fb923c; --accent-ink: #1d2226; --stage: #101315; --ok: #4ade80; --warn: #fbbf24; color-scheme: dark }
+html, body { height: 100% }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); }
+.app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 300px; }
+.stage { position: relative; background: var(--stage); min-width: 0; min-height: 0; }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.hud { position: absolute; left: 16px; bottom: 14px; right: 16px; font: 12px/1.45 var(--f-mono); color: var(--muted);
+  pointer-events: none; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.chip { font: 600 11px/1 var(--f-ui); letter-spacing: .04em; text-transform: uppercase; padding: 5px 8px;
+  border-radius: 999px; border: 1px solid currentColor; }
+.chip.ok { color: var(--ok) } .chip.warn { color: var(--warn) } .chip.muted { color: var(--muted) }
+.load { position: absolute; inset: 0; display: grid; place-items: center; font: 13px var(--f-mono); color: var(--muted); }
+.rail { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; padding-block: 18px;
+  padding-inline: 16px; display: flex; flex-direction: column; gap: 18px; }
+h1 { font-size: 17px; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+.sub { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.label { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { flex: 1; font: 600 12.5px var(--f-ui); padding: 7px 4px; background: transparent; color: var(--ink);
+  border: 0; border-right: 1px solid var(--line); cursor: pointer; }
+.seg button:last-child { border-right: 0 }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.range { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: 12.5px; }
+.range input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.range output { font: 12px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.layers { display: flex; flex-direction: column; gap: 2px; }
+.layers label { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 4px 2px; cursor: pointer; }
+.sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); flex: none; }
+.info { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column;
+  gap: 4px; font-size: 12.5px; line-height: 1.45; min-width: 0; }
+.info b { font: 500 12.5px var(--f-mono); overflow-wrap: anywhere; }
+.info .dim { font: 12px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { font-size: 12px; color: var(--muted); line-height: 1.45; }
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 58vh auto; height: auto; }
+  .rail { border-left: 0; border-top: 1px solid var(--line); padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+}
+</style>
+
+<div class="app">
+  <div class="stage" id="stage"><div class="load" id="load">Loading parts…</div><div class="hud" id="hud"></div></div>
+  <aside class="rail">
+    <div>
+      <h1 id="title">Pen lifter, lofi</h1>
+      <p class="sub">Flexure head, magnetic pen plate and dock for Etch. Blocks show positions only; sizes are placeholders until the fit kit measures them.</p>
+    </div>
+    <div class="group">
+      <span class="label">Scene</span>
+      <div class="seg" id="scenes"></div>
+    </div>
+    <div class="group" id="rig">
+      <div class="range"><label for="servo">Servo</label><output id="servoOut"></output>
+        <input id="servo" type="range" min="0" max="100" value="0"></div>
+      <div class="range"><label for="explode">Explode</label><output id="explodeOut"></output>
+        <input id="explode" type="range" min="0" max="100" value="0"></div>
+    </div>
+    <div class="group">
+      <span class="label">View</span>
+      <div class="seg" id="views">
+        <button data-v="iso" aria-pressed="true">Iso</button><button data-v="front">Front</button>
+        <button data-v="side">Side</button><button data-v="top">Top</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="label">Layers</span>
+      <div class="layers" id="layers"></div>
+    </div>
+    <div class="info" id="info"><span class="note">Click a part to see what it is and its size.</span></div>
+    <p class="note">Drag to orbit, right-drag or two fingers to pan, scroll or pinch to zoom. Units are mm; z is up and the paper is at z = 0.</p>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const DATA = document.querySelector('meta[name="parts-data"]').content;
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const stage = $("stage");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 1, 5000);
+camera.up.set(0, 0, 1);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a9399, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 0.75); sun.position.set(180, 260, 320); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.25); fill.position.set(-200, -120, 120); scene.add(fill);
+
+let meshes = [], rig = {}, current = "assembly", picked = null;
+const state = { servo: 0, explode: 0 };
+
+function resize() {
+  const r = stage.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false); camera.aspect = r.width / Math.max(r.height, 1); camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+function applyTheme() { scene.background = new THREE.Color(css("--stage")); }
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+fetch(DATA).then(r => { if (!r.ok) throw new Error(`${DATA}: HTTP ${r.status}`); return r.text(); }).then(b64 => {
+  const buf = Uint8Array.from(atob(b64.trim()), c => c.charCodeAt(0)).buffer;
+  const hlen = new DataView(buf).getUint32(0, true);
+  const head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, hlen)));
+  const base = 4 + hlen, meta = head.meta || {};
+  rig = head.rig || {};
+  if (head.title) $("title").textContent = head.title;
+  for (const p of head.parts) {
+    const v = new Int16Array(buf.slice(base + p.v, base + p.v + p.nv * 6)), pos = new Float32Array(v.length);
+    for (let k = 0; k < v.length; k++) pos[k] = v[k] / head.q;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(buf.slice(base + p.i, base + p.i + p.nt * 12)), 1));
+    g.computeBoundingBox();
+    const m = meta[p.name] || { scene: "assembly", group: "Parts", color: "#cccccc" };
+    const mat = new THREE.MeshStandardMaterial({ color: m.color, flatShading: true, roughness: 0.65, metalness: 0.05,
+      transparent: (m.opacity ?? 1) < 1, opacity: m.opacity ?? 1, depthWrite: (m.opacity ?? 1) >= 1 });
+    const mesh = new THREE.Mesh(g, mat);
+    mesh.matrixAutoUpdate = false;
+    mesh.userData = { name: p.name, ...m };
+    scene.add(mesh); meshes.push(mesh);
+  }
+  $("load").hidden = true;
+  buildScenes(); setScene("assembly"); applyTheme(); resize();
+}).catch(e => { $("load").textContent = `Could not load the parts (${e.message}). Rebuild with hardware/parts/pen_lifter.py.`; });
+
+function buildScenes() {
+  const names = [...new Set(meshes.map(m => m.userData.scene))];
+  const label = { assembly: "Assembly", fit: "Fit kit" };
+  $("scenes").innerHTML = names.map(n => `<button data-s="${n}">${label[n] || n}</button>`).join("");
+  $("scenes").onclick = e => { const b = e.target.closest("button"); if (b) setScene(b.dataset.s); };
+}
+
+function setScene(s) {
+  current = s;
+  for (const b of $("scenes").children) b.setAttribute("aria-pressed", b.dataset.s === s);
+  $("rig").hidden = s !== "assembly";
+  const groups = new Map();
+  for (const m of meshes) {
+    m.visible = m.userData.scene === s;
+    if (m.visible && !groups.has(m.userData.group)) groups.set(m.userData.group, m.userData.color);
+  }
+  $("layers").innerHTML = [...groups].map(([g, c], i) =>
+    `<label><input type="checkbox" id="layer${i}" data-g="${g}" checked><span class="sw" style="background:${c}"></span>${g}</label>`).join("");
+  select(null); pose(); view("iso");
+}
+
+$("layers").addEventListener("change", e => {
+  const g = e.target.dataset.g;
+  for (const m of meshes) if (m.userData.scene === current && m.userData.group === g) m.visible = e.target.checked;
+});
+
+function pose() {
+  const r = rig, drop = r.arm_drop ?? 0, lift = r.lift ?? 0;
+  const h = -drop + (state.servo / 100) * (lift + drop);          // arm tip height over the tab contact
+  const z = Math.max(0, h), ex = state.explode / 100;
+  for (const m of meshes) {
+    const d = m.userData, M = new THREE.Matrix4();
+    if (d.scene === "assembly") {
+      if (d.anim === "lift") M.makeTranslation(0, 0, z);
+      else if (d.anim === "shear") { const k = z / r.shear_len; M.set(1,0,0,0, 0,1,0,0, 0,k,1,-k*r.shear_y0, 0,0,0,1); }
+      else if (d.anim === "arm") {
+        const [sx, , sz] = r.shaft, phi = Math.asin(Math.max(-1, Math.min(1, h / r.arm_r)));
+        M.makeTranslation(sx, 0, sz).multiply(new THREE.Matrix4().makeRotationY(phi)).multiply(new THREE.Matrix4().makeTranslation(-sx, 0, -sz));
+      }
+      if (d.explode) M.premultiply(new THREE.Matrix4().makeTranslation(d.explode[0] * ex, d.explode[1] * ex, d.explode[2] * ex));
+    }
+    m.matrix.copy(M); m.matrixWorldNeedsUpdate = true;
+  }
+  $("servoOut").textContent = `${state.servo}%`;
+  $("explodeOut").textContent = `${state.explode}%`;
+  const swOn = lift && z >= lift - 0.5;
+  const chip = h < 0 ? `<span class="chip ok">Pen down · servo unloaded</span>`
+             : z < lift ? `<span class="chip warn">Lifting</span>` : `<span class="chip ok">Pen up</span>`;
+  $("hud").innerHTML = current !== "assembly" ? `<span>Bambu A1 mini bed, 180 × 180 mm</span>` :
+    `${chip}<span>lift ${z.toFixed(1)} / ${lift} mm</span><span>arm ${h < 0 ? (-h).toFixed(1) + " mm clear of tab" : "on tab"}</span>` +
+    `<span>switch ${swOn ? "made" : "open"}</span>`;
+}
+
+for (const id of ["servo", "explode"]) $(id).addEventListener("input", e => { state[id] = +e.target.value; pose(); });
+
+function visibleBox() {
+  const b = new THREE.Box3();
+  for (const m of meshes) if (m.visible && m.userData.group !== "Context") {
+    const bb = m.geometry.boundingBox.clone().applyMatrix4(m.matrix); b.union(bb);
+  }
+  return b;
+}
+function view(v) {
+  for (const b of $("views").children) b.setAttribute("aria-pressed", b.dataset.v === v);
+  const box = visibleBox(), c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() * 0.62 || 100;
+  const d = r / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.aspect < 1 ? 1.25 / camera.aspect : 1);
+  const dir = { iso: [0.85, 1.0, 0.65], front: [0, 1, 0.12], side: [1, 0, 0.12], top: [0.0001, 0.0001, 1] }[v];
+  camera.position.copy(c).add(new THREE.Vector3(...dir).normalize().multiplyScalar(d));
+  controls.target.copy(c); controls.update();
+}
+$("views").onclick = e => { const b = e.target.closest("button"); if (b) view(b.dataset.v); };
+
+function select(m) {
+  if (picked) picked.material.emissive.setHex(0x000000);
+  picked = m;
+  if (!m) { $("info").innerHTML = `<span class="note">Click a part to see what it is and its size.</span>`; return; }
+  m.material.emissive.setHex(0x5a2a0a);
+  const s = m.geometry.boundingBox.getSize(new THREE.Vector3());
+  const esc = t => String(t ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  $("info").innerHTML = `<b>${esc(m.userData.name)}</b><span class="dim">${s.x.toFixed(1)} × ${s.y.toFixed(1)} × ${s.z.toFixed(1)} mm (x × y × z)</span>` +
+    `<span>${esc(m.userData.note)}</span><span class="note">${esc(m.userData.group)}</span>`;
+}
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let down = null;
+renderer.domElement.addEventListener("pointerdown", e => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener("pointerup", e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  for (const m of meshes) m.updateMatrixWorld(true);
+  const hit = ray.intersectObjects(meshes.filter(m => m.visible && m.userData.group !== "Context"))[0];
+  select(hit ? hit.object : null);
+});
+
+(function loop() { controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+</script>

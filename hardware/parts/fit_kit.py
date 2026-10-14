@@ -220,6 +220,109 @@ def coupon_i_panel(length=70.0):
     return p.part
 
 
+# ---------------------------------------------------------------------------
+# Pen lifter (docs/PEN_LIFTER.md): flexure, pick face + pen plate, dock channel
+# ---------------------------------------------------------------------------
+
+# Parallel-leaf flexure: 4 leaves (two pairs), L long, H tall, printed standing on the bed.
+FLEX_L, FLEX_H = 40.0, 8.0
+FLEX_TRAVEL = 4.0          # the shuttle's nose stands this far below the fixed block's foot
+PICK = 32.0                # pick face / pen plate, square
+PICK_MAG = 9.0             # magnet pockets on a 2 x 9 = 18 mm square
+RIDGE_H = 1.5              # 90 deg locating ridges on the pick face; the plate's grooves are cut 0.2 shallower
+FLANGE_T, FLANGE_W = 2.0, 3.0   # pen-plate side flange that slides into the dock channel
+
+
+def coupon_j(t):
+    """Flexure: fixed block, two pairs of leaves t thick, shuttle. Stand it on the fixed block's foot on a kitchen
+    scale and press down: the shuttle's nose touches first and the reading just before the foot lands is the force
+    at FLEX_TRAVEL."""
+    blk, h_tot = 14.0, 30.0
+    with BuildPart() as p:
+        with BuildSketch():
+            with Locations((-blk / 2, h_tot / 2)):
+                Rectangle(blk, h_tot)                                   # fixed block, foot = its bottom edge
+            with Locations((FLEX_L + blk / 2, h_tot / 2 + 1.0)):
+                Rectangle(blk, h_tot - 2.0)                             # shuttle
+            with Locations((FLEX_L + blk / 2, -FLEX_TRAVEL / 2 + 1.0)):
+                Rectangle(6.0, FLEX_TRAVEL + 2.0)                       # nose, FLEX_TRAVEL below the foot
+            for yc in (5.0, h_tot - 5.0):                               # two pairs, each 5 mm apart
+                for dy in (-2.5, 2.5):
+                    with Locations((FLEX_L / 2, yc + dy)):
+                        Rectangle(FLEX_L + 0.2, t)
+        extrude(amount=FLEX_H)
+        label(p, f"J{t:.1f}", -blk / 2, h_tot / 2, FLEX_H, size=3.0)
+    return p.part
+
+
+def coupon_k_face():
+    """Pick face: 4 magnet pockets (N out) and two 90 deg ridges in an L, one locating each axis. Ridges up."""
+    t = 5.0
+    with BuildPart() as p:
+        Box(PICK, PICK, t, align=(Align.CENTER, Align.CENTER, Align.MAX))
+        for x in (-PICK_MAG, PICK_MAG):
+            for y in (-PICK_MAG, PICK_MAG):
+                with Locations((x, y, -MAG_DEPTH)):
+                    Cylinder(FIT["magnet_pocket"] / 2, MAG_DEPTH, align=(Align.CENTER, Align.CENTER, Align.MIN),
+                             mode=Mode.SUBTRACT)
+        add(_ridge(along_x=True).moved(Pos(0, 13.0, 0)))                # along X at the top: locates Y
+        add(_ridge(along_x=False).moved(Pos(13.0, 0, 0)))               # along Y at the right: locates X
+        label(p, "K face", 0, 0, 0, size=3.0)
+    return p.part
+
+
+def _ridge(along_x, depth=RIDGE_H, length=PICK - 8.0):
+    """A 90 deg prism standing on z = 0, `depth` high."""
+    with BuildPart() as r:
+        with BuildSketch(Plane.YZ if along_x else Plane.XZ):
+            Polygon((-depth, 0), (depth, 0), (0, depth), align=None)
+        extrude(amount=length / 2, both=True)
+    return r.part
+
+
+def coupon_k_plate():
+    """Pen plate's back: grooves 0.2 shallower than the ridges so the flanks seat before the faces touch, magnet
+    pockets (S out). Modelled mating face down at z = 0, mirrored so it lines up with the face, then turned over."""
+    t = 4.0
+    with BuildPart() as p:
+        Box(PICK, PICK, t, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        for x in (-PICK_MAG, PICK_MAG):
+            for y in (-PICK_MAG, PICK_MAG):
+                with Locations((x, y, 0)):
+                    Cylinder(FIT["magnet_pocket"] / 2, MAG_DEPTH, align=(Align.CENTER, Align.CENTER, Align.MIN),
+                             mode=Mode.SUBTRACT)
+        for along_x, pos in ((True, (0, 13.0, -0.2)), (False, (13.0, 0, -0.2))):
+            add(_ridge(along_x, length=PICK + 2.0).moved(Pos(*pos)), mode=Mode.SUBTRACT)
+        for sx in (-1, 1):                                             # side flanges for the dock channel
+            with Locations((sx * (PICK / 2 + FLANGE_W / 2), 0, t - FLANGE_T)):
+                Box(FLANGE_W, PICK, FLANGE_T, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        label(p, "K plate", 0, -4, t, size=3.0)
+    return p.part.rotate(Axis.X, 180)
+
+
+def coupon_l(c):
+    """Dock channel section: a slot FLANGE_T + c wide, FLANGE_W + 0.5 deep, lead-in at the entry end. Slide the
+    K plate's flange in; it should run free by hand and not rock."""
+    w, h, ln = 14.0, 10.0, 34.0
+    slot = FLANGE_T + c
+    with BuildPart() as p:
+        Box(ln, w, h, align=(Align.CENTER, Align.MIN, Align.MIN))
+        with Locations((0, w - (FLANGE_W + 0.5) / 2, h / 2)):
+            Box(ln, FLANGE_W + 0.5, slot, mode=Mode.SUBTRACT)
+        with Locations((ln / 2, w - (FLANGE_W + 0.5) / 2, h / 2)):        # lead-in
+            Box(3.0, FLANGE_W + 0.5, slot + 1.6, mode=Mode.SUBTRACT)
+        label(p, f"L{c:.1f}", -6, 4.0, h, size=3.0)
+    return p.part
+
+
+def build_pen():
+    parts = {f"J_flexure_{t:.1f}": coupon_j(t) for t in (0.6, 0.8, 1.0)}
+    parts["K_pick_face"] = coupon_k_face()
+    parts["K_pen_plate"] = coupon_k_plate()
+    parts.update({f"L_channel_{c:.1f}": coupon_l(c) for c in (0.2, 0.3, 0.4)})
+    return parts
+
+
 def build():
     parts = {"A_screws_inserts_rivnut": coupon_a(), "B_gx16": coupon_b(), "D_led_stop": coupon_d()}
     for i, (cw, ch) in enumerate(((47.0, 27.0), (47.5, 27.5), (48.0, 28.0))):
@@ -237,6 +340,7 @@ def build():
     for d in (6, 9):
         parts[f"H_saddle_{d}mm"] = coupon_h_saddle(d)
     parts.update(build_i())
+    parts.update(build_pen())
     return parts
 
 
@@ -247,7 +351,8 @@ def build_i():
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     import sys
-    for name, part in (build_i() if sys.argv[1:] == ["I"] else build()).items():
+    only = {"I": build_i, "P": build_pen}.get(sys.argv[1] if sys.argv[1:] else "", build)
+    for name, part in only().items():
         export_stl(part, str(OUT / f"{name}.stl"))
         bb = part.bounding_box()
         print(f"{name:34s} {bb.size.X:6.1f} x {bb.size.Y:5.1f} x {bb.size.Z:4.1f}  vol {part.volume / 1000:5.2f} cm3")
