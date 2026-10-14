@@ -1,53 +1,64 @@
 # Pen lifter
 
-_Started 2026-10-14. Lofi layout agreed for inspection, nothing printed yet._
+_Started 2026-10-14. Lofi layout in the inspector, nothing printed yet._
 
 ## The idea
 
-The reference is a build Allwin shared (photos, not in the repo). On Etch's flat bed it works like this:
-
-- **A loop spring in line with the lift.** Three printed oval loops are stacked on top of the shuttle, joined
-  only at their middles, under a shelf on the bracket. Lifting the pen squashes them by 4 mm; they spring back
-  and put the pen on the paper. The shuttle runs in a printed vertical guide on the bracket, which keeps the pen
-  about 37 mm from the carriage face.
-  (A first draft used horizontal parallel leaves. That pushed the pen ~85 mm out on four thin cantilevers, and
-  the spring did not act along the lift. Dropped.)
-- **Pick face and pen plate.** The shuttle carries a pick face. Each pen is clamped by a grub screw into its own
-  pen plate. Every plate has the same outline and hangs on the pick face by 4 × Ø6 magnets, and two 90° ridges in
-  an L locate it in X and Z.
-- **Servo lifts, never holds a stop.** The servo arm lifts the shuttle by a tab from below. At pen down the arm
-  drops 1.2 mm clear of the tab, so the pen lands on the spring and its own weight, and the servo holds
-  nothing. At pen up it holds only the squashed spring and the plate. There is no hard stop anywhere in its travel,
-  which is the FINDINGS 7b rule.
-- **Switch reads, never stops.** A microswitch reads pen up from a second tab. The tab meets the lever 0.5 mm
+- **Two smooth rods, rolling bearings.** The shuttle rides two vertical Ø4 rods, 20 mm apart, inside its own
+  32 mm width. Four LM4UU linear ball bearings carry it, two per rod and 6 mm apart. Rolling means next to no
+  friction, and two bearings per rod mean it can't rock. The rods are clamped in a bottom and a top ear on the
+  bracket.
+- **Gravity puts the pen down.** No spring. The pen-down force is the weight of shuttle, bearings, pick face,
+  plate and pen, about 50 g (estimate; weigh it). To press harder, add weight to the plate.
+- **The servo only lifts.** An MG90S-size servo lies on its side above the top ear, inside the head's width. It
+  turns a 3.5 mm toggle crank whose pin sits in a window on the shuttle:
+  - at pen down (−30°) the pin hangs 1.1 mm clear of the window's top edge, so the servo holds nothing
+    (FINDINGS 7b)
+  - it meets the edge at −10° and lifts 4 mm by +80°
+  - at pen up the pin is nearly over the shaft, so the weight it holds has only 0.6 mm of lever
+- **Switch reads, never stops.** A microswitch sits over the window plate. The plate meets the lever 0.5 mm
   before full lift, and the lever's over-travel takes the rest.
-- **Docks.** A rail top and bottom catches the plate's flanges, with a lip on the carriage side. The head slides a
-  plate in along X at pen-up height and backs off in −Y, which breaks the magnets. Pickup is the reverse.
+- **Pick face, pen plate, docks.** Unchanged. Every pen gets a plate with the same outline: a grub-screw clamp,
+  4 × Ø6 magnets, and two 90° ridges in an L. Docks catch the plate's flanges; the head slides a plate in along
+  X at pen-up height and backs off in −Y.
 
-The head bolts to the ACRO front plate's 31 mm M3 square if ACRO goes ahead. Otherwise only the mount bracket
-changes.
+The head is 44 mm wide, and the pen sits 37 mm from the carriage face. It bolts to the ACRO front plate's 31 mm
+M3 square if ACRO goes ahead; otherwise only the bracket's back changes.
 
-## Numbers (estimates until the fit kit measures them)
+### How we got here (2026-10-14)
+
+1. A horizontal parallel-leaf flexure pushed the pen ~85 mm out on four thin cantilevers. Dropped.
+2. A vertical stack of printed loop springs was liked, but the spring force loads the servo at pen up.
+3. A folded-beam suspension (frictionless, no play) made the head 114 mm wide. Dropped as too wide.
+4. **Rods + gravity + lift-only servo (this).** Narrowest, proven, and no spring for the servo to fight.
+
+## Numbers (estimates until measured)
 
 | Quantity | Value | Source |
 |---|---|---|
 | Lift | 4 mm | chosen |
-| Spring | 3 loops, 40 long × 8 high × 8 deep, 0.6 / 0.8 / 1.0 thick, 30 mm free height | coupon J picks |
-| Force at 4 mm squash | 0.6: 30–115 g · 0.8: 70–270 g · 1.0: 130–530 g | **estimate**, PETG E ≈ 2 GPa; loop ends somewhere between pinned and fixed, hence the range |
-| Loop strain at 4 mm | 0.2–0.4 % | estimate; PETG is comfortable under 1 % |
-| Servo torque at 4 mm, 8 mm arm | up to ~0.4 kg·cm with 1.0 loops, plus the plate and pen | estimate; an MG90S is rated ~1.8 kg·cm |
-| Pen-down force | plate + pen + shuttle weight; add preload by lowering the shelf | to tune on paper |
+| Moving weight = pen-down force | ~50 g | **estimate**: weigh shuttle + plate + pen |
+| Servo torque, mid-lift peak | ~0.02 kg·cm | estimate: 0.5 N × 3.5 mm |
+| Servo torque, pen up | ~0.003 kg·cm | estimate: 0.5 N × 0.6 mm |
+| MG90S rating | ~1.8 kg·cm | catalogue |
 
-The servo torque row is the point of the design: the old lift carried a ~400 g Ender carriage on a 30 mm crank and
-needed ~1.2 kg·cm. Less torque means less servo current, and current is what resets the board.
+The old lift carried a ~400 g Ender carriage on a 30 mm crank: about 1.2 kg·cm. Less torque means less servo
+current, and current is what resets the board.
 
 ## Fit kit coupons (hardware/parts/fit_kit.py, `python3 hardware/parts/fit_kit.py P`)
 
-- **J spring 0.6 / 0.8 / 1.0.** Stand it on a kitchen scale and press the top bar down. The reading just before
-  the bar lands on its two stop posts is the force at 4 mm of squash. It should spring straight back.
+- **J rod + bearing.** LM4UU bores at 7.9 / 8.0 / 8.1: pick the tightest a bearing goes into by thumb without
+  cracking. Ø4 rod holes at 3.9 / 4.0 / 4.1: pick the tightest a rod slides through by hand.
 - **K pick face + pen plate.** Press magnets in using coupon I's pocket size, N out on the face and S out on the
   plate. Check it seats with no rock, and hang weights to find the pull-off force.
 - **L channel 0.2 / 0.3 / 0.4.** Slide the K plate's flange in. Pick the tightest that runs free by hand.
+
+## To buy
+
+- 2 × Ø4 mm smooth rod, ~50 mm (cut from a longer length)
+- 4 × LM4UU linear bearings
+- 1 × MG90S (metal gear) servo
+- 1 × mini microswitch with lever
 
 ## Inspector
 
@@ -58,7 +69,6 @@ The page is generic: point its `parts-data` meta at any bundle that `web_bundle.
 
 ## Open
 
-- ACRO or the current frame: only the mount bracket depends on it.
-- Servo: MG90S-class (small current, the point of the design) or the MG996R already fitted.
+- ACRO or the current frame: only the bracket's back depends on it.
 - Pen capping in the dock, so parked pens don't dry out.
-- Plate weight, i.e. the pen-down force: the spring adds preload if the shelf is lowered, and the plate sets the rest.
+- Whether ~50 g is enough pen pressure for each pen type; add weight to the plate if not.

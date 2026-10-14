@@ -3,17 +3,17 @@
     python3 hardware/parts/pen_lifter.py      # -> hardware/out/pen_lifter/*.stl + meta.json
                                               #    -> hardware/web/pen_lifter.b64.txt (parts inspector data)
 
-The idea (docs/PEN_LIFTER.md), after a reference build Allwin shared:
-  * the shuttle hangs in a folded-beam suspension: two thin layers (top and bottom of the shuttle), each with a
-    folded beam left and right running ALONG the carriage face. Soft up and down, stiff every other way, and
-    nothing slides: no friction, no clearance, no wobble. The suspension is also the spring
-  * the servo drives a short toggle crank: at pen up the crank pin is nearly under the shaft, so the spring's
-    force passes close to the shaft and the holding torque is a fraction of what a level arm needs
+The idea (docs/PEN_LIFTER.md):
+  * the shuttle rides two vertical smooth rods (Ø4, 20 apart, inside the shuttle's own width) on four LM4UU
+    linear ball bearings, two per rod: rolling, so next to no friction, and two per rod so it cannot rock
+  * gravity puts the pen down: the pen force is the weight of shuttle + plate + pen. No spring
+  * the servo only lifts. It lies above the shuttle, inside the head's width, and turns a short toggle crank whose
+    pin sits in a window on the shuttle. The pin pushes the window's top edge up; at pen down it drops clear, so
+    the servo holds nothing (FINDINGS 7b). At pen up the pin is nearly over the shaft, so even the weight it
+    holds has almost no lever
   * the shuttle carries a pick face; the pen plate (pen clamped by a grub screw) hangs on it by 4 magnets and
     locates on two 90 deg ridges
-  * at pen down the crank pin drops clear of the shuttle's tab, so the pen lands on its own weight and the
-    servo holds nothing (FINDINGS 7b: never stall it)
-  * a microswitch reads "pen up" off a second tab. Sensor only, never a stop
+  * a microswitch reads "pen up" off the window plate. Sensor only, never a stop
   * docks hold parked plates by their flanges; the head slides a plate in along X and backs off in -Y
 
 Frame (mm): x along the head, y out of the carriage (carriage face at y = 0), z up, paper at z = 0, pen tip on
@@ -44,34 +44,27 @@ Z0 = 40.0                 # bottom of the moving stack at pen down
 H = 32.0                  # shuttle / pick face / plate height (= PICK)
 
 # y stations, carriage face outwards: bracket back plate, shuttle back, shuttle front, pick face's mating face
-Y_BACK, Y_SHUT0, Y_SHUT = 5.0, 8.0, 20.0
+Y_BACK, Y_SHUT0, Y_SHUT = 5.0, 6.0, 20.0
 Y_FACE = Y_SHUT + 5.0
-Z_SQUARE = Z0 + 16.0                  # centre of the ACRO plate's 31 mm M3 square on the bracket
+X_SHUT = 16.0             # shuttle half width: the head is this wide plus the window plate on one side
 
-# Suspension, per side per layer: beam A (front) shuttle -> truss, beam B (back) truss -> anchor on the bracket.
-# The truss floats at half the lift and is free to slide in x, so the beams never have to stretch.
-LEAF_T = 0.7              # leaf thickness (vertical bending); a coupon picks it
-BEAM_W = 5.0              # leaf width in y; in-plane stiffness goes as (BEAM_W / LEAF_T)^2 over vertical
-X_SHUT, X_ANCHOR, X_TRUSS = 16.0, 22.0, 44.0
-Y_A, Y_B = (Y_SHUT - BEAM_W, Y_SHUT), (Y_SHUT0, Y_SHUT0 + BEAM_W)
-Z_LAYERS = (Z0 + 1.0, Z0 + H - 1.0 - LEAF_T)          # bottom faces of the two layers
+# rods and bearings: LM4UU is Ø4 bore, Ø8 OD, 12 long (catalogue size; check the ones bought)
+ROD_D, ROD_X, ROD_Y = 4.0, 10.0, (Y_SHUT0 + Y_SHUT) / 2
+BRG_D, BRG_L = 8.0, 12.0
+BRG_Z = (Z0 + 2.0, Z0 + H - 2.0 - BRG_L)               # two per rod, as far apart as the shuttle allows
+EAR_T = 5.0
+Z_EAR_LO = Z0 - 1.0 - EAR_T                            # bottom ear under the shuttle at pen down
+Z_EAR_HI = Z0 + H + LIFT + 1.0                         # top ear over it at pen up
 
-# Toggle crank: pin at CRANK_R from the shaft. Pen down at PHI_REST (pin clear of the tab), contact at PHI_CONTACT,
-# pen up at PHI_UP, where the pin is nearly under the shaft and the lever on the spring force is R cos(PHI_UP).
+# servo lies above the top ear, shaft along +x; toggle crank turns in the YZ plane
 CRANK_R, PIN_R = 3.5, 1.5
 PHI_REST, PHI_CONTACT, PHI_UP = -30.0, -10.0, 80.0
-SHAFT = (55.5, 27.7, Z0 + 12.0)
-Z_TAB = SHAFT[2] + CRANK_R * math.sin(math.radians(PHI_CONTACT)) + PIN_R     # tab underside at pen down
+SHAFT = (6.7, Y_BACK + 6.1, Z_EAR_HI + EAR_T + 4.7 + 5.9 + 0.5)
+X_WIN = (X_SHUT + 0.5, X_SHUT + 3.5)                   # window plate, beside the top ear
+Z_WIN = SHAFT[2] + CRANK_R * math.sin(math.radians(PHI_CONTACT)) + PIN_R   # window's top inner edge, pen down
+Z_SQUARE = Z0 + 20.0                                   # centre of the ACRO plate's 31 mm M3 square
 
-# Rough figures for the inspector's torque readout (estimates, PETG E ~ 2 GPa; plate + pen + shuttle ~60 g)
-E_PETG, MOVING_N = 2000.0, 0.6
-
-
-def suspension_k():
-    """Vertical stiffness, N/mm: per side per layer beam A and beam B in series (fixed-guided), 2 sides x 2 layers."""
-    i = BEAM_W * LEAF_T ** 3 / 12
-    ka, kb = (12 * E_PETG * i / ln ** 3 for ln in (X_TRUSS - X_SHUT, X_TRUSS - X_ANCHOR))
-    return 4 / (1 / ka + 1 / kb)
+MOVING_N = 0.5            # shuttle + 4 bearings + pick face + plate + pen, ~50 g: an ESTIMATE, weigh it
 
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -88,32 +81,82 @@ def union(*parts):
     return p
 
 
+def zcyl(x, y, z0, z1, d):
+    with BuildPart() as c:
+        with Locations((x, y, z0)):
+            Cylinder(d / 2, z1 - z0, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    return c.part
+
+
 def bracket():
-    """Back plate on the ACRO 31 mm square, with the suspension's four anchor blocks standing off it."""
-    back = box(-50, 64, 0, Y_BACK, Z0 - 6, Z0 + H + 6)
+    """Back plate on the ACRO 31 mm square, bottom and top ears that clamp the rods."""
+    top = SHAFT[2] + 22.0
+    back = box(-20, 24, 0, Y_BACK, Z_EAR_LO - 2, top)
     with BuildPart() as holes:
         for x in (-15.5, 15.5):
             for dz in (-15.5, 15.5):
                 with Locations((x, Y_BACK / 2, Z_SQUARE + dz)):
                     Cylinder(1.7, Y_BACK, rotation=(90, 0, 0))
-    anchors = [box(sx * X_ANCHOR - 5 if sx > 0 else -X_ANCHOR, X_ANCHOR if sx > 0 else -X_ANCHOR + 5,
-                   Y_BACK, Y_B[1], z - 2.0, z + LEAF_T + 2.0) for sx in (-1, 1) for z in Z_LAYERS]
-    return union(back - holes.part, *anchors)
+    ears = [box(-X_SHUT, X_SHUT, Y_BACK, Y_SHUT - 1, z, z + EAR_T) for z in (Z_EAR_LO, Z_EAR_HI)]
+    p = union(back - holes.part, *ears)
+    for sx in (-1, 1):
+        p = p - zcyl(sx * ROD_X, ROD_Y, Z_EAR_LO - 1, Z_EAR_HI + EAR_T + 1, ROD_D)
+    return p
 
 
-def beams(which, sx):
-    """Both layers' beam A (front, shuttle -> truss) or beam B (back, truss -> anchor) on side sx."""
-    x0 = X_SHUT if which == "A" else X_ANCHOR
-    y0, y1 = Y_A if which == "A" else Y_B
-    out = [box(*sorted((sx * (x0 - 0.1), sx * (X_TRUSS + 0.1))), y0, y1, z, z + LEAF_T) for z in Z_LAYERS]
+def rods():
+    return union(*[zcyl(sx * ROD_X, ROD_Y, Z_EAR_LO, Z_EAR_HI + EAR_T, ROD_D) for sx in (-1, 1)])
+
+
+def bearings():
+    out = []
+    for sx in (-1, 1):
+        for z in BRG_Z:
+            out.append(zcyl(sx * ROD_X, ROD_Y, z, z + BRG_L, BRG_D) - zcyl(sx * ROD_X, ROD_Y, z - 1, z + BRG_L + 1, ROD_D))
     return union(*out)
 
 
-def trusses():
-    """The floating bars that join beam A to beam B at each outer end. They ride at half the lift."""
-    out = [box(*sorted((sx * X_TRUSS, sx * (X_TRUSS + 4.0))), Y_SHUT0, Y_SHUT, z - 1.0, z + LEAF_T + 1.0)
-           for sx in (-1, 1) for z in Z_LAYERS]
-    return union(*out)
+def shuttle():
+    """Body with the bearing bores, and the window plate that rises beside the top ear to the crank pin."""
+    body = box(-X_SHUT, X_SHUT, Y_SHUT0, Y_SHUT, Z0, Z0 + H)
+    for sx in (-1, 1):
+        body = body - zcyl(sx * ROD_X, ROD_Y, Z0 - 1, Z0 + H + 1, BRG_D)
+    bridge = box(X_SHUT - 1.0, X_WIN[1], Y_SHUT0, Y_SHUT, Z0 + H - 6.0, Z0 + H)
+    win = box(*X_WIN, Y_SHUT0, Y_SHUT, Z0 + H - 6.0, Z_WIN + 3.0)
+    hole = box(X_WIN[0] - 1, X_WIN[1] + 1, SHAFT[1] - 2.0, SHAFT[1] + CRANK_R + PIN_R + 2.5,
+               SHAFT[2] - CRANK_R - PIN_R - 1.5, Z_WIN)
+    return union(body, bridge, win - hole)
+
+
+def servo():
+    """MG90S-sized body lying on its side over the top ear: shaft along +x, mounting ears along z."""
+    zs = SHAFT[2]
+    body = box(SHAFT[0] - 22.7, SHAFT[0], SHAFT[1] - 6.1, SHAFT[1] + 6.1, zs - 5.9, zs + 16.9)
+    ears = box(SHAFT[0] - 6.7, SHAFT[0] - 4.2, SHAFT[1] - 6.1, SHAFT[1] + 6.1, zs - 10.6, zs + 21.6)
+    with BuildPart() as s:
+        with Locations(SHAFT):
+            Cylinder(2.4, 4.0, rotation=(0, 90, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
+    return body + ears + s.part
+
+
+def crank():
+    """Toggle crank, modelled at phi = 0 with the pin towards +y. The inspector turns it about the shaft (x)."""
+    x0 = SHAFT[0] + 4.0
+    with BuildPart() as c:
+        with Locations((x0, SHAFT[1], SHAFT[2])):
+            Cylinder(3.0, 2.0, rotation=(0, 90, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
+        with Locations((x0 + 2.0, SHAFT[1] + CRANK_R, SHAFT[2])):
+            Cylinder(PIN_R, X_WIN[1] + 1.5 - x0 - 2.0, rotation=(0, 90, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
+    return c.part
+
+
+def switch():
+    """Mini microswitch over the window plate. The plate meets the lever 0.5 mm before full lift and the lever's
+    own over-travel takes the rest: it reads pen up, it never stops the shuttle."""
+    zb = Z_WIN + 3.0 + LIFT - 0.5
+    body = box(X_WIN[0] - 1.5, X_WIN[1] + 1.5, Y_BACK, Y_BACK + 12.8, zb + 3.0, zb + 9.5)
+    lever = box(*X_WIN, Y_BACK + 2.0, Y_BACK + 10.0, zb, zb + 3.0)
+    return body + lever
 
 
 def pick_face():
@@ -148,52 +191,6 @@ def pen(zoff=0.0, xoff=0.0):
         with Locations((0, yc, 4.0)):
             Cylinder(2.2, 4.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
     return p.part.moved(Pos(xoff, 0, zoff))
-
-
-# servo: MG90S-sized body (12.2 x 22.8 x 22.7) on the back plate, outboard of the suspension, shaft out along +y
-
-
-def servo():
-    x0, z0 = SHAFT[0] - 6.1, SHAFT[2] - 5.9
-    body = box(x0, x0 + 12.2, Y_BACK, SHAFT[1], z0, z0 + 22.8)
-    ears = box(x0, x0 + 12.2, 16.0, 18.5, z0 - 4.7, z0 + 27.5)
-    with BuildPart() as s:
-        with Locations(SHAFT):
-            Cylinder(2.4, 4.0, rotation=(-90, 0, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
-    return body + ears + s.part
-
-
-def crank():
-    """Toggle crank, modelled at phi = 0 with the pin towards -x. The inspector turns it about the shaft."""
-    y0 = SHAFT[1] + 4.0
-    with BuildPart() as c:
-        with Locations((SHAFT[0], y0, SHAFT[2])):
-            Cylinder(3.0, 2.0, rotation=(-90, 0, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
-        with Locations((SHAFT[0] - CRANK_R, y0, SHAFT[2])):
-            Cylinder(PIN_R, 7.0, rotation=(-90, 0, 0), align=(Align.CENTER, Align.CENTER, Align.MIN))
-    return c.part
-
-
-def shuttle():
-    """Hangs in the suspension. The lift tab runs out past the truss to the crank pin; switch tab on the far side."""
-    body = box(-X_SHUT, X_SHUT, Y_SHUT0, Y_SHUT, Z0, Z0 + H)
-    # between the two layers: out along x in front of the beams, round the front of the servo, over the pin
-    x_turn = SHAFT[0] - 11.0
-    arm = box(X_SHUT, x_turn + 3.5, Y_SHUT - 4.0, Y_SHUT + 4.0, Z_TAB, Z_TAB + 4.0)
-    riser = box(x_turn, x_turn + 3.5, Y_SHUT, SHAFT[1] + 12.0, Z_TAB, Z_TAB + 3.0)
-    hook = box(x_turn, SHAFT[0] + 1.0, SHAFT[1] + 6.3, SHAFT[1] + 12.0, Z_TAB, Z_TAB + 3.0)
-    switch_tab = box(-X_SHUT - 8, -X_SHUT, Y_SHUT0 + 2, Y_SHUT - 4, Z0 + 10, Z0 + 13)
-    return union(body, arm, riser, hook, switch_tab)
-
-
-def switch():
-    """Mini microswitch over the switch tab. The tab meets the lever 0.5 mm before full lift and the lever's own
-    over-travel takes the rest: it reads pen up, it never stops the shuttle."""
-    zb = Z0 + 13 + LIFT - 0.5
-    body = box(-32.0, -19.2, Y_SHUT0 + 1.1, Y_SHUT0 + 6.9, zb + 3.0, zb + 9.5)
-    lever = box(-30.0, -20.0, Y_SHUT0 + 2.5, Y_SHUT0 + 5.5, zb, zb + 3.0)
-    post = box(-32.0, -26.0, Y_BACK, Y_SHUT0 + 1.1, zb + 3.0, zb + 9.5)
-    return body + lever + post
 
 
 DOCK_X = -110.0
@@ -238,33 +235,26 @@ PARTS = {
                             "ACRO X carriage front plate, from Allwin's print. Context only: ACRO not decided."),
     "paper": (paper, "Context", "paper", None, "Paper at z = 0."),
     "bracket": (bracket, "Head (fixed)", "fixed", None,
-                "Back plate on the 31 mm M3 square; the suspension's four anchor blocks stand off it."),
-    "beams_A_right": (lambda: beams("A", 1), "Suspension", "flex",
-                      dict(type="shear", x0=X_SHUT, x1=X_TRUSS, f0=1.0, f1=0.5),
-                      f"Front beams, shuttle to truss, {X_TRUSS - X_SHUT:.0f} long x {BEAM_W:.0f} wide x {LEAF_T} thick."),
-    "beams_A_left": (lambda: beams("A", -1), "Suspension", "flex",
-                     dict(type="shear", x0=-X_SHUT, x1=-X_TRUSS, f0=1.0, f1=0.5), "Front beams, left."),
-    "beams_B_right": (lambda: beams("B", 1), "Suspension", "flex",
-                      dict(type="shear", x0=X_ANCHOR, x1=X_TRUSS, f0=0.0, f1=0.5),
-                      f"Back beams, anchor to truss, {X_TRUSS - X_ANCHOR:.0f} long."),
-    "beams_B_left": (lambda: beams("B", -1), "Suspension", "flex",
-                     dict(type="shear", x0=-X_ANCHOR, x1=-X_TRUSS, f0=0.0, f1=0.5), "Back beams, left."),
-    "trusses": (trusses, "Suspension", "truss", dict(type="lift", f=0.5),
-                "Floating trusses: ride at half the lift and slide in x, so the beams never stretch."),
-    "shuttle": (shuttle, "Suspension", "shuttle", "lift",
-                "Hangs in the suspension. Lift tab runs out to the crank pin; switch tab on the far side."),
+                "Back plate on the 31 mm M3 square; bottom and top ears clamp the two rods."),
+    "rods": (rods, "Head (fixed)", "steel", None,
+             f"Two \u00d8{ROD_D:.0f} smooth rods, {2 * ROD_X:.0f} apart, {Z_EAR_HI + EAR_T - Z_EAR_LO:.0f} long."),
+    "bearings": (bearings, "Shuttle", "steel", "lift",
+                 f"4 x LM4UU (\u00d8{ROD_D:.0f} x \u00d8{BRG_D:.0f} x {BRG_L:.0f}), two per rod, "
+                 f"{BRG_Z[1] - BRG_Z[0]:.0f} mm apart."),
+    "shuttle": (shuttle, "Shuttle", "shuttle", "lift",
+                "Bearing bores, and the window plate the crank pin lifts by its top edge."),
     "pick_face": (pick_face, "Pen plate + pick face", "pick", "lift",
                   "4 magnet pockets on an 18 mm square, two 90 deg ridges in an L. Coupon K."),
     "pen_plate": (plate, "Pen plate + pick face", "plate", "lift",
                   "Same outline for every pen; clamp bore per pen, grub screw on top. Flanges ride the dock rails."),
-    "pen": (pen, "Pen plate + pick face", "pen", "lift", f"Placeholder pen, Ø{PEN_D:.0f}."),
-    "servo": (servo, "Servo + switch", "servo", None, "MG90S-sized body on the back plate, shaft out along +y."),
+    "pen": (pen, "Pen plate + pick face", "pen", "lift", f"Placeholder pen, \u00d8{PEN_D:.0f}."),
+    "servo": (servo, "Servo + switch", "servo", None, "MG90S-sized, lying over the top ear, shaft along +x."),
     "servo_crank": (crank, "Servo + switch", "arm", "crank",
                     f"Toggle crank, pin at {CRANK_R} mm. {PHI_REST:.0f} deg pen down (pin clear), contact at "
-                    f"{PHI_CONTACT:.0f}, pen up at {PHI_UP:.0f}: lever on the spring force only "
+                    f"{PHI_CONTACT:.0f}, pen up at {PHI_UP:.0f}: lever on the weight only "
                     f"{CRANK_R * math.cos(math.radians(PHI_UP)):.1f} mm."),
     "pen_up_switch": (switch, "Servo + switch", "switch", None,
-                      "Tab meets the lever 0.5 mm before full lift; lever over-travel takes the rest. Sensor only."),
+                      "Window plate meets the lever 0.5 mm before full lift; over-travel takes the rest. Sensor only."),
     "dock": (dock, "Dock", "dock", None,
              "One dock. Rails with lips hold the flanges; slide in along +x, head backs off in -y."),
     "dock_parked_plate": (lambda: plate(LIFT, DOCK_X), "Dock", "plate", None, "A parked plate, at pen-up height."),
@@ -272,13 +262,12 @@ PARTS = {
 }
 
 # where each part goes when the inspector explodes the head (mm at full explode)
-EXPLODE = dict(carriage_acro_front=(0, -30, 0), bracket=(0, -14, 0), shuttle=(0, 6, 0), trusses=(0, 3, 0),
-               pick_face=(0, 18, 0), pen_plate=(0, 40, 0), pen=(0, 40, 0), servo=(30, 0, 0),
-               servo_crank=(30, 18, 0), pen_up_switch=(-30, 0, 0))
+EXPLODE = dict(carriage_acro_front=(0, -30, 0), bracket=(0, -14, 0), rods=(0, -7, 0), bearings=(0, 0, 0),
+               shuttle=(0, 8, 0), pick_face=(0, 18, 0), pen_plate=(0, 40, 0), pen=(0, 40, 0), servo=(0, 0, 30),
+               servo_crank=(12, 0, 30), pen_up_switch=(0, 0, 45))
 
-COLOURS = dict(context="#9aa3a8", paper="#f4f4f0", fixed="#e9ecee", flex="#2fa25a", pick="#2f2f33", plate="#e9ecee",
-               pen="#f2a33a", servo="#2c4a7a", arm="#f2f2f2", switch="#3b3b3b", dock="#e9ecee",
-               truss="#1f7a43", shuttle="#d7dcdf")
+COLOURS = dict(context="#9aa3a8", paper="#f4f4f0", fixed="#e9ecee", pick="#2f2f33", plate="#e9ecee", pen="#f2a33a",
+               servo="#2c4a7a", arm="#f2f2f2", switch="#3b3b3b", dock="#e9ecee", shuttle="#2fa25a", steel="#8f989e")
 
 
 def export_assembly():
@@ -300,7 +289,7 @@ def export_assembly():
 def export_fit_kit():
     """The pen-lifter coupons, laid out on the A1 mini's 180 mm bed."""
     meta, x, y, row_h = {}, -80.0, -80.0, 0.0
-    names = {"J": "spring", "K": "pick face + plate", "L": "dock channel"}
+    names = {"J": "rod + bearing fits", "K": "pick face + plate", "L": "dock channel"}
     for name, part in build_pen().items():
         bb = part.bounding_box()
         if x + bb.size.X > 85:
@@ -322,8 +311,8 @@ def export_fit_kit():
 def main():
     meta = export_assembly()
     meta.update(export_fit_kit())
-    rig = dict(lift=LIFT, shaft=SHAFT, crank_r=CRANK_R, phi_rest=PHI_REST, phi_contact=PHI_CONTACT, phi_up=PHI_UP,
-               k_est=round(suspension_k(), 3), moving_n=MOVING_N, compare_arm=8.0)
+    rig = dict(lift=LIFT, shaft=SHAFT, crank_axis="x", crank_r=CRANK_R, phi_rest=PHI_REST, phi_contact=PHI_CONTACT,
+               phi_up=PHI_UP, k_est=0.0, moving_n=MOVING_N, compare_arm=8.0)
     (OUT / "meta.json").write_text(json.dumps(dict(meta=meta, rig=rig, title="Pen lifter, lofi"), indent=1))
     pack(OUT, DATA)
 

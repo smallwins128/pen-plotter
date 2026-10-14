@@ -64,7 +64,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   <aside class="rail">
     <div>
       <h1 id="title">Pen lifter, lofi</h1>
-      <p class="sub">Folded-beam suspension, toggle crank, magnetic pen plate and dock for Etch. Blocks show positions only; sizes are placeholders until the fit kit measures them.</p>
+      <p class="sub">Shuttle on two smooth rods, pen down by gravity, servo only lifts. Magnetic pen plate and dock for Etch. Blocks show positions only; sizes are placeholders until the fit kit measures them.</p>
     </div>
     <div class="group">
       <span class="label">Scene</span>
@@ -193,8 +193,8 @@ function pose() {
         const kx = z * (a.f1 - a.f0) / (a.x1 - a.x0);
         M.set(1,0,0,0, 0,1,0,0, kx,0,1,z * a.f0 - kx * a.x0, 0,0,0,1);
       } else if (a.type === "crank") {
-        const [sx, , sz] = r.shaft;
-        M.makeTranslation(sx, 0, sz).multiply(new THREE.Matrix4().makeRotationY(phi)).multiply(new THREE.Matrix4().makeTranslation(-sx, 0, -sz));
+        const [sx, sy, sz] = r.shaft, rot = r.crank_axis === "x" ? new THREE.Matrix4().makeRotationX(phi) : new THREE.Matrix4().makeRotationY(phi);
+        M.makeTranslation(sx, sy, sz).multiply(rot).multiply(new THREE.Matrix4().makeTranslation(-sx, -sy, -sz));
       }
     }
     if (d.scene === "assembly" && d.explode) M.premultiply(new THREE.Matrix4().makeTranslation(d.explode[0] * ex, d.explode[1] * ex, d.explode[2] * ex));
