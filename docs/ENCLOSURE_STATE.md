@@ -16,7 +16,7 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Every printed panel: 3 mm plate outside, 2 mm boss in the cutout (0.3 mm smaller per side),
   M3 countersunk screws + nyloc nuts.
 - Lid fixings: 3 top + 3 back per box, M3 rivnuts set from outside (flange Ø8, measured), lid holes Ø10,
-  M3 button head + **Ø15 washer (ID 3.2, 1.0–1.5 thick; not DIN 9021 M3, which is Ø9)**. Front corner tabs: 2 solid Ø3 rivets each, set cold.
+  M3 button head + **printed Ø15 × Ø3.4 × 2.0 washer** (`hardware/parts/washers.py`; button heads only, pan heads overrun the stack). Front corner tabs: 2 solid Ø3 rivets each, set cold.
 - Stacking: 4 printed **locating feet** under the control box (Ø24 × 6 flange + Ø7.6 peg) drop into
   the power lid: Ø8 front-left locates, 8 × 11 slot front-right, Ø10 at the back. Power box keeps
   rubber feet.

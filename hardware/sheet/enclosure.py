@@ -99,7 +99,7 @@ FAN_DEPTH = 25.0
 # Stacking: printed feet under the control box (flange = spacer, peg = locator) drop into the power lid.
 FEET_XZ = [(sx * (W / 2 - 40), sz * (D / 2 - 40)) for sx in (-1, 1) for sz in (-1, 1)]     # both boxes' foot holes
 STACK = dict(flange_d=24.0, flange_h=6.0, peg_d=7.6, peg_len=6.0,
-             lid_fix_h=1.2 + 2.4,          # penny washer + M3 pan head, proud of the power lid
+             lid_fix_h=2.0 + 1.65,         # printed Ø15 washer (2.0) + M3 button head (ISO 7380), proud of the power lid
              floor_head_h=2.8,             # M4 standoff screw heads under the control floor
              foot_screw_head_h=2.8)        # M4 screw holding each foot, head inside on the control floor
 # power-lid holes under the feet: front-left locates, front-right slot (along x) stops rotation, back two only clear
