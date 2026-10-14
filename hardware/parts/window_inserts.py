@@ -171,7 +171,7 @@ def contour(name, op):
 
 def rect(name, op, extra_right=0.0):
     x0, y0, x1, y1 = op.buffer(PANEL_OFF).bounds
-    r = rounded(sbox(x0, y0, x1 + extra_right, y1), 3.0)
+    r = rounded(sbox(x0, y0, x1 + extra_right, y1), E.WIN["r"] + PANEL_OFF)   # same corners as the other panels
     c = side_clip(name)
     return r.intersection(c) if c is not None else r
 
@@ -209,10 +209,10 @@ def card_panel(name, op, open_side):
     outline = rect(name, op)
     part, top = base(name, op, outline)
     x0, y0, x1, y1 = outline.bounds
-    aperture = rounded(sbox(x0 + CARD_RIM, y0 + CARD_RIM, x1 - CARD_RIM, y1 - CARD_RIM), 2.0)
+    aperture = rounded(sbox(x0 + CARD_RIM, y0 + CARD_RIM, x1 - CARD_RIM, y1 - CARD_RIM), E.WIN["r"] + PANEL_OFF - CARD_RIM)
     if name == "power_left":                                  # keep the frame rim even along the slanted cut
         aperture = aperture.intersection(outline.buffer(-CARD_RIM))
-    card = rounded(aperture.buffer(CARD_MAR, join_style=2), 1.0)
+    card = aperture.buffer(CARD_MAR, join_style=1, quad_segs=8)
     cx0, cy0, cx1, cy1 = card.bounds
     run = sbox(x0 - 1, cy0 - 0.3, cx0 + 1, cy1 + 0.3) if open_side == "left" else sbox(cx1 - 1, cy0 - 0.3, x1 + 1, cy1 + 0.3)
     slot = unary_union([card.buffer(0.3, join_style=2), run])
