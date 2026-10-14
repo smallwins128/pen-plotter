@@ -53,7 +53,7 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 
 ## Using the renderer in another chat
 
-Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). To change it:
+Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v29, with a filament colour picker for the printed parts). To change it:
 1. Edit `enclosure.py` (or the inspector's drawing code), run `python3 hardware/sheet/enclosure.py` —
    it rewrites the `GEN` block in the inspector, so the 3D view always matches the cut files.
 2. Republish: from a new chat, publish `hardware/web/enclosure_inspector.html` with
