@@ -91,6 +91,9 @@ H cable tie mount + saddles). `FIT` at the top holds the numbers every real part
 
 ## Later (parked)
 
+- DIN-rail power box (someday): 35 mm rail on the base plate's M4 grid (no steel change), slim DIN-rail PSUs for
+  24 V and 12 V, DIN terminal blocks. Box is 170 tall inside, so standard ~90 mm DIN modules fit.
+
 - Interior light (2026-10-14): 12 V warm-white 5730 3-LED modules (1.5 W, 60 × 10), 1 in the control box, 2 in the
   power box, on the front wall aimed at the back so the windows show a glow, not the LEDs. Optional printed angled clip.
 - Fan / light switches (2026-10-14): 2 mini toggles (MTS-102, Ø6 hole) per box, either on a window panel (needs a
@@ -117,7 +120,7 @@ H cable tie mount + saddles). `FIT` at the top holds the numbers every real part
 
 ## Open before cutting
 
-1. ~~Issue cut pack v4~~ done 2026-10-12. ~~v5~~ done 2026-10-14: send it to the vendor, tell them to discard v4.
+1. ~~Issue cut pack v4~~ done 2026-10-12. ~~v5~~ done and **sent to the vendor 2026-10-14** (Drive: R04 Outputs / 2026-10-14 Cut pack v5, 4 combined DXFs + read me).
 2. Fabricator confirms bend deduction for 1 mm 304 at R1 (files assume K 0.44, BD 1.74). — Allwin
 3. Front design: Allwin draws it; plain panels (vents only) for now. Awaiting his final changes before v4.
 
