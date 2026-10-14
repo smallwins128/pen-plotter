@@ -1,0 +1,208 @@
+<title>Etch Order List</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style id="css">
+/* Layout: one column of category sections, each a list of parts with a three-way status (to order / ordered / have).
+   Same tokens as the enclosure and parts inspectors: steel greys, one orange accent. */
+:root {
+  --bg: #eef0f1; --panel: #ffffff; --ink: #1d2226; --muted: #5d676f; --line: #d3d8dc;
+  --accent: #c2410c; --accent-ink: #ffffff; --ok: #15803d; --ok-bg: #dcfce7; --warn: #b45309; --warn-bg: #fef3c7;
+  --chip: #e8ebed;
+  --f-ui: "Archivo", "Helvetica Neue", Arial, sans-serif; --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15191c; --panel: #1d2226; --ink: #e8ecef; --muted: #9aa5ad; --line: #333b41;
+  --accent: #fb923c; --accent-ink: #1d2226; --ok: #4ade80; --ok-bg: #14301f; --warn: #fbbf24; --warn-bg: #3a2c0c;
+  --chip: #262c31; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15191c; --panel: #1d2226; --ink: #e8ecef; --muted: #9aa5ad; --line: #333b41;
+  --accent: #fb923c; --accent-ink: #1d2226; --ok: #4ade80; --ok-bg: #14301f; --warn: #fbbf24; --warn-bg: #3a2c0c;
+  --chip: #262c31; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 24px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-direction: column; gap: 6px; }
+h1 { margin: 0; font-size: 24px; letter-spacing: .01em; text-wrap: balance; }
+.sub { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; max-width: 65ch; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font: 12.5px var(--f-mono); color: var(--muted); }
+.progress { flex: 1 1 200px; height: 6px; background: var(--chip); border-radius: 3px; overflow: hidden; display: flex; }
+.progress i { display: block; height: 100%; }
+.progress .p-ord { background: var(--accent); } .progress .p-have { background: var(--ok); }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toggle { font: 600 12.5px var(--f-ui); padding: 7px 12px; border-radius: 7px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); cursor: pointer; }
+.toggle[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.save { font: 12px var(--f-mono); color: var(--muted); }
+.save.err { color: var(--warn); }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+section > h2 { margin: 0; padding: 12px 16px; font-size: 15px; display: flex; gap: 10px; align-items: baseline;
+  border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+section > h2 .count { font: 12px var(--f-mono); color: var(--muted); font-weight: 400; }
+section > p.note { margin: 0; padding: 10px 16px 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+ul { list-style: none; margin: 0; padding: 4px 0; }
+li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; padding: 10px 16px;
+  border-top: 1px solid var(--line); align-items: start; }
+li:first-child { border-top: 0; }
+.what { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.name { font-weight: 600; font-size: 14px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.qty { font: 500 12.5px var(--f-mono); padding: 1px 7px; border-radius: 999px; background: var(--chip); white-space: nowrap; }
+.spec { font: 12.5px var(--f-mono); color: var(--ink); opacity: .85; overflow-wrap: anywhere; }
+.why { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.flag { font: 600 10.5px var(--f-ui); letter-spacing: .05em; text-transform: uppercase; color: var(--warn);
+  background: var(--warn-bg); padding: 2px 6px; border-radius: 4px; }
+.status { display: flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; align-self: center; }
+.status button { font: 600 12px var(--f-ui); padding: 6px 9px; border: 0; border-right: 1px solid var(--line);
+  background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.status button:last-child { border-right: 0; }
+.status button[aria-pressed="true"][data-s="todo"] { background: var(--chip); color: var(--ink); }
+.status button[aria-pressed="true"][data-s="ordered"] { background: var(--accent); color: var(--accent-ink); }
+.status button[aria-pressed="true"][data-s="have"] { background: var(--ok-bg); color: var(--ok); }
+.status button:disabled { cursor: default; }
+li.done .name, li.done .spec { opacity: .55; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.later { padding: 14px 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+footer { color: var(--muted); font-size: 12px; line-height: 1.5; }
+@media (max-width: 560px) {
+  li { grid-template-columns: 1fr; }
+  .status { justify-self: start; }
+}
+@media (prefers-reduced-motion: no-preference) { .progress i { transition: width .3s; } }
+</style>
+
+<div class="wrap" id="root"></div>
+
+<script type="application/json" id="data">
+{"updated": "2026-10-14", "items": [
+{"id":"iec","cat":"IEC panel","name":"3-in-1 IEC C14 inlet module","qty":"1","spec":"inlet + 5×20 fuse holder + lit rocker, snap-in, flange ~50 × 30, cutout ~47.5 × 27.5","why":"Power box left wall, printed 154 × 89 panel. Coupon C sizes the frame.","status":"todo"},
+{"id":"fuse","cat":"IEC panel","name":"5×20 mm slow-blow fuses","qty":"5","spec":"T3.15A (or T4A), 250 V","why":"1 in the module + spares.","status":"todo"},
+{"id":"led12","cat":"IEC panel","name":"12 mm metal LED indicator, green","qty":"2","spec":"Ø12 hole, 12–24 V rated","why":"One on the 24 V rail, one on the 12 V rail.","status":"todo"},
+{"id":"estop","cat":"IEC panel","name":"LA38-11ZS latching mushroom stop","qty":"1","spec":"Ø22 hole, 1NO + 1NC, ~51 mm deep behind the face","why":"NC in series with mains after the switch.","flag":"Check AC rating ≥ 2.5 A at 230 V","status":"todo"},
+{"id":"earth","cat":"IEC panel","name":"M6 earth stud set","qty":"1","spec":"M6 × 16 bolt, 3 nuts, 2 star washers, M6 ring terminals","why":"The Ø6.5 earth stud on the power box.","status":"todo"},
+{"id":"ferrule","cat":"IEC panel","name":"Ferrules 0.75 mm² + 0.75 mm² mains wire","qty":"1 kit","spec":"bootlace ferrules, ~2 m of 0.75 mm² in brown / blue / green-yellow","why":"Every mains conductor gets a ferrule (POWER.md). Skip if you have them.","status":"todo"},
+
+{"id":"mag","cat":"Magnets","name":"Ø6 × 1.5 mm N52 disc magnets","qty":"100","spec":"pack of 100","why":"Window bezels 12, window panels ~24, pen lifter: 4 on the pick face + 4 per pen plate (8 pens = 32), coupons I and K ~16. About 85 in all.","status":"todo"},
+
+{"id":"rivm3","cat":"Rivnuts","name":"M3 rivnuts for 1 mm steel","qty":"60","spec":"Ø5 hole, flange Ø8 (as measured)","why":"32 in the cut files (12 lids, 4 IEC, 4 USB, 12 window bezels) + 7 GX plates + 7 optional accessory holes, plus spares for misses.","status":"todo"},
+{"id":"rivm4","cat":"Rivnuts","name":"M4 rivnuts","qty":"20","spec":"for the base plates' Ø6 grid (135 holes, set as needed)","why":"Mounting things to the base plates later.","flag":"Ø6 hole assumed: check the listing's hole size","status":"todo"},
+{"id":"rivtool","cat":"Rivnuts","name":"Rivnut hand setter, M3–M6","qty":"1","spec":"with M3 and M4 mandrels","why":"Skip if you already set the rivnuts you measured with one.","status":"todo"},
+{"id":"rivet","cat":"Rivnuts","name":"Solid rivets Ø3.2","qty":"20","spec":"length to suit 1 + 1 mm (about 5 mm)","why":"16 in the cut files: front corner tabs, 2 per tab, set cold.","flag":"Have some? You measured their fit","status":"todo"},
+
+{"id":"m3x8","cat":"Screws","name":"M3 × 8 pan head, A2 stainless","qty":"50","spec":"ISO 7380 button head or DIN 7985 pan head","why":"Into M3 rivnuts: 12 lid fixings, 4 IEC panel, 4 USB panel, 7 GX plates, 12 window bezels.","flag":"Length assumed: check against a rivnut and a bezel","status":"todo"},
+{"id":"m3csk","cat":"Screws","name":"M3 × 10 countersunk","qty":"10","spec":"DIN 7991","why":"PSU panel (4) and receiving panel (4), with nylocs.","status":"todo"},
+{"id":"m4fan","cat":"Screws","name":"M4 × 30 for the fans","qty":"10","spec":"pan head","why":"2 fans × 4, through the fan body and 1 mm steel, with nylocs.","flag":"Length from fan thickness: check your fans","status":"todo"},
+{"id":"stand","cat":"Screws","name":"M4 × 5 standoffs, female–female","qty":"12","spec":"brass or steel","why":"6 per box under the 2 mm base plates.","status":"todo"},
+{"id":"m4x8","cat":"Screws","name":"M4 × 8 pan head","qty":"30","spec":"A2 stainless","why":"24 for the standoffs (12 under the floor, 12 through the plates) + spares.","status":"todo"},
+{"id":"feet","cat":"Screws","name":"Rubber feet with M4 bolt","qty":"4","spec":"bumper feet, ~20 mm","why":"Under the power box (4 × Ø4.5 holes).","status":"todo"},
+{"id":"m4x10","cat":"Screws","name":"M4 × 10 pan head","qty":"6","spec":"A2 stainless","why":"The 4 printed locating feet under the control box, + spares.","status":"todo"},
+{"id":"m3x10","cat":"Screws","name":"M3 × 10 socket head","qty":"10","spec":"DIN 912","why":"Pen guide to the ACRO front plate (4), from behind into heat-set inserts.","status":"todo"},
+{"id":"grub","cat":"Screws","name":"M3 × 6 grub screws, cup point","qty":"10","spec":"DIN 916","why":"One per pen plate, clamps the pen.","status":"todo"},
+{"id":"inserts","cat":"Screws","name":"M3 heat-set inserts","qty":"50","spec":"M3 × 4 long, Ø4.2 bore (coupon A picks 4.0 / 4.2 / 4.4)","why":"Pen guide (4) and future printed parts.","status":"todo"},
+
+{"id":"nyl3","cat":"Nuts and washers","name":"M3 nyloc nuts","qty":"20","spec":"A2 stainless","why":"PSU and receiving panels (8) + spares.","status":"todo"},
+{"id":"hex3","cat":"Nuts and washers","name":"M3 hex nuts","qty":"20","spec":"A2 stainless","why":"General use and nut traps in printed parts.","status":"todo"},
+{"id":"nyl4","cat":"Nuts and washers","name":"M4 nyloc nuts","qty":"20","spec":"A2 stainless","why":"Fans (8), locating feet (4) + spares.","status":"todo"},
+{"id":"penny","cat":"Nuts and washers","name":"M3 penny washers, Ø16 OD","qty":"14","spec":"stainless, ~1.2 thick","why":"Over the Ø10 lid holes: 3 top + 3 back per box = 12, + spares.","status":"todo"},
+
+{"id":"cob","cat":"COB lights","name":"12 V COB LED module, warm white","qty":"4","spec":"~60 × 10 mm, ≤ 1.5 W each, 12 V","why":"Interior glow: 1 in the control box, 2 in the power box, on the front wall aimed at the back. + 1 spare.","flag":"Earlier plan was 3-LED 5730 modules; COB is the same 12 V / 1.5 W budget","status":"todo"},
+{"id":"tog","cat":"COB lights","name":"Mini toggle switch MTS-102","qty":"2","spec":"Ø6 hole, SPDT","why":"Light switch (and fan switch) per box. Optional: parked on 2026-10-14.","status":"todo"},
+
+{"id":"servo","cat":"Pen lifter","name":"MG90S servo, 180°, metal gear","qty":"2","spec":"22.8 × 12.2 × 28.5 mm, positional (not 360° / continuous)","why":"1 for the lifter + 1 spare: AxiDraw calls the servo the consumable part.","status":"todo"},
+{"id":"micro","cat":"Pen lifter","name":"Mini microswitch with lever","qty":"2","spec":"~13 × 6 × 6.5 mm body (KW11-3Z class)","why":"Pen-up sensor + 1 spare.","status":"todo"}
+]}
+</script>
+
+<script id="app">
+(function () {
+  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>';
+  const CATS = ["IEC panel", "Magnets", "Rivnuts", "Screws", "Nuts and washers", "COB lights", "Pen lifter"];
+  const LABEL = { todo: "To order", ordered: "Ordered", have: "Have" };
+  const data = JSON.parse(document.getElementById("data").textContent);
+  const root = document.getElementById("root");
+  let onlyTodo = false, artifact = null, readOnly = false, saveTimer = null, saveMsg = "";
+  try { onlyTodo = sessionStorage.getItem("etch-only-todo") === "1"; } catch (e) {}
+
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function render() {
+    const n = data.items.length, ord = data.items.filter(i => i.status === "ordered").length,
+          have = data.items.filter(i => i.status === "have").length;
+    let html = `<header><h1>Etch order list</h1>
+      <p class="sub">Parts for the enclosure (cut pack v5) and the pen lifter. Quantities come from the cut files and the
+      pen-lifter model; anything marked <span class="flag">check</span> is an assumption to confirm before ordering.</p>
+      <div class="bar"><span>${n - ord - have} to order · ${ord} ordered · ${have} have</span>
+        <span class="progress" aria-hidden="true"><i class="p-have" style="width:${100 * have / n}%"></i><i class="p-ord" style="width:${100 * ord / n}%"></i></span></div>
+      <div class="tools"><button class="toggle" id="onlyTodo" aria-pressed="${onlyTodo}">Show only to-order</button>
+        <span class="save${saveMsg.startsWith("Couldn") ? " err" : ""}" id="save">${esc(saveMsg)}</span></div></header>`;
+    for (const cat of CATS) {
+      const items = data.items.filter(i => i.cat === cat && (!onlyTodo || i.status === "todo"));
+      const all = data.items.filter(i => i.cat === cat), left = all.filter(i => i.status === "todo").length;
+      if (!items.length && onlyTodo) continue;
+      html += `<section><h2>${esc(cat)} <span class="count">${left ? left + " to order" : "all sorted"} · ${all.length} lines</span></h2><ul>`;
+      for (const it of items) {
+        html += `<li class="${it.status === "todo" ? "" : "done"}"><div class="what">
+          <span class="name">${esc(it.name)} <span class="qty">× ${esc(it.qty)}</span>${it.flag ? ` <span class="flag" title="${esc(it.flag)}">check</span>` : ""}</span>
+          <span class="spec">${esc(it.spec)}</span>
+          <span class="why">${esc(it.why)}${it.flag ? ` <strong>${esc(it.flag)}.</strong>` : ""}</span></div>
+          <div class="status" role="group" aria-label="Status of ${esc(it.name)}">${["todo", "ordered", "have"].map(s =>
+            `<button data-id="${esc(it.id)}" data-s="${s}" aria-pressed="${it.status === s}"${readOnly ? " disabled" : ""}>${LABEL[s]}</button>`).join("")}</div></li>`;
+      }
+      html += `</ul></section>`;
+    }
+    html += `<section><h2>Later: fasteners for the ACRO plates <span class="count">waiting on the acrylic quote</span></h2>
+      <p class="later">Once you decide on the ACRO frame, I'll add its screws, wheels, spacers and T-nuts here from the plate files.</p></section>
+      <footer>${readOnly ? "View only: you can see the list, but changes here aren't saved." : "Changes save to this page a moment after you click, so they show up on every device."} Last updated ${esc(data.updated)}.</footer>`;
+    root.innerHTML = html;
+  }
+
+  function documentHtml() {
+    const json = JSON.stringify(data, null, 0).replace(/</g, "\\u003c");
+    const css = document.getElementById("css").textContent, app = document.getElementById("app").textContent;
+    return SKELETON + '<title>Etch Order List</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n' +
+      '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">\n' +
+      '<style id="css">' + css + '</style>\n\n<div class="wrap" id="root"></div>\n\n' +
+      '<script type="application/json" id="data">\n' + json + '\n</scr' + 'ipt>\n\n<script id="app">' + app + '</scr' + 'ipt>\n</body></html>';
+  }
+
+  function scheduleSave() {
+    if (!artifact || readOnly) return;
+    saveMsg = "Saving…"; clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      data.updated = new Date().toISOString().slice(0, 10);
+      try { await artifact.publish(documentHtml()); }
+      catch (e) {
+        const code = e && e.code;
+        if (code === "conflict") return;                       // the view reloads to the newer version
+        if (["not_writer", "not_granted", "not_declared", "consent_required", "capability_disabled", "capability_removed"].includes(code)) readOnly = true;
+        saveMsg = code === "rate_limited" ? "Couldn't save yet: too many saves, try again in a minute." :
+                  readOnly ? "" : "Couldn't save: the change is kept on this screen only.";
+        render();
+      }
+    }, 1500);
+    render();
+  }
+
+  root.addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.id === "onlyTodo") {
+      onlyTodo = !onlyTodo;
+      try { sessionStorage.setItem("etch-only-todo", onlyTodo ? "1" : "0"); } catch (err) {}
+      render(); return;
+    }
+    if (b.dataset.id && !readOnly) {
+      const it = data.items.find(i => i.id === b.dataset.id);
+      if (it && it.status !== b.dataset.s) { it.status = b.dataset.s; scheduleSave(); }
+    }
+  });
+
+  render();
+  if (window.claude && claude.use) claude.use("artifact").then(a => {
+    artifact = a;
+    if (!a) { readOnly = true; render(); }
+  });
+  else { readOnly = true; render(); }
+})();
+</script>
