@@ -114,6 +114,39 @@ fits. Re-fold from their own bend lines:</p>
 </body></html>"""
 
 
+def combined_dxf(parts, path, title):
+    """All parts in one DXF, laid out in rows with a label over each (name, material, qty), for a fabricator who
+    nests them himself. Same layers as the single files; geometry copied 1:1, only moved."""
+    import ezdxf
+    from ezdxf.addons import Importer
+    from ezdxf import bbox
+    doc = ezdxf.new("R12", setup=True)
+    doc.header["$INSUNITS"] = 4
+    if "Part Labels" not in doc.layers:
+        doc.layers.add("Part Labels", color=2)
+    msp = doc.modelspace()
+    gap, row_w, x, y, row_h = 40.0, 1400.0, 0.0, 0.0, 0.0
+    for p in parts:
+        src = ezdxf.readfile(OUT / f"{p['part']}.dxf")
+        ext = bbox.extents(src.modelspace())
+        w, h = ext.size.x, ext.size.y
+        if x > 0 and x + w > row_w:
+            x, y, row_h = 0.0, y - row_h - gap - 20, 0.0
+        dx, dy = x - ext.extmin.x, y - h - ext.extmin.y
+        for e in src.modelspace():
+            e.translate(dx, dy, 0)
+        imp = Importer(src, doc)
+        imp.import_modelspace()
+        imp.finalize()
+        msp.add_text(f"{p['part']}  ·  {p['material']}  ·  qty {p['qty']}", height=8,
+                     dxfattribs={"layer": "Part Labels", "insert": (x, y + 6)})
+        x += w + gap
+        row_h = max(row_h, h)
+    msp.add_text(title, height=12, dxfattribs={"layer": "Part Labels", "insert": (0, 40)})
+    doc.saveas(path)
+    return path
+
+
 def chromium():
     for c in ("/opt/pw-browsers/chromium-1194/chrome-linux/chrome", shutil.which("chromium"), shutil.which("google-chrome")):
         if c and pathlib.Path(c).exists():
@@ -138,10 +171,18 @@ def main():
         subprocess.run([ch, "--headless", "--no-sandbox", "--disable-gpu", "--no-pdf-header-footer",
                         f"--print-to-pdf={pdf}", page.as_uri()], check=True, capture_output=True)
         print("wrote", pdf)
+    steel = [p for p in summary["parts"] if not p["part"].startswith("acrylic")]
+    acr = [p for p in summary["parts"] if p["part"].startswith("acrylic")]
+    combined = [combined_dxf(steel, OUT / "ALL_STEEL_PARTS.dxf", f"{NAME} · all steel parts (1 mm 304; base plates per order)"),
+                combined_dxf(acr, OUT / "ALL_ACRYLIC_PARTS.dxf", f"{NAME} · all acrylic parts (3 mm clear cast)")]
+    for c in combined:
+        print("wrote", c)
     zp = OUT / f"{NAME}.zip"
     with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED) as z:
         for p in summary["parts"]:
             z.write(OUT / f"{p['part']}.dxf", f"{p['part']}.dxf")
+        for c in combined:
+            z.write(c, c.name)
         if pdf.exists():
             z.write(pdf, pdf.name)
     print("wrote", zp)
