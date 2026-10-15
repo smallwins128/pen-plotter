@@ -40,6 +40,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .spec li span:last-child { color: var(--ink); }
 .key { display: grid; grid-template-columns: 14px 1fr; gap: 6px 8px; font-size: 12.5px; align-items: center; }
 .sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line); }
+.fil-row { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.fil { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.fil button { width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 1px solid var(--line); }
+.fil button[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--line); }
+.fil input[type=color] { width: 28px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: transparent; cursor: pointer; }
 @media (max-width: 760px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 62vh auto; height: auto; }
   .rail { border-left: 0; border-top: 1px solid var(--line); }
@@ -78,6 +83,13 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
       <div class="ins-row"><span>Power right</span><div class="seg" id="ins-power_right"></div></div>
       <div class="ins-row"><span>Control</span><div class="seg" id="ins-control"></div></div>
       <div class="note" id="ins-note">Loading parts…</div>
+    </div>
+    <div class="group">
+      <div class="label">Filament colour</div>
+      <div class="fil-row"><span>Jack panels</span><div class="fil" id="fil-panel"></div></div>
+      <div class="fil-row"><span>Window inserts + GX plates</span><div class="fil" id="fil-dark"></div></div>
+      <div class="fil-row"><span>Logo plate</span><div class="fil" id="fil-logo"></div></div>
+      <div class="note" id="fil-note">Preview only. Real filament colours vary by brand.</div>
     </div>
     <div class="group">
       <div class="label">Explode</div>
@@ -193,11 +205,37 @@ mat("laptop", 0x9ea3a9, { metalness: 0.4, roughness: 0.35 });
 const SHELL = ["body", "lid", "lip", "tab"];
 const INSERT_SLOTS = [];        // filled by buildBox, one per window
 
-const KEY = [["body", "body sheet"], ["lid", "lid sheet"], ["lip", "lips"], ["tab", "corner tabs"], ["panel", "printed panels"], ["petg", "window inserts (black PETG)"],
+const KEY = [["body", "body sheet"], ["lid", "lid sheet"], ["lip", "lips"], ["tab", "corner tabs"], ["panel", "printed panels"], ["petg", "window inserts, GX plates"],
              ["rivnut", "rivnuts (lid fixings, plate)"], ["screw", "screws"], ["washer", "washers / nuts"], ["standoff", "standoffs"],
              ["plate", "base plate"], ["foot", "rubber feet"]];
-document.getElementById("key").innerHTML = KEY.map(([m, l]) =>
-  `<span class="sw" style="background:#${M[m].color.getHexString()}"></span><span>${l}</span>`).join("");
+function drawKey() { document.getElementById("key").innerHTML = KEY.map(([m, l]) =>
+  `<span class="sw" style="background:#${M[m].color.getHexString()}"></span><span>${l}</span>`).join(""); }
+drawKey();
+
+// ---------- filament colour preview (printed parts only) ----------
+const FILAMENTS = [["Black", "#1b1c1e"], ["Grey", "#6b7075"], ["Silver", "#b8bcc0"], ["White", "#f2f2ef"], ["Natural", "#efe6cc"],
+                   ["Red", "#d1495b"], ["Orange", "#e8702a"], ["Yellow", "#f2c94c"], ["Green", "#2e8b57"], ["Blue", "#2f6db5"], ["Purple", "#6a4c93"]];
+const FIL_TARGETS = { panel: ["panel"], dark: ["petg", "rib"], logo: ["logo"] };
+const FIL_DEFAULT = { panel: "#efe6cc", dark: "#1b1c1e", logo: "#d1495b" };
+let FIL = Object.assign({}, FIL_DEFAULT);
+try { Object.assign(FIL, JSON.parse(localStorage.getItem("etch-filament") || "{}")); } catch (e) {}
+function setFilament(slot, hex) {
+  FIL[slot] = hex;
+  FIL_TARGETS[slot].forEach(m => M[m].color.set(hex));
+  const row = document.getElementById("fil-" + slot);
+  row.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.hex === hex.toLowerCase())));
+  row.querySelector("input").value = hex;
+  drawKey();
+  try { localStorage.setItem("etch-filament", JSON.stringify(FIL)); } catch (e) {}
+}
+for (const slot of Object.keys(FIL_TARGETS)) {
+  const row = document.getElementById("fil-" + slot);
+  row.innerHTML = FILAMENTS.map(([n, h]) => `<button data-hex="${h}" title="${n}" aria-label="${n}" aria-pressed="false" style="background:${h}"></button>`).join("")
+    + `<input type="color" aria-label="Custom colour" title="Custom colour">`;
+  row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => setFilament(slot, b.dataset.hex)));
+  row.querySelector("input").addEventListener("input", e => setFilament(slot, e.target.value));
+  setFilament(slot, FIL[slot]);
+}
 
 // ---------- helpers ----------
 function box(w, h, d, m, x, y, z, name, info) {
