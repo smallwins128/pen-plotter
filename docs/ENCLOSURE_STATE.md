@@ -120,7 +120,7 @@ H cable tie mount + saddles). `FIT` at the top holds the numbers every real part
 
 ## Open before cutting
 
-1. ~~Issue cut pack v4~~ done 2026-10-12. ~~v5~~ done and **sent to the vendor 2026-10-14** (Drive: R04 Outputs / 2026-10-14 Cut pack v5, 4 combined DXFs + read me).
+1. ~~Issue cut pack v4~~ done 2026-10-12. ~~v5~~ done and **sent to the vendor 2026-10-14** (Drive: R04 Outputs / 2026-10-14 Cut pack v5, 4 combined DXFs + read me). Vendor needed DXF 2004: re-saved (`to_r2004.py`, checked entity by entity). His nest showed dimensions ×100 (units setting); told him to cut the Visible layer only. **Cutting started 2026-10-15.**
 2. Fabricator confirms bend deduction for 1 mm 304 at R1 (files assume K 0.44, BD 1.74). — Allwin
 3. Front design: Allwin draws it; plain panels (vents only) for now. Awaiting his final changes before v4.
 
