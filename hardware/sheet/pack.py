@@ -33,15 +33,22 @@ FOLDED = {
 }
 
 
+ACRYLIC_OFF = 13.0      # acrylic edge beyond the opening: covers the 4 window rivnuts (7 out) with 6 mm to spare
+
+
 def acrylic_parts():
-    """Window acrylic: the opening + WIN['mar'] all round (the bezel covers the edge). No holes: screws pass outside it."""
+    """Window acrylic, screwed on: the opening + 13 all round, 4 Ø3.4 holes over the window's M3 rivnuts.
+    M3 screws (nylon washers) from the front into the rivnuts; a thin printed bezel snaps over the edge."""
     parts = []
-    for name, title, (pl, _) in (("acrylic_power_left", "POWER FRONT · WINDOW ACRYLIC, LEFT", E.window_panes()[0]),
-                                 ("acrylic_power_right", "POWER FRONT · WINDOW ACRYLIC, RIGHT", E.window_panes()[1]),
-                                 ("acrylic_control", "CONTROL FRONT · WINDOW ACRYLIC", E.ctrl_window())):
+    M = E.Map(1, 0, 0, 1, 0, 0)
+    for name, title, (pl, scr) in (("acrylic_power_left", "POWER FRONT · WINDOW ACRYLIC, LEFT", E.window_panes()[0]),
+                                   ("acrylic_power_right", "POWER FRONT · WINDOW ACRYLIC, RIGHT", E.window_panes()[1]),
+                                   ("acrylic_control", "CONTROL FRONT · WINDOW ACRYLIC", E.ctrl_window())):
         p = E.Part(name, title, "3 mm clear cast acrylic, protective film on both sides")
-        p.solid = [pl.buffer(E.WIN["mar"], join_style=1, quad_segs=8)]
-        p.notes = ["Laser cut. Edges hidden under a printed bezel: no polishing needed."]
+        p.solid = [pl.buffer(ACRYLIC_OFF, join_style=1, quad_segs=8)]
+        for u, v in scr:
+            E.add_circle(p, "acrylic", M, u, v, "m3", "Ø3.4 M3 screw into the window rivnut")
+        p.notes = ["Laser cut. 4 holes Ø3.4. Edges hidden under a printed bezel: no polishing needed."]
         parts.append(p)
     return parts
 
@@ -138,7 +145,8 @@ def combined_dxf(parts, path, title):
         imp = Importer(src, doc)
         imp.import_modelspace()
         imp.finalize()
-        msp.add_text(f"{p['part']}  ·  {p['material']}  ·  qty {p['qty']}", height=8,
+        lbl = f"{p['part']}  ·  {p['material']}  ·  qty {p['qty']}"
+        msp.add_text(lbl, height=min(8.0, w / (0.62 * len(lbl))),       # shrink so it stays over its own part
                      dxfattribs={"layer": "Part Labels", "insert": (x, y + 6)})
         x += w + gap
         row_h = max(row_h, h)

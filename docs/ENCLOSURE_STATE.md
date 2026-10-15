@@ -27,6 +27,10 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
   flush, N out) stays on; panels carry 4 magnets (S in) and pull off from the front: **inlay** (3 mm pocket: the window
   acrylic, or a 149 × 56 card on a printed backer), **relief**, **pen cup** (one open cup, 70 % of the card height,
   22 deep). Logo spine + plate modelled too (`logo_parts`).
+  **Window acrylic (2026-10-15), separate vendor:** screwed on instead: 169 × 76 × 3, R18 corners, 4 Ø3.4 holes over the
+  window rivnuts (M3 button + nylon washer), resting on the 1 mm rivnut flanges; a thin printed snap bezel wraps the edge and
+  hides the heads (lip under the acrylic edge). File: `hardware/cutfiles/2026-10-15 Acrylic windows v1/ACRYLIC_WINDOWS.dxf`
+  (DXF 2004, all three). Any window can still swap to the magnet bezel + panels on the same rivnuts.
 - Power front (v5): vent rows at 145 and 42 (middle top row dropped), 3 Ø5 accessory holes at 30 mm, and a **logo
   keyhole slot** in the middle (`LOGO`: 4.2 slot with two 13 × 13 entries; a printed spine's 2 dovetail lugs go out
   through the entries from inside and drop 15; a 48 × 79 logo plate slides down onto them, a hidden spring finger clicks

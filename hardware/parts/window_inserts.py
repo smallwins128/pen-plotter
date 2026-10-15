@@ -213,6 +213,27 @@ def card_backer(op):
     return slab(inlay_outline(op), PANEL_Z + 0.05, PANEL_Z + ACR_POCKET - CARD_T)
 
 
+# screwed-on acrylic (alternative to the magnet bezel + panels): acrylic = opening + 13, M3 screws into the window
+# rivnuts, resting on the rivnut flanges; a thin bezel snaps over its edge and hides the screw heads
+FIX = dict(off=13.0, flange=1.0, t=3.0, head=1.65 + 0.5, front=3.0, wall=1.2, lip=0.8, inner=3.0)
+
+
+def snap_bezel(name, op):
+    """Thin frame over the screwed-on acrylic: front band hides the 4 screw heads (pockets), a side wall wraps the
+    acrylic edge down to the steel, and a lip under the edge (in the 1 mm gap the rivnut flanges leave) snaps it on."""
+    f = FIX
+    acr = op.buffer(f["off"], join_style=1, quad_segs=8)
+    a0, a1 = f["flange"], f["flange"] + f["t"]                 # acrylic, w
+    fr0, fr1 = a1 + 0.05, a1 + 0.05 + f["front"]
+    outer = acr.buffer(0.2 + f["wall"], join_style=1, quad_segs=8)
+    part = slab(outer.difference(op.buffer(f["inner"], join_style=1, quad_segs=8)), fr0, fr1)
+    part += slab(outer.difference(acr.buffer(0.2, join_style=1, quad_segs=8)), 0.3, fr0 + 0.01)
+    part += slab(acr.buffer(0.2, join_style=1, quad_segs=8).difference(acr.buffer(-f["lip"], join_style=1, quad_segs=8)), 0.3, a0 - 0.15)
+    for u, v in openings()[name][1]:
+        part -= Pos(u, v, fr0 - 0.01) * Cylinder(4.25, f["head"] + 0.2, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    return part
+
+
 def cup_panel(name, op):
     """Rounded panel with one open-top cup across its bottom: 70 % of the card height, 22 mm deep inside."""
     outline = contour(name, op)
@@ -288,6 +309,9 @@ def build(fast=False):
         info[f"cardfront_{name}"] = round(PANEL_Z + ACR_POCKET - CARD_T, 2)
     for name, (op, _, _) in ops.items():
         out[f"cup_{name}"], info[f"cup_{name}"] = cup_panel(name, op)
+    for name, (op, _, _) in ops.items():
+        out[f"snapbezel_{name}"] = snap_bezel(name, op)
+        info[f"fixed_{name}"] = op.buffer(FIX["off"], join_style=1, quad_segs=8)
     out["logo_spine"], out["logo_plate"] = logo_parts()
     return out, info
 
@@ -310,6 +334,9 @@ def main():
             card_svg(OUT / f"{k}_template.svg", v)
             meta["cards"][k[len("card_"):]] = [[round(x, 2), round(y, 2)] for x, y in v.exterior.coords[:-1]]
             print(f"{k}: card {v.bounds[2] - v.bounds[0]:.1f} x {v.bounds[3] - v.bounds[1]:.1f} mm -> {k}_template.svg")
+        elif k.startswith("fixed_"):
+            meta.setdefault("fixed", {})[k[len("fixed_"):]] = dict(outline=[[round(x, 2), round(y, 2)] for x, y in v.exterior.coords[:-1]],
+                                                                   screws=[list(q) for q in openings()[k[len("fixed_"):]][1]], fix=FIX)
         elif k.startswith("cardfront_"):
             meta["card_front_w"][k[len("cardfront_"):]] = v
         else:

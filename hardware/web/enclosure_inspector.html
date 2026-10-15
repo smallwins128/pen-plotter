@@ -73,7 +73,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
       </div>
     </div>
     <div class="group">
-      <div class="label">Window panels (magnetic)</div>
+      <div class="label">Window panels</div>
       <div class="ins-row"><span>Power left</span><div class="seg" id="ins-power_left"></div></div>
       <div class="ins-row"><span>Power right</span><div class="seg" id="ins-power_right"></div></div>
       <div class="ins-row"><span>Control</span><div class="seg" id="ins-control"></div></div>
@@ -397,7 +397,7 @@ function buildBox(kind) {
     const slot = new THREE.Group(); slot.position.z = D/2 + t;       // insert frame: w = 0 on the steel's outer face
     slot.userData = { slot: WSLOT[i], opt: {} };
     const shape = pts => { const sh = new THREE.Shape(); pts.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath(); return sh; };
-    for (const o of ["acrylic", "relief", "card", "pen"]) { const g = new THREE.Group(); g.visible = false; slot.userData.opt[o] = g; slot.add(g); }
+    for (const o of ["fixed", "none", "acrylic", "relief", "card", "pen"]) { const g = new THREE.Group(); g.visible = false; slot.userData.opt[o] = g; slot.add(g); }
     const ac = new THREE.Mesh(new THREE.ExtrudeGeometry(shape(w.acrylic), { depth: 3, bevelEnabled: false }), M.acrylic);
     ac.position.z = 3.55; ac.userData = { name: "Window acrylic, 3 mm clear", info: "Opening + 3 mm all round. Sits on the bolted bezel, in a pocket in the back of the acrylic panel." };
     slot.userData.opt.acrylic.add(ac);
@@ -540,10 +540,11 @@ toggle("t-steel", on => [power, control].forEach(b => b.traverse(o => { if (o.is
 toggle("t-xray", on => SHELL.forEach(n => { M[n].transparent = on; M[n].opacity = on ? 0.22 : 1; M[n].depthWrite = !on; M[n].needsUpdate = true; }));
 
 // ---------- window inserts: options per window, meshes from window_inserts.bin ----------
-const INS_OPTS = { power_left: ["none", "acrylic", "card", "relief"], power_right: ["none", "acrylic", "card", "relief", "pen"], control: ["none", "acrylic", "card", "relief", "pen"] };
-const INS_LABEL = { none: "Bezel only", acrylic: "Acrylic", relief: "Relief", card: "Card", pen: "Pen cup" };
-const INS_PICK = { power_left: "card", power_right: "acrylic", control: "pen" };
+const INS_OPTS = { power_left: ["fixed", "none", "acrylic", "card", "relief", "pen"], power_right: ["fixed", "none", "acrylic", "card", "relief", "pen"], control: ["fixed", "none", "acrylic", "card", "relief", "pen"] };
+const INS_LABEL = { fixed: "Acrylic, screwed", none: "Magnet bezel", acrylic: "Acrylic panel", relief: "Relief", card: "Card", pen: "Pen cup" };
+const INS_PICK = { power_left: "fixed", power_right: "fixed", control: "fixed" };
 const INS_INFO = {
+  snap: ["Snap bezel (screwed acrylic)", "Black PETG, about 7 mm off the steel. Wraps the acrylic edge, hides the 4 screw heads in pockets, and a lip under the acrylic edge (in the 1 mm gap the rivnut flanges leave) snaps it on."],
   bezel: ["Bezel (stays on)", "Black PETG, 13 × 3.5 mm round the opening. 4 M3 screws into rivnuts in the steel, heads sunk flush. 4 Ø6 × 1.5 magnets glued flush, N out."],
   inlay: ["Inlay panel", "Black PETG frame, 4.4 mm, 4 magnets (S in). A 3 mm inlay sits in a pocket in its back, on the bezel: the window acrylic, or a card on a printed backer. Pull the panel off to swap it."],
   backer: ["Card backer", "Printed, 2.6 mm, same outline as the acrylic. The card (149 × 56) sits in front of it."],
@@ -580,7 +581,22 @@ fetch("window_inserts.b64.txt").then(r => { if (!r.ok) throw new Error(r.status)
     m.userData = { name: `${n} · ${name.replace(/^[a-z]+_/, "").replace(/_/g, " ")}`, info: i }; g.add(m); };
   for (const s of INSERT_SLOTS) {
     const k = s.userData.slot, O = s.userData.opt;
-    add(s, `bezel_${k}`, "bezel");                    // the bezel stays on whatever panel is picked
+    for (const o of ["none", "acrylic", "relief", "card", "pen"]) add(O[o], `bezel_${k}`, "bezel");   // magnet bezel under every magnet option
+    add(O.fixed, `snapbezel_${k}`, "snap");
+    const FX = H.fixed && H.fixed[k];                  // screwed-on acrylic: sits on the rivnut flanges, 4 M3 screws
+    if (FX) {
+      const sh = new THREE.Shape(); FX.outline.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath();
+      FX.screws.forEach(([x, y]) => sh.holes.push(holeCircle(x, y, 1.7)));
+      const ac = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: FX.fix.t, bevelEnabled: false }), M.acrylic);
+      ac.position.z = FX.fix.flange; ac.userData = { name: "Window acrylic, screwed (169 × 76 × 3)", info: "4 Ø3.4 holes; M3 button screws with nylon washers into the window rivnuts. Rests on the rivnut flanges." };
+      O.fixed.add(ac);
+      FX.screws.forEach(([x, y]) => {
+        const hd = cyl(2.85, 1.65, "screw"); hd.rotation.x = Math.PI / 2; hd.position.set(x, y, FX.fix.flange + FX.fix.t + 0.5 + 0.83);
+        const fl = cyl(4, FX.fix.flange, "rivnut"); fl.rotation.x = Math.PI / 2; fl.position.set(x, y, FX.fix.flange / 2);
+        hd.userData = { name: "M3 button screw + nylon washer", info: "Into the window rivnut." }; fl.userData = { name: "M3 rivnut flange", info: "Ø8 × 1, the acrylic rests on these." };
+        O.fixed.add(hd, fl);
+      });
+    }
     add(O.acrylic, `inlay_${k}`, "inlay"); add(O.relief, `relief_${k}`, "relief");
     add(O.card, `inlay_${k}`, "inlay"); add(O.card, `cardbacker_${k}`, "backer");
     if (H.cards && H.cards[k]) {
@@ -607,7 +623,7 @@ fetch("window_inserts.b64.txt").then(r => { if (!r.ok) throw new Error(r.status)
     pg.add(g);
   }
   if (document.getElementById("t-steel").getAttribute("aria-pressed") === "true") INSERT_SLOTS.forEach(s => s.traverse(o => { if (o.isMesh) o.visible = false; }));
-  document.getElementById("ins-note").textContent = "Each window has a bolted bezel with 4 magnets; panels hold on by magnets and pull off from the front.";
+  document.getElementById("ins-note").textContent = "Acrylic, screwed: acrylic on the window rivnuts, thin bezel snapped over. Magnet options: a bolted bezel with 4 magnets, panels pull off from the front.";
 }).catch(e => { document.getElementById("ins-note").textContent = "Insert parts did not load (" + e.message + ")."; });
 const ex = document.getElementById("explode");
 ex.addEventListener("input", () => { explode = +ex.value; document.getElementById("explode-v").textContent = Math.round(explode * 100) + "%"; layout(); });
