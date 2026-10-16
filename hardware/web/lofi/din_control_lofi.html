@@ -41,58 +41,58 @@ code{font-family:var(--f-mono);font-size:.92em}
 </ul></section>
 </main>
 <script>
+(()=>{
 const H=[[-205.0, -127.5, "m4"], [-205.0, 127.5, "m4"], [0.0, -127.5, "m4"], [0.0, 127.5, "m4"], [205.0, -127.5, "m4"], [205.0, 127.5, "m4"], [-160.0, -122.5, "grid"], [-120.0, -122.5, "grid"], [-80.0, -122.5, "grid"], [-40.0, -122.5, "grid"], [40.0, -122.5, "grid"], [80.0, -122.5, "grid"], [120.0, -122.5, "grid"], [160.0, -122.5, "grid"], [-180.0, -82.5, "grid"], [-140.0, -82.5, "grid"], [-100.0, -82.5, "grid"], [-60.0, -82.5, "grid"], [-20.0, -82.5, "grid"], [20.0, -82.5, "grid"], [60.0, -82.5, "grid"], [100.0, -82.5, "grid"], [140.0, -82.5, "grid"], [180.0, -82.5, "grid"], [-200.0, -42.5, "grid"], [-160.0, -42.5, "grid"], [-120.0, -42.5, "grid"], [-80.0, -42.5, "grid"], [-40.0, -42.5, "grid"], [0.0, -42.5, "grid"], [40.0, -42.5, "grid"], [80.0, -42.5, "grid"], [120.0, -42.5, "grid"], [160.0, -42.5, "grid"], [200.0, -42.5, "grid"], [-180.0, -2.5, "grid"], [-140.0, -2.5, "grid"], [-100.0, -2.5, "grid"], [-60.0, -2.5, "grid"], [-20.0, -2.5, "grid"], [20.0, -2.5, "grid"], [60.0, -2.5, "grid"], [100.0, -2.5, "grid"], [140.0, -2.5, "grid"], [180.0, -2.5, "grid"], [-160.0, 37.5, "grid"], [-120.0, 37.5, "grid"], [-80.0, 37.5, "grid"], [-40.0, 37.5, "grid"], [0.0, 37.5, "grid"], [40.0, 37.5, "grid"], [80.0, 37.5, "grid"], [120.0, 37.5, "grid"], [160.0, 37.5, "grid"], [200.0, 37.5, "grid"], [-180.0, 77.5, "grid"], [-140.0, 77.5, "grid"], [-100.0, 77.5, "grid"], [-60.0, 77.5, "grid"], [-20.0, 77.5, "grid"], [20.0, 77.5, "grid"], [60.0, 77.5, "grid"], [100.0, 77.5, "grid"], [140.0, 77.5, "grid"], [180.0, 77.5, "grid"], [-160.0, 117.5, "grid"], [-120.0, 117.5, "grid"], [-80.0, 117.5, "grid"], [-40.0, 117.5, "grid"], [40.0, 117.5, "grid"], [80.0, 117.5, "grid"], [120.0, 117.5, "grid"], [160.0, 117.5, "grid"]];
 const NS="http://www.w3.org/2000/svg";
 function el(svg,t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e}
-const top=document.getElementById('top');
-const S=getComputedStyle(document.documentElement);
+const tv=document.getElementById('top');
 const c=n=>"var(--"+n+")";
 // walls (inner faces)
-el(top,'rect',{x:-226,y:-148.5,width:452,height:297,fill:'none',stroke:c('ink'),'stroke-width':1.5});
+el(tv,'rect',{x:-226,y:-148.5,width:452,height:297,fill:'none',stroke:c('ink'),'stroke-width':1.5});
 // plate with fan notch (y = z, front at bottom)
-el(top,'path',{d:'M-220 -142.5 H220 V142.5 H-220 V122 H-197.5 V37 H-220 Z',fill:c('steel'),stroke:c('line'),'stroke-width':.6});
+el(tv,'path',{d:'M-220 -142.5 H220 V142.5 H-220 V122 H-197.5 V37 H-220 Z',fill:c('steel'),stroke:c('line'),'stroke-width':.6});
 // fan
-el(top,'rect',{x:-225,y:39.5,width:25,height:80,fill:'none',stroke:c('mute'),'stroke-dasharray':'3 2'});
-el(top,'text',{x:-212,y:82,'font-size':6,'text-anchor':'middle',transform:'rotate(-90 -212 80)',fill:c('mute')},'FAN 80');
+el(tv,'rect',{x:-225,y:39.5,width:25,height:80,fill:'none',stroke:c('mute'),'stroke-dasharray':'3 2'});
+el(tv,'text',{x:-212,y:82,'font-size':6,'text-anchor':'middle',transform:'rotate(-90 -212 80)',fill:c('mute')},'FAN 80');
 // side panels
-el(top,'rect',{x:-229,y:-45-52,width:3,height:104,fill:c('mute')});
-el(top,'text',{x:-232,y:-45,'font-size':6,'text-anchor':'middle',transform:'rotate(-90 -232 -45)'},'USB panel');
-el(top,'rect',{x:226,y:-12.5-86,width:3,height:172,fill:c('mute')});
-el(top,'text',{x:236,y:-12.5,'font-size':6,'text-anchor':'middle',transform:'rotate(90 236 -12.5)'},'receiving panel');
+el(tv,'rect',{x:-229,y:-45-52,width:3,height:104,fill:c('mute')});
+el(tv,'text',{x:-232,y:-45,'font-size':6,'text-anchor':'middle',transform:'rotate(-90 -232 -45)'},'USB panel');
+el(tv,'rect',{x:226,y:-12.5-86,width:3,height:172,fill:c('mute')});
+el(tv,'text',{x:236,y:-12.5,'font-size':6,'text-anchor':'middle',transform:'rotate(90 236 -12.5)'},'receiving panel');
 // GX sockets behind the front wall
-[[-173],[-139],[-156],[-82],[-32],[2]].forEach(([x])=>el(top,'rect',{x:x-11,y:120,width:22,height:27.5,fill:'none',stroke:c('mute'),'stroke-width':.6}));
-el(top,'text',{x:-85,y:162,'font-size':7,'text-anchor':'middle',fill:c('mute')},'GX16 sockets (front wall)');
-el(top,'text',{x:0,y:172,'font-size':8,'text-anchor':'middle'},'FRONT');
-el(top,'text',{x:0,y:-158,'font-size':8,'text-anchor':'middle'},'BACK');
+[[-173],[-139],[-156],[-82],[-32],[2]].forEach(([x])=>el(tv,'rect',{x:x-11,y:120,width:22,height:27.5,fill:'none',stroke:c('mute'),'stroke-width':.6}));
+el(tv,'text',{x:-85,y:162,'font-size':7,'text-anchor':'middle',fill:c('mute')},'GX16 sockets (front wall)');
+el(tv,'text',{x:0,y:172,'font-size':8,'text-anchor':'middle'},'FRONT');
+el(tv,'text',{x:0,y:-158,'font-size':8,'text-anchor':'middle'},'BACK');
 // grid + standoffs
-H.forEach(([x,z,t])=>el(top,'circle',{cx:x,cy:z,r:t==='grid'?3:2.25,fill:'none',stroke:c('line'),'stroke-width':.6}));
+H.forEach(([x,z,t])=>el(tv,'circle',{cx:x,cy:z,r:t==='grid'?3:2.25,fill:'none',stroke:c('line'),'stroke-width':.6}));
 // ducts
-el(top,'rect',{x:-190,y:68,width:340,height:25,fill:'none',stroke:c('mute'),'stroke-dasharray':'4 3'});
-el(top,'text',{x:-20,y:83,'font-size':6,'text-anchor':'middle',fill:c('mute')},'duct 25 (optional)');
-el(top,'rect',{x:-190,y:-100,width:380,height:25,fill:'none',stroke:c('mute'),'stroke-dasharray':'4 3'});
-el(top,'text',{x:0,y:-85,'font-size':6,'text-anchor':'middle',fill:c('mute')},'duct 25 (optional)');
+el(tv,'rect',{x:-190,y:68,width:340,height:25,fill:'none',stroke:c('mute'),'stroke-dasharray':'4 3'});
+el(tv,'text',{x:-20,y:83,'font-size':6,'text-anchor':'middle',fill:c('mute')},'duct 25 (optional)');
+el(tv,'rect',{x:-190,y:-100,width:380,height:25,fill:'none',stroke:c('mute'),'stroke-dasharray':'4 3'});
+el(tv,'text',{x:0,y:-85,'font-size':6,'text-anchor':'middle',fill:c('mute')},'duct 25 (optional)');
 // rail z -20..15
-el(top,'rect',{x:-190,y:-20,width:380,height:35,fill:c('rail'),opacity:.55});
-[-180,-60,60,180].forEach(x=>el(top,'circle',{cx:x,cy:-2.5,r:3.5,fill:c('ink')}));
+el(tv,'rect',{x:-190,y:-20,width:380,height:35,fill:c('rail'),opacity:.55});
+[-180,-60,60,180].forEach(x=>el(tv,'circle',{cx:x,cy:-2.5,r:3.5,fill:c('ink')}));
 // TB6600s
 [-155,-95,-35].forEach((x,i)=>{
- el(top,'rect',{x:x-28,y:-2.5-48,width:56,height:96,rx:4,fill:c('part'),opacity:.85});
- el(top,'rect',{x:x-7,y:-2.5-50,width:14,height:100,rx:2,fill:c('clip'),opacity:.9});
- [-43.5,43.5].forEach(d=>el(top,'rect',{x:x-2,y:-2.5+d-4.5,width:4,height:9,rx:2,fill:c('bg')}));
- el(top,'text',{x:x,y:-2.5+28,'font-size':6.5,'text-anchor':'middle'},'TB6600 '+(i+1));
+ el(tv,'rect',{x:x-28,y:-2.5-48,width:56,height:96,rx:4,fill:c('part'),opacity:.85});
+ el(tv,'rect',{x:x-7,y:-2.5-50,width:14,height:100,rx:2,fill:c('clip'),opacity:.9});
+ [-43.5,43.5].forEach(d=>el(tv,'rect',{x:x-2,y:-2.5+d-4.5,width:4,height:9,rx:2,fill:c('bg')}));
+ el(tv,'text',{x:x+17,y:-2.5+30,'font-size':7,'text-anchor':'middle'},'TB'+(i+1));
 });
-el(top,'text',{x:-95,y:-60,'font-size':6,'text-anchor':'middle',fill:c('mute')},'signal end');
-el(top,'text',{x:-95,y:62,'font-size':6,'text-anchor':'middle',fill:c('mute')},'motor end');
+el(tv,'text',{x:-95,y:-60,'font-size':6,'text-anchor':'middle',fill:c('mute')},'signal end');
+el(tv,'text',{x:-95,y:62,'font-size':6,'text-anchor':'middle',fill:c('mute')},'motor end');
 // board
 const bx=88;
-el(top,'rect',{x:bx-63,y:-2.5-43,width:126,height:86,rx:3,fill:c('part'),opacity:.85});
-[-59,59].forEach(d=>{el(top,'rect',{x:bx+d-6,y:-2.5-46,width:12,height:92,rx:2,fill:c('clip'),opacity:.9});
- [-39,39].forEach(e=>el(top,'rect',{x:bx+d-2,y:-2.5+e-4.5,width:4,height:9,rx:2,fill:c('bg')}))});
-el(top,'text',{x:bx,y:-10,'font-size':7,'text-anchor':'middle'},'FluidNC 6x');
-el(top,'text',{x:bx,y:0,'font-size':6,'text-anchor':'middle'},'holes 118 × 78');
-el(top,'rect',{x:156,y:-20,width:34,height:35,fill:'none',stroke:c('ink'),'stroke-dasharray':'2 2'});
-el(top,'text',{x:173,y:28,'font-size':6,'text-anchor':'middle'},'splitter');
-el(top,'text',{x:-190,y:-24,'font-size':6,fill:c('mute')},'DIN rail 380, row z −2.5');
+el(tv,'rect',{x:bx-63,y:-2.5-43,width:126,height:86,rx:3,fill:c('part'),opacity:.85});
+[-59,59].forEach(d=>{el(tv,'rect',{x:bx+d-6,y:-2.5-46,width:12,height:92,rx:2,fill:c('clip'),opacity:.9});
+ [-39,39].forEach(e=>el(tv,'rect',{x:bx+d-2,y:-2.5+e-4.5,width:4,height:9,rx:2,fill:c('bg')}))});
+el(tv,'text',{x:bx,y:-10,'font-size':7,'text-anchor':'middle'},'FluidNC 6x');
+el(tv,'text',{x:bx,y:0,'font-size':6,'text-anchor':'middle'},'holes 118 × 78');
+el(tv,'rect',{x:156,y:-20,width:34,height:35,fill:'none',stroke:c('ink'),'stroke-dasharray':'2 2'});
+el(tv,'text',{x:173,y:28,'font-size':6,'text-anchor':'middle'},'splitter');
+el(tv,'text',{x:190,y:-24,'font-size':6,'text-anchor':'end',fill:c('mute')},'DIN rail 380, row z −2.5');
 // side elevation (heights)
 const sd=document.getElementById('side');
 const sc=1;const y0=125;
@@ -113,4 +113,5 @@ el(sd,'rect',{x:220,y:y0-27.1,width:86,height:1.6,fill:c('part')});
 el(sd,'rect',{x:235,y:y0-42.1,width:50,height:15,fill:c('part'),opacity:.6});
 el(sd,'text',{x:263,y:y0-46,'font-size':7,'text-anchor':'middle'},'board top ≈ 42');
 el(sd,'text',{x:0,y:0,'font-size':8},'Side view (heights in mm above the box floor; parts not to scale along x)');
+})();
 </script>
