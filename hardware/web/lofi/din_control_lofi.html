@@ -21,7 +21,7 @@ ul{margin:0;padding-left:1.2em;max-width:70ch}li{margin:2px 0}
 code{font-family:var(--f-mono);font-size:.92em}
 </style>
 <main>
-<header><h1>Control box · DIN rail lofi v2</h1><p class="sub">Top view, front wall (GX sockets) at the bottom. TB6600s lie flat on L-clips with their terminals facing right. The board sits upright, as in your photo. Duct A (back) carries power, USB and logic; duct B (front) carries motor and I/O wires to the GX sockets.</p></header>
+<header><h1>Control box · DIN rail lofi v3</h1><p class="sub">Top view, front wall (GX sockets) at the bottom. TB6600s lie flat on L-clips with their terminals facing right. The board is rotated 180° from your photo and sits at the left end, near the USB panel. Duct A (back) carries power, USB and logic; duct B (front) carries motor and I/O wires to the GX sockets.</p></header>
 
 <section class="fig"><svg id="top" viewBox="-252 -180 504 362"></svg></section>
 
@@ -29,13 +29,13 @@ code{font-family:var(--f-mono);font-size:.92em}
 <div><h2>Wiring split</h2><ul>
 <li><b class="a">Duct A (back):</b> 24 V in from the receiving panel, driver VCC/GND, board → driver PUL/DIR/ENA, USB-C and antenna to the left-wall panel.</li>
 <li><b class="b">Duct B (front):</b> TB6600 A±/B± and board I/O (endstops, servo) → GX sockets.</li>
-<li><b>Crossovers:</b> each driver's 2 power wires hop back over its motor terminals. The board's power terminals face the front, so its 2 power wires run round the board's right side to duct A.</li>
+<li><b>Crossovers:</b> only each driver's 2 power wires, which hop back over its motor terminals. The board's power now faces straight into duct A.</li><li><b>USB lead:</b> leaves the board's front-right corner and runs along the left wall to the panel, in neither duct (about 200 mm). A right-angle USB-C plug helps.</li><li><b>Noise:</b> 24 V DC next to USB and signals is fine; twist the power pairs and use a shielded USB cable. The risk is endstops next to the motor phases in duct B, so use twisted or shielded endstop cable and turn on debounce.</li>
 </ul></div>
 <div><h2>Placement (mm)</h2><ul>
-<li><b>Rail:</b> 380 long (x −195 to 185) on grid row z −2.5, with M4 screws at x −180, −60, 60, 140.</li>
+<li><b>Rail:</b> 370 long (x −175 to 195) on grid row z −2.5, with M4 screws at x −140, −20, 100, 180.</li>
 <li><b>TB6600:</b> 96 × 57 × 28 body on a 92 mm pitch (3 wall + 57 body + 12 terminals + 20 wire gap). Signal end at the back, VCC end at the front.</li>
-<li><b>Board:</b> upright as in your photo (USB to the back), shifted 10 back from the rail. PCB about 87 × 126 measured off your photo <span class="u">(unverified)</span>.</li>
-<li><b>Free space:</b> 46 mm to the right of the board for I/O wiring. TB1 sits 5 mm from the fan.</li>
+<li><b>Board:</b> rotated 180° (USB to the front, power to the back), at x −167 to −80, shifted 7.5 back from the rail, with 20 mm on its left for the I/O wires. PCB about 87 × 126 measured off your photo <span class="u">(unverified)</span>.</li>
+<li><b>Free space:</b> about 20 mm right of TB3 for motor wires, then the right wall. The receiving panel's jacks may stick in there <span class="u">(check)</span>. The board's I/O wires pass about 25 mm from the fan.</li>
 </ul></div>
 </section>
 
@@ -70,26 +70,41 @@ T(-85,163,'GX16 sockets (front wall)',{'font-size':7,fill:c('mute')});
 T(0,174,'FRONT',{'font-size':8});T(0,-160,'BACK',{'font-size':8});
 H.forEach(([x,z,t])=>el(tv,'circle',{cx:x,cy:z,r:t==='grid'?3:2.25,fill:'none',stroke:c('line'),'stroke-width':.6}));
 // ducts
-el(tv,'rect',{x:-190,y:-127,width:380,height:25,fill:c('pa'),opacity:.18,stroke:c('pa'),'stroke-dasharray':'4 3'});
+el(tv,'rect',{x:-190,y:-127,width:400,height:25,fill:c('pa'),opacity:.18,stroke:c('pa'),'stroke-dasharray':'4 3'});
 T(0,-112,'DUCT A · 24 V · USB · logic',{'font-size':7,fill:c('pa')});
-el(tv,'rect',{x:-190,y:75,width:375,height:25,fill:c('pb'),opacity:.18,stroke:c('pb'),'stroke-dasharray':'4 3'});
+el(tv,'rect',{x:-190,y:75,width:400,height:25,fill:c('pb'),opacity:.18,stroke:c('pb'),'stroke-dasharray':'4 3'});
 T(60,90,'DUCT B · motors · I/O → GX',{'font-size':7,fill:c('pb')});
 // rail
-el(tv,'rect',{x:-195,y:-20,width:380,height:35,fill:c('rail'),opacity:.5});
-[-180,-60,60,140].forEach(x=>el(tv,'circle',{cx:x,cy:-2.5,r:3.5,fill:c('ink')}));
+el(tv,'rect',{x:-175,y:-20,width:370,height:35,fill:c('rail'),opacity:.5});
+[-140,-20,100,180].forEach(x=>el(tv,'circle',{cx:x,cy:-2.5,r:3.5,fill:c('ink')}));
+// board, rotated 180 from the photo: USB/SD front, power back, driver signals right, I/O left
+const bx=-123.5,bz=-10;
+[-39,39].forEach(d=>el(tv,'rect',{x:bx+d-6,y:bz-65,width:12,height:130,rx:2,fill:c('clip'),opacity:.9}));
+el(tv,'rect',{x:bx-43.5,y:bz-63,width:87,height:126,rx:3,fill:c('part'),opacity:.92});
+[-39,39].forEach(dx=>[-59,59].forEach(dz=>el(tv,'circle',{cx:bx+dx,cy:bz+dz,r:1.8,fill:c('ink')})));
+el(tv,'rect',{x:bx+40.5,y:bz-50,width:6,height:100,fill:'#6fc28a',stroke:c('pa'),'stroke-width':1});   // right: driver signals
+el(tv,'rect',{x:bx-46.5,y:bz-50,width:6,height:100,fill:'#6fc28a',stroke:c('pb'),'stroke-width':1});   // left: I/O
+el(tv,'rect',{x:bx-22,y:bz-69,width:30,height:6,fill:'#6fc28a',stroke:c('pa'),'stroke-width':1});     // back: power
+el(tv,'rect',{x:bx+27,y:bz+61,width:9,height:5,fill:c('ink')});                                       // USB-C (front right corner)
+T(bx,bz-8,'FluidNC 6x',{'font-size':7});T(bx,bz+2,'rotated 180°',{'font-size':5.5});T(bx,bz+10,'holes 78 × 118',{'font-size':5.5});
+T(bx+31.5,bz+73,'USB',{'font-size':5});T(bx+44,bz+56,'sig',{'font-size':5,'text-anchor':'start'});T(bx-50,bz+56,'I/O',{'font-size':5,'text-anchor':'end'});T(bx-7,bz-72,'24 V',{'font-size':5});
+// board wires
+el(tv,'path',{d:`M${bx-7} ${bz-69} V-104`,fill:'none',stroke:c('pa'),'stroke-width':1.2});                 // power → A
+el(tv,'path',{d:`M${bx+46.5} ${bz-30} h6 V-104`,fill:'none',stroke:c('pa'),'stroke-width':1.2});           // signals → A
+el(tv,'path',{d:`M${bx-46.5} ${bz+20} h-12 V77`,fill:'none',stroke:c('pb'),'stroke-width':1.2});          // I/O → B
+el(tv,'path',{d:`M${bx+31.5} ${bz+66} v6 H-218 V-45`,fill:'none',stroke:c('ink'),'stroke-width':1.1,'stroke-dasharray':'5 2'});  // USB to panel
+T(-180,bz+82,'USB lead (outside the ducts) →',{'font-size':5,'text-anchor':'start',fill:c('mute')});
 // drivers
-const z0=-50.5,z1=45.5;
-[-190,-98,-6].forEach((x0,i)=>{
+const z0=-50.5;
+[-63,29,121].forEach((x0,i)=>{
  el(tv,'rect',{x:x0,y:z0-2,width:60,height:100,fill:c('clip'),opacity:.25});
  el(tv,'rect',{x:x0,y:z0-2,width:3,height:100,fill:c('clip')});
  el(tv,'rect',{x:x0+3,y:z0,width:57,height:96,rx:3,fill:c('part')});
  const tx=x0+60;
  el(tv,'rect',{x:tx,y:z0+8,width:12,height:80,fill:'#6fc28a',stroke:c('ink'),'stroke-width':.4});
- // groups along terminal strip: signal (back) 6, motor 4, power 2 (front)
  el(tv,'rect',{x:tx,y:z0+8,width:12,height:40,fill:'none',stroke:c('pa'),'stroke-width':1.4});
  el(tv,'rect',{x:tx,y:z0+48,width:12,height:26.7,fill:'none',stroke:c('pb'),'stroke-width':1.4});
  el(tv,'rect',{x:tx,y:z0+74.7,width:12,height:13.3,fill:'none',stroke:c('pa'),'stroke-width':1.4});
- // wires
  el(tv,'path',{d:`M${tx+12} ${z0+28} h8 V-104`,fill:'none',stroke:c('pa'),'stroke-width':1.2});
  el(tv,'path',{d:`M${tx+12} ${z0+61} h12 V77`,fill:'none',stroke:c('pb'),'stroke-width':1.2});
  el(tv,'path',{d:`M${tx+12} ${z0+81} h4 V-104`,fill:'none',stroke:c('pa'),'stroke-width':.8,'stroke-dasharray':'2 1.5'});
@@ -97,24 +112,7 @@ const z0=-50.5,z1=45.5;
  T(x0+31,4,'96×57×28',{'font-size':5,fill:c('ink')});
  [-43.5,43.5].forEach(d=>el(tv,'rect',{x:x0,y:-2.5+d-2.2,width:3,height:4.4,fill:c('bg')}));
 });
-T(-124,z0+12,'sig',{'font-size':5});T(-124,z0+64,'mot',{'font-size':5});T(-124,z0+84,'pwr',{'font-size':5});
-// board upright, centre x 132.5, z -12.5 (shifted 10 back of the rail centre)
-const bx=132.5,bz=-12.5;
-[-39,39].forEach(d=>el(tv,'rect',{x:bx+d-6,y:bz-65,width:12,height:130,rx:2,fill:c('clip'),opacity:.9}));
-el(tv,'rect',{x:bx-43.5,y:bz-63,width:87,height:126,rx:3,fill:c('part'),opacity:.92});
-[-39,39].forEach(dx=>[-59,59].forEach(dz=>el(tv,'circle',{cx:bx+dx,cy:bz+dz,r:1.8,fill:c('ink')})));
-// board edges
-el(tv,'rect',{x:bx-46.5,y:bz-50,width:6,height:100,fill:'#6fc28a',stroke:c('pa'),'stroke-width':1});   // left: driver signals
-el(tv,'rect',{x:bx+40.5,y:bz-50,width:6,height:100,fill:'#6fc28a',stroke:c('pb'),'stroke-width':1});   // right: I/O
-el(tv,'rect',{x:bx-8,y:bz+63,width:30,height:6,fill:'#6fc28a',stroke:c('pa'),'stroke-width':1});      // bottom: power
-el(tv,'rect',{x:bx-36,y:bz-66,width:9,height:5,fill:c('ink')});                                       // USB-C
-T(bx,bz-8,'FluidNC 6x',{'font-size':7});T(bx,bz+2,'holes 78 × 118',{'font-size':5.5});
-T(bx-31,bz-70,'USB',{'font-size':5});
-el(tv,'path',{d:`M${bx-31.5} ${bz-66} V-104`,fill:'none',stroke:c('pa'),'stroke-width':1.2});
-el(tv,'path',{d:`M${bx-46.5} ${bz-30} h-6 V-104`,fill:'none',stroke:c('pa'),'stroke-width':1.2});
-el(tv,'path',{d:`M${bx+46.5} ${bz+10} h10 V77`,fill:'none',stroke:c('pb'),'stroke-width':1.2});
-el(tv,'path',{d:`M${bx+7} ${bz+69} v4 h${183-bx-7} V-104`,fill:'none',stroke:c('pa'),'stroke-width':.8,'stroke-dasharray':'2 1.5'});
-
+T(3,z0+12,'sig',{'font-size':5});T(3,z0+64,'mot',{'font-size':5});T(3,z0+84,'pwr',{'font-size':5});
 // side view
 const sd=document.getElementById('side');const y0=128;
 const S=(x,y,t,o={})=>el(sd,'text',Object.assign({x,y,'font-size':7,'text-anchor':'middle'},o),t);
@@ -124,18 +122,18 @@ S(410,y0-114,'inside height 110 (lid lips)',{'text-anchor':'end',fill:c('warn')}
 el(sd,'rect',{x:0,y:y0-8,width:410,height:2,fill:c('line')});
 S(2,y0+9,'plate top = 8',{'text-anchor':'start',fill:c('mute')});
 el(sd,'rect',{x:5,y:y0-15.5,width:380,height:7.5,fill:c('rail')});
-[0,92,184].forEach(o=>{const x=5+o;
+[127,219,311].forEach(o=>{const x=-5+o;
  el(sd,'rect',{x:x,y:y0-18.5,width:60,height:3,fill:c('clip')});
  el(sd,'rect',{x:x,y:y0-46.5,width:3,height:28,fill:c('clip')});
  el(sd,'rect',{x:x+3,y:y0-46.5,width:57,height:28,fill:c('part')});
  el(sd,'rect',{x:x+60,y:y0-40,width:12,height:16,fill:'#6fc28a'});
 });
-S(36,y0-50,'top ≈ 47');
-el(sd,'rect',{x:284,y:y0-18.5,width:87,height:3,fill:c('clip')});
-el(sd,'rect',{x:288,y:y0-24.5,width:4,height:6,fill:c('clip')});el(sd,'rect',{x:363,y:y0-24.5,width:4,height:6,fill:c('clip')});
-el(sd,'rect',{x:284,y:y0-26.1,width:87,height:1.6,fill:c('part')});
-el(sd,'rect',{x:300,y:y0-41.1,width:50,height:15,fill:c('part'),opacity:.6});
-S(327,y0-45,'board top ≈ 41');
+S(153,y0-50,'top ≈ 47');
+el(sd,'rect',{x:20,y:y0-18.5,width:87,height:3,fill:c('clip')});
+el(sd,'rect',{x:24,y:y0-24.5,width:4,height:6,fill:c('clip')});el(sd,'rect',{x:99,y:y0-24.5,width:4,height:6,fill:c('clip')});
+el(sd,'rect',{x:20,y:y0-26.1,width:87,height:1.6,fill:c('part')});
+el(sd,'rect',{x:36,y:y0-41.1,width:50,height:15,fill:c('part'),opacity:.6});
+S(63,y0-45,'board top ≈ 41');
 S(200,y0-80,'≈ 63 mm free above the drivers',{fill:c('mute')});
 // clip sketch
 const cl=document.getElementById('clip');
