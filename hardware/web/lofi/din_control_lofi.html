@@ -1,0 +1,116 @@
+<title>Control Box DIN Lofi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one column, top view first, then height strip and clip sketch */
+:root{--bg:#f3f5f6;--ink:#1c2328;--mute:#5f6b73;--line:#9aa6ad;--steel:#d9dfe2;--rail:#7d8a93;--part:#77c1ef;--clip:#1c2328;--warn:#c9782a;--card:#ffffff;
+--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--steel:#262e33;--rail:#8a98a1;--part:#3f88b8;--clip:#e3e8eb;--warn:#e09a52;--card:#1b2226;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--steel:#262e33;--rail:#8a98a1;--part:#3f88b8;--clip:#e3e8eb;--warn:#e09a52;--card:#1b2226;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:980px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+h1{font-size:1.4rem;margin:0;text-wrap:balance}h2{font-size:1rem;margin:0 0 8px}
+p{margin:0;max-width:65ch}.sub{color:var(--mute)}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--f-mono);fill:var(--ink)}
+ul{margin:0;padding-left:1.2em;max-width:70ch}li{margin:2px 0}
+.u{color:var(--warn);font-weight:600}
+code{font-family:var(--f-mono);font-size:.92em}
+</style>
+<main>
+<header><h1>Control box · DIN rail lofi</h1><p class="sub">Top view, front wall at the bottom. 1 rail, FluidNC board on 2 clips, 3 × TB6600 on 1 clip each. Real grid and fan notch from the v5 plate.</p></header>
+
+<section class="fig"><svg id="top" viewBox="-250 -178 500 352"></svg></section>
+
+<section><h2>What's drawn</h2><ul>
+<li><b>Rail:</b> 35 × 7.5 top-hat, 380 long, on grid row z −2.5. Screws at x −180, −60, 60, 180 (4 × M4 into rivnuts). Drill your own Ø4.5 holes if the rail's slots don't land on these.</li>
+<li><b>TB6600 × 3:</b> one clip each, holes 87 apart running front–back. Motor terminals face the front, toward the stepper GX sockets. Body 96 × 56 <span class="u">unverified</span>; send width if yours differs.</li>
+<li><b>Board:</b> 118 × 78 holes, 118 along the rail. Two clips, one under each pair of holes. PCB outline 126 × 86 <span class="u">guess</span>.</li>
+<li><b>Spare rail</b> at the right end (about 35 mm) for a splitter PCB clip.</li>
+<li><b>Ducts</b> (dashed) sit on the plate, not the rail: front one between the drivers and the GX sockets, back one behind the board. Optional.</li>
+</ul></section>
+
+<section class="fig"><svg id="side" viewBox="-10 -10 420 150"></svg></section>
+
+<section><h2>Clip (one design, 3 sizes)</h2><ul>
+<li>3 mm flat PETG plate with a fixed DIN hook on one side and a spring latch on the other.</li>
+<li>Device holes are <b>slots ±3 mm</b>, along the plate, with a hex pocket underneath for an M3 nut. This is the tolerance absorber.</li>
+<li>Sideways along the rail, the clip slides, so no tolerance issue there.</li>
+<li>Sizes: TB6600 plate about 100 × 20 (2 slots, 87 apart), board plate about 90 × 14 (2 slots, 78 apart, with 6 mm standoff bosses), splitter plate TBD.</li>
+</ul></section>
+</main>
+<script>
+const H=[[-205.0, -127.5, "m4"], [-205.0, 127.5, "m4"], [0.0, -127.5, "m4"], [0.0, 127.5, "m4"], [205.0, -127.5, "m4"], [205.0, 127.5, "m4"], [-160.0, -122.5, "grid"], [-120.0, -122.5, "grid"], [-80.0, -122.5, "grid"], [-40.0, -122.5, "grid"], [40.0, -122.5, "grid"], [80.0, -122.5, "grid"], [120.0, -122.5, "grid"], [160.0, -122.5, "grid"], [-180.0, -82.5, "grid"], [-140.0, -82.5, "grid"], [-100.0, -82.5, "grid"], [-60.0, -82.5, "grid"], [-20.0, -82.5, "grid"], [20.0, -82.5, "grid"], [60.0, -82.5, "grid"], [100.0, -82.5, "grid"], [140.0, -82.5, "grid"], [180.0, -82.5, "grid"], [-200.0, -42.5, "grid"], [-160.0, -42.5, "grid"], [-120.0, -42.5, "grid"], [-80.0, -42.5, "grid"], [-40.0, -42.5, "grid"], [0.0, -42.5, "grid"], [40.0, -42.5, "grid"], [80.0, -42.5, "grid"], [120.0, -42.5, "grid"], [160.0, -42.5, "grid"], [200.0, -42.5, "grid"], [-180.0, -2.5, "grid"], [-140.0, -2.5, "grid"], [-100.0, -2.5, "grid"], [-60.0, -2.5, "grid"], [-20.0, -2.5, "grid"], [20.0, -2.5, "grid"], [60.0, -2.5, "grid"], [100.0, -2.5, "grid"], [140.0, -2.5, "grid"], [180.0, -2.5, "grid"], [-160.0, 37.5, "grid"], [-120.0, 37.5, "grid"], [-80.0, 37.5, "grid"], [-40.0, 37.5, "grid"], [0.0, 37.5, "grid"], [40.0, 37.5, "grid"], [80.0, 37.5, "grid"], [120.0, 37.5, "grid"], [160.0, 37.5, "grid"], [200.0, 37.5, "grid"], [-180.0, 77.5, "grid"], [-140.0, 77.5, "grid"], [-100.0, 77.5, "grid"], [-60.0, 77.5, "grid"], [-20.0, 77.5, "grid"], [20.0, 77.5, "grid"], [60.0, 77.5, "grid"], [100.0, 77.5, "grid"], [140.0, 77.5, "grid"], [180.0, 77.5, "grid"], [-160.0, 117.5, "grid"], [-120.0, 117.5, "grid"], [-80.0, 117.5, "grid"], [-40.0, 117.5, "grid"], [40.0, 117.5, "grid"], [80.0, 117.5, "grid"], [120.0, 117.5, "grid"], [160.0, 117.5, "grid"]];
+const NS="http://www.w3.org/2000/svg";
+function el(svg,t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e}
+const top=document.getElementById('top');
+const S=getComputedStyle(document.documentElement);
+const c=n=>"var(--"+n+")";
+// walls (inner faces)
+el(top,'rect',{x:-226,y:-148.5,width:452,height:297,fill:'none',stroke:c('ink'),'stroke-width':1.5});
+// plate with fan notch (y = z, front at bottom)
+el(top,'path',{d:'M-220 -142.5 H220 V142.5 H-220 V122 H-197.5 V37 H-220 Z',fill:c('steel'),stroke:c('line'),'stroke-width':.6});
+// fan
+el(top,'rect',{x:-225,y:39.5,width:25,height:80,fill:'none',stroke:c('mute'),'stroke-dasharray':'3 2'});
+el(top,'text',{x:-212,y:82,'font-size':6,'text-anchor':'middle',transform:'rotate(-90 -212 80)',fill:c('mute')},'FAN 80');
+// side panels
+el(top,'rect',{x:-229,y:-45-52,width:3,height:104,fill:c('mute')});
+el(top,'text',{x:-232,y:-45,'font-size':6,'text-anchor':'middle',transform:'rotate(-90 -232 -45)'},'USB panel');
+el(top,'rect',{x:226,y:-12.5-86,width:3,height:172,fill:c('mute')});
+el(top,'text',{x:236,y:-12.5,'font-size':6,'text-anchor':'middle',transform:'rotate(90 236 -12.5)'},'receiving panel');
+// GX sockets behind the front wall
+[[-173],[-139],[-156],[-82],[-32],[2]].forEach(([x])=>el(top,'rect',{x:x-11,y:120,width:22,height:27.5,fill:'none',stroke:c('mute'),'stroke-width':.6}));
+el(top,'text',{x:-85,y:162,'font-size':7,'text-anchor':'middle',fill:c('mute')},'GX16 sockets (front wall)');
+el(top,'text',{x:0,y:172,'font-size':8,'text-anchor':'middle'},'FRONT');
+el(top,'text',{x:0,y:-158,'font-size':8,'text-anchor':'middle'},'BACK');
+// grid + standoffs
+H.forEach(([x,z,t])=>el(top,'circle',{cx:x,cy:z,r:t==='grid'?3:2.25,fill:'none',stroke:c('line'),'stroke-width':.6}));
+// ducts
+el(top,'rect',{x:-190,y:68,width:340,height:25,fill:'none',stroke:c('mute'),'stroke-dasharray':'4 3'});
+el(top,'text',{x:-20,y:83,'font-size':6,'text-anchor':'middle',fill:c('mute')},'duct 25 (optional)');
+el(top,'rect',{x:-190,y:-100,width:380,height:25,fill:'none',stroke:c('mute'),'stroke-dasharray':'4 3'});
+el(top,'text',{x:0,y:-85,'font-size':6,'text-anchor':'middle',fill:c('mute')},'duct 25 (optional)');
+// rail z -20..15
+el(top,'rect',{x:-190,y:-20,width:380,height:35,fill:c('rail'),opacity:.55});
+[-180,-60,60,180].forEach(x=>el(top,'circle',{cx:x,cy:-2.5,r:3.5,fill:c('ink')}));
+// TB6600s
+[-155,-95,-35].forEach((x,i)=>{
+ el(top,'rect',{x:x-28,y:-2.5-48,width:56,height:96,rx:4,fill:c('part'),opacity:.85});
+ el(top,'rect',{x:x-7,y:-2.5-50,width:14,height:100,rx:2,fill:c('clip'),opacity:.9});
+ [-43.5,43.5].forEach(d=>el(top,'rect',{x:x-2,y:-2.5+d-4.5,width:4,height:9,rx:2,fill:c('bg')}));
+ el(top,'text',{x:x,y:-2.5+28,'font-size':6.5,'text-anchor':'middle'},'TB6600 '+(i+1));
+});
+el(top,'text',{x:-95,y:-60,'font-size':6,'text-anchor':'middle',fill:c('mute')},'signal end');
+el(top,'text',{x:-95,y:62,'font-size':6,'text-anchor':'middle',fill:c('mute')},'motor end');
+// board
+const bx=88;
+el(top,'rect',{x:bx-63,y:-2.5-43,width:126,height:86,rx:3,fill:c('part'),opacity:.85});
+[-59,59].forEach(d=>{el(top,'rect',{x:bx+d-6,y:-2.5-46,width:12,height:92,rx:2,fill:c('clip'),opacity:.9});
+ [-39,39].forEach(e=>el(top,'rect',{x:bx+d-2,y:-2.5+e-4.5,width:4,height:9,rx:2,fill:c('bg')}))});
+el(top,'text',{x:bx,y:-10,'font-size':7,'text-anchor':'middle'},'FluidNC 6x');
+el(top,'text',{x:bx,y:0,'font-size':6,'text-anchor':'middle'},'holes 118 × 78');
+el(top,'rect',{x:156,y:-20,width:34,height:35,fill:'none',stroke:c('ink'),'stroke-dasharray':'2 2'});
+el(top,'text',{x:173,y:28,'font-size':6,'text-anchor':'middle'},'splitter');
+el(top,'text',{x:-190,y:-24,'font-size':6,fill:c('mute')},'DIN rail 380, row z −2.5');
+// side elevation (heights)
+const sd=document.getElementById('side');
+const sc=1;const y0=125;
+el(sd,'line',{x1:0,y1:y0-111,x2:400,y2:y0-111,stroke:c('warn'),'stroke-dasharray':'4 3'});
+el(sd,'text',{x:400,y:y0-114,'font-size':7,'text-anchor':'end',fill:c('warn')},'inside height 110 (lid lips)');
+el(sd,'rect',{x:0,y:y0-8,width:400,height:2,fill:c('line')});
+el(sd,'text',{x:2,y:y0+9,'font-size':7,fill:c('mute')},'plate top = 8 above floor');
+el(sd,'rect',{x:40,y:y0-15.5,width:320,height:7.5,fill:c('rail')});
+// tb6600 stack: clip 4 + body 33
+el(sd,'rect',{x:60,y:y0-19.5,width:96,height:4,fill:c('clip')});
+el(sd,'rect',{x:60,y:y0-52.5,width:96,height:33,fill:c('part')});
+el(sd,'text',{x:108,y:y0-33,'font-size':7,'text-anchor':'middle'},'TB6600 ~33 tall');
+el(sd,'text',{x:108,y:y0-56,'font-size':7,'text-anchor':'middle'},'top ≈ 53 → 58 mm free');
+// board: clip 4 + standoff 6 + pcb 1.6 + parts 15
+el(sd,'rect',{x:220,y:y0-19.5,width:86,height:4,fill:c('clip')});
+el(sd,'rect',{x:225,y:y0-25.5,width:4,height:6,fill:c('clip')});el(sd,'rect',{x:297,y:y0-25.5,width:4,height:6,fill:c('clip')});
+el(sd,'rect',{x:220,y:y0-27.1,width:86,height:1.6,fill:c('part')});
+el(sd,'rect',{x:235,y:y0-42.1,width:50,height:15,fill:c('part'),opacity:.6});
+el(sd,'text',{x:263,y:y0-46,'font-size':7,'text-anchor':'middle'},'board top ≈ 42');
+el(sd,'text',{x:0,y:0,'font-size':8},'Side view (heights in mm above the box floor; parts not to scale along x)');
+</script>
