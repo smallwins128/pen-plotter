@@ -1,0 +1,117 @@
+<title>Workshop Room Walls</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one column; wall progress strip, then one elevation per wall, then what to confirm */
+:root{--bg:#f3f5f6;--ink:#1c2328;--mute:#5f6b73;--line:#9aa6ad;--card:#ffffff;
+--wood:#3a3633;--loft:#eceae6;--wall:#2f6fa8;--glass:#a9c7dc;--mirror:#cfdde6;--ghost:#7d8a93;--warn:#c9782a;--ok:#2f7d5b;
+--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;
+--wood:#4a4541;--loft:#3a3c3e;--wall:#5b9bd5;--glass:#3d6f8f;--mirror:#4d6575;--ghost:#8a98a1;--warn:#e09a52;--ok:#5fbf94;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;
+--wood:#4a4541;--loft:#3a3c3e;--wall:#5b9bd5;--glass:#3d6f8f;--mirror:#4d6575;--ghost:#8a98a1;--warn:#e09a52;--ok:#5fbf94;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:980px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+h1{font-size:1.4rem;margin:0;text-wrap:balance}h2{font-size:1rem;margin:0 0 8px;text-wrap:balance}
+p{margin:0;max-width:65ch}.sub{color:var(--mute)}
+.steps{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--f-mono);font-size:.8rem}
+.steps span{border:1px solid var(--line);border-radius:4px;padding:2px 8px;color:var(--mute)}
+.steps span.on{border-color:var(--ink);color:var(--ink);font-weight:500}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--f-mono);fill:var(--ink)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}.grid2>div{min-width:0}
+ul,ol{margin:0;padding-left:1.2em;max-width:70ch}li{margin:3px 0}
+.g{color:var(--warn);font-weight:600}.k{color:var(--ok);font-weight:600}
+</style>
+<main>
+<header style="display:grid;gap:8px">
+<h1>Workshop room · wall by wall</h1>
+<p class="sub">Lofi elevations traced from your two photos. Not to scale. We agree on each wall, then move to the next, then the top view.</p>
+<div class="steps"><span class="on">A · Wardrobes</span><span>B · Window</span><span>C · Whiteboard</span><span>D · Door</span><span>Top view</span></div>
+</header>
+
+<section>
+<h2>Wall A · wardrobes, as it is now</h2>
+<p class="sub">Standing in the middle of the room, facing the wardrobes. The door is to your left, the window to your right. Solid shapes are on the wall; dashed shapes stand in front of it.</p>
+</section>
+
+<section class="fig"><svg id="wallA" viewBox="0 0 800 470" role="img" aria-label="Elevation of the wardrobe wall"></svg></section>
+
+<section class="grid2">
+<div><h2>What I see</h2><ul>
+<li><b>A1</b>: one tall mirror door, nearest the entrance.</li>
+<li><b>A2, A3, A4</b>: double-door units. A3 has the two glass strips.</li>
+<li><b>Lofts</b>: four white loft cupboards over the full run.</li>
+<li><b>Plotter</b>: against A1 and part of A2, with electronics boxes on the floor under it.</li>
+<li><b>LINNMON bench</b>: about 1 m out from A2 and A3, in the middle of the room.</li>
+<li><b>Backpack</b>: on the floor in front of A3/A4.</li>
+</ul></div>
+<div><h2>Confirm or correct</h2><ol>
+<li>Four units: A1 mirror, A2 plain, A3 glass, A4 plain?</li>
+<li><span class="g">My guess:</span> A2 is arts &amp; crafts and A3 is storage. Right?</li>
+<li>What's in A1 and A4? Clothes?</li>
+<li>Inside A3: shelves or a hanging rail? How many shelves, and how deep?</li>
+<li>What's in the lofts? Can you reach them with a step stool?</li>
+<li>With the plotter where it is, do the A1 and A2 doors open?</li>
+</ol></div>
+</section>
+</main>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg",s=document.getElementById('wallA');
+const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;s.appendChild(e);return e};
+const c=n=>"var(--"+n+")";
+const T=(x,y,t,o={})=>el('text',Object.assign({x,y,'font-size':12,'text-anchor':'middle'},o),t);
+const X0=60,FLOOR=400,TOP=40,LOFT=110;
+// wall + floor + ceiling
+el('rect',{x:20,y:TOP-14,width:760,height:FLOOR-TOP+14,fill:c('wall'),opacity:.12});
+el('line',{x1:10,y1:FLOOR,x2:790,y2:FLOOR,stroke:c('ink'),'stroke-width':2});
+el('line',{x1:10,y1:TOP-14,x2:790,y2:TOP-14,stroke:c('line'),'stroke-width':1});
+T(30,FLOOR+22,"◄ door",{'text-anchor':'start','font-size':11,fill:c('mute')});
+T(770,FLOOR+22,"window ►",{'text-anchor':'end','font-size':11,fill:c('mute')});
+// units: [label, width, doors, kind]
+const U=[["A1",120,1,"mirror"],["A2",190,2,"plain"],["A3",190,2,"glass"],["A4",180,2,"plain"]];
+let x=X0;
+U.forEach(([lab,w,n,k])=>{
+  el('rect',{x,y:TOP,width:w,height:LOFT-TOP,fill:c('loft'),stroke:c('ink'),'stroke-width':1.2});
+  if(w>150)el('line',{x1:x+w/2,y1:TOP,x2:x+w/2,y2:LOFT,stroke:c('line')});
+  T(x+w/2,(TOP+LOFT)/2+4,"loft",{'font-size':11,fill:c('mute')});
+  el('rect',{x,y:LOFT,width:w,height:FLOOR-LOFT,fill:c('wood'),stroke:c('ink'),'stroke-width':1.2});
+  const dw=w/n;
+  for(let i=0;i<n;i++){
+    const dx=x+i*dw;
+    el('rect',{x:dx+4,y:LOFT+4,width:dw-8,height:FLOOR-LOFT-8,fill:'none',stroke:c('line'),'stroke-width':.8});
+    if(k==="mirror")el('rect',{x:dx+18,y:LOFT+30,width:dw-36,height:190,fill:c('mirror'),stroke:c('line')});
+    if(k==="glass")el('rect',{x:dx+(i?14:dw-28),y:LOFT+30,width:14,height:120,fill:c('glass'),stroke:c('line')});
+    const hx=n===1?dx+dw-16:(i?dx+10:dx+dw-10);
+    el('line',{x1:hx,y1:LOFT+120,x2:hx,y2:LOFT+150,stroke:c('loft'),'stroke-width':3,'stroke-linecap':'round'});
+  }
+  T(x+w/2,LOFT+24,lab,{'font-size':15,'font-weight':600,fill:c('loft')});
+  x+=w;
+});
+// guesses under unit labels
+T(X0+120+95,LOFT+44,"arts & crafts?",{'font-size':11,fill:c('warn')});
+T(X0+310+95,LOFT+44,"storage?",{'font-size':11,fill:c('warn')});
+T(X0+500+90,LOFT+44,"?",{'font-size':12,fill:c('warn')});
+T(X0+60,LOFT+262,"?",{'font-size':12,fill:c('warn')});
+// ghost: plotter table in front of A1 + part of A2
+const g={fill:c('card'),'fill-opacity':.85,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'};
+el('rect',Object.assign({x:X0+8,y:FLOOR-150,width:270,height:16},g));
+el('rect',Object.assign({x:X0+24,y:FLOOR-200,width:238,height:50},g,{'fill-opacity':.6}));
+T(X0+143,FLOOR-170,"PLOTTER (gantry)",{'font-size':12,'font-weight':600});
+[X0+14,X0+266].forEach(lx=>el('line',{x1:lx,y1:FLOOR-134,x2:lx,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
+el('rect',Object.assign({x:X0+40,y:FLOOR-44,width:90,height:44},g));
+el('rect',Object.assign({x:X0+140,y:FLOOR-36,width:70,height:36},g));
+T(X0+125,FLOOR-56,"electronics boxes",{'font-size':10,fill:c('mute')});
+// ghost: LINNMON bench, ~1 m out
+el('rect',Object.assign({x:X0+300,y:FLOOR-110,width:220,height:12},g,{stroke:c('ghost')}));
+[X0+306,X0+514].forEach(lx=>el('line',{x1:lx,y1:FLOOR-98,x2:lx,y2:FLOOR,stroke:c('ghost'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
+T(X0+410,FLOOR-120,"LINNMON bench · ~1 m out",{'font-size':11,fill:c('ghost')});
+// backpack
+el('rect',Object.assign({x:X0+540,y:FLOOR-56,width:40,height:56,rx:10},g,{stroke:c('ghost')}));
+T(X0+560,FLOOR-64,"bag",{'font-size':10,fill:c('ghost')});
+// legend
+T(30,450,"solid = on the wall   dashed = standing in front   orange ? = my guess",{'text-anchor':'start','font-size':11,fill:c('mute')});
+})();
+</script>
