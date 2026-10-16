@@ -2,7 +2,7 @@
 
 Stack (bottom up): 35 mm rail on the base plate grid -> bought DIN clip (25 x 69, 2 x Ø3.4 holes 58.5 apart,
 countersunk on the rail side) -> printed adapter plate -> part. Flat-head M3 screws go up from the clip's rail side
-into M3 heat-set inserts pressed into raised pads from the plate's underside (8 tall, insert 5 deep), so clip and
+into M3 heat-set inserts pressed into raised pads from the plate's underside (8 tall, insert 4 deep), so clip and
 plate screw together before the part goes on, and come apart again without touching the part.
 
     python3 hardware/parts/din_mounts.py     # writes hardware/out/din_mounts/*.stl + preview PNG
@@ -32,7 +32,7 @@ CLIP = dict(w=25.0, l=69.0, pitch=58.5)        # bought clip: width along the ra
 NUT_AF, NUT_H = 5.8, 2.6                       # M3 nut pocket (5.5 AF + play), depth
 M3 = FIT["m3_clear"]
 # clip screws: M3 heat-set insert pressed in from the plate's underside (the clip face), in a raised pad
-INS_BORE, INS_DEPTH = FIT["insert_bore"], 5.5  # bore from coupon A; M3 x 5 insert + 0.5
+INS_BORE, INS_DEPTH = 4.0, 4.5                 # Allwin's inserts: M3 x 4, OD 4.3 (brass, knurled); bore 0.3 under OD
 PAD_D, PAD_H = 10.0, 8.0                       # pad diameter, height above the clip face (2.5 solid over the bore)
 
 TB = dict(l=96.0, w=57.0, h=28.0, hole_pitch=87.0)   # TB6600 body; flange holes 87 apart along its length
@@ -165,6 +165,37 @@ def preview(parts, path):
     fig.savefig(path)
 
 
+def dxf(name, levels, side=None):
+    """1:1 DXF from the STL: plan sections at each height (one layer each), plus an optional side section."""
+    import ezdxf
+    import trimesh
+    m = trimesh.load(OUT / f"{name}.stl")
+    doc = ezdxf.new("R2010", setup=True)
+    doc.units = ezdxf.units.MM
+    msp = doc.modelspace()
+    colours = [7, 1, 5, 3]
+    lo, hi = m.bounds
+
+    def put(section, layer, dx=0.0, dy=0.0, axes=(0, 1)):
+        for ent in section.discrete:
+            pts = [(float(p[axes[0]]) + dx, float(p[axes[1]]) + dy) for p in ent]
+            msp.add_lwpolyline(pts, close=True, dxfattribs={"layer": layer})
+
+    for i, (z, label) in enumerate(levels):
+        layer = f"Z{z:g} {label}".replace(".", "_")
+        doc.layers.add(layer, color=colours[i % len(colours)])
+        put(m.section(plane_origin=(0, 0, z), plane_normal=(0, 0, 1)), layer)
+    if side:
+        x, label = side
+        layer = f"SIDE x{x:g} {label}".replace(".", "_")
+        doc.layers.add(layer, color=6)
+        put(m.section(plane_origin=(x, 0, 0), plane_normal=(1, 0, 0)), layer, dx=hi[0] + 20 - lo[1], dy=lo[1], axes=(1, 2))   # side view right of the plan
+    doc.layers.add("TEXT", color=8)
+    msp.add_text(f"{name}  1:1 mm  (plan sections by height; layers named by Z)", height=3,
+                 dxfattribs={"layer": "TEXT"}).set_placement((lo[0], lo[1] - 8))
+    doc.saveas(OUT / f"{name}.dxf")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     tb, bd = tb6600_plate(), board_plate()
@@ -173,6 +204,9 @@ def main():
     for n, p in (("tb6600_plate", tb), ("board_plate", bd)):
         bb = p.bounding_box()
         print(f"{n}: {bb.size.X:.1f} x {bb.size.Y:.1f} x {bb.size.Z:.1f} mm, {p.volume / 1000:.1f} cm3")
+    dxf("tb6600_plate", [(1.5, "base frame"), (6.0, "seat ribs and insert bores"), (20.0, "flange posts")],
+        side=(-2.5, "post face, slots and nut channel"))
+    dxf("board_plate", [(2.0, "frame and insert bores"), (10.0, "bosses (float holes)")])
     preview([("tb6600_plate", tb, [(TB["w"] / 2, 0)]),
              ("board_plate", bd, [(-BOARD_CLIP_X, BOARD_CLIP_DY), (BOARD_CLIP_X, BOARD_CLIP_DY)])],
             OUT / "preview.png")
