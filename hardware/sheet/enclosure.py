@@ -357,7 +357,7 @@ def body(kind):
         add_bend(p, ((xt0 + xt1) / 2, yb0), ((xt0 + xt1) / 2, zs - S), "Up 90° R1", ztop)
         p.fold.append((f"{side} top lip", *sorted((sgn * (WO / 2), sgn * (WO / 2 - LIPO))), Hb - T, Hb, ZB + 0.0 + S, zs - S))
         # back lip: y from 16.5 to Hb-3
-        vb0, vb1 = LIPO + FOLD_GAP, Hb - 3.0          # clear of the base back lip
+        vb0, vb1 = LIPO + FOLD_GAP, Hb - T - 2.0      # clear of the base back lip; 2.0 under the top lip
         xa, xb = M_(0, vb0)[0], M_(0, vb1)[0]
         zb_zone = sbox(min(xa, xb), yb0 - BA, max(xa, xb), yb0)
         blip = sbox(min(xa, xb), yb0 - BA - (LIPO - S), max(xa, xb), yb0 - BA)
@@ -367,7 +367,7 @@ def body(kind):
             relief_notch(p, (xe_, yb0), (away, 0), (0, 1), (0, -1))
         p.fold.append((f"{side} back lip", *sorted((sgn * (WO / 2), sgn * (WO / 2 - LIPO))), vb0, vb1, ZB, ZB + T))
         # corner tab at the front edge: y from 8 to Hb-3
-        tv0, tv1 = 8.0, Hb - 3.0
+        tv0, tv1 = 8.0, Hb - T - 2.0
         xa, xb = M_(0, tv0)[0], M_(0, tv1)[0]
         tz = sbox(min(xa, xb), zs - S, max(xa, xb), zs - S + BA)
         tab = sbox(min(xa, xb), zs - S + BA, max(xa, xb), zs - S + BA + (LIPO - S))

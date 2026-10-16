@@ -83,6 +83,7 @@ class Bend:
         a, b = np.array(a), np.array(b)
         self.mid = (a + b) / 2
         self.d = (b - a) / np.linalg.norm(b - a)
+        a, b = a - self.d * 0.05, b + self.d * 0.05      # DXF bend lines are rounded to 0.01: reach the part's edge
         self.n = np.array([-self.d[1], self.d[0]])      # in-plane normal (sign fixed once the parent side is known)
         self.zone = self.strip(-BA / 2, BA / 2, a, b)
         self.a, self.b = a, b
