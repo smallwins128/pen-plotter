@@ -67,6 +67,9 @@ Published at https://claude.ai/artifact/DqabBr8QGaitg9eDwsvwex (private; v11). T
 
 ## Status (2026-10-12)
 
+- **Cut pack v6 (2026-10-16): stainless now 1.2 mm 304** (vendor has no 1.0). T = R = 1.2, BD 2.086 assumed; inside sizes unchanged,
+  outside +0.4 (body 452.4 × 297.4). Steel-only folder `hardware/cutfiles/2026-10-16 v6/` (+ DXF 2004 zip). Mild steel base plates were
+  already cut from v5 and are unchanged; acrylic unchanged. Vendor to confirm his bend deduction for 1.2 mm 304.
 - Cut pack v5 issued 2026-10-14 (v4 had not been cut): rectangular windows, logo slot, IEC/USB panels on M3 rivnuts
   (rivnut centres 7 out from the cutouts; IEC plate now 154 × 89, USB 104 × 54). Receiving and PSU panels are already
   printed: their Ø3.4 holes and cutouts stay.

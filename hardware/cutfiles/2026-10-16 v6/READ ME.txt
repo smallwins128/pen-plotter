@@ -1,0 +1,10 @@
+Plotter enclosure, cut pack v6 (2026-10-16): stainless parts only, 1.2 mm 304.
+
+Cut and bend: control_body, control_lid, power_body, power_lid (also all four in ALL_SS304.dxf).
+Use the files in "DXF 2004". Cut the Visible layer; bend lines are on "Bend Center", notes on "Bend Notes".
+All bends UP 90 deg, inner radius R1.2. Flats assume bend deduction 2.086 mm per 90 deg bend (K 0.44).
+If your deduction for 1.2 mm 304 differs, send the number and the flats will be re-issued.
+
+Mild steel base plates: already cut from v5, unchanged. Do not re-cut.
+Acrylic windows: separate vendor ("2026-10-15 Acrylic windows v1"), unchanged.
+v5 stainless files (1.0 mm) are superseded.

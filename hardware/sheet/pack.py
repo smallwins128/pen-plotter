@@ -83,9 +83,9 @@ Prepared by Allwin Tom · {datetime.date.today().isoformat()} · {VERSION}</p>
 <table><tr><th>#</th><th>File</th><th>Part</th><th>Material</th><th>Qty</th><th>Flat (mm)</th><th>Bends</th><th>Folded outside (mm)</th></tr>{rows}</table>
 <div class=cols>
 <div class=box><h3>Bending</h3><ul>
-<li>Every flat is drawn from the <b>inside face</b>. Every bend is <b>UP 90°</b>, inner radius <b>R1</b>.</li>
-<li>Flats assume K {b['K']}, bend allowance {b['BA']} mm, bend deduction {b['BD']} mm per 90° bend (1 mm 304, R = t).
-<b>If your bend deduction for 1 mm 304 at R1 differs, tell us the number</b>: we re-issue the flats so every hole lands where it should.</li>
+<li>Every flat is drawn from the <b>inside face</b>. Every bend is <b>UP 90°</b>, inner radius <b>R{E.R:g}</b>.</li>
+<li>Flats assume K {b['K']}, bend allowance {b['BA']} mm, bend deduction {b['BD']} mm per 90° bend ({E.T:g} mm 304, R = t).
+<b>If your bend deduction for {E.T:g} mm 304 at R{E.R:g} differs, tell us the number</b>: we re-issue the flats so every hole lands where it should.</li>
 <li>Bend order: small lips first (top lips, back lips, corner tabs, base back lip), then the side walls, then the front wall last.
 Lid: return lips first, then the top-to-back bend.</li>
 <li>Corner reliefs and end-of-flange reliefs are already cut into the outline.</li>
@@ -114,7 +114,7 @@ PSU panels (Ø3.4 holes, screw + nut). The keyhole slot in the middle of the pow
 folded parts free of clashes, folded flanges at least 2 mm apart wherever they are not meant to touch, whole assembly (fans, panels, rivnuts,
 base plate, standoffs) clear by 2 mm, lid clear of the body, every lid hole over its rivnut, base-plate standoffs over the floor's, panel cutouts and
 screw patterns matched to the printed panels, every bend end relieved. The files were then read back and folded in software from the DXFs alone
-(bends UP, R1): every hole lands where the design puts it, no part touches another, and with an inner radius anywhere from R0.6 to R2.5 the lid still
+(bends UP, R{E.R:g}): every hole lands where the design puts it, no part touches another, and with an inner radius anywhere from R0.6 to R2.5 the lid still
 fits. Re-fold from their own bend lines:</p>
 <ul>{refold}</ul>
 {pages}
@@ -186,7 +186,7 @@ def main():
     assert len(ss) + len(ms) + len(acr) == len(ps), "every part in exactly one material drawing"
     for old in OUT.glob("ALL_*.dxf"):
         old.unlink()
-    combined = [combined_dxf(ss, OUT / "ALL_SS304.dxf", f"{NAME} · all stainless parts: 1 mm 304 (mm)"),
+    combined = [combined_dxf(ss, OUT / "ALL_SS304.dxf", f"{NAME} · all stainless parts: {E.T:g} mm 304 (mm)"),
                 combined_dxf(ms, OUT / "ALL_MS.dxf", f"{NAME} · all mild steel parts: 2 mm (mm)"),
                 combined_dxf(acr, OUT / "ALL_ACRYLIC.dxf", f"{NAME} · all acrylic parts: 3 mm clear cast (mm)"),
                 combined_dxf(ps, OUT / "ALL_PARTS.dxf", f"{NAME} · every part, all materials (mm)")]
