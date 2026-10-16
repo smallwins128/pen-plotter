@@ -31,31 +31,47 @@ hr{border:0;border-top:1px solid var(--line);margin:8px 0;width:100%}
 <header style="display:grid;gap:8px">
 <h1>Workshop room · wall by wall</h1>
 <p class="sub">Lofi elevations traced from your two photos. Not to scale. We agree on each wall, then move to the next, then the top view.</p>
-<div class="steps"><span class="done">A · Wardrobes ✓</span><span class="on">B · Window</span><span>C · Whiteboard</span><span>D · Door</span><span>Top view</span></div>
+<div class="steps"><span class="done">A · Wardrobes ✓</span><span class="done">B · Window ✓</span><span class="on">C · Whiteboard</span><span>D · Door</span><span>Top view</span></div>
 </header>
 
 <section class="wall">
-<div><h2>Wall B · window, as it is now</h2>
-<p class="sub">Standing in the middle of the room, facing the window. The wardrobes (wall A) are on your left; the slotted rack corner (wall C) is on your right.</p></div>
-<div class="fig"><svg id="wallB" viewBox="0 0 800 470" role="img" aria-label="Elevation of the window wall"></svg></div>
+<div><h2>Wall C · whiteboard, as it is now</h2>
+<p class="sub">Standing in the middle of the room, facing the whiteboard. The window (wall B) is on your left; the opening and the door side are on your right.</p></div>
+<div class="fig"><svg id="wallC" viewBox="0 0 800 470" role="img" aria-label="Elevation of the whiteboard wall"></svg></div>
 <div class="grid2">
 <div><h2>What I see</h2><ul>
-<li><b>Window</b>: one window, a little right of centre, with layered curtains (dark outer, cream inner).</li>
-<li><b>Office desk</b>: black, under the window, running from the wardrobe corner. Monitor, webcam on a mini tripod, pen cup. Stays where it is.</li>
-<li><b>Under the desk</b>: a grey box or ottoman at the left end.</li>
-<li><b>Light panel</b>: a flat light on a tall tripod, between the wardrobe corner and the desk.</li>
-<li><b>Pink pendant lamp</b>: hangs from the ceiling in front of the window.</li>
-<li><b>Peeling paint</b>: high up, right of the window, near the corner. Possible damp.</li>
+<li><b>Slotted rack</b>: black metal, in the window corner. Cat house on a middle shelf, arm lamp clamped on top, a racquet bag hanging off the side, a small yellow bin at the floor.</li>
+<li><b>Wooden board</b>: leaning against the wall beside the rack, with a spray bottle.</li>
+<li><b>Small folding table</b> (going away): cutting mat, a black riser, a purple box of wires, cable coils. Power strip and a cardboard box on the floor under it.</li>
+<li><b>Whiteboard</b>: above the small table, about 1.2 m wide. Optional.</li>
+<li><b>Peeling paint</b>: a large patch above the whiteboard.</li>
+<li><b>Switch and socket</b>: a light switch right of the whiteboard; a socket at about table height, right of the table, with a plug in it.</li>
+<li><b>Opening</b>: wooden frame at the right end, with wood panelling, extrusion lengths on a shelf and a tote bag inside.</li>
 </ul></div>
 <div><h2>Confirm or correct</h2><ol>
-<li>One window, opens? It is the only fresh air for solder fumes.</li>
-<li>What's the grey box under the desk?</li>
-<li>Is the light panel for video calls? Does it need to stay there?</li>
-<li>Where are the power sockets on this wall, if any?</li>
-<li>Can anything go on the wall either side of the window (a shelf or a SKÅDIS)?</li>
-<li>Do you know about the peeling paint? Is the wall damp to touch after rain?</li>
+<li>Is this black rack the 1×2×6 ft slotted shelf?</li>
+<li>What's through the opening: a dressing area, a bathroom? Does it have to stay clear to walk through?</li>
+<li>The socket right of the table: how many outlets, and roughly how high?</li>
+<li><span class="g">Most useful number:</span> the wall length from the rack corner to the opening's frame.</li>
+<li>Same old damp story for the patch above the whiteboard?</li>
+<li>What's the leaning wooden board? Spare, or part of something?</li>
 </ol></div>
 </div>
+</section>
+
+<hr>
+
+<section class="wall">
+<div><h2>Wall B · window <span class="k">agreed</span></h2>
+<p class="sub">Standing in the middle of the room, facing the window. The wardrobes (wall A) are on your left; the slotted rack corner (wall C) is on your right.</p></div>
+<div class="fig"><svg id="wallB" viewBox="0 0 800 470" role="img" aria-label="Elevation of the window wall"></svg></div>
+<ul>
+<li><b>Window</b> opens: fresh air for solder fumes.</li>
+<li><b>Office desk</b> stays. Footrest underneath. Power socket below the desk, centre of the wall.</li>
+<li><b>Call light</b>: a tripod by A4. It mostly stays, but gets moved to open A4.</li>
+<li><b>Right of the window</b>: wall space opens up if the rack moves. Keep in mind for the top view.</li>
+<li><b>Peeling paint</b>: old damp, dry now.</li>
+</ul>
 </section>
 
 <hr>
@@ -160,8 +176,19 @@ el('polygon',Object.assign({points:`${WX+40},95 ${WX+10},135 ${WX+70},135`},g,{s
 T(WX+40,150,"pendant",{'font-size':10,fill:c('ghost')});
 // peeling paint
 el('ellipse',{cx:690,cy:75,rx:34,ry:22,fill:'none',stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'3 3'});
-T(690,112,"peeling paint",{'font-size':10,fill:c('warn')});
-T(690,124,"damp?",{'font-size':10,fill:c('warn')});
+T(690,112,"peeling paint",{'font-size':10,fill:c('mute')});
+T(690,124,"old, dry now",{'font-size':10,fill:c('mute')});
+// fresh air
+T(WX+WW/2,WY+WH/2,"opens · fresh air",{'font-size':11,fill:c('ok'),'font-weight':600});
+// free wall right of window
+el('rect',{x:WX+WW+70,y:150,width:60,height:180,fill:'none',stroke:c('ok'),'stroke-width':1.5,'stroke-dasharray':'2 4'});
+T(WX+WW+100,236,"free if",{'font-size':9,fill:c('ok')});
+T(WX+WW+100,248,"rack",{'font-size':9,fill:c('ok')});
+T(WX+WW+100,260,"moves",{'font-size':9,fill:c('ok')});
+// socket under the desk, centre
+el('rect',{x:392,y:FLOOR-40,width:22,height:16,fill:c('card'),stroke:c('ink')});
+el('circle',{cx:403,cy:FLOOR-32,r:3,fill:c('ink')});
+T(403,FLOOR-48,"socket",{'font-size':9});
 // desk under window
 const DX=150,DW=520,DY=FLOOR-118;
 el('rect',Object.assign({x:DX,y:DY,width:DW,height:12},g));
@@ -180,16 +207,81 @@ el('rect',Object.assign({x:DX+470,y:DY-24,width:16,height:24},g));
 T(DX+478,DY-30,"pens",{'font-size':9});
 // grey box under desk
 el('rect',Object.assign({x:DX+50,y:FLOOR-60,width:80,height:60},g,{stroke:c('ghost')}));
-T(DX+90,FLOOR-26,"grey box?",{'font-size':10,fill:c('warn')});
+T(DX+90,FLOOR-26,"footrest",{'font-size':10,fill:c('ghost')});
 // light panel on tripod
 el('rect',Object.assign({x:72,y:FLOOR-260,width:58,height:10},g,{stroke:c('ghost')}));
 el('line',{x1:101,y1:FLOOR-250,x2:101,y2:FLOOR-80,stroke:c('ghost'),'stroke-dasharray':'4 3'});
 el('line',{x1:101,y1:FLOOR-80,x2:76,y2:FLOOR,stroke:c('ghost'),'stroke-dasharray':'4 3'});
 el('line',{x1:101,y1:FLOOR-80,x2:126,y2:FLOOR,stroke:c('ghost'),'stroke-dasharray':'4 3'});
-T(101,FLOOR-268,"light panel",{'font-size':10,fill:c('ghost')});
+T(101,FLOOR-280,"call light",{'font-size':10,fill:c('ghost')});
+T(101,FLOOR-268,"(moves for A4)",{'font-size':9,fill:c('ghost')});
 // chair
 el('rect',Object.assign({x:DX+260,y:FLOOR-160,width:90,height:90,rx:12},g,{stroke:c('ghost'),'fill-opacity':.5}));
 T(DX+305,FLOOR-112,"chair",{'font-size':10,fill:c('ghost')});
+}
+
+// ---------- Wall C ----------
+{
+const s=document.getElementById('wallC'),{el,T}=kit(s);
+frame(el,T,"◄ window corner (B)","opening, door side (D) ►");
+// rack in corner: posts + shelves
+const RX=40,RW=130,RT=FLOOR-320;
+[RX,RX+RW].forEach(px=>el('line',{x1:px,y1:RT,x2:px,y2:FLOOR,stroke:c('ink'),'stroke-width':3}));
+[0,1,2,3,4].forEach(i=>el('line',{x1:RX,y1:RT+10+i*76,x2:RX+RW,y2:RT+10+i*76,stroke:c('ink'),'stroke-width':2}));
+T(RX+RW/2,RT-8,"SLOTTED RACK?",{'font-size':11,'font-weight':600,fill:c('warn')});
+el('rect',Object.assign({x:RX+14,y:RT+100,width:100,height:62},g,{stroke:c('ghost')}));
+T(RX+64,RT+136,"cat house",{'font-size':10,fill:c('ghost')});
+el('line',{x1:RX+RW-10,y1:RT+10,x2:RX+RW+30,y2:RT-40,stroke:c('ghost'),'stroke-width':2});
+el('polygon',{points:`${RX+RW+30},${RT-40} ${RX+RW+44},${RT-24} ${RX+RW+20},${RT-28}`,fill:c('ghost')});
+T(RX+RW+46,RT-46,"arm lamp",{'font-size':9,fill:c('ghost'),'text-anchor':'start'});
+el('rect',Object.assign({x:RX+RW+2,y:RT+60,width:20,height:150,rx:8},g,{stroke:c('ghost')}));
+T(RX+RW+12,RT+225,"bag",{'font-size':9,fill:c('ghost')});
+el('rect',Object.assign({x:RX+40,y:FLOOR-30,width:30,height:30},g,{stroke:c('warn')}));
+T(RX+55,FLOOR-36,"bin",{'font-size':9,fill:c('warn')});
+// leaning board + spray
+el('polygon',Object.assign({points:`200,${FLOOR} 232,${FLOOR} 250,${FLOOR-150} 222,${FLOOR-150}`},g,{stroke:c('ghost')}));
+T(232,FLOOR-158,"board?",{'font-size':9,fill:c('warn')});
+// whiteboard
+const BX=300,BW=260,BY=110,BH=150;
+el('rect',{x:BX,y:BY,width:BW,height:BH,fill:c('card'),stroke:c('ink'),'stroke-width':2});
+T(BX+BW/2,BY+BH/2,"WHITEBOARD · optional",{'font-size':12,'font-weight':600});
+el('ellipse',{cx:BX+BW-40,cy:62,rx:60,ry:24,fill:'none',stroke:c('mute'),'stroke-width':1.5,'stroke-dasharray':'3 3'});
+T(BX+BW-40,66,"peeling paint",{'font-size':10,fill:c('mute')});
+// small table (going)
+const TX=280,TW=280,TY=FLOOR-120;
+el('rect',Object.assign({x:TX,y:TY,width:TW,height:10},g,{stroke:c('warn')}));
+el('line',{x1:TX+20,y1:TY+10,x2:TX+TW-20,y2:FLOOR,stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+el('line',{x1:TX+TW-20,y1:TY+10,x2:TX+20,y2:FLOOR,stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+T(TX+TW/2,TY+30,"small table · going away",{'font-size':11,'font-weight':600,fill:c('warn')});
+el('rect',Object.assign({x:TX+20,y:TY-26,width:90,height:26},g));
+T(TX+65,TY-9,"riser",{'font-size':9});
+el('rect',Object.assign({x:TX+130,y:TY-30,width:70,height:30},g));
+T(TX+165,TY-11,"wire box",{'font-size':9});
+el('rect',Object.assign({x:TX+215,y:TY-6,width:55,height:6},g));
+T(TX+242,TY-10,"mat",{'font-size':9});
+el('rect',Object.assign({x:TX+60,y:FLOOR-12,width:90,height:12},g,{stroke:c('ghost')}));
+T(TX+105,FLOOR-18,"power strip",{'font-size':9,fill:c('ghost')});
+el('rect',Object.assign({x:TX+TW+6,y:FLOOR-34,width:60,height:34},g,{stroke:c('ghost')}));
+T(TX+TW+36,FLOOR-40,"carton",{'font-size':9,fill:c('ghost')});
+// switch + socket
+el('rect',{x:600,y:180,width:16,height:26,fill:c('card'),stroke:c('ink')});
+T(608,172,"switch",{'font-size':9});
+el('rect',{x:590,y:FLOOR-150,width:44,height:22,fill:c('card'),stroke:c('ink')});
+el('circle',{cx:603,cy:FLOOR-139,r:3,fill:c('ink')});el('circle',{cx:621,cy:FLOOR-139,r:3,fill:c('ink')});
+T(612,FLOOR-158,"socket?",{'font-size':9,fill:c('warn')});
+el('path',{d:`M612,${FLOOR-128} C612,${FLOOR-80} 640,${FLOOR-60} 600,${FLOOR}`,fill:'none',stroke:c('ghost')});
+// opening
+const OX=660,OW=110;
+el('rect',{x:OX,y:TOP+30,width:OW,height:FLOOR-TOP-30,fill:c('wood'),stroke:c('ink'),'stroke-width':2});
+el('rect',{x:OX+10,y:TOP+40,width:OW-20,height:FLOOR-TOP-40,fill:c('loft'),opacity:.25});
+el('line',{x1:OX+14,y1:FLOOR-150,x2:OX+OW-14,y2:FLOOR-150,stroke:c('loft'),'stroke-width':4});
+T(OX+OW/2,FLOOR-158,"extrusion",{'font-size':9,fill:c('loft')});
+T(OX+OW/2,TOP+60,"OPENING",{'font-size':11,'font-weight':600,fill:c('loft')});
+T(OX+OW/2,TOP+74,"to where?",{'font-size':10,fill:c('warn')});
+// length to measure
+el('line',{x1:RX,y1:FLOOR+8,x2:OX,y2:FLOOR+8,stroke:c('warn'),'stroke-width':1.2,'marker-end':''});
+[RX,OX].forEach(px=>el('line',{x1:px,y1:FLOOR+2,x2:px,y2:FLOOR+14,stroke:c('warn'),'stroke-width':1.2}));
+T((RX+OX)/2,FLOOR+22,"measure this: corner → opening",{'font-size':11,fill:c('warn'),'font-weight':600});
 }
 })();
 </script>
