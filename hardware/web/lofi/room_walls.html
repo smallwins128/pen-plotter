@@ -40,9 +40,9 @@ hr{border:0;border-top:1px solid var(--line);margin:8px 0;width:100%}
 <div class="fig"><svg id="planNew" viewBox="0 0 640 700" role="img" aria-label="Proposed top view of the room"></svg></div>
 <div class="grid2">
 <div><h2>The moves</h2><ol>
-<li><b>Bench to wall C</b>, between the rack and the entrance, where the small table was. Its power strip runs from the low C socket, which ends up right at the bench's end.</li>
+<li><b>Bench into the window corner on wall C.</b> Daylight from the left, and it sits beside and behind the webcam, out of the call frame. Its power strip runs from the low C socket, under the rack.</li>
 <li><b>SKÅDIS moves from D to above the bench.</b> Its old spot on D takes framed plots, so the call background shows your work.</li>
-<li><b>Rack becomes staging</b>, at the bench's other end. The cat house moves to the window, right of the desk.</li>
+<li><b>Rack moves to the entrance end of the bench</b> and becomes staging. You reach it from the open floor, not from between two tables, and parcels coming in land on it first. The cat house goes on the office desk.</li>
 <li><b>Plotter stays on D.</b> The enclosure zone is the end nearest A1, next to the A1 socket. Paper lies flat on a shelf under the table.</li>
 <li><b>A3 is storage, lofts hold rarely used things.</b></li>
 <li><b>The middle stays empty</b>: a walkway from the entrance, and room to step back from the plotter.</li>
@@ -54,7 +54,7 @@ hr{border:0;border-top:1px solid var(--line);margin:8px 0;width:100%}
 <li>Whiteboard, unless you want it back somewhere</li>
 </ul>
 <h2 style="margin-top:16px">Check</h2><ul>
-<li><b>Camera</b>: the webcam faces wall D. The bench's near end may show at the edge of the frame <span class="g">(unverified)</span>. Turn the webcam on and look before you mount the SKÅDIS.</li>
+<li><b>Camera</b>: the webcam faces wall D. The bench is now out of frame, but the rack may show at the left edge <span class="g">(unverified)</span>. Check before you move it, and keep its front tidy with lidded bins.</li>
 <li><b>Tape two lengths</b>: wall C from the rack corner to the entrance frame, and wall D from the door to the wardrobe front.</li>
 </ul></div>
 </div>
@@ -364,7 +364,8 @@ function plan(id,proposed){
     el('path',{d:`M${a[0]},${a[1]} L${l[0]},${l[1]} M${a[0]},${a[1]} L${r[0]},${r[1]}`,stroke:c('mute'),'stroke-dasharray':'2 4'});
     T(r[0]-4,r[1]+12,"webcam view",{'font-size':9,fill:c('mute'),'text-anchor':'end'});}
   // rack in C/B corner (2 ft wide along C, 1 ft deep)
-  R(W-0.32,0.04,0.3,0.6,proposed?zone('warn'):thing,proposed?"STAGING\nrack":"rack +\ncat",{'font-size':9});
+  if(proposed)R(W-0.32,1.38,0.3,0.6,zone('warn'),"STAGING\nrack",{'font-size':9});
+  else R(W-0.32,0.04,0.3,0.6,thing,"rack +\ncat",{'font-size':9});
   // plotter table along D: 1524 x 600, from x 1.05 to 2.57
   if(proposed){
     R(1.05,L-0.62,1.52,0.6,zone('ink'));
@@ -379,13 +380,13 @@ function plan(id,proposed){
   }
   if(proposed){
     // bench on C between rack and entrance
-    R(W-0.62,0.8,0.6,1.2,zone('ok'),"BENCH\n2×4 ft",{'font-size':11,'font-weight':600});
-    const [sx,sy]=P(W-0.05,0.85);el('line',{x1:sx,y1:sy,x2:sx,y2:sy+0.6*S,stroke:c('ok'),'stroke-width':5});
+    R(W-0.62,0.05,0.6,1.2,zone('ok'),"BENCH\n2×4 ft",{'font-size':11,'font-weight':600});
+    const [sx,sy]=P(W-0.05,0.35);el('line',{x1:sx,y1:sy,x2:sx,y2:sy+0.6*S,stroke:c('ok'),'stroke-width':5});
     T(sx-10,sy+0.3*S,"SKÅDIS",{'font-size':9,fill:c('ok'),'font-weight':600,'text-anchor':'end',transform:`rotate(-90 ${sx-10} ${sy+0.3*S})`});
     // power run
-    {const a=P(3.36,2.3),b=P(3.36,1.95);el('line',{x1:a[0]-8,y1:a[1],x2:b[0]-8,y2:b[1],stroke:c('warn'),'stroke-width':2});}
+    {const a=P(3.36,2.3),b=P(3.36,1.25);el('line',{x1:a[0]-8,y1:a[1],x2:b[0]-8,y2:b[1],stroke:c('warn'),'stroke-width':2});}
     // cat house by window
-    R(2.55,0.05,0.45,0.4,{fill:'none',stroke:c('curtain'),'stroke-width':1.5,rx:8},"cat",{'font-size':9});
+    R(2.0,0.12,0.38,0.3,{fill:c('card'),stroke:c('curtain'),'stroke-width':1.5,rx:8},"cat",{'font-size':9});
     // clear floor
     R(0.9,1.45,1.6,1.1,{fill:'none',stroke:c('ok'),'stroke-dasharray':'1 5','stroke-width':2},"clear floor",{fill:c('ok'),'font-size':11});
     // SKÅDIS old spot on D -> plots
