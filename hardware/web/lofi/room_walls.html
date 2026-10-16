@@ -35,21 +35,25 @@ hr{border:0;border-top:1px solid var(--line);margin:8px 0;width:100%}
 </header>
 
 <section class="wall">
-<div><h2>Wall D · entrance side, mostly guessed</h2>
-<p class="sub">Standing at the window, looking back at the entrance. The whiteboard wall (C) is on your left, the wardrobes (A) on your right. Both your photos were taken from this side, so I can barely see it.</p></div>
-<div class="fig"><svg id="wallD" viewBox="0 0 800 470" role="img" aria-label="Elevation of the entrance wall"></svg></div>
+<div><h2>Wall D · plotter wall, from your photo</h2>
+<p class="sub">Standing at the window, looking back. The entrance and whiteboard wall (C) are on your left, the wardrobes (A) on your right.</p></div>
+<div class="fig"><svg id="wallD" viewBox="0 0 800 470" role="img" aria-label="Elevation of the plotter wall"></svg></div>
 <div class="grid2">
-<div><h2>What I think</h2><ul>
-<li><b>Entrance</b>: the wooden-framed opening sits at the corner where walls C and D meet. Your second photo was taken standing in it.</li>
-<li><b>Door leaf</b>: wooden, brass handle. It looks like it swings into the room, toward the wardrobes.</li>
-<li><b>Frames and a small pegboard</b>: on blue wall between the door and the A1 mirror, with something green hanging on the pegboard.</li>
-<li><b>Plotter</b>: its near end comes close to this wall.</li>
+<div><h2>What I see</h2><ul>
+<li><b>Door</b>: hinged at the corner, it swings in and rests flat against this wall. A floor stop holds it.</li>
+<li><b>SKÅDIS</b>: one white board, about 76 × 56 cm. Headphones, a blue shelf with model cars, some hooks.</li>
+<li><b>Comic posters</b>: eleven frames, from the centre to the right.</li>
+<li><b>Plotter table runs along this wall</b>, not along the wardrobes. The plotter fills the left two-thirds; two black hard cases sit on the right third, where the stainless enclosure is meant to go.</li>
+<li><b>Under the table</b>: a dark bag or box and some cardboard. A white unit stands on the floor at the right end.</li>
+<li><b>Small square plate</b> on the wall at the far right, about table height.</li>
 </ul></div>
 <div><h2>Confirm or correct</h2><ol>
-<li>Is the entrance on this wall, at the corner with C? Or on wall C at its end?</li>
-<li>Does the door swing into the room? Which side is the hinge on, and how far does it open?</li>
-<li>What's on the rest of this wall: the frames, a small pegboard, anything else? Any sockets?</li>
-<li><span class="g">Easiest answer:</span> one photo of this wall, taken from the window.</li>
+<li>Does the door usually stay open against this wall?</li>
+<li>The small square plate at the right: socket, switch or blank? This decides where the plotter gets power.</li>
+<li>What's the white unit on the floor at the right end?</li>
+<li>What's in the two black cases?</li>
+<li>Is this your only SKÅDIS board? It could move to the bench.</li>
+<li>Posters stay? <span class="g">My guess</span>: yes, they are the room's character.</li>
 </ol></div>
 </div>
 </section>
@@ -95,7 +99,7 @@ hr{border:0;border-top:1px solid var(--line);margin:8px 0;width:100%}
 <li><b>A1, A4</b>: personal, off-limits. Plan around them.</li>
 <li><b>A2</b>: arts &amp; crafts. <b>A3</b>: workshop storage. Shelf detail later.</li>
 <li><b>Lofts</b>: all four empty. Reachable with a ladder, so they suit things you touch a few times a year.</li>
-<li><b>Plotter</b>: A1 and A2 doors still open with it in place, so it can stay.</li>
+<li><b>Plotter</b>: corrected from your wall D photo. The table runs along wall D; only its end sits near A1. A1 and A2 doors open fine.</li>
 </ul>
 </section>
 </main>
@@ -150,13 +154,10 @@ U.forEach(([lab,w,n,k,use])=>{
   T(x+w/2,LOFT+45,use,{'font-size':11,fill:use==="personal"?c('mute'):c('ok'),'font-weight':600});
   x+=w;
 });
-el('rect',Object.assign({x:X0+8,y:FLOOR-150,width:270,height:16},g));
-el('rect',Object.assign({x:X0+24,y:FLOOR-200,width:238,height:50},g,{'fill-opacity':.6}));
-T(X0+143,FLOOR-170,"PLOTTER (gantry)",{'font-size':12,'font-weight':600});
-[X0+14,X0+266].forEach(lx=>el('line',{x1:lx,y1:FLOOR-134,x2:lx,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
-el('rect',Object.assign({x:X0+40,y:FLOOR-44,width:90,height:44},g));
-el('rect',Object.assign({x:X0+140,y:FLOOR-36,width:70,height:36},g));
-T(X0+125,FLOOR-56,"electronics boxes",{'font-size':10,fill:c('mute')});
+el('rect',Object.assign({x:X0-30,y:FLOOR-150,width:140,height:16},g));
+[X0-24,X0+104].forEach(lx=>el('line',{x1:lx,y1:FLOOR-134,x2:lx,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
+T(X0+40,FLOOR-160,"plotter table end",{'font-size':11,'font-weight':600});
+T(X0+40,FLOOR-112,"(runs along D)",{'font-size':10,fill:c('mute')});
 el('rect',Object.assign({x:X0+300,y:FLOOR-110,width:220,height:12},g,{stroke:c('ghost')}));
 [X0+306,X0+514].forEach(lx=>el('line',{x1:lx,y1:FLOOR-98,x2:lx,y2:FLOOR,stroke:c('ghost'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
 T(X0+410,FLOOR-120,"LINNMON bench · ~1 m out",{'font-size':11,fill:c('ghost')});
@@ -297,33 +298,53 @@ T((RX+OX)/2,FLOOR+22,"≈ 7.5 ft corner → entrance (estimated, tape it)",{'fon
 // ---------- Wall D ----------
 {
 const s=document.getElementById('wallD'),{el,T}=kit(s);
-frame(el,T,"◄ whiteboard wall (C)","wardrobes (A) ►");
-// entrance at C corner
-const EX=40,EW=150;
-el('rect',{x:EX,y:TOP+30,width:EW,height:FLOOR-TOP-30,fill:c('wood'),stroke:c('ink'),'stroke-width':2});
-el('rect',{x:EX+10,y:TOP+40,width:EW-20,height:FLOOR-TOP-40,fill:c('loft'),opacity:.25});
-T(EX+EW/2,TOP+64,"ENTRANCE",{'font-size':12,'font-weight':600,fill:c('loft')});
-// door leaf swung in, seen edge-on-ish
-el('polygon',Object.assign({points:`${EX+EW},${TOP+34} ${EX+EW+90},${TOP+60} ${EX+EW+90},${FLOOR+6} ${EX+EW},${FLOOR}`},g,{stroke:c('warn')}));
-el('circle',{cx:EX+EW+78,cy:(TOP+FLOOR)/2+30,r:5,fill:c('warn')});
-T(EX+EW+45,TOP+100,"door leaf",{'font-size':10,fill:c('warn')});
-T(EX+EW+45,TOP+114,"swing?",{'font-size':10,fill:c('warn')});
-// frames + small pegboard toward A corner
-[[420,90,60,80],[500,100,50,60],[420,190,60,70],[500,180,50,60]].forEach(([x,y,w,h])=>
-  el('rect',{x,y,width:w,height:h,fill:'none',stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'4 3'}));
-T(485,282,"frames?",{'font-size':10,fill:c('warn')});
-el('rect',{x:590,y:120,width:90,height:110,fill:'none',stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'4 3'});
-for(let i=0;i<4;i++)for(let j=0;j<5;j++)el('circle',{cx:605+i*20,cy:135+j*20,r:2,fill:c('warn')});
-T(635,248,"small pegboard?",{'font-size':10,fill:c('warn')});
-// wardrobe end at right
-el('rect',{x:754,y:TOP-14,width:26,height:FLOOR-TOP+14,fill:c('wood'),stroke:c('ink')});
-T(767,FLOOR-8,"A1",{'font-size':10,fill:c('loft')});
-// plotter end in front
-el('rect',Object.assign({x:620,y:FLOOR-150,width:130,height:16},g));
-el('rect',Object.assign({x:640,y:FLOOR-200,width:100,height:50},g,{'fill-opacity':.6}));
-[626,744].forEach(lx=>el('line',{x1:lx,y1:FLOOR-134,x2:lx,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
-T(690,FLOOR-170,"plotter end",{'font-size':10,'font-weight':600});
-T(400,FLOOR-30,"? anything else on this wall",{'font-size':12,fill:c('warn')});
+frame(el,T,"◄ entrance (C corner)","wardrobes (A) ►");
+// dark band high on the wall
+el('rect',{x:20,y:120,width:760,height:8,fill:c('wall'),opacity:.5});
+// door leaf open flat against the wall
+el('rect',{x:24,y:TOP+40,width:70,height:FLOOR-TOP-40,fill:c('curtain'),stroke:c('ink'),'stroke-width':1.5});
+el('circle',{cx:84,cy:FLOOR-150,r:5,fill:c('ink')});
+T(59,TOP+64,"DOOR",{'font-size':11,'font-weight':600});
+T(59,TOP+78,"open,",{'font-size':9});
+T(59,TOP+90,"flat",{'font-size':9});
+el('rect',{x:70,y:FLOOR-14,width:8,height:14,fill:c('ink')});
+T(74,FLOOR-20,"stop",{'font-size':8});
+// SKÅDIS
+const SX=120,SY=170,SW=210,SH=105;
+el('rect',{x:SX,y:SY,width:SW,height:SH,fill:c('loft'),stroke:c('ink'),'stroke-width':1.5});
+for(let i=0;i<14;i++)for(let j=0;j<5;j++)el('rect',{x:SX+10+i*14,y:SY+10+j*18,width:3,height:9,fill:c('line')});
+T(SX+SW/2,SY-8,"SKÅDIS ~76×56",{'font-size':11,'font-weight':600});
+el('circle',{cx:SX+16,cy:SY+60,r:14,fill:'none',stroke:c('ok'),'stroke-width':4});
+T(SX+16,SY+92,"phones",{'font-size':8});
+el('rect',{x:SX+100,y:SY+62,width:80,height:8,fill:c('wall')});
+T(SX+140,SY+56,"cars",{'font-size':8});
+// posters
+[[390,140,60,70],[460,150,40,50],[350,215,30,35],[390,215,40,50],[460,210,55,65],[340,275,55,65],[405,275,40,45],[455,285,24,28],[485,285,40,50]].forEach(([x,y,w,h])=>
+  el('rect',{x,y,width:w,height:h,fill:c('card'),stroke:c('ink'),'stroke-width':2}));
+T(430,370-20,"",{});
+T(570,200,"comic posters",{'font-size':11,fill:c('mute'),'text-anchor':'start'});
+// small plate right
+el('rect',{x:720,y:230,width:20,height:20,fill:c('card'),stroke:c('warn'),'stroke-width':1.5});
+T(730,222,"plate?",{'font-size':9,fill:c('warn')});
+// plotter table along the wall
+const PX=110,PW=610,PY=FLOOR-128;
+el('rect',Object.assign({x:PX,y:PY,width:PW,height:12},g));
+[PX+8,PX+PW-8].forEach(lx=>el('line',{x1:lx,y1:PY+12,x2:lx,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
+el('rect',Object.assign({x:PX+10,y:PY-46,width:390,height:46},g,{'fill-opacity':.6}));
+T(PX+205,PY-18,"PLOTTER (LINNMON frame)",{'font-size':12,'font-weight':600});
+el('rect',Object.assign({x:PX+410,y:PY-34,width:190,height:34},g,{stroke:c('ghost')}));
+T(PX+505,PY-14,"2 black cases",{'font-size':10,fill:c('ghost')});
+T(PX+505,PY-40,"enclosure zone 524",{'font-size':9,fill:c('ok')});
+T(PX+PW/2,PY+28,"table ~1524 × 600 (from repo)",{'font-size':10,fill:c('mute')});
+// under table
+el('rect',Object.assign({x:PX+180,y:FLOOR-60,width:160,height:60},g,{stroke:c('ghost')}));
+T(PX+260,FLOOR-26,"bag / box",{'font-size':9,fill:c('ghost')});
+el('rect',Object.assign({x:PX+430,y:FLOOR-70,width:60,height:70},g,{stroke:c('ghost')}));
+T(PX+460,FLOOR-30,"card",{'font-size':9,fill:c('ghost')});
+// white unit right end
+el('rect',Object.assign({x:730,y:FLOOR-120,width:46,height:120},g,{stroke:c('warn')}));
+T(753,FLOOR-56,"white",{'font-size':9,fill:c('warn')});
+T(753,FLOOR-44,"unit?",{'font-size':9,fill:c('warn')});
 }
 })();
 </script>
