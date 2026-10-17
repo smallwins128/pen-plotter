@@ -60,7 +60,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   <aside class="rail">
     <div>
       <h1>Enclosure Inspector</h1>
-      <p class="sub">Two 1 mm stainless boxes, stacked. Control box on top, power box below. Every lip, rivnut, screw and standoff is modelled at size so contacts can be checked up close.</p>
+      <p class="sub">Two 1.2 mm stainless boxes, stacked. Control box on top, power box below. Every lip, rivnut, screw and standoff is modelled at size so contacts can be checked up close.</p>
     </div>
     <div class="group">
       <div class="label">Show</div>
@@ -134,7 +134,7 @@ const GEN = {"clr":1.0,"tabGap":0.5,"foldGap":2.5,"lidHole":10.0,"lidReturnInset
 // GEN:END
 // ===================== design values (mm) =====================
 const P = {
-  t: 1, lip: 15, clr: GEN.clr, tabGap: GEN.tabGap, rivFromWall: 8, W: 450, D: 295,
+  t: GEN.t || 1, lip: 15, clr: GEN.clr, tabGap: GEN.tabGap, rivFromWall: 8, W: 450, D: 295,
   H: { control: 110, power: 170 },
   band: 20,                 // no-mount band under the lid: 20 mm below the top, 20 mm from the back edge
   standoff: 5, plateT: 2, foot: 8, rivHoleLid: GEN.lidHole, washer: 16,
@@ -362,12 +362,13 @@ function buildBox(kind) {
   body.add(asSide(sheet(-D/2, D/2 - P.tabGap, t, top, left, "body", `${BN} · left wall`, "Fan grille cut in the steel, " + (kind === "control" ? "USB-C and antenna." : "IEC panel cutout and earth stud.")), -W/2));
   body.add(asSide(sheet(-D/2, D/2 - P.tabGap, t, top, right, "body", `${BN} · right wall`, kind === "control" ? "Original receiving panel, mounted on its side." : "Original PSU panel, mounted on its side."), W/2 + t));
   // ---- lips (inward): top lips on sides + front, back lips on sides + base
-  body.add(box(lip, t, D, "lip", -W/2 + lip/2, top - t/2, 0, `${BN} · left top lip`, "15 mm, folds inward. The lid rests on it; 3 rivnuts."));
-  body.add(box(lip, t, D, "lip", W/2 - lip/2, top - t/2, 0, `${BN} · right top lip`, "15 mm, folds inward. The lid rests on it; 3 rivnuts."));
-  body.add(box(2 * GEN.frontLipHalf, t, lip, "lip", 0, top - t/2, D/2 - lip/2, `${BN} · front top lip`, "15 mm, folds inward. Relief gaps at both ends."));
-  body.add(box(lip, top - 3 - GEN.backLipFrom, t, "lip", -W/2 + lip/2, (top - 3 + GEN.backLipFrom) / 2, -D/2 + t/2, `${BN} · left back lip`, "Folds inward at the back edge. The lid back screws to it."));
-  body.add(box(lip, top - 3 - GEN.backLipFrom, t, "lip", W/2 - lip/2, (top - 3 + GEN.backLipFrom) / 2, -D/2 + t/2, `${BN} · right back lip`, "Folds inward at the back edge. The lid back screws to it."));
-  body.add(box(2 * GEN.baseLipHalf, lip, t, "lip", 0, t + lip/2, -D/2 + t/2, `${BN} · base back lip`, "Folds up off the base. The lid back screws to it."));
+  const lr = 2.5, lxr = W/2 - P.rivFromWall, lzr = D/2 - P.rivFromWall, lbTop = top - P.t - 2;   // M3 rivnut holes (Ø5), one per lip
+  body.add(asFlat(sheet(-W/2, -W/2 + lip, -D/2, D/2, [holeCircle(-lxr, 0, lr)], "lip", `${BN} · left top lip`, "15 mm, folds inward. The lid rests on it; 1 rivnut (Ø5) for a lid screw."), top));
+  body.add(asFlat(sheet(W/2 - lip, W/2, -D/2, D/2, [holeCircle(lxr, 0, lr)], "lip", `${BN} · right top lip`, "15 mm, folds inward. The lid rests on it; 1 rivnut (Ø5) for a lid screw."), top));
+  body.add(asFlat(sheet(-GEN.frontLipHalf, GEN.frontLipHalf, D/2 - lip, D/2, [holeCircle(0, lzr, lr)], "lip", `${BN} · front top lip`, "15 mm, folds inward. Relief gaps at both ends; 1 rivnut (Ø5) for a lid screw."), top));
+  body.add(asFront(sheet(-W/2, -W/2 + lip, GEN.backLipFrom, lbTop, [holeCircle(-lxr, t + H / 2, lr)], "lip", `${BN} · left back lip`, "Folds inward at the back edge. The lid back screws to it (1 rivnut)."), -D/2));
+  body.add(asFront(sheet(W/2 - lip, W/2, GEN.backLipFrom, lbTop, [holeCircle(lxr, t + H / 2, lr)], "lip", `${BN} · right back lip`, "Folds inward at the back edge. The lid back screws to it (1 rivnut)."), -D/2));
+  body.add(asFront(sheet(-GEN.baseLipHalf, GEN.baseLipHalf, t, t + lip, [holeCircle(0, t + lip / 2, lr)], "lip", `${BN} · base back lip`, "Folds up off the base. The lid back screws to it (1 rivnut)."), -D/2));
   // corner tabs off the side walls, inside the front wall, held by M3 screw + nut
   for (const s of [-1, 1]) {
     body.add(box(lip, H - 2 * lip, t, "tab", s * (W/2 - lip/2), t + H / 2, D/2 - P.tabGap - t/2, `${BN} · front corner tab`, "Folds off the side wall, laps inside the front wall. 2 × solid rivet, set cold by hand."));

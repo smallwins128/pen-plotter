@@ -1066,7 +1066,7 @@ INSPECTOR = HERE.parent / "web" / "enclosure_inspector.html"
 def sync_inspector(parts):
     """Write the generator's numbers into the 3D inspector, so the preview is the cut files, not a copy of them."""
     by = {p.name: p for p in parts}
-    gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
+    gen = dict(t=T, clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={}, accLid=[list(q) for q in ACC_LID], accD=HOLE["acc"][0],
                gx=[dict(group=g, open=[[round(a, 2), round(b, 2)] for a, b in list(sbox(*rect).buffer(-3, join_style=1, quad_segs=4).buffer(3, join_style=1, quad_segs=4).exterior.coords)[:-1]],
