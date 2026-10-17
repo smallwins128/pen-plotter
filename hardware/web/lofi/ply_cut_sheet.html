@@ -1,0 +1,82 @@
+<!-- Room R05 Harbor. Cut sheet for the bench backboard. -->
+<title>Ply Cut Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* layout: one sheet drawing, then the cut steps the shop follows in order */
+:root{--bg:#f3f5f6;--ink:#1c2328;--mute:#5f6b73;--line:#9aa6ad;--card:#ffffff;--ply:#e8d9bd;--panel:#d9c39a;--strip:#c9a873;--cut:#c0392b;--waste:#eef0f1;
+--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;--ply:#5a4c34;--panel:#6b5a3c;--strip:#7d6640;--cut:#ff7a6b;--waste:#20272b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;--ply:#5a4c34;--panel:#6b5a3c;--strip:#7d6640;--cut:#ff7a6b;--waste:#20272b;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:860px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+h1{font-size:1.4rem;margin:0}h2{font-size:1rem;margin:0 0 8px}
+p{margin:0;max-width:65ch}.sub{color:var(--mute)}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;max-width:520px;margin:0 auto}
+svg text{font-family:var(--f-mono);fill:var(--ink)}
+ol{margin:0;padding-left:1.4em;display:grid;gap:6px}
+li b{font-family:var(--f-mono)}
+table{border-collapse:collapse;font-family:var(--f-mono);font-size:.9rem}
+td,th{border-bottom:1px solid var(--line);padding:6px 12px 6px 0;text-align:left;font-variant-numeric:tabular-nums}
+.k{color:var(--cut);font-weight:600}
+</style>
+<main>
+<header style="display:grid;gap:6px">
+<h1>Ply cut sheet</h1>
+<p class="sub">One sheet of 12 mm plywood, 7 × 4 ft (2134 × 1220 mm). Four straight cuts. Sizes in mm.</p>
+</header>
+
+<section class="fig"><svg id="sheet" viewBox="0 0 560 830" role="img" aria-label="7 by 4 ft plywood sheet with four numbered cuts: one 6 by 3 ft panel, four strips, one offcut"></svg></section>
+
+<section>
+<h2>Cuts, in order</h2>
+<ol>
+<li><span class="k">Cut 1</span> across the sheet at <b>1829</b> (6 ft). The short end piece, <b>305 × 1220</b>, is offcut: keep it.</li>
+<li><span class="k">Cut 2</span> along the big piece at <b>914</b> (3 ft). One side is the <b>panel, 1829 × 914</b>; the other is a long strip about 1829 × 300.</li>
+<li><span class="k">Cut 3</span> along the long strip, down the middle: two strips about <b>1829 × 150</b>.</li>
+<li><span class="k">Cut 4</span> across both strips together at <b>912</b>: four strips about <b>912 × 150</b>.</li>
+</ol>
+</section>
+
+<section>
+<h2>Pieces to take home</h2>
+<table>
+<tr><th>Piece</th><th>Size (mm)</th><th>Qty</th></tr>
+<tr><td>Panel</td><td>1829 × 914</td><td>1</td></tr>
+<tr><td>Strips</td><td>about 912 × 150</td><td>4</td></tr>
+<tr><td>Offcut</td><td>305 × 1220</td><td>1</td></tr>
+</table>
+</section>
+</main>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg",s=document.getElementById('sheet'),c=n=>"var(--"+n+")";
+const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;s.appendChild(e);return e};
+// portrait: sheet 1220 wide x 2134 tall, the panel stands as it will hang
+const K=0.32,OX=70,OY=60,X=v=>OX+v*K,Y=v=>OY+v*K;
+const T=(x,y,t,o={})=>el('text',Object.assign({x,y,'font-size':15,'text-anchor':'middle'},o),t);
+const R=(x,y,w,h,f)=>el('rect',{x:X(x),y:Y(y),width:w*K,height:h*K,fill:c(f),stroke:c('ink'),'stroke-width':1.2});
+R(0,0,914,1829,'panel');
+T(X(457),Y(880),"PANEL",{'font-size':20,'font-weight':600});
+T(X(457),Y(880)+24,"1829 × 914",{'font-size':15});
+T(X(457),Y(880)+44,"6 × 3 ft",{'font-size':14,fill:c('mute')});
+[[914,0,912],[914,914,915],[1066,0,912],[1066,914,915]].forEach(([x,y,h])=>{R(x,y,152,h,'strip');
+  const cx=X(x+76),cy=Y(y+h/2);T(cx,cy,"STRIP ≈ 912 × 150",{'font-size':12,'font-weight':600,transform:`rotate(-90 ${cx} ${cy})`});});
+R(0,1829,1220,305,'waste');
+T(X(610),Y(1981),"OFFCUT 1220 × 305 (keep)",{'font-size':14,'font-weight':600});
+el('rect',{x:X(0),y:Y(0),width:1220*K,height:2134*K,fill:'none',stroke:c('ink'),'stroke-width':2.5});
+const cut=(x1,y1,x2,y2,n,lx,ly)=>{el('line',{x1:X(x1),y1:Y(y1),x2:X(x2),y2:Y(y2),stroke:c('cut'),'stroke-width':3.5,'stroke-dasharray':'10 5'});
+  el('circle',{cx:lx,cy:ly,r:14,fill:c('cut')});T(lx,ly+5,n,{'font-size':15,'font-weight':600,fill:c('card')});};
+cut(-50,1829,1270,1829,"1",X(-50)-16,Y(1829));
+cut(914,-50,914,1829,"2",X(914),Y(-50)-16);
+cut(1066,-50,1066,1829,"3",X(1066),Y(-50)-16);
+cut(914,914,1270,914,"4",X(1270)+16,Y(914));
+const dim=(x1,y1,x2,y2,t,rot)=>{el('line',{x1,y1,x2,y2,stroke:c('mute')});const mx=(x1+x2)/2,my=(y1+y2)/2;
+  T(mx+(rot?-8:0),my+(rot?0:-6),t,{'font-size':13,fill:c('mute'),transform:rot?`rotate(-90 ${mx-8} ${my})`:''});};
+dim(X(0)-30,Y(0),X(0)-30,Y(1829),"1829 (6 ft)",1);
+dim(X(0),Y(2134)+30,X(914),Y(2134)+30,"914 (3 ft)");
+dim(X(1220)+40,Y(0),X(1220)+40,Y(2134),"2134 (7 ft)",1);
+T(X(610),Y(2134)+62,"red = cut lines, numbered in cutting order",{'font-size':13,fill:c('mute')});
+})();
+</script>
