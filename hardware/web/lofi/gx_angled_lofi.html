@@ -1,0 +1,101 @@
+<title>GX Plate Angles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one card per option: side section (how the plug and cable leave) next to the front view */
+:root{--bg:#f1f3f4;--ink:#1c2328;--mute:#5f6b73;--line:#b9c2c8;--steel:#aab3ba;--print:#22262b;--plug:#6d7780;--cable:#c2410c;--card:#fff;
+--f:"IBM Plex Sans",system-ui,sans-serif;--m:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13181b;--ink:#e3e8eb;--mute:#93a0a8;--line:#3a464e;--steel:#6c7780;--print:#0b0d0f;--plug:#9aa6ad;--cable:#fb923c;--card:#1b2226;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13181b;--ink:#e3e8eb;--mute:#93a0a8;--line:#3a464e;--steel:#6c7780;--print:#0b0d0f;--plug:#9aa6ad;--cable:#fb923c;--card:#1b2226;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f)}
+main{max-width:1000px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+h1{font-size:1.4rem;margin:0}h2{font-size:1.05rem;margin:0}p{margin:0;max-width:68ch}.sub{color:var(--mute)}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:10px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:16px;align-items:center}
+@media (max-width:640px){.row{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--m);fill:var(--mute);font-size:7px}
+.tag{font:600 11px var(--m);letter-spacing:.06em;text-transform:uppercase;color:var(--cable)}
+ul{margin:0;padding-left:1.2em}li{margin:2px 0}
+</style>
+<main>
+<header><h1>GX plates: flat vs angled</h1><p class="sub">Control box front, 1:1-ish lofi. Left: side section (front of the box faces right; steel in grey, print in black, plug and cable in orange). Right: the three plates seen from the front (steppers ×3, servo, endstops ×2). Nothing modelled yet.</p></header>
+<div id="opts"></div>
+<section class="opt"><h2>Same for all</h2><ul>
+<li>Steel stays as cut: same openings, same rivnuts. Only the printed plate changes.</li>
+<li>The socket's rear nut sits inside the printed block on the angled ones, so it still clears the 6 mm play round each opening (to check when modelled).</li>
+<li>Plug (GX16) ≈ 50 mm long + cable bend radius ≈ 30 mm. That sets how far cables stick out.</li>
+</ul></section>
+</main>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg";
+const el=(p,t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e};
+const c=n=>`var(--${n})`;
+// side section: wall at x=40, front to the right. rows: list of [y (height), facet angle deg from vertical, facet height, proud]
+function side(svg,rows){
+  el(svg,'rect',{x:34,y:5,width:6,height:110,fill:c('steel')});
+  el(svg,'text',{x:2,y:118},'box inside');
+  el(svg,'text',{x:120,y:118,'text-anchor':'end'},'front →');
+  rows.forEach(r=>{
+    const {y,ang,h,base=4}=r, a=ang*Math.PI/180;
+    // facet: from (40,y-h/2) on the wall; face tilted: top proud by d
+    const top=[40+base, y-h/2], bot=[40+base, y+h/2];
+    let pts;
+    if(ang===0){pts=[[40,y-h/2],[40+base,y-h/2],[40+base,y+h/2],[40,y+h/2]];}
+    else if(ang>0){ // face looks down: top edge proud
+      const d=h*Math.tan(a); pts=[[40,y-h/2],[40+base+d,y-h/2],[40+base,y+h/2],[40,y+h/2]];
+    } else { const d=h*Math.tan(-a); pts=[[40,y-h/2],[40+base,y-h/2],[40+base+d,y+h/2],[40,y+h/2]]; }
+    el(svg,'polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:c('print')});
+    // socket axis from face centre, direction = normal to face
+    const fx=(pts[1][0]+pts[2][0])/2, fy=y;
+    const nx=Math.cos(a), ny=Math.sin(a); // ang>0 -> points down (+y)
+    const L=34; // plug length at this scale (≈50 mm * 0.68)
+    const px=fx+nx*L, py=fy+ny*L;
+    el(svg,'line',{x1:fx,y1:fy,x2:px,y2:py,stroke:c('plug'),'stroke-width':9,'stroke-linecap':'round'});
+    // cable: continue then curve down
+    const cx2=px+nx*14, cy2=py+ny*14;
+    el(svg,'path',{d:`M${px},${py} Q${cx2},${cy2} ${cx2+ (ang>=0?2:8)},${118}`,fill:'none',stroke:c('cable'),'stroke-width':3});
+    // nut behind
+    el(svg,'rect',{x:31,y:y-6,width:3,height:12,fill:c('plug')});
+  });
+}
+function front(svg,style){
+  // three plates (from the steel model, x in mm, y up): steppers x -200..-112, y 6..89; servo -104..-60, 20..74; endstops -54..24, 20..74
+  const plates=[{x0:-200,x1:-112,y0:6,y1:89,s:[[-173,62],[-139,62],[-156,33]]},{x0:-104,x1:-60,y0:20,y1:74,s:[[-82,47]]},{x0:-54,x1:24,y0:20,y1:74,s:[[-32,47],[2,47]]}];
+  const X=x=>x+215, Y=y=>100-y;
+  plates.forEach(p=>{
+    el(svg,'rect',{x:X(p.x0),y:Y(p.y1),width:p.x1-p.x0,height:p.y1-p.y0,rx:4,fill:c('print')});
+    p.s.forEach(([x,y])=>{
+      if(style==='saw'){el(svg,'rect',{x:X(x)-13,y:Y(y)-13,width:26,height:26,rx:3,fill:'none',stroke:c('line'),'stroke-width':.6});
+        el(svg,'line',{x1:X(x)-13,y1:Y(y)-13,x2:X(x)+13,y2:Y(y)-13,stroke:c('steel'),'stroke-width':1.6});}
+      if(style==='side'){el(svg,'path',{d:`M${X(x)-13},${Y(y)-13} L${X(x)+13},${Y(y)-13} L${X(x)+13},${Y(y)+13} L${X(x)-13},${Y(y)+13}Z`,fill:'none',stroke:c('line'),'stroke-width':.6});
+        el(svg,'line',{x1:X(x)+13,y1:Y(y)-13,x2:X(x)+13,y2:Y(y)+13,stroke:c('steel'),'stroke-width':1.6});}
+      el(svg,'circle',{cx:X(x),cy:Y(y),r:9.5,fill:c('plug')});
+      el(svg,'circle',{cx:X(x),cy:Y(y),r:6,fill:c('print')});
+      if(style==='down'||style==='saw') el(svg,'path',{d:`M${X(x)},${Y(y)+4} l0,6 l-2,-2 m2,2 l2,-2`,stroke:c('cable'),'stroke-width':1,fill:'none'});
+      if(style==='side') el(svg,'path',{d:`M${X(x)+4},${Y(y)} l6,0 l-2,-2 m2,2 l-2,2`,stroke:c('cable'),'stroke-width':1,fill:'none'});
+    });
+  });
+  if(style==='down'){plates.forEach(p=>el(svg,'line',{x1:X(p.x0),y1:Y(p.y1),x2:X(p.x1),y2:Y(p.y1),stroke:c('steel'),'stroke-width':1.6}));}
+  el(svg,'text',{x:2,y:112},'steppers');el(svg,'text',{x:X(-104),y:112},'servo');el(svg,'text',{x:X(-54),y:112},'endstops');
+}
+const OPTS=[
+ {tag:'A · today',name:'Flat',side:[{y:40,ang:0,h:60},{y:85,ang:0,h:26}],front:'flat',
+  pts:['Plugs stick straight out about 50 mm, then the cables bend down: about 80 mm proud in total.','Simplest print; already designed.']},
+ {tag:'B',name:'One wedge per plate, tilted 30° down',side:[{y:50,ang:30,h:80}],front:'down',
+  pts:['Every plug points down at the table. Cables drop without a hard bend.','The wedge is big: the top edge sits about 45 mm proud on the 83 mm stepper plate. Chunky on the front.']},
+ {tag:'C',name:'Sawtooth: a small 30° facet per row',side:[{y:30,ang:30,h:28},{y:62,ang:30,h:28},{y:94,ang:30,h:24}],front:'saw',
+  pts:['Same downward angle as B, but each row gets its own shallow step: about 16 mm proud.','Reads as a ribbed, machined front. Good match for the vent slots.','More edges to print (supports under each step, or print face-down).']},
+ {tag:'D',name:'Facets angled sideways (25°)',side:[{y:40,ang:0,h:60}],front:'side',
+  pts:['Plugs point toward the side the plotter sits on, so cables run along the front instead of straight out.','About 12 mm proud per socket. Needs to know which side the plotter is.','The side section looks flat because the tilt is left/right.']},
+];
+const host=document.getElementById('opts');
+OPTS.forEach(o=>{
+  const s=document.createElement('section');s.className='opt';
+  s.innerHTML=`<div class="tag">${o.tag}</div><h2>${o.name}</h2><div class="row"><svg viewBox="0 0 125 122"></svg><svg viewBox="0 0 260 118"></svg></div><ul>${o.pts.map(p=>`<li>${p}</li>`).join('')}</ul>`;
+  host.appendChild(s);
+  const [a,b]=s.querySelectorAll('svg'); side(a,o.side); front(b,o.front);
+});
+})();
+</script>
