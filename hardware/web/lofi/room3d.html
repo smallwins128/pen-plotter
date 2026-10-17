@@ -1,0 +1,165 @@
+<!-- Room R05 Harbor (Copilot harness). 3D model of the workshop room; state lives in "[R05 Harbor] Handoff". -->
+<title>Workshop Room 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: viewer on top, view buttons, then the item list; one data table drives the scene */
+:root{--bg:#f3f5f6;--ink:#1c2328;--mute:#5f6b73;--line:#9aa6ad;--card:#ffffff;--accent:#2f6fa8;--ok:#2f7d5b;--warn:#c9782a;--scene:#e9edf0;
+--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;--accent:#5b9bd5;--ok:#5fbf94;--warn:#e09a52;--scene:#1a2125;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;--accent:#5b9bd5;--ok:#5fbf94;--warn:#e09a52;--scene:#1a2125;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:1100px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+h1{font-size:1.35rem;margin:0}p{margin:0;max-width:70ch}.sub{color:var(--mute)}
+#view{position:relative;height:min(68vh,600px);min-height:340px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--scene)}
+#view canvas{display:block}
+.lbl{font-family:var(--f-mono);font-size:11px;color:var(--ink);background:color-mix(in srgb,var(--card) 82%,transparent);border:1px solid var(--line);border-radius:3px;padding:1px 5px;white-space:nowrap;pointer-events:none}
+.lbl.planned{border-style:dashed;color:var(--warn)}
+.bar{display:flex;flex-wrap:wrap;gap:6px}
+button{font:500 .85rem var(--f-mono);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:5px 10px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#info{border:1px solid var(--line);border-radius:6px;background:var(--card);padding:10px 12px;min-height:3.2em}
+#info b{font-family:var(--f-mono)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 18px}
+.item{display:flex;gap:8px;align-items:baseline;font-size:.9rem;cursor:pointer;border:0;background:none;padding:2px 0;text-align:left;color:var(--ink);font-family:var(--f-body)}
+.dot{width:10px;height:10px;border-radius:2px;flex:none;transform:translateY(1px)}
+.tag{font-family:var(--f-mono);font-size:.72rem;color:var(--mute)}
+.tag.planned{color:var(--warn)}
+</style>
+<main>
+<header style="display:grid;gap:4px">
+<h1>Workshop room · 3D</h1>
+<p class="sub">Built from your measurements (wall A 3.8 m, 2.7 m floor from the wardrobe front, wall C 3.0 m to the door) and photos. Drag to orbit, pinch or scroll to zoom. Tap anything for its notes. Dashed labels are planned, not built yet.</p>
+</header>
+<div id="view" role="img" aria-label="3D model of the workshop room"></div>
+<div class="bar" id="views"></div>
+<div class="bar"><button id="tLabels" aria-pressed="true">Labels</button><button id="tPlanned" aria-pressed="true">Planned items</button></div>
+<div id="info">Tap an item in the room or the list below.</div>
+<section class="grid" id="list"></section>
+<p class="sub">Estimated, not measured: ceiling height 2.9 m, wardrobe depth 60 cm, door 75 cm, exact panel position.</p>
+</main>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {CSS2DRenderer,CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js';
+
+// Room frame, metres. x: wall A (wardrobe back) -> wall C. y: up. z: wall B (window) -> wall D.
+const W=3.3, L=3.8, H=2.9;
+
+// One row per thing. box: [x0,x1, y0,y1, z0,z1]. status: built | planned. Update this table as the room changes.
+const ITEMS=[
+ {id:'A4',label:'A4 · personal',box:[0,0.6,0,2.1,0.05,1.05],c:'#3a3633',status:'built',note:'Personal wardrobe. Off-limits.'},
+ {id:'A3',label:'A3 · storage',box:[0,0.6,0,2.1,1.05,2.05],c:'#2f6fa8',status:'built',op:0.25,note:'Workshop storage. Counter at 0.9 m with 2 drawers; four 47 × 48 × 35 cubbies below; hanging rail at the top. Rack B sits on the counter.'},
+ {id:'A2',label:'A2 · arts',box:[0,0.6,0,2.1,2.05,3.05],c:'#3a3633',status:'built',note:'Arts and crafts. Pens and paper for the plotter can live here.'},
+ {id:'A1',label:'A1 · personal',box:[0,0.6,0,2.1,3.05,3.7],c:'#3a3633',status:'built',note:'Personal. Socket below its mirror feeds the plotter end.'},
+ {id:'loft',label:'Lofts',box:[0,0.6,2.1,2.6,0.05,3.7],c:'#d8d4cc',status:'built',note:'Four lofts, empty. Ladder access: rarely used things.'},
+ {id:'counter',label:null,box:[0.02,0.6,0.88,0.92,1.08,2.02],c:'#f0f0ee',status:'built',note:'A3 counter.'},
+ {id:'rackB',label:'Rack B',box:[0.04,0.34,0.92,1.4,1.1,1.68],c:'#1c2328',wire:true,shelves:[1.4],status:'built',note:'Half rack in A3: 55 × 28 × 45 inside. Three SAMLA 11 L (wire cards, connectors, heat-shrink) + folded servo leads. 5 L stack beside it.'},
+ {id:'samlaB',label:null,box:[0.06,0.33,0.94,1.36,1.12,1.52],c:'#a9c7dc',status:'planned',op:0.6,note:'SAMLA 11 L ×3 in rack B.'},
+ {id:'desk',label:'Office desk',box:[1.7,3.3,0.72,0.75,0,0.8],c:'#26292c',status:'built',legs:true,note:'160 × 80, pushed right. Cat house on its left end. Socket under the desk, centre of wall B.'},
+ {id:'monitor',label:null,box:[2.35,2.95,0.8,1.15,0.12,0.16],c:'#111',status:'built',note:'Monitor.'},
+ {id:'cat',label:'Cat house',box:[1.75,2.05,0.75,0.98,0.1,0.42],c:'#c9a0b4',status:'planned',note:'Moves onto the desk from the rack shelf.'},
+ {id:'chair',label:'Chair',box:[2.15,2.6,0.42,0.5,1.0,1.45],c:'#555',status:'built',legs:true,note:'One chair swivels between desk and bench.'},
+ {id:'light',label:'Call light',box:[0.83,0.87,0,1.6,0.35,0.39],c:'#aaa',status:'built',note:'Tripod light for calls. Moves to open A4.'},
+ {id:'bench',label:'Bench',box:[2.68,3.27,0.71,0.74,0.82,2.02],c:'#1f1f1f',status:'built',legs:true,note:'LINNMON 120 × 60 along wall C, in an L with the desk.'},
+ {id:'panel',label:'Ply panel',box:[3.276,3.288,0.1,1.93,0.86,1.77],c:'#d9c39a',status:'planned',note:'12 mm ply, 6 × 3 ft. Hangs on 2 wall strips + 2 panel strips (top and bottom), screwed through. Currently leaning, unpainted.'},
+ {id:'skadis',label:'SKÅDIS',box:[3.26,3.275,0.85,1.41,0.93,1.69],c:'#f4f4f2',status:'planned',note:'76 × 56 on the panel, low. Daily hand tools.'},
+ {id:'drawers',label:'Drawer cabinet',box:[3.12,3.275,1.45,1.675,1.14,1.505],c:'#222',status:'planned',note:'30 drawers, above the SKÅDIS over the top strip. M3/M4/M5 hardware. Not bought yet.'},
+ {id:'post',label:'Light post',box:[3.2,3.24,0.74,1.95,2.0,2.04],c:'#333',status:'built',note:'Extrusion post with the bar light at the bench end (R06 Beacon).'},
+ {id:'ftable',label:'Folding table',box:[2.69,3.3,0.72,0.75,2.04,2.95],c:'#b98b5b',status:'built',legs:true,note:'Interim, until a sturdier one. Switches stay reachable above it.'},
+ {id:'rackA',label:'Rack A',box:[3.0,3.3,0.75,1.5,2.06,2.66],c:'#1c2328',wire:true,shelves:[0.78,1.03,1.27,1.5],status:'built',note:'Half rack against the wall, staging. 3 rows × 2 bins. Keep it left of the switches; bracket it to the wall.'},
+ {id:'switch',label:'Switches',box:[3.29,3.3,1.1,1.28,2.7,2.9],c:'#f5f5f5',status:'built',note:'Within 40 cm of the door. Keep clear.'},
+ {id:'plotT',label:'Plotter table',box:[1.02,2.54,0.72,0.75,3.2,3.8],c:'#e8e8e8',status:'built',legs:true,note:'1524 × 600 along wall D.'},
+ {id:'plotter',label:'Plotter',box:[1.56,2.5,0.75,0.95,3.25,3.75],c:'#9aa6ad',wire:true,status:'built',note:'Pen plotter (R04 Etch).'},
+ {id:'encl',label:'Enclosure zone',box:[1.04,1.54,0.75,0.95,3.22,3.78],c:'#2f7d5b',status:'planned',op:0.35,note:'Stainless electronics enclosure goes here, next to the A1 socket.'},
+ {id:'samla55',label:'SAMLA 55 L',box:[1.1,1.89,0.02,0.2,3.22,3.79],c:'#a9c7dc',status:'planned',op:0.6,note:'Under the plotter: flat paper and finished plots.'},
+ {id:'plots',label:'Framed plots',box:[1.95,2.55,1.2,1.75,3.79,3.8],c:'#2f7d5b',status:'planned',note:'Presentation wall D: call background.'},
+ {id:'door',label:'Door',box:[2.55,3.3,0,2.05,3.76,3.79],c:'#b07a3c',status:'built',op:0.3,note:'Hinged at the C/D corner, rests open against wall D.'}
+];
+
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,1,0.05,50);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+view.appendChild(renderer.domElement);
+const labels=new CSS2DRenderer();
+Object.assign(labels.domElement.style,{position:'absolute',top:'0',left:'0',pointerEvents:'none'});
+view.appendChild(labels.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.target.set(W/2,0.8,L/2);controls.maxPolarAngle=Math.PI*0.495;
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x8899aa,1.6));
+const sun=new THREE.DirectionalLight(0xffffff,1.4);sun.position.set(2,5,-3);scene.add(sun);
+
+// floor and walls: walls face inward and are single-sided, so the near walls vanish as you orbit
+const wallMat=new THREE.MeshStandardMaterial({color:0x2f6fa8,side:THREE.FrontSide,roughness:.9});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(W,L),new THREE.MeshStandardMaterial({color:0xa0522d,roughness:.8}));
+floor.rotation.x=-Math.PI/2;floor.position.set(W/2,0,L/2);scene.add(floor);
+const wall=(w,h,pos,rotY,name)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),wallMat);m.position.copy(pos);m.rotation.y=rotY;scene.add(m);
+  const t=document.createElement('div');t.className='lbl';t.textContent=name;const o=new CSS2DObject(t);o.position.set(pos.x+(pos.x===0?0.9:pos.x===W?-0.9:0),0.02,pos.z+(pos.z===0?0.5:pos.z===L?-0.9:0));scene.add(o);wallLabels.push(o);};
+const wallLabels=[];
+wall(L,H,new THREE.Vector3(0,H/2,L/2),Math.PI/2,'A · wardrobes');
+wall(L,H,new THREE.Vector3(W,H/2,L/2),-Math.PI/2,'C · bench');
+wall(W,H,new THREE.Vector3(W/2,H/2,0),0,'B · window');
+wall(W,H,new THREE.Vector3(W/2,H/2,L),Math.PI,'D · presentation');
+// window and entrance
+const flat=(x0,x1,y0,y1,z,col,rotY=0)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,y1-y0),new THREE.MeshStandardMaterial({color:col,side:THREE.DoubleSide,transparent:true,opacity:.85}));m.position.set((x0+x1)/2,(y0+y1)/2,z);m.rotation.y=rotY;scene.add(m);return m;};
+flat(1.55,2.65,0.9,2.1,0.005,0xcfe3f0);
+{const m=new THREE.Mesh(new THREE.PlaneGeometry(0.75,2.05),new THREE.MeshStandardMaterial({color:0x3a2a1a,side:THREE.FrontSide}));m.position.set(W-0.005,1.025,3.0+0.375);m.rotation.y=-Math.PI/2;scene.add(m);}
+
+const meshes=[],labelObjs=[];
+ITEMS.forEach(it=>{
+  const [x0,x1,y0,y1,z0,z1]=it.box;const g=new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0);
+  const planned=it.status==='planned';
+  const mat=new THREE.MeshStandardMaterial({color:it.c,roughness:.7,transparent:planned||!!it.op||it.wire,opacity:it.wire?0.12:(it.op??(planned?0.55:1))});
+  const m=new THREE.Mesh(g,mat);m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);m.userData=it;scene.add(m);meshes.push(m);
+  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:it.wire?0x1c2328:0x000000,transparent:true,opacity:it.wire?0.9:0.25}));
+  edges.position.copy(m.position);scene.add(edges);m.userData.edges=edges;
+  if(it.legs){[[x0+0.04,z0+0.04],[x1-0.04,z0+0.04],[x0+0.04,z1-0.04],[x1-0.04,z1-0.04]].forEach(([lx,lz])=>{
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,y0),new THREE.MeshStandardMaterial({color:0x222222}));leg.position.set(lx,y0/2,lz);scene.add(leg);});}
+  (it.shelves||[]).forEach(h=>{const sh=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,0.015,z1-z0),new THREE.MeshStandardMaterial({color:0x3a3a3a}));sh.position.set((x0+x1)/2,h,(z0+z1)/2);scene.add(sh);});
+  if(it.label){const d=document.createElement('div');d.className='lbl'+(planned?' planned':'');d.textContent=it.label;const o=new CSS2DObject(d);
+    o.position.set((x0+x1)/2,y1+0.06,(z0+z1)/2);scene.add(o);o.userData=it;labelObjs.push(o);m.userData.labelObj=o;}
+});
+
+// views
+const VIEWS={Overview:[[W+1.7,4.0,L+1.9],[W/2,0.7,L/2]],Top:[[W/2,7.2,L/2+0.01],[W/2,0,L/2]],Bench:[[1.0,1.7,1.4],[3.2,1.1,1.6]],A3:[[2.2,1.5,1.55],[0.3,1.1,1.55]],Plotter:[[1.8,1.8,1.7],[1.8,0.9,3.6]]};
+const vb=document.getElementById('views');
+const go=(k)=>{const [p,t]=VIEWS[k];camera.position.set(...p);controls.target.set(...t);controls.update();[...vb.children].forEach(b=>b.setAttribute('aria-pressed',b.textContent===k));};
+Object.keys(VIEWS).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>go(k);vb.appendChild(b);});
+
+// info + list
+const info=document.getElementById('info'),list=document.getElementById('list');
+let sel=null;
+const select=(it)=>{
+  if(sel){sel.material.emissive.setHex(0);}
+  sel=meshes.find(m=>m.userData.id===it.id);if(sel)sel.material.emissive.setHex(0x334455);
+  info.innerHTML='';const b=document.createElement('b');b.textContent=(it.label||it.id)+' ';const t=document.createElement('span');t.className='tag'+(it.status==='planned'?' planned':'');t.textContent=it.status;
+  const p=document.createElement('div');p.textContent=it.note;info.append(b,t,p);};
+ITEMS.filter(i=>i.label).forEach(it=>{const btn=document.createElement('button');btn.className='item';
+  const d=document.createElement('span');d.className='dot';d.style.background=it.c;
+  const n=document.createElement('span');n.textContent=it.label;
+  const t=document.createElement('span');t.className='tag'+(it.status==='planned'?' planned':'');t.textContent=it.status;
+  btn.append(d,n,t);btn.onclick=()=>select(it);list.appendChild(btn);});
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();let down=null;
+renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
+renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;
+  const r=renderer.domElement.getBoundingClientRect();ptr.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(meshes.filter(m=>m.visible))[0];if(hit)select(hit.object.userData);});
+
+// toggles
+const tog=(id,fn)=>{const b=document.getElementById(id);b.onclick=()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);fn(on);};};
+tog('tLabels',on=>{[...labelObjs,...wallLabels].forEach(o=>o.visible=on);});
+tog('tPlanned',on=>{meshes.forEach(m=>{if(m.userData.status==='planned'){m.visible=on;m.userData.edges.visible=on;if(m.userData.labelObj)m.userData.labelObj.visible=on;}});});
+
+const theme=()=>{scene.background=new THREE.Color(css('scene')||'#e9edf0');};
+theme();matchMedia('(prefers-color-scheme: dark)').addEventListener('change',theme);
+new MutationObserver(theme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+const size=()=>{const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);labels.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};
+new ResizeObserver(size).observe(view);size();go('Overview');
+const loop=()=>{controls.update();renderer.render(scene,camera);labels.render(scene,camera);requestAnimationFrame(loop);};loop();
+</script>
