@@ -11,6 +11,7 @@ import os
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode.qr import QrCodeWidget
 from reportlab.graphics.shapes import Drawing
+from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
@@ -21,7 +22,11 @@ MARGIN = 12 * mm
 GAP = 3 * mm
 
 # label sizes in mm (w, h); change here when the real slots are measured
-SIZE = {"bin": (80, 22), "samla": (90, 45), "loc": (70, 30)}
+SIZE = {"bin": (60, 12), "samla": (90, 45), "loc": (70, 30)}
+# bin colour by family: screws by diameter, the rest by part type
+FAMILY = {"m2": ("#E0B000", "M2 · M2.5"), "m3": ("#1F5FAD", "M3"), "m4": ("#2E8540", "M4"),
+          "m5": ("#E06A10", "M5"), "nut": ("#C62828", "nuts"), "washer": ("#5A5A5A", "washers · spacers"),
+          "rivet": ("#6A3FA0", "rivets")}
 SHEET = {"bin": "Grey bins", "samla": "SAMLA boxes", "loc": "Cupboard and rack spots"}
 
 
@@ -39,8 +44,8 @@ def fit(c, text, font, size, maxw):
     return size
 
 
-def code_block(c, code, x, y, w, h, size):
-    c.setFillGray(0)
+def code_block(c, code, x, y, w, h, size, fill="#000000"):
+    c.setFillColor(HexColor(fill))
     c.rect(x, y, w, h, stroke=0, fill=1)
     c.setFillGray(1)
     s = fit(c, code, "Helvetica-Bold", size, w - 2 * mm)
@@ -64,17 +69,27 @@ def draw_label(c, row, x, y):
     pad = 2 * mm
     q = h - 2 * pad
     if kind == "bin":
-        code_block(c, row["code"], x, y, 17 * mm, h, 13)
-        qr(c, row["code"], x + w - pad - q, y + pad, q)
-        tx, tw = x + 17 * mm + pad, w - 17 * mm - q - 3 * pad
-        if row["title"]:
-            c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 11, tw))
-            c.drawString(tx, y + h - 9 * mm, row["title"])
-            c.setFont("Helvetica", fit(c, row["sub"], "Helvetica", 7, tw))
-            c.drawString(tx, y + 4.5 * mm, row["sub"])
+        bw = 13 * mm
+        if row["family"]:
+            code_block(c, row["code"], x, y, bw, h, 12, FAMILY[row["family"]][0])
         else:
-            write_line(c, tx, y + h - 10 * mm, tw)
-            write_line(c, tx, y + 4 * mm, tw)
+            c.setStrokeGray(0)
+            c.setLineWidth(0.8)
+            c.rect(x, y, bw, h, stroke=1, fill=0)
+            c.setFont("Helvetica-Bold", 12)
+            c.drawCentredString(x + bw / 2, y + h / 2 - 4.2, row["code"])
+        tx, tw = x + bw + 1.5 * mm, w - bw - 2.5 * mm
+        if row["title"] and row["sub"]:
+            c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 15, tw))
+            c.drawString(tx, y + 4.6 * mm, row["title"])
+            c.setFont("Helvetica", fit(c, row["sub"], "Helvetica", 6.5, tw))
+            c.drawString(tx, y + 1.4 * mm, row["sub"])
+        elif row["title"]:
+            sz = fit(c, row["title"], "Helvetica-Bold", 18, tw)
+            c.setFont("Helvetica-Bold", sz)
+            c.drawString(tx, y + h / 2 - sz * 0.35, row["title"])
+        else:
+            write_line(c, tx, y + 3 * mm, tw - 1 * mm)
     elif kind == "samla":
         code_block(c, row["code"], x, y + h - 14 * mm, 22 * mm, 14 * mm, 18)
         q = 24 * mm
@@ -133,8 +148,24 @@ def sheet(c, kind, rows, scaled):
     for i, row in enumerate(rows):
         r, k = divmod(i, cols)
         draw_label(c, row, x0 + k * (w + GAP), top - (r + 1) * h - r * GAP)
+    if kind == "bin":
+        legend(c, top - (r + 1) * h - r * GAP - 12 * mm)
     check_bar(c, scaled)
     c.showPage()
+
+
+def legend(c, y):
+    x = MARGIN
+    c.setFont("Helvetica", 8)
+    c.setFillGray(0)
+    c.drawString(x, y, "Colour key:")
+    x += 18 * mm
+    for col, name in FAMILY.values():
+        c.setFillColor(HexColor(col))
+        c.rect(x, y - 1, 4 * mm, 3.2 * mm, stroke=0, fill=1)
+        c.setFillGray(0)
+        c.drawString(x + 5 * mm, y, name)
+        x += 5 * mm + c.stringWidth(name, "Helvetica", 8) + 5 * mm
 
 
 def main():
@@ -144,7 +175,9 @@ def main():
         c = canvas.Canvas(os.path.join(HERE, name), pagesize=A4)
         c.setTitle("Harbor labels")
         for kind in ("bin", "samla", "loc"):
-            sheet(c, kind, [r for r in rows if r["kind"] == kind], scaled)
+            picked = [r for r in rows if r["kind"] == kind]
+            # bins are small and cheap to misplace: print two of each
+            sheet(c, kind, picked * 2 if kind == "bin" else picked, scaled)
         c.save()
 
 

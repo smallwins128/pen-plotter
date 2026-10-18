@@ -1,35 +1,35 @@
-kind,code,title,sub,home
-bin,G01,M3 CSK,countersunk · for 3D prints,
-bin,G02,M3 OTHERS,button · pan · socket · flange,
-bin,G03,M4 SMALL,short lengths,
-bin,G04,M4 LARGE,long lengths,
-bin,G05,M5,all heads · all lengths,
-bin,G06,RIVETS · RIVNUTS,,
-bin,G07,NUTS,plain · nyloc,
-bin,G08,WASHERS · SPACERS,standoffs,
-bin,G09,,,
-bin,G10,,,
-bin,G11,,,
-bin,G12,,,
-samla,S01,WIRE CARDS,11 L,RB-1
-samla,S02,CONNECTORS,11 L,RB-1
-samla,S03,HEAT-SHRINK,11 L,RB-2
-samla,S04,JUMPERS,5 L,A3-C
-samla,S05,WIRE OFFCUTS,5 L,A3-C
-samla,S06,DUPONT,5 L,A3-C
-samla,S07,ZIP TIES · ANCHORS,11 L,A3-UL
-samla,S08,EDGE GUARDS,11 L,A3-UL
-samla,S09,PLUMBING,22 L,A3-UR
-samla,S10,OLD MOTORS,22 L,A3-LL
-loc,A3,STORAGE,wall A · third cupboard,
-loc,A3-T,TOP SHELF,A3 cupboard · top,
-loc,A3-UL,UPPER LEFT,A3 cupboard,
-loc,A3-UR,UPPER RIGHT,A3 cupboard,
-loc,A3-LL,LOWER LEFT,A3 cupboard,
-loc,A3-LR,LOWER RIGHT,A3 cupboard,
-loc,A3-C,COUNTER,A3 cupboard · beside rack B,
-loc,RB-1,RACK B · SHELF 1,inside A3 · top shelf,
-loc,RB-2,RACK B · SHELF 2,inside A3,
-loc,RA-1,RACK A · ROW 1,bench end · top row,
-loc,RA-2,RACK A · ROW 2,bench end,
-loc,RA-3,RACK A · ROW 3,bench end · bottom row,
+kind,code,title,sub,home,family
+bin,G01,M3 CSK,countersunk · for 3D prints,,m3
+bin,G02,M3 OTHERS,button · pan · socket · flange,,m3
+bin,G03,M4 SMALL,short lengths,,m4
+bin,G04,M4 LARGE,long lengths,,m4
+bin,G05,M5,all heads · all lengths,,m5
+bin,G06,RIVETS · RIVNUTS,,,rivet
+bin,G07,NUTS,plain · nyloc,,nut
+bin,G08,WASHERS · SPACERS,standoffs,,washer
+bin,G09,,,,
+bin,G10,,,,
+bin,G11,,,,
+bin,G12,,,,
+samla,S01,WIRE CARDS,11 L,RB-1,
+samla,S02,CONNECTORS,11 L,RB-1,
+samla,S03,HEAT-SHRINK,11 L,RB-2,
+samla,S04,JUMPERS,5 L,A3-C,
+samla,S05,WIRE OFFCUTS,5 L,A3-C,
+samla,S06,DUPONT,5 L,A3-C,
+samla,S07,ZIP TIES · ANCHORS,11 L,A3-UL,
+samla,S08,EDGE GUARDS,11 L,A3-UL,
+samla,S09,PLUMBING,22 L,A3-UR,
+samla,S10,OLD MOTORS,22 L,A3-LL,
+loc,A3,STORAGE,wall A · third cupboard,,
+loc,A3-T,TOP SHELF,A3 cupboard · top,,
+loc,A3-UL,UPPER LEFT,A3 cupboard,,
+loc,A3-UR,UPPER RIGHT,A3 cupboard,,
+loc,A3-LL,LOWER LEFT,A3 cupboard,,
+loc,A3-LR,LOWER RIGHT,A3 cupboard,,
+loc,A3-C,COUNTER,A3 cupboard · beside rack B,,
+loc,RB-1,RACK B · SHELF 1,inside A3 · top shelf,,
+loc,RB-2,RACK B · SHELF 2,inside A3,,
+loc,RA-1,RACK A · ROW 1,bench end · top row,,
+loc,RA-2,RACK A · ROW 2,bench end,,
+loc,RA-3,RACK A · ROW 3,bench end · bottom row,,
