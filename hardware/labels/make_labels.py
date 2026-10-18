@@ -23,10 +23,12 @@ GAP = 3 * mm
 
 # label sizes in mm (w, h); change here when the real slots are measured
 SIZE = {"bin": (60, 12), "samla": (90, 45), "loc": (70, 30)}
-# bin colour by family: screws by diameter, the rest by part type
-FAMILY = {"m2": ("#E0B000", "M2 · M2.5"), "m3": ("#1F5FAD", "M3"), "m4": ("#2E8540", "M4"),
-          "m5": ("#E06A10", "M5"), "nut": ("#C62828", "nuts"), "washer": ("#5A5A5A", "washers · spacers"),
-          "rivet": ("#6A3FA0", "rivets")}
+# screw sizes use the resistor colour code, so the digit is the colour (M3 = orange = 3);
+# other parts get a black block with a shape icon instead
+FAMILY = {"m2": ("#D32F2F", "M2 red"), "m3": ("#EF6C00", "M3 orange"), "m4": ("#F9C80E", "M4 yellow"),
+          "m5": ("#2E7D32", "M5 green"), "m6": ("#1565C0", "M6 blue"),
+          "nut": ("#1C1C1C", "nuts"), "washer": ("#1C1C1C", "washers"), "rivet": ("#1C1C1C", "rivets")}
+DARK_TEXT = {"m4"}
 SHEET = {"bin": "Grey bins", "samla": "SAMLA boxes", "loc": "Cupboard and rack spots"}
 
 
@@ -54,6 +56,28 @@ def code_block(c, code, x, y, w, h, size, fill="#000000"):
     c.setFillGray(0)
 
 
+def icon(c, fam, cx, cy, r):
+    """White part silhouette: hex nut, washer ring or rivet."""
+    import math
+    c.setFillGray(1)
+    c.setStrokeGray(1)
+    if fam in ("nut", "washer"):
+        p = c.beginPath()
+        if fam == "nut":
+            for i in range(6):
+                a = math.radians(60 * i)
+                (p.moveTo if i == 0 else p.lineTo)(cx + r * math.cos(a), cy + r * math.sin(a))
+            p.close()
+        else:
+            p.circle(cx, cy, r)
+        p.circle(cx, cy, r * 0.45)
+        c.drawPath(p, stroke=0, fill=1, fillMode=0)
+    else:
+        c.wedge(cx - r * 0.9, cy + r * 0.15, cx + r * 0.9, cy + r * 1.3, 180, 180, stroke=0, fill=1)
+        c.rect(cx - r * 0.25, cy - r * 1.1, r * 0.5, r * 1.85, stroke=0, fill=1)
+    c.setFillGray(0)
+
+
 def write_line(c, x, y, w):
     c.setStrokeGray(0.6)
     c.setLineWidth(0.4)
@@ -69,27 +93,38 @@ def draw_label(c, row, x, y):
     pad = 2 * mm
     q = h - 2 * pad
     if kind == "bin":
-        bw = 13 * mm
-        if row["family"]:
-            code_block(c, row["code"], x, y, bw, h, 12, FAMILY[row["family"]][0])
+        bw = 17 * mm
+        fam = row["family"]
+        if fam:
+            c.setFillColor(HexColor(FAMILY[fam][0]))
+            c.rect(x, y, bw, h, stroke=0, fill=1)
+            if row["size"]:
+                c.setFillGray(0 if fam in DARK_TEXT else 1)
+                sz = fit(c, row["size"], "Helvetica-Bold", 22, bw - 2 * mm)
+                c.setFont("Helvetica-Bold", sz)
+                c.drawCentredString(x + bw / 2, y + h / 2 - sz * 0.35, row["size"])
+            else:
+                icon(c, fam, x + bw / 2, y + h / 2, h * 0.36)
         else:
             c.setStrokeGray(0)
             c.setLineWidth(0.8)
             c.rect(x, y, bw, h, stroke=1, fill=0)
-            c.setFont("Helvetica-Bold", 12)
-            c.drawCentredString(x + bw / 2, y + h / 2 - 4.2, row["code"])
-        tx, tw = x + bw + 1.5 * mm, w - bw - 2.5 * mm
+        c.setFillGray(0.45)
+        c.setFont("Helvetica-Bold", 6)
+        c.drawRightString(x + w - 1 * mm, y + h - 2.6 * mm, row["code"])
+        c.setFillGray(0)
+        tx, tw = x + bw + 1.5 * mm, w - bw - 8 * mm
         if row["title"] and row["sub"]:
-            c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 15, tw))
+            c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 14, tw))
             c.drawString(tx, y + 4.6 * mm, row["title"])
-            c.setFont("Helvetica", fit(c, row["sub"], "Helvetica", 6.5, tw))
+            c.setFont("Helvetica", fit(c, row["sub"], "Helvetica", 6.5, w - bw - 2.5 * mm))
             c.drawString(tx, y + 1.4 * mm, row["sub"])
         elif row["title"]:
-            sz = fit(c, row["title"], "Helvetica-Bold", 18, tw)
+            sz = fit(c, row["title"], "Helvetica-Bold", 16, tw)
             c.setFont("Helvetica-Bold", sz)
             c.drawString(tx, y + h / 2 - sz * 0.35, row["title"])
         else:
-            write_line(c, tx, y + 3 * mm, tw - 1 * mm)
+            write_line(c, tx, y + 3 * mm, tw)
     elif kind == "samla":
         code_block(c, row["code"], x, y + h - 14 * mm, 22 * mm, 14 * mm, 18)
         q = 24 * mm
@@ -158,14 +193,15 @@ def legend(c, y):
     x = MARGIN
     c.setFont("Helvetica", 8)
     c.setFillGray(0)
-    c.drawString(x, y, "Colour key:")
-    x += 18 * mm
-    for col, name in FAMILY.values():
+    c.drawString(x, y, "Resistor colour code:")
+    x += 30 * mm
+    for col, name in [v for k, v in FAMILY.items() if k.startswith("m")]:
         c.setFillColor(HexColor(col))
         c.rect(x, y - 1, 4 * mm, 3.2 * mm, stroke=0, fill=1)
         c.setFillGray(0)
         c.drawString(x + 5 * mm, y, name)
         x += 5 * mm + c.stringWidth(name, "Helvetica", 8) + 5 * mm
+    c.drawString(x, y, "Black with a shape: nuts, washers, rivets.")
 
 
 def main():
