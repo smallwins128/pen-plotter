@@ -29,6 +29,11 @@ FAMILY = {"m2": ("#D32F2F", "M2 red"), "m3": ("#EF6C00", "M3 orange"), "m4": ("#
           "m5": ("#2E7D32", "M5 green"), "m6": ("#1565C0", "M6 blue"),
           "nut": ("#1C1C1C", "nuts"), "washer": ("#1C1C1C", "washers"), "rivet": ("#1C1C1C", "rivets")}
 DARK_TEXT = {"m4"}
+# SAMLA boxes carry a band for the overarching category
+CATEGORY = {"electronics": ("#00838F", "ELECTRONICS"), "electricals": ("#B71C1C", "ELECTRICALS"),
+            "plumbing": ("#1565C0", "PLUMBING"), "woodworking": ("#795548", "WOODWORKING"),
+            "sewing": ("#C2185B", "SEWING"), "art": ("#6A1B9A", "ART SUPPLIES"),
+            "hardware": ("#455A64", "HARDWARE"), "mechanical": ("#212121", "MECHANICAL")}
 SHEET = {"bin": "Grey bins", "samla": "SAMLA boxes", "loc": "Cupboard and rack spots"}
 
 
@@ -126,20 +131,42 @@ def draw_label(c, row, x, y):
         else:
             write_line(c, tx, y + 3 * mm, tw)
     elif kind == "samla":
-        code_block(c, row["code"], x, y + h - 14 * mm, 22 * mm, 14 * mm, 18)
+        band = 9 * mm
+        cat = CATEGORY.get(row["category"])
+        if cat:
+            c.setFillColor(HexColor(cat[0]))
+            c.rect(x, y + h - band, w, band, stroke=0, fill=1)
+            c.setFillGray(1)
+        else:
+            c.setStrokeGray(0)
+            c.setLineWidth(0.8)
+            c.rect(x, y + h - band, w, band, stroke=1, fill=0)
+            c.setFillGray(0)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(x + pad, y + h - band + 2.6 * mm, row["code"])
+        if cat:
+            c.setFont("Helvetica-Bold", 11)
+            c.drawRightString(x + w - pad, y + h - band + 3 * mm, cat[1])
+        c.setFillGray(0)
         q = 24 * mm
         qr(c, row["code"], x + w - pad - q, y + pad, q)
         tw = w - q - 3 * pad
-        c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 15, tw))
-        c.drawString(x + pad, y + h - 22 * mm, row["title"])
-        c.setFont("Helvetica", 8)
-        c.drawString(x + pad, y + h - 28 * mm, row["sub"])
+        if row["title"]:
+            c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 16, tw))
+            c.drawString(x + pad, y + h - band - 9 * mm, row["title"])
+            c.setFont("Helvetica", 8)
+            c.drawString(x + pad, y + h - band - 14 * mm, row["sub"])
+        else:
+            write_line(c, x + pad, y + h - band - 10 * mm, tw)
+            write_line(c, x + pad, y + h - band - 18 * mm, tw)
         c.setFont("Helvetica", 7)
         c.setFillGray(0.35)
         c.drawString(x + pad, y + pad + 1 * mm, "HOME")
         c.setFillGray(0)
         c.setFont("Helvetica-Bold", 12)
         c.drawString(x + pad + 9 * mm, y + pad + 1 * mm, row["home"])
+        if not row["home"]:
+            write_line(c, x + pad + 9 * mm, y + pad + 0.5 * mm, 20 * mm)
     else:
         q = 20 * mm
         qr(c, row["code"], x + w - pad - q, y + (h - q) / 2, q)
@@ -167,6 +194,15 @@ def check_bar(c, scaled):
 
 
 def sheet(c, kind, rows, scaled):
+    h = SIZE[kind][1] * mm
+    per_row = int((PW - 2 * MARGIN + GAP) // (SIZE[kind][0] * mm + GAP))
+    fit_rows = int((PH - 2 * MARGIN - 10 * mm - 20 * mm + GAP) // (h + GAP))
+    n = per_row * fit_rows
+    for i in range(0, len(rows), n):
+        page(c, kind, rows[i:i + n], scaled)
+
+
+def page(c, kind, rows, scaled):
     if scaled:
         c.translate(PW / 2, PH / 2)
         c.scale(15 / 14, 15 / 14)
