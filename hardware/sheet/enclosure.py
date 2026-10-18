@@ -148,9 +148,11 @@ def gx_openings():
 
 
 def gx_plate(rect, g):
-    """The inspector's plate (chamfered, after Allwin's sketch): opening + 10 (5 sideways for the two small groups)."""
-    mx = 10.0 if g == "steppers" else 5.0
-    b = sbox(rect[0] - mx, rect[1] - 10, rect[2] + mx, rect[3] + 10)
+    """GX printed plate (chamfered, after Allwin's sketch): opening + 12 where a rivnut sits (its countersunk screw and
+    the Ø9 flange relief need the room), + 10 below the steppers (no rivnut), + 5 sideways for the two small groups."""
+    small = g != "steppers"
+    mx = 5.0 if small else 12.0
+    b = sbox(rect[0] - mx, rect[1] - (12.0 if small else 10.0), rect[2] + mx, rect[3] + 12.0)
     c = 7.0 if g == "steppers" else 5.0
     return b.buffer(-c, join_style=2).buffer(c, join_style=3)
 

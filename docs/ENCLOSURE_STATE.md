@@ -13,8 +13,10 @@ base back lip, front corner tabs) and a folded **lid** (top + back, return lips)
 - Fans + IEC on the left walls, original printed jack panels on the right walls (on their sides),
   GX16 1×6 rail on the control front (rectangular cutout, panel like the rest), USB-C + antenna
   panel on the control left wall.
-- Every printed panel: 3 mm plate outside, 2 mm boss in the cutout (0.3 mm smaller per side),
-  M3 countersunk screws + nyloc nuts.
+- **Panel rules (Allwin, 2026-10-18; `hardware/parts/panel_rules.py`)**: every printed panel on rivnuts is a 3 mm plate with
+  countersunk M3 (Ø3.4 + 90° to Ø6.4), a Ø9 × 1.2 relief in the back over each rivnut flange, and a 2 mm wide × 2 mm tall
+  locating lip 0.3 mm inside the steel opening. GX plates done this way (`hardware/parts/gx_plates.py`). Banana panels
+  (already printed): M3 screw + washer + nyloc through Ø3.4 steel holes.
 - Lid fixings: 3 top + 3 back per box, M3 rivnuts set from outside (flange Ø8, measured), lid holes Ø10,
   M3 screw + **Ø16 penny washer**. Front corner tabs: 2 solid Ø3 rivets each, set cold.
 - Stacking: 4 printed **locating feet** under the control box (Ø24 × 6 flange + Ø7.6 peg) drop into
