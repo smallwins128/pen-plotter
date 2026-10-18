@@ -22,7 +22,7 @@ MARGIN = 12 * mm
 GAP = 3 * mm
 
 # label sizes in mm (w, h); change here when the real slots are measured
-SIZE = {"bin": (60, 12), "samla": (90, 45), "loc": (70, 30)}
+SIZE = {"bin": (60, 12), "samla": (90, 45), "loc": (88, 38)}
 # screw sizes use the resistor colour code, so the digit is the colour (M3 = orange = 3);
 # other parts get a black block with a shape icon instead
 FAMILY = {"m2": ("#D32F2F", "M2 red"), "m3": ("#EF6C00", "M3 orange"), "m4": ("#F9C80E", "M4 yellow"),
@@ -33,7 +33,10 @@ DARK_TEXT = {"m4"}
 CATEGORY = {"electronics": ("#00838F", "ELECTRONICS"), "electricals": ("#B71C1C", "ELECTRICALS"),
             "plumbing": ("#1565C0", "PLUMBING"), "woodworking": ("#795548", "WOODWORKING"),
             "sewing": ("#C2185B", "SEWING"), "art": ("#6A1B9A", "ART SUPPLIES"),
-            "hardware": ("#455A64", "HARDWARE"), "mechanical": ("#212121", "MECHANICAL")}
+            "hardware": ("#455A64", "HARDWARE"), "mechanical": ("#212121", "MECHANICAL"),
+            "fasteners": ("#9E7C0C", "FASTENERS")}
+# a spot inside another spot passes its contents up (rack B stands in A3)
+PARENT = {"RB-1": "A3", "RB-2": "A3"}
 SHEET = {"bin": "Grey bins", "samla": "SAMLA boxes", "loc": "Cupboard and rack spots"}
 
 
@@ -168,15 +171,58 @@ def draw_label(c, row, x, y):
         if not row["home"]:
             write_line(c, x + pad + 9 * mm, y + pad + 0.5 * mm, 20 * mm)
     else:
-        q = 20 * mm
-        qr(c, row["code"], x + w - pad - q, y + (h - q) / 2, q)
+        q = 22 * mm
+        qr(c, row["code"], x + w - pad - q, y + h - pad - q, q)
         tw = w - q - 3 * pad
-        c.setFont("Helvetica-Bold", fit(c, row["code"], "Helvetica-Bold", 24, tw))
+        c.setFont("Helvetica-Bold", fit(c, row["code"], "Helvetica-Bold", 28, tw))
         c.drawString(x + pad, y + h - 12 * mm, row["code"])
-        c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 9, tw))
-        c.drawString(x + pad, y + 9 * mm, row["title"])
+        c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 10, tw))
+        c.drawString(x + pad, y + h - 18 * mm, row["title"])
         c.setFont("Helvetica", fit(c, row["sub"], "Helvetica", 7, tw))
-        c.drawString(x + pad, y + 4 * mm, row["sub"])
+        c.drawString(x + pad, y + h - 22.5 * mm, row["sub"])
+        chips(c, row.get("contains", []), x + pad, y + pad, w - 2 * pad)
+
+
+def chips(c, cats, x, y, maxw):
+    """Row of category colour chips along the bottom of a spot card."""
+    c.setStrokeGray(0.6)
+    c.setLineWidth(0.4)
+    c.line(x, y + 7.5 * mm, x + maxw, y + 7.5 * mm)
+    if not cats:
+        c.setFont("Helvetica", 7)
+        c.setFillGray(0.45)
+        c.drawString(x, y + 2 * mm, "CONTAINS")
+        write_line(c, x + 15 * mm, y + 1.8 * mm, maxw - 15 * mm)
+        c.setFillGray(0)
+        return
+    cx, ch = x, 5.5 * mm
+    for k in cats:
+        col, name = CATEGORY[k]
+        size = 7
+        cw = c.stringWidth(name, "Helvetica-Bold", size) + 3 * mm
+        if cx + cw > x + maxw:
+            break
+        c.setFillColor(HexColor(col))
+        c.roundRect(cx, y, cw, ch, 1 * mm, stroke=0, fill=1)
+        c.setFillGray(1)
+        c.setFont("Helvetica-Bold", size)
+        c.drawString(cx + 1.5 * mm, y + 1.8 * mm, name)
+        cx += cw + 1.5 * mm
+    c.setFillGray(0)
+
+
+def contents(rows):
+    """Categories held at each spot, from where each box lives."""
+    held = {}
+    for r in rows:
+        if r["kind"] == "samla" and r["home"] and r["category"]:
+            spot = r["home"]
+            while spot:
+                held.setdefault(spot, [])
+                if r["category"] not in held[spot]:
+                    held[spot].append(r["category"])
+                spot = PARENT.get(spot) or (spot.split("-")[0] if "-" in spot else None)
+    return held
 
 
 def check_bar(c, scaled):
@@ -243,6 +289,10 @@ def legend(c, y):
 def main():
     with open(os.path.join(HERE, "labels.csv"), newline="") as f:
         rows = list(csv.DictReader(f))
+    held = contents(rows)
+    for r in rows:
+        if r["kind"] == "loc":
+            r["contains"] = held.get(r["code"], [])
     for name, scaled in (("labels.pdf", False), ("labels_plus7.pdf", True)):
         c = canvas.Canvas(os.path.join(HERE, name), pagesize=A4)
         c.setTitle("Harbor labels")
