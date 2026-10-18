@@ -1,5 +1,7 @@
 """Room R05 Harbor: print sheets for bin, SAMLA and location labels.
 
+Fonts in fonts/ are Barlow Condensed and IBM Plex Mono (SIL Open Font License, Google Fonts).
+
 Reads labels.csv, writes labels.pdf (true size) and labels_plus7.pdf (scaled up
 15/14 for a print shop that shrinks to fit). Each sheet carries a 100 mm check bar.
 
@@ -14,6 +16,8 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +41,13 @@ CATEGORY = {"electronics": ("#00838F", "ELECTRONICS"), "electricals": ("#B71C1C"
             "fasteners": ("#9E7C0C", "FASTENERS")}
 # a spot inside another spot passes its contents up (rack B stands in A3)
 PARENT = {"RB-1": "A3", "RB-2": "A3"}
+# what this print run includes; spot cards and box homes wait until storage is final
+PRINT = ("bin", "samla")
+PRINT_HOMES = False
+# condensed display face for names, mono for codes and field labels (both OFL, in fonts/)
+for _f in ("BarlowCondensed-ExtraBold", "BarlowCondensed-Medium", "IBMPlexMono-Regular", "IBMPlexMono-SemiBold"):
+    pdfmetrics.registerFont(TTFont(_f, os.path.join(HERE, "fonts", _f + ".ttf")))
+DISPLAY, MONO, MONO_B = "BarlowCondensed-ExtraBold", "IBMPlexMono-Regular", "IBMPlexMono-SemiBold"
 SHEET = {"bin": "Grey bins", "samla": "SAMLA boxes", "loc": "Cupboard and rack spots"}
 
 
@@ -95,81 +106,16 @@ def write_line(c, x, y, w):
 def draw_label(c, row, x, y):
     kind = row["kind"]
     w, h = SIZE[kind][0] * mm, SIZE[kind][1] * mm
-    c.setStrokeGray(0.75)
-    c.setLineWidth(0.3)
-    c.rect(x, y, w, h, stroke=1, fill=0)
+    if kind != "samla":
+        c.setStrokeGray(0.8)
+        c.setLineWidth(0.25)
+        c.rect(x, y, w, h, stroke=1, fill=0)
     pad = 2 * mm
     q = h - 2 * pad
     if kind == "bin":
-        bw = 17 * mm
-        fam = row["family"]
-        if fam:
-            c.setFillColor(HexColor(FAMILY[fam][0]))
-            c.rect(x, y, bw, h, stroke=0, fill=1)
-            if row["size"]:
-                c.setFillGray(0 if fam in DARK_TEXT else 1)
-                sz = fit(c, row["size"], "Helvetica-Bold", 22, bw - 2 * mm)
-                c.setFont("Helvetica-Bold", sz)
-                c.drawCentredString(x + bw / 2, y + h / 2 - sz * 0.35, row["size"])
-            else:
-                icon(c, fam, x + bw / 2, y + h / 2, h * 0.36)
-        else:
-            c.setStrokeGray(0)
-            c.setLineWidth(0.8)
-            c.rect(x, y, bw, h, stroke=1, fill=0)
-        c.setFillGray(0.45)
-        c.setFont("Helvetica-Bold", 6)
-        c.drawRightString(x + w - 1 * mm, y + h - 2.6 * mm, row["code"])
-        c.setFillGray(0)
-        tx, tw = x + bw + 1.5 * mm, w - bw - 8 * mm
-        if row["title"] and row["sub"]:
-            c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 14, tw))
-            c.drawString(tx, y + 4.6 * mm, row["title"])
-            c.setFont("Helvetica", fit(c, row["sub"], "Helvetica", 6.5, w - bw - 2.5 * mm))
-            c.drawString(tx, y + 1.4 * mm, row["sub"])
-        elif row["title"]:
-            sz = fit(c, row["title"], "Helvetica-Bold", 16, tw)
-            c.setFont("Helvetica-Bold", sz)
-            c.drawString(tx, y + h / 2 - sz * 0.35, row["title"])
-        else:
-            write_line(c, tx, y + 3 * mm, tw)
+        draw_bin(c, row, x, y, w, h)
     elif kind == "samla":
-        band = 9 * mm
-        cat = CATEGORY.get(row["category"])
-        if cat:
-            c.setFillColor(HexColor(cat[0]))
-            c.rect(x, y + h - band, w, band, stroke=0, fill=1)
-            c.setFillGray(1)
-        else:
-            c.setStrokeGray(0)
-            c.setLineWidth(0.8)
-            c.rect(x, y + h - band, w, band, stroke=1, fill=0)
-            c.setFillGray(0)
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(x + pad, y + h - band + 2.6 * mm, row["code"])
-        if cat:
-            c.setFont("Helvetica-Bold", 11)
-            c.drawRightString(x + w - pad, y + h - band + 3 * mm, cat[1])
-        c.setFillGray(0)
-        q = 24 * mm
-        qr(c, row["code"], x + w - pad - q, y + pad, q)
-        tw = w - q - 3 * pad
-        if row["title"]:
-            c.setFont("Helvetica-Bold", fit(c, row["title"], "Helvetica-Bold", 16, tw))
-            c.drawString(x + pad, y + h - band - 9 * mm, row["title"])
-            c.setFont("Helvetica", 8)
-            c.drawString(x + pad, y + h - band - 14 * mm, row["sub"])
-        else:
-            write_line(c, x + pad, y + h - band - 10 * mm, tw)
-            write_line(c, x + pad, y + h - band - 18 * mm, tw)
-        c.setFont("Helvetica", 7)
-        c.setFillGray(0.35)
-        c.drawString(x + pad, y + pad + 1 * mm, "HOME")
-        c.setFillGray(0)
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(x + pad + 9 * mm, y + pad + 1 * mm, row["home"])
-        if not row["home"]:
-            write_line(c, x + pad + 9 * mm, y + pad + 0.5 * mm, 20 * mm)
+        draw_samla(c, row, x, y, w, h)
     else:
         q = 22 * mm
         qr(c, row["code"], x + w - pad - q, y + h - pad - q, q)
@@ -181,6 +127,107 @@ def draw_label(c, row, x, y):
         c.setFont("Helvetica", fit(c, row["sub"], "Helvetica", 7, tw))
         c.drawString(x + pad, y + h - 22.5 * mm, row["sub"])
         chips(c, row.get("contains", []), x + pad, y + pad, w - 2 * pad)
+
+
+def field(c, name, x, y):
+    """Tiny field name, as in a drawing title block."""
+    c.setFont(MONO, 4.6)
+    c.setFillGray(0.4)
+    c.drawString(x, y, name)
+    c.setFillGray(0)
+
+
+def draw_bin(c, row, x, y, w, h):
+    bw = 15 * mm
+    fam = row["family"]
+    if fam:
+        c.setFillColor(HexColor(FAMILY[fam][0]))
+        c.rect(x, y, bw, h, stroke=0, fill=1)
+        if row["size"]:
+            c.setFillGray(0 if fam in DARK_TEXT else 1)
+            sz = fit(c, row["size"], DISPLAY, 30, bw - 1.5 * mm)
+            c.setFont(DISPLAY, sz)
+            c.drawCentredString(x + bw / 2, y + h / 2 - sz * 0.34, row["size"])
+        else:
+            icon(c, fam, x + bw / 2, y + h / 2, h * 0.34)
+    else:
+        c.setStrokeGray(0)
+        c.setLineWidth(0.8)
+        c.rect(x, y, bw, h, stroke=1, fill=0)
+    tx = x + bw + 1.4 * mm
+    tw = w - bw - 2.4 * mm
+    # top line: code and detail in mono
+    c.setFillGray(0)
+    c.setFont(MONO_B, 5)
+    c.drawString(tx, y + h - 2.6 * mm, row["code"])
+    if row["sub"]:
+        c.setFont(MONO, 5)
+        c.setFillGray(0.35)
+        c.drawString(tx + c.stringWidth(row["code"] + "  ", MONO_B, 5), y + h - 2.6 * mm, row["sub"].upper())
+        c.setFillGray(0)
+    if row["title"]:
+        c.setFont(DISPLAY, fit(c, row["title"], DISPLAY, 21, tw))
+        c.drawString(tx, y + 3.1 * mm, row["title"])
+    else:
+        write_line(c, tx, y + 3.4 * mm, tw)
+    # millimetre scale from the colour block's edge: butt a screw head against it to read its length
+    c.setStrokeGray(0)
+    for i in range(int(tw / mm) + 1):
+        t = 1.9 if i % 10 == 0 else 1.25 if i % 5 == 0 else 0.7
+        c.setLineWidth(0.35 if i % 5 == 0 else 0.2)
+        c.line(x + bw + i * mm, y, x + bw + i * mm, y + t * mm)
+
+
+def draw_samla(c, row, x, y, w, h):
+    strip, qcol, low = 8 * mm, 25 * mm, 11 * mm
+    cat = CATEGORY.get(row["category"])
+    # category strip down the left edge, name reading upwards
+    if cat:
+        c.setFillColor(HexColor(cat[0]))
+        c.rect(x, y, strip, h, stroke=0, fill=1)
+        c.saveState()
+        c.translate(x + strip / 2 + 2.3 * mm, y + h / 2)
+        c.rotate(90)
+        c.setFillGray(1)
+        c.setFont(DISPLAY, fit(c, cat[1], DISPLAY, 15, h - 4 * mm))
+        c.drawCentredString(0, 0, cat[1])
+        c.restoreState()
+    # title-block frame and cells
+    c.setStrokeGray(0)
+    c.setLineWidth(0.7)
+    c.rect(x, y, w, h, stroke=1, fill=0)
+    c.setLineWidth(0.35)
+    mx, mw = x + strip, w - strip - qcol
+    c.line(mx, y, mx, y + h)
+    c.line(mx + mw, y, mx + mw, y + h)
+    c.line(mx, y + low, mx + mw, y + low)
+    cells = [("CODE", 22 * mm), ("SIZE", 14 * mm), ("HOME", mw - 36 * mm)]
+    cx = mx
+    for name, cw in cells:
+        if cx > mx:
+            c.line(cx, y, cx, y + low)
+        field(c, name, cx + 1.2 * mm, y + low - 2.2 * mm)
+        cx += cw
+    c.setFont(DISPLAY, 17)
+    c.drawString(mx + 1.2 * mm, y + 1.6 * mm, row["code"])
+    c.setFont(MONO_B, 9)
+    c.drawString(mx + 22 * mm + 1.2 * mm, y + 2.2 * mm, row["sub"])
+    if PRINT_HOMES and row["home"]:
+        c.setFont(MONO_B, 9)
+        c.drawString(mx + 36 * mm + 1.2 * mm, y + 2.2 * mm, row["home"])
+    # contents cell
+    field(c, "CONTENTS", mx + 1.2 * mm, y + h - 2.8 * mm)
+    tw = mw - 2.4 * mm
+    if row["title"]:
+        c.setFont(DISPLAY, fit(c, row["title"], DISPLAY, 30, tw))
+        c.drawString(mx + 1.2 * mm, y + low + 11 * mm, row["title"])
+    else:
+        write_line(c, mx + 1.2 * mm, y + low + 14 * mm, tw)
+        write_line(c, mx + 1.2 * mm, y + low + 5 * mm, tw)
+    # QR column
+    q = 21 * mm
+    field(c, "SCAN", mx + mw + 1.2 * mm, y + h - 2.8 * mm)
+    qr(c, row["code"], mx + mw + (qcol - q) / 2, y + (h - q) / 2 - 1.5 * mm, q)
 
 
 def chips(c, cats, x, y, maxw):
@@ -233,7 +280,7 @@ def check_bar(c, scaled):
     for i in range(11):
         t = 3 * mm if i % 5 == 0 else 1.5 * mm
         c.line(MARGIN + i * 10 * mm, y, MARGIN + i * 10 * mm, y + t)
-    c.setFont("Helvetica", 7)
+    c.setFont(MONO, 7)
     note = "this bar must measure 100 mm after printing" if not scaled else \
         "pre-scaled +7%: this bar must measure 100 mm after printing"
     c.drawString(MARGIN + 104 * mm, y, note)
@@ -253,9 +300,9 @@ def page(c, kind, rows, scaled):
         c.translate(PW / 2, PH / 2)
         c.scale(15 / 14, 15 / 14)
         c.translate(-PW / 2, -PH / 2)
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(MARGIN, PH - MARGIN - 4 * mm, f"R05 Harbor · {SHEET[kind]}")
-    c.setFont("Helvetica", 7)
+    c.setFont(DISPLAY, 13)
+    c.drawString(MARGIN, PH - MARGIN - 4 * mm, f"R05 HARBOR · {SHEET[kind].upper()}")
+    c.setFont(MONO, 7)
     c.drawRightString(PW - MARGIN, PH - MARGIN - 4 * mm,
                       "Print at 100% / actual size. Do not use fit to page.")
     w, h = SIZE[kind][0] * mm, SIZE[kind][1] * mm
@@ -273,17 +320,17 @@ def page(c, kind, rows, scaled):
 
 def legend(c, y):
     x = MARGIN
-    c.setFont("Helvetica", 8)
+    c.setFont(MONO, 8)
     c.setFillGray(0)
     c.drawString(x, y, "Resistor colour code:")
-    x += 30 * mm
+    x += c.stringWidth("Resistor colour code:", MONO, 8) + 4 * mm
     for col, name in [v for k, v in FAMILY.items() if k.startswith("m")]:
         c.setFillColor(HexColor(col))
         c.rect(x, y - 1, 4 * mm, 3.2 * mm, stroke=0, fill=1)
         c.setFillGray(0)
         c.drawString(x + 5 * mm, y, name)
-        x += 5 * mm + c.stringWidth(name, "Helvetica", 8) + 5 * mm
-    c.drawString(x, y, "Black with a shape: nuts, washers, rivets.")
+        x += 5 * mm + c.stringWidth(name, MONO, 8) + 4 * mm
+    c.drawString(MARGIN, y - 5 * mm, "Black with a shape: nuts, washers, rivets. Bottom edge is a mm scale from the colour block.")
 
 
 def main():
@@ -296,7 +343,7 @@ def main():
     for name, scaled in (("labels.pdf", False), ("labels_plus7.pdf", True)):
         c = canvas.Canvas(os.path.join(HERE, name), pagesize=A4)
         c.setTitle("Harbor labels")
-        for kind in ("bin", "samla", "loc"):
+        for kind in PRINT:
             picked = [r for r in rows if r["kind"] == kind]
             # bins are small and cheap to misplace: print two of each
             sheet(c, kind, picked * 2 if kind == "bin" else picked, scaled)
