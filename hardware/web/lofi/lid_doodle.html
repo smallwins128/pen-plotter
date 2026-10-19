@@ -1,0 +1,148 @@
+<title>Control Lid Doodles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: controls bar, then one big lid drawing per direction, notes at the end */
+:root{--bg:#eceeef;--ink:#1c2328;--mute:#5f6b73;--line:#c3cbd0;--card:#fff;--acc:#c2410c;--steel:#c9cfd3;--steel2:#b3bbc1;--posca:#121212;
+--f:"IBM Plex Sans",system-ui,sans-serif;--m:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181b;--ink:#e3e8eb;--mute:#93a0a8;--line:#36424a;--card:#1b2226;--acc:#fb923c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14181b;--ink:#e3e8eb;--mute:#93a0a8;--line:#36424a;--card:#1b2226;--acc:#fb923c;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f)}
+main{max-width:1060px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+h1{font-size:1.4rem;margin:0}h2{font-size:1.05rem;margin:0}p{margin:0;max-width:70ch}.sub{color:var(--mute)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar button,.bar label{font:inherit;font-size:.9rem;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.bar button:focus-visible{outline:2px solid var(--acc)}
+.dir{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:8px}
+.tag{font:600 11px var(--m);letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+svg{width:100%;height:auto;display:block;border-radius:3px}
+ul{margin:0;padding-left:1.2em}li{margin:2px 0}
+</style>
+<main>
+<header><h1>Control lid: Posca doodle directions</h1><p class="sub">Drawn to scale on the control lid top (457 × 301 mm, front edge at the bottom). Black = Posca, grey = bare brushed stainless. Dashed circles are the lid screws (Ø15 washers) and the 4 accessory holes; keep the pen 3 mm off them. Reshuffle for new layouts.</p></header>
+<div class="bar"><button id="shuffle">Reshuffle all</button><label>Cell size <input id="dens" type="range" min="14" max="40" value="24" aria-label="cell count"></label></div>
+<section class="dir"><div class="tag">A · Cells</div><h2>Rounded cells, line fills and solid blacks</h2><svg id="A"></svg>
+<ul><li>Straight from your first reference: each cell a rounded shape, about a third solid black, the rest filled with bowed parallel lines.</li><li>Pens: PC-5M for the solids, PC-1MR (0.7) for lines. Lines about 3 mm apart read well at arm's length.</li></ul></section>
+<section class="dir"><div class="tag">B · Doodle bomb</div><h2>Packed characters round a bubble-letter ETCH</h2><svg id="B"></svg>
+<ul><li>Your second reference. This is a layout guide only: blobs to turn into characters, sized so none is smaller than about 25 mm (easier with a Posca).</li><li>Draw outlines first with PC-3M, then fill the black shadows.</li></ul></section>
+<section class="dir"><div class="tag">C · Hybrid</div><h2>Cells that come alive</h2><svg id="C"></svg>
+<ul><li>Direction A's cells, but a few of them get eyes and mouths. Calmer than B, more playful than A.</li></ul></section>
+<section class="dir"><h2>Posca on stainless</h2><ul>
+<li>Scuff lightly with a grey Scotch-Brite pad, wipe with IPA, don't touch it after.</li>
+<li>Posca is water-based: it wipes off bare steel until sealed. Finish with a clear spray (matte or satin), 2–3 light coats.</li>
+<li>Pencil doesn't show on steel: sketch the big shapes with a white Posca or a fine dry-erase marker first.</li>
+<li>Direction A is generative, so later the plotter can draw it with a Posca on a removable panel. On the lid itself, by hand.</li>
+</ul></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6.0.4/dist/d3-delaunay.min.js"></script>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg";
+const W=456.8, X0=-228.4, Z0=-149.9, Z1=150.9, H=Z1-Z0;
+const KEEP=[[-217,0,7.5],[217,0,7.5],[0,139.5,7.5],[-185,-107.5,2.5],[-185,107.5,2.5],[185,-107.5,2.5],[185,107.5,2.5]];
+// SVG frame: x right, y = front at bottom -> y = Z1 - z
+const sx=x=>x-X0, sy=z=>Z1-z;
+let seed=7;
+function rnd(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646}
+function el(p,t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e}
+function base(svg){
+  svg.innerHTML='';svg.setAttribute('viewBox',`-6 -6 ${W+12} ${H+12}`);
+  const d=el(svg,'defs',{});
+  const g=el(d,'linearGradient',{id:svg.id+'br',x1:0,y1:0,x2:1,y2:0});
+  for(let i=0;i<=10;i++)el(g,'stop',{offset:i/10,'stop-color':i%2?'#c4cacf':'#d2d7db'});
+  el(svg,'rect',{x:0,y:0,width:W,height:H,rx:2,fill:`url(#${svg.id}br)`,stroke:'#8d969c','stroke-width':.8});
+  return d;
+}
+function overlay(svg){
+  KEEP.forEach(([x,z,r])=>{el(svg,'circle',{cx:sx(x),cy:sy(z),r:r+3,fill:'#cfd4d8',stroke:'#7b858c','stroke-width':.5,'stroke-dasharray':'2 1.5'});
+    el(svg,'circle',{cx:sx(x),cy:sy(z),r:r>3?5:2.5,fill:'#5a6268'});});
+  [[0,0],[W,0],[0,H],[W,H]].forEach(([x,y])=>el(svg,'rect',{x:x?x-38:0,y:y?y-38:0,width:38,height:38,fill:'rgba(255,255,255,.35)',stroke:'#9aa3a9','stroke-width':.5}));
+  el(svg,'text',{x:W/2,y:H+4.5,'text-anchor':'middle','font-size':5,fill:'#5f6b73','font-family':'IBM Plex Mono, monospace'},'front edge');
+}
+function cells(n){
+  const pts=[];let tries=0;
+  while(pts.length<n&&tries<20000){tries++;const p=[rnd()*W,rnd()*H];const minD=Math.sqrt(W*H/n)*0.62;
+    if(pts.every(q=>Math.hypot(p[0]-q[0],p[1]-q[1])>minD))pts.push(p)}
+  const v=d3.Delaunay.from(pts).voronoi([0,0,W,H]);
+  return pts.map((p,i)=>({c:p,poly:v.cellPolygon(i)}));
+}
+function poly(points){return 'M'+points.map(p=>p.join(',')).join('L')+'Z'}
+function drawCells(svg,d,list,faces){
+  const GAP=3.6, LW=1.3;
+  list.forEach((cell,i)=>{
+    const cp=el(d,'clipPath',{id:`${svg.id}c${i}`});el(cp,'path',{d:poly(cell.poly)});
+    const g=el(svg,'g',{'clip-path':`url(#${svg.id}c${i})`});
+    const kind=rnd();
+    const area=Math.abs(d3.polygonArea?0:0);
+    if(kind<0.33){el(g,'path',{d:poly(cell.poly),fill:'#141414'});}
+    else{
+      const [cx,cy]=cell.c;
+      if(rnd()<0.6){ // lens: lines fan between the cell's two farthest corners, like the reference
+        let A=cell.poly[0],B=cell.poly[1],best=0;
+        for(const p of cell.poly)for(const q of cell.poly){const dd=Math.hypot(p[0]-q[0],p[1]-q[1]);if(dd>best){best=dd;A=p;B=q}}
+        const mx=(A[0]+B[0])/2,my=(A[1]+B[1])/2, L=Math.hypot(B[0]-A[0],B[1]-A[1]), nx=-(B[1]-A[1])/L, ny=(B[0]-A[0])/L;
+        for(let t=-L*1.1;t<=L*1.1;t+=7) el(g,'path',{d:`M${A[0]},${A[1]} Q${mx+nx*t},${my+ny*t} ${B[0]},${B[1]}`,fill:'none',stroke:'#141414','stroke-width':LW*0.85});
+      } else { // bowed parallel lines
+        const ang=rnd()*Math.PI, bow=(rnd()<.5?-1:1)*(0.5+rnd()*0.9), sp=3.2, R=90;
+        const ux=Math.cos(ang),uy=Math.sin(ang), vx=-uy, vy=ux;
+        for(let t=-R;t<=R;t+=sp){
+          const ax=cx+vx*t-ux*R, ay=cy+vy*t-uy*R, bx=cx+vx*t+ux*R, by=cy+vy*t+uy*R, k=bow*40*(1-(t/R)**2);
+          el(g,'path',{d:`M${ax},${ay} Q${cx+vx*(t+k)},${cy+vy*(t+k)} ${bx},${by}`,fill:'none',stroke:'#141414','stroke-width':LW*0.85});
+        }
+      }
+      el(g,'path',{d:poly(cell.poly),fill:'none',stroke:'#141414','stroke-width':2*GAP+2*LW,'stroke-linejoin':'round'});
+      if(faces&&rnd()<0.28){ // a face on top of the lines
+        const s=8+rnd()*5;
+        el(g,'circle',{cx:cx,cy:cy,r:s*1.9,fill:'#d0d5d9'});
+        el(g,'circle',{cx:cx-s*.6,cy:cy-s*.4,r:s*.42,fill:'#fff',stroke:'#141414','stroke-width':1});
+        el(g,'circle',{cx:cx+s*.6,cy:cy-s*.4,r:s*.42,fill:'#fff',stroke:'#141414','stroke-width':1});
+        el(g,'circle',{cx:cx-s*.55+rnd(),cy:cy-s*.35,r:s*.18,fill:'#141414'});
+        el(g,'circle',{cx:cx+s*.65+rnd(),cy:cy-s*.35,r:s*.18,fill:'#141414'});
+        rnd()<.5?el(g,'path',{d:`M${cx-s*.8},${cy+s*.5} Q${cx},${cy+s*1.3} ${cx+s*.8},${cy+s*.5}Z`,fill:'#141414'})
+               :el(g,'path',{d:`M${cx-s*.7},${cy+s*.8} Q${cx},${cy+s*.3} ${cx+s*.7},${cy+s*.8}`,fill:'none',stroke:'#141414','stroke-width':1.3,'stroke-linecap':'round'});
+      }
+    }
+    // steel gap with rounded corners
+    el(g,'path',{d:poly(cell.poly),fill:'none',stroke:'#cdd2d6','stroke-width':2*GAP,'stroke-linejoin':'round'});
+  });
+}
+function drawBomb(svg,d){
+  // bubble letters ETCH in the middle
+  const cx=W/2, cy=H/2+6;
+  const blobs=[];
+  const letters=el(svg,'g',{});
+  el(letters,'text',{x:cx,y:cy+22,'text-anchor':'middle','font-size':78,'font-family':'Arial Black, Impact, sans-serif','font-weight':900,fill:'#e9ecee',stroke:'#141414','stroke-width':4.5,'paint-order':'stroke','letter-spacing':'-3'},'ETCH');
+  blobs.push([cx,cy,125,48]);
+  // circle packing around it
+  const list=[];let tries=0;
+  while(list.length<70&&tries<40000){tries++;
+    const r=12+rnd()*28, x=r+rnd()*(W-2*r), y=r+rnd()*(H-2*r);
+    if(Math.abs(x-cx)<125+r&&Math.abs(y-cy)<44+r)continue;
+    if(KEEP.some(([kx,kz,kr])=>Math.hypot(x-sx(kx),y-sy(kz))<r+kr+4))continue;
+    if((x<38+r*0.3||x>W-38-r*0.3)&&(y<38+r*0.3||y>H-38-r*0.3))continue;
+    if(list.every(([a,b,c])=>Math.hypot(x-a,y-b)>r+c+1.2))list.push([x,y,r]);
+  }
+  list.forEach(([x,y,r])=>{
+    const n=7, pts=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2,rr=r*(0.82+rnd()*0.22);pts.push([x+Math.cos(a)*rr,y+Math.sin(a)*rr])}
+    let dd='';for(let i=0;i<n;i++){const p=pts[i],q=pts[(i+1)%n];const m=[(p[0]+q[0])/2,(p[1]+q[1])/2];dd+=(i?'':`M${(pts[n-1][0]+p[0])/2},${(pts[n-1][1]+p[1])/2}`)+`Q${p[0]},${p[1]} ${m[0]},${m[1]}`}
+    el(svg,'path',{d:dd+'Z',fill:rnd()<.15?'#141414':'#eef0f1',stroke:'#141414','stroke-width':2});
+    if(r>17&&rnd()<.75){const s=r*.32;
+      el(svg,'circle',{cx:x-s,cy:y-s*.5,r:s*.55,fill:'#fff',stroke:'#141414','stroke-width':1.2});el(svg,'circle',{cx:x+s,cy:y-s*.5,r:s*.55,fill:'#fff',stroke:'#141414','stroke-width':1.2});
+      el(svg,'circle',{cx:x-s+s*.2,cy:y-s*.4,r:s*.22,fill:'#141414'});el(svg,'circle',{cx:x+s+s*.2,cy:y-s*.4,r:s*.22,fill:'#141414'});
+      const m=rnd();
+      if(m<.4){el(svg,'path',{d:`M${x-s*1.2},${y+s*.5} Q${x},${y+s*2} ${x+s*1.2},${y+s*.5}Z`,fill:'#141414'});for(let k=-1;k<=1;k++)el(svg,'rect',{x:x+k*s*.45-s*.18,y:y+s*.5,width:s*.36,height:s*.35,fill:'#fff'})}
+      else if(m<.7)el(svg,'path',{d:`M${x-s},${y+s} Q${x},${y+s*.4} ${x+s},${y+s}`,fill:'none',stroke:'#141414','stroke-width':1.6,'stroke-linecap':'round'});
+      else el(svg,'ellipse',{cx:x,cy:y+s*.9,rx:s*.4,ry:s*.5,fill:'#141414'});
+    } else if(r<=17){for(let k=0;k<4;k++)el(svg,'path',{d:`M${x-r*.5},${y-r*.4+k*r*.28} h${r}`,stroke:'#141414','stroke-width':1})}
+  });
+}
+function render(){
+  const n=Math.round(+document.getElementById('dens').value);
+  ['A','B','C'].forEach((id,k)=>{seed=(window.__s||7)+k*101;const svg=document.getElementById(id);const d=base(svg);
+    if(id==='B')drawBomb(svg,d);else drawCells(svg,d,cells(n),id==='C');overlay(svg);});
+}
+document.getElementById('shuffle').onclick=()=>{window.__s=Math.floor(Math.random()*1e6)+1;render()};
+document.getElementById('dens').oninput=render;
+render();
+})();
+</script>
