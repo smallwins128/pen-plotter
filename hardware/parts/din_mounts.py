@@ -11,8 +11,8 @@ Plate frame: x along the rail, y across the rail (box z, + = front), z up from t
 Parts:
   tb6600_plate  one per driver. Driver lies flat (96 x 57 x 28) on two ribs over the insert pads; a wall on its left takes the flange: M3 through the
                 flange's open U-slots into nuts that slide in a vertical channel (8-20 up), so label up or down fits.
-  board_plate   FluidNC 6x (holes 78 along x, 118 along y). Two clips. Float holes (Ø6 in Ø9 bosses) give about
-                ±1.3 mm for the measured hole pattern; M3 + washer + nut from below.
+  board_plate   FluidNC 6x (holes 78 along x, 118 along y). Two clips. Bosses take M3 × 4 inserts from the top;
+                M3 × 6 pan heads through the PCB (hole pattern confirmed by the 2026-10-20 test print).
 """
 import math
 import pathlib
@@ -35,12 +35,14 @@ M3 = FIT["m3_clear"]
 INS_BORE, INS_DEPTH = 4.0, 4.5                 # Allwin's inserts: M3 x 4, OD 4.3 (brass, knurled); bore 0.3 under OD
 PAD_D, PAD_H = 10.0, 8.0                       # pad diameter, height above the clip face (2.5 solid over the bore)
 
-TB = dict(l=96.0, w=57.0, h=28.0, hole_pitch=87.0)   # TB6600 body; flange holes 87 apart along its length
+TB = dict(l=96.0, w=57.0, h=28.0, hole_pitch=89.0)   # TB6600 body; flange holes 89 apart (test print: 87 was 2 short)
+TB_SLOT_PLAY = 1.0                                    # slots ±1 along the length too
 TB_BASE_T, TB_WALL_T, TB_SLOT = 3.0, 5.0, (8.0, 20.0)   # slot from 8 to 20 above the seat
 TB_SEAT = PAD_H                                         # driver sits on two ribs that carry the insert pads
 
 BOARD = dict(pcb=(87.0, 126.0), holes=(78.0, 118.0))    # FluidNC 6x, holes measured (best effort)
-BOARD_T, BOSS_D, BOSS_H, FLOAT_D = 4.0, 9.0, 8.0, 6.0   # PCB sits 12 up: 4 over the insert pads
+BOARD_T, BOSS_D, BOSS_H = 4.0, 9.0, 8.0                 # PCB sits 12 up: 4 over the insert pads
+# board holes line up (test print), so the bosses take M3 × 4 inserts from the top (M3 × 6 pan heads through the PCB)
 BOARD_CLIP_X = 30.0                                     # clip centres at x = ±30 under the board
 BOARD_CLIP_DY = 10.0                                    # board centre sits 10 behind the rail centre
 
@@ -105,7 +107,7 @@ def tb6600_plate():
     z0, z1 = TB_SEAT + TB_SLOT[0], TB_SEAT + TB_SLOT[1]
     for sgn in (-1, 1):
         y = sgn * TB["hole_pitch"] / 2
-        part -= Pos(x0 / 2, y, (z0 + z1) / 2) * Box(TB_WALL_T + 2, M3, z1 - z0)
+        part -= Pos(x0 / 2, y, (z0 + z1) / 2) * Box(TB_WALL_T + 2, M3 + 2 * TB_SLOT_PLAY, z1 - z0)
         # nut channel on the post's outer face, open at the top so the nut drops in
         zb = z0 - 3
         part -= Pos(x0 + NUT_H / 2 - 0.5, y, (zb + top + 1) / 2) * Box(NUT_H + 1, NUT_AF, top + 1 - zb)
@@ -132,7 +134,9 @@ def board_plate():
         for sy in (-1, 1):
             x, y = sx * hx, sy * hy
             part += Pos(x, y, BOARD_T + BOSS_H / 2 - 0.01) * Cylinder(BOSS_D / 2, BOSS_H)
-            part -= Pos(x, y, (BOARD_T + BOSS_H) / 2) * Cylinder(FLOAT_D / 2, BOARD_T + BOSS_H + 2)
+            top = BOARD_T + BOSS_H
+            part -= Pos(x, y, top - INS_DEPTH / 2 + 0.01) * Cylinder(INS_BORE / 2, INS_DEPTH + 0.02)
+            part -= Pos(x, y, top / 2) * Cylinder(M3 / 2, top + 2)
     for sx in (-1, 1):
         part = clip_holes(part, sx * BOARD_CLIP_X, BOARD_CLIP_DY)
     return part
