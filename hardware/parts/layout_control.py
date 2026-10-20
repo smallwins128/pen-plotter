@@ -91,8 +91,9 @@ def main():
         if n.startswith("TB"):
             ax.add_patch(plt.Rectangle((x1 - TB["term"], z0 + 10), TB["term"], z1 - z0 - 20, fc="#6fc28a", ec="#1c2328"))
         ax.text((x0 + x1) / 2, (z0 + z1) / 2, n, ha="center", va="center", fontsize=9, weight="bold")
-    ax.text(0, ZF + 6, "FRONT (GX sockets)", ha="center", fontsize=8); ax.text(0, ZB - 10, "BACK", ha="center", fontsize=8)
-    ax.set_xlim(-XW - 15, XW + 15); ax.set_ylim(ZB - 18, ZF + 14); ax.set_aspect("equal"); ax.axis("off")
+    ax.text(0, ZF + 10, "FRONT (GX sockets) - you stand here", ha="center", fontsize=8); ax.text(0, ZB - 8, "BACK", ha="center", fontsize=8)
+    ax.set_xlim(-XW - 15, XW + 15); ax.set_ylim(ZF + 14, ZB - 18);   # front at the bottom: seen from above, standing at the front
+    ax.set_aspect("equal"); ax.axis("off")
     ax.set_title(f"Control box top view: rail at z {RAIL_Z:g}, {spare / 2:.0f} mm spare each side beyond the side keep-outs", fontsize=10)
     fig.tight_layout(); fig.savefig(OUT / "control_layout.png")
 
