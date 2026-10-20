@@ -43,12 +43,49 @@ def coupon(c, length=20.0):
     return slab(profile(c), 0, length)
 
 
+ANCHOR = dict(len=10.0, half_w=8.0, z0=4.5, bore=4.0, depth=4.5)   # tab off the grip's end; M3 × 4 insert (OD 4.3)
+
+
+def anchor_tab(x0):
+    """Anchor tab starting at x = x0: sits over the rail's channel; an M3 screw down through an insert jacks on the
+    rail floor, pulling the hooks up against the edges (locks position, kills rattle)."""
+    from build123d import Box, Cylinder, Pos
+    a = ANCHOR
+    top = RAIL["h"] + TOP
+    tab = Pos(x0 + a["len"] / 2, 0, (a["z0"] + top) / 2) * Box(a["len"], 2 * a["half_w"], top - a["z0"])
+    cx = x0 + a["len"] / 2
+    tab -= Pos(cx, 0, top - a["depth"] / 2 + 0.01) * Cylinder(a["bore"] / 2, a["depth"] + 0.02)
+    tab -= Pos(cx, 0, (a["z0"] + top) / 2) * Cylinder(3.4 / 2, top - a["z0"] + 2)
+    assert a["half_w"] < RAIL["hat"] / 2 - 1.0 - 0.5, "tab must fit inside the rail's channel"
+    return tab
+
+
+def grip_along_x(c, x0, x1):
+    """The grip profile as a solid running along x from x0 to x1 (y across the rail, z up)."""
+    from build123d import BuildPart, BuildSketch, Plane, Polygon as BPolygon, extrude
+    pts = list(profile(c).exterior.coords)[:-1]
+    with BuildPart() as bp:
+        with BuildSketch(Plane.YZ.offset(x0)):
+            BPolygon(*pts, align=None)
+        extrude(amount=x1 - x0)
+    return bp.part
+
+
+def coupon_anchor(c=0.3, length=20.0):
+    """Loose grip + anchor tab on one end. Print lying on its top face (hooks up)."""
+    return grip_along_x(c, 0, length) + anchor_tab(length - 0.01)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for c in (0.1, 0.2, 0.3):
         part = coupon(c)
         export_stl(part, str(OUT / f"din_grip_coupon_c{c:g}.stl"))
         print(f"din_grip_coupon_c{c:g}: {part.volume / 1000:.1f} cm3")
+    a = coupon_anchor(0.3)
+    export_stl(a, str(OUT / "din_grip_anchor_c0.3.stl"))
+    bb = a.bounding_box()
+    print(f"din_grip_anchor_c0.3: {bb.size.X:.1f} x {bb.size.Y:.1f} x {bb.size.Z:.1f}, {a.volume / 1000:.1f} cm3")
 
 
 if __name__ == "__main__":
