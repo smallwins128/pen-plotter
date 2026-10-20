@@ -1,0 +1,68 @@
+<title>DIN Grip Coupon</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* layout: viewer on top, part toggles, notes below */
+:root{--bg:#eef1f3;--ink:#1c2328;--mute:#5f6b73;--line:#c4ccd1;--card:#ffffff;--acc:#2f7fb8;--f:"IBM Plex Sans",system-ui,sans-serif;--m:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13181b;--ink:#e3e8eb;--mute:#93a0a8;--line:#34404a;--card:#1b2226;--acc:#69b3e6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13181b;--ink:#e3e8eb;--mute:#93a0a8;--line:#34404a;--card:#1b2226;--acc:#69b3e6;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);line-height:1.5}
+main{max-width:1000px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+h1{font-size:1.35rem;margin:0}h2{font-size:1rem;margin:0 0 6px}p{margin:0;max-width:68ch}.sub{color:var(--mute)}
+#view{width:100%;aspect-ratio:16/10;max-height:70vh;background:var(--card);border:1px solid var(--line);border-radius:6px;touch-action:none}
+.bar{display:flex;flex-wrap:wrap;gap:8px}
+.bar button,.bar label{font:inherit;font-size:.9rem;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.bar button[aria-pressed="true"]{border-color:var(--acc);color:var(--acc);font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}.grid2>div{min-width:0}
+ul{margin:0;padding-left:1.2em}li{margin:2px 0}.u{color:#c9782a;font-weight:600}
+</style>
+<main>
+<header><h1>DIN grip test coupon</h1><p class="sub">The 0.2 mm coupon (black PETG) on a short piece of 35 × 7.5 DIN rail. It slides on from the rail's end. Drag to orbit, scroll or pinch to zoom.</p></header>
+<div class="bar" role="group" aria-label="View"><button id="b-slide" aria-pressed="false">Slide it off</button><button id="b-end" aria-pressed="false">Look down the rail end</button></div>
+<canvas id="view"></canvas>
+<div class="grid2"><div><h2>What you're seeing</h2><ul>
+<li>3 mm top resting on the rail's two edges.</li>
+<li>A hook down each side that reaches 2.2 mm under each 1 mm edge. Nothing flexes.</li>
+<li>"Look down the rail end" moves the coupon to the rail's end so you can see the hooks under the edges.</li>
+<li>Three coupons to print: 0.1, 0.2 and 0.3 mm clearance. Each prints standing on its end.</li>
+</ul></div><div><h2>On the real plates</h2><ul>
+<li>This profile is built into the underside of each TB6600 and board plate.</li>
+<li>Plates slide onto the rail on the bench; the rail is then screwed down through the gaps between them.</li>
+</ul></div></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(()=>{
+const B64="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";
+function stl(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+ const dv=new DataView(u.buffer),n=dv.getUint32(80,true),pos=new Float32Array(n*9);let o=84;
+ for(let i=0;i<n;i++){o+=12;for(let j=0;j<9;j++){pos[i*9+j]=dv.getFloat32(o,true);o+=4}o+=2}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.computeVertexNormals();return g}
+const cv=document.getElementById('view');
+const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+const sc=new THREE.Scene();const cam=new THREE.PerspectiveCamera(30,1.6,1,2000);
+const ctl=new THREE.OrbitControls(cam,cv);ctl.enableDamping=true;
+sc.add(new THREE.HemisphereLight(0xffffff,0x445566,0.8));const dl=new THREE.DirectionalLight(0xffffff,0.75);dl.position.set(60,120,90);sc.add(dl);
+// rail: profile in (y,z) extruded along x (three: x along rail, y up, z across)
+const t=1.0, s=new THREE.Shape();
+const P=[[-17.5,6.5],[-17.5,7.5],[-12.5,7.5],[-12.5,1],[12.5,1],[12.5,7.5],[17.5,7.5],[17.5,6.5],[13.5,6.5],[13.5,0],[-13.5,0],[-13.5,6.5]];
+// hollow hat: outer path with 1 mm walls
+const O=[[-17.5,6.5],[-17.5,7.5],[-13.5,7.5],[-13.5,1],[13.5,1],[13.5,7.5],[17.5,7.5],[17.5,6.5],[14.5,6.5],[14.5,0],[-14.5,0],[-14.5,6.5]];
+// simple TS35: edges at 6.5..7.5, walls at ±13.5..±14.5, floor 0..1
+const prof=[[-17.5,7.5],[-13.5,7.5],[-13.5,1],[13.5,1],[13.5,7.5],[17.5,7.5],[17.5,6.5],[14.5,6.5],[14.5,0],[-14.5,0],[-14.5,6.5],[-17.5,6.5]];
+s.moveTo(prof[0][0],prof[0][1]);prof.slice(1).forEach(p=>s.lineTo(p[0],p[1]));s.closePath();
+const railG=new THREE.ExtrudeGeometry(s,{depth:140,bevelEnabled:false});
+const rail=new THREE.Mesh(railG,new THREE.MeshStandardMaterial({color:0xc6ccd1,metalness:.6,roughness:.35}));
+rail.rotation.y=Math.PI/2;rail.position.x=-70;sc.add(rail);   // shape (y->across? ) : shape x = across, shape y = up, extrude along -> x after rotation
+const grip=new THREE.Mesh(stl(B64),new THREE.MeshStandardMaterial({color:0x2a2e33,roughness:.55}));
+// STL: profile in XY (x across, y up), extruded along Z 0..20 -> rotate like the rail
+const holder=new THREE.Group();holder.add(grip);holder.rotation.y=Math.PI/2;sc.add(holder);
+let off=false,target=-10,cur=-10;
+document.getElementById('b-slide').onclick=()=>{off=!off;target=off?75:-10;document.getElementById('b-slide').setAttribute('aria-pressed',off);document.getElementById('b-slide').textContent=off?'Slide it on':'Slide it off'};
+let end=false;document.getElementById('b-end').onclick=()=>{end=!end;document.getElementById('b-end').setAttribute('aria-pressed',end);
+ if(end){cam.position.set(135,5,0);target=50}else{cam.position.set(70,70,110);target=off?75:-10}ctl.target.set(0,6,0);ctl.update()};
+cam.position.set(70,70,110);ctl.target.set(0,6,0);ctl.update();
+function size(){const w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==w*r.getPixelRatio()||cv.height!==h*r.getPixelRatio()){r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}}
+(function loop(){cur+=(target-cur)*0.08;holder.position.x=cur;size();ctl.update();r.render(sc,cam);requestAnimationFrame(loop)})();
+})();
+</script>
