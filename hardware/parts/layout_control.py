@@ -82,19 +82,24 @@ def main():
         x0, z0, x1, z1 = g.bounds
         ax.add_patch(plt.Rectangle((x0, z0), x1 - x0, z1 - z0, fc="#e7b7a8", ec="#b0533a", alpha=.6, hatch="//"))
         ax.text((x0 + x1) / 2, (z0 + z1) / 2, n, ha="center", va="center", fontsize=7, rotation=90 if x1 - x0 < 40 else 0)
-    # two 8-inch rails: A under the drivers (full 203), B under the board (cut to 120); bought clips 25 x 69
-    clips = [p[f"TB{i + 1}"].bounds[0] + TB["wall"] + TB["body"] / 2 for i in range(3)]
+    # two uncut 8-inch rails: A along x under the drivers, B front-back under the board's centre line
+    L8 = 203.2
+    clips = [(p[f"TB{i + 1}"].bounds[0] + TB["wall"] + TB["body"] / 2, RAIL_Z, False) for i in range(3)]
     bcx = (p["board"].bounds[0] + p["board"].bounds[2]) / 2
-    clips += [bcx - 30, bcx + 30]
-    ra = (clips[0] - 12.5, clips[0] - 12.5 + 203.2)
-    rb = (bcx - 60, bcx + 60)
-    for (x0, x1), lab in ((ra, "rail A: full 8 in (203)"), (rb, "rail B: 8 in cut to 120")):
-        ax.add_patch(plt.Rectangle((x0, RAIL_Z - 17.5), x1 - x0, 35, fc="#aab4bb", ec="#6d7780", zorder=1))
-        ax.add_patch(plt.Rectangle((x0, RAIL_Z - 17.5), x1 - x0, 35, fc="none", ec="#3d464d", lw=1, ls=":", zorder=6))
-        ax.text((x0 + x1) / 2, RAIL_Z - 88, lab + f"  (x {x0:.0f} to {x1:.0f})", ha="center", fontsize=7.5, color="#3d464d", zorder=6)
-    screws = [(clips[0] + clips[1]) / 2, (clips[1] + clips[2]) / 2, bcx, rb[1] - 8]
-    print("rail A", [round(v, 1) for v in ra], "rail B", [round(v, 1) for v in rb])
-    print("clip centres", [round(c, 1) for c in clips], "rail screws", [round(v, 1) for v in screws])
+    bz = RAIL_Z + BOARD_DZ
+    clips += [(bcx, bz - 30, True), (bcx, bz + 30, True)]
+    ra = (clips[0][0] - 12.5, clips[0][0] - 12.5 + L8)
+    rb = (ZB + 12.5, ZB + 12.5 + L8)                                   # starts 12.5 in from the back edge
+    ax.add_patch(plt.Rectangle((ra[0], RAIL_Z - 17.5), L8, 35, fc="#aab4bb", ec="#6d7780", zorder=1))
+    ax.add_patch(plt.Rectangle((ra[0], RAIL_Z - 17.5), L8, 35, fc="none", ec="#3d464d", lw=1, ls=":", zorder=6))
+    ax.text((ra[0] + ra[1]) / 2, RAIL_Z - 88, f"rail A: 8 in, along the box (x {ra[0]:.0f} to {ra[1]:.0f})", ha="center", fontsize=7.5, color="#3d464d", zorder=6)
+    ax.add_patch(plt.Rectangle((bcx - 17.5, rb[0]), 35, L8, fc="#aab4bb", ec="#6d7780", zorder=1))
+    ax.add_patch(plt.Rectangle((bcx - 17.5, rb[0]), 35, L8, fc="none", ec="#3d464d", lw=1, ls=":", zorder=6))
+    ax.text(bcx, rb[1] + 9, f"rail B: 8 in, front-back (z {rb[0]:.0f} to {rb[1]:.0f})", ha="center", fontsize=7.5, color="#3d464d", zorder=6)
+    screws = [((clips[0][0] + clips[1][0]) / 2, RAIL_Z), ((clips[1][0] + clips[2][0]) / 2, RAIL_Z),
+              (bcx, rb[0] + 10), (bcx, bz), (bcx, rb[1] - 10)]
+    print("rail A x", [round(v, 1) for v in ra], "rail B z", [round(v, 1) for v in rb], "at x", round(bcx, 1))
+    print("clips", [(round(a, 1), round(b, 1)) for a, b, _ in clips], "screws", [(round(a, 1), round(b, 1)) for a, b in screws])
     CLIPS, SCREWS = clips, screws
     for n, g in p.items():
         x0, z0, x1, z1 = g.bounds
@@ -104,14 +109,15 @@ def main():
         if n.startswith("TB"):
             ax.add_patch(plt.Rectangle((x1 - TB["term"], z0 + 10), TB["term"], z1 - z0 - 20, fc="#6fc28a", ec="#1c2328"))
         ax.text((x0 + x1) / 2, (z0 + z1) / 2, n, ha="center", va="center", fontsize=9, weight="bold")
-    for cx in CLIPS:
-        ax.add_patch(plt.Rectangle((cx - 12.5, RAIL_Z - 34.5), 25, 69, fc="none", ec="#d22", lw=1.2, ls="--", zorder=7))
-    for sx in SCREWS:
-        ax.add_patch(plt.Circle((sx, RAIL_Z), 3, fc="#222", zorder=8))
+    for cx, cz, rot in CLIPS:
+        w, l = (69, 25) if rot else (25, 69)
+        ax.add_patch(plt.Rectangle((cx - w / 2, cz - l / 2), w, l, fc="none", ec="#d22", lw=1.2, ls="--", zorder=7))
+    for sx, sz in SCREWS:
+        ax.add_patch(plt.Circle((sx, sz), 3, fc="#222", zorder=8))
     ax.text(0, ZF + 10, "FRONT (GX sockets) - you stand here", ha="center", fontsize=8); ax.text(0, ZB - 8, "BACK", ha="center", fontsize=8)
     ax.set_xlim(-XW - 15, XW + 15); ax.set_ylim(ZF + 14, ZB - 18);   # front at the bottom: seen from above, standing at the front
     ax.set_aspect("equal"); ax.axis("off")
-    ax.set_title(f"Control box top view: two 8-inch rails at z {RAIL_Z:g} (red dashed = DIN clips, black dots = rail screws); {spare / 2:.0f} mm spare each side", fontsize=9.5)
+    ax.set_title(f"Control box top view: two uncut 8-inch rails, B turned front-back (red dashed = DIN clips, black dots = rail screws); {spare / 2:.0f} mm spare each side", fontsize=9.5)
     fig.tight_layout(); fig.savefig(OUT / "control_layout.png")
 
 

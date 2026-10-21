@@ -11,7 +11,7 @@ Plate frame: x along the rail, y across the rail (box z, + = front), z up from t
 Parts:
   tb6600_plate  one per driver. Driver lies flat (96 x 57 x 28) on two ribs over the insert pads; a wall on its left takes the flange: M3 through the
                 flange's open U-slots into nuts that slide in a vertical channel (8-20 up), so label up or down fits.
-  board_plate   FluidNC 6x (holes 78 along x, 118 along y). Two clips. Bosses take M3 × 4 inserts from the top;
+  board_plate   FluidNC 6x (holes 78 along x, 118 along y). Two clips on a front-back rail under its centre line. Bosses take M3 × 4 inserts from the top;
                 M3 × 6 pan heads through the PCB (hole pattern confirmed by the 2026-10-20 test print).
 """
 import math
@@ -43,8 +43,9 @@ TB_SEAT = PAD_H                                         # driver sits on two rib
 BOARD = dict(pcb=(87.0, 126.0), holes=(78.0, 118.0))    # FluidNC 6x, holes measured (best effort)
 BOARD_T, BOSS_D, BOSS_H = 4.0, 9.0, 8.0                 # PCB sits 12 up: 4 over the insert pads
 # board holes line up (test print), so the bosses take M3 × 4 inserts from the top (M3 × 6 pan heads through the PCB)
-BOARD_CLIP_X = 30.0                                     # clip centres at x = ±30 under the board
-BOARD_CLIP_DY = 10.0                                    # board centre sits 10 behind the rail centre
+# rail B runs front-back under the board's centre line (an uncut 8-inch rail, 2026-10-21): the board's two clips sit
+# on that rail at y = ±BOARD_CLIP_Y, each clip's two holes across the rail (along x)
+BOARD_CLIP_Y = 30.0
 
 
 def hexagon(x, y, af):
@@ -69,13 +70,14 @@ def organic(shapes, fillet=5.0):
     return u.buffer(fillet, quad_segs=12).buffer(-fillet, quad_segs=12).buffer(0)
 
 
-def clip_holes(part, cx, cy):
-    """One clip centred at (cx, cy): a raised pad per screw with a heat-set insert bore from the underside."""
+def clip_holes(part, cx, cy, across="y"):
+    """One clip centred at (cx, cy): a raised pad per screw with a heat-set insert bore from the underside.
+    `across` = the plate axis that runs across the rail (the clip's two holes lie along it)."""
     for sgn in (-1, 1):
-        y = cy + sgn * CLIP["pitch"] / 2
-        part += Pos(cx, y, PAD_H / 2) * Cylinder(PAD_D / 2, PAD_H)
-        part -= Pos(cx, y, INS_DEPTH / 2 - 0.5) * Cylinder(INS_BORE / 2, INS_DEPTH + 1)
-        part -= Pos(cx, y, PAD_H / 2) * Cylinder(M3 / 2, PAD_H + 2)      # a longer screw runs on through
+        x, y = (cx, cy + sgn * CLIP["pitch"] / 2) if across == "y" else (cx + sgn * CLIP["pitch"] / 2, cy)
+        part += Pos(x, y, PAD_H / 2) * Cylinder(PAD_D / 2, PAD_H)
+        part -= Pos(x, y, INS_DEPTH / 2 - 0.5) * Cylinder(INS_BORE / 2, INS_DEPTH + 1)
+        part -= Pos(x, y, PAD_H / 2) * Cylinder(M3 / 2, PAD_H + 2)      # a longer screw runs on through
     return part
 
 
@@ -116,19 +118,19 @@ def tb6600_plate():
 
 def board_plate():
     hx, hy = BOARD["holes"][0] / 2, BOARD["holes"][1] / 2
-    pw, pl = BOARD["pcb"][0] + 5, BOARD["pcb"][1] + 6
-    cy = BOARD_CLIP_DY
+    px, cy = CLIP["pitch"] / 2, BOARD_CLIP_Y
     bosses = [(sx * hx, sy * hy) for sx in (-1, 1) for sy in (-1, 1)]
-    pads = [(sx * BOARD_CLIP_X, cy + sy * CLIP["pitch"] / 2) for sx in (-1, 1) for sy in (-1, 1)]
+    pads = [(sx * px, sy * cy) for sx in (-1, 1) for sy in (-1, 1)]
     frame = [Point(p).buffer(BOSS_D / 2 + 1.5) for p in bosses] + [Point(p).buffer(PAD_D / 2 + 1.5) for p in pads]
-    for sx in (-1, 1):
-        frame.append(strut((sx * BOARD_CLIP_X, cy - CLIP["pitch"] / 2), (sx * BOARD_CLIP_X, cy + CLIP["pitch"] / 2), bend=sx * 6, w=8))   # along each clip
-        frame.append(strut((sx * hx, -hy), (sx * BOARD_CLIP_X, cy - CLIP["pitch"] / 2), bend=sx * 3, w=7))                        # boss -> pad
-        frame.append(strut((sx * hx, hy), (sx * BOARD_CLIP_X, cy + CLIP["pitch"] / 2), bend=-sx * 3, w=7))
     for sy in (-1, 1):
-        frame.append(strut((-hx, sy * hy), (hx, sy * hy), bend=-sy * 10, w=6))                                             # end ties, bowed in
-    frame.append(strut((-BOARD_CLIP_X, cy - CLIP["pitch"] / 2), (BOARD_CLIP_X, cy + CLIP["pitch"] / 2), bend=10, w=6))     # one sweeping brace
-    frame.append(strut((-BOARD_CLIP_X, cy + CLIP["pitch"] / 2), (BOARD_CLIP_X, cy - CLIP["pitch"] / 2), bend=10, w=6))
+        frame.append(strut((-px, sy * cy), (px, sy * cy), bend=-sy * 5, w=8))                       # across each clip
+        frame.append(strut((-hx, sy * hy), (hx, sy * hy), bend=-sy * 10, w=6))                      # end ties, bowed in
+    for sx in (-1, 1):
+        frame.append(strut((sx * px, -cy), (sx * px, cy), bend=-sx * 6, w=7))                       # between the clips
+        for sy in (-1, 1):
+            frame.append(strut((sx * hx, sy * hy), (sx * px, sy * cy), bend=sx * sy * 3, w=7))      # boss -> pad
+    frame.append(strut((-px, -cy), (px, cy), bend=8, w=6))                                           # sweeping braces
+    frame.append(strut((-px, cy), (px, -cy), bend=8, w=6))
     part = slab(organic(frame, 5.0), 0, BOARD_T)
     for sx in (-1, 1):
         for sy in (-1, 1):
@@ -137,8 +139,8 @@ def board_plate():
             top = BOARD_T + BOSS_H
             part -= Pos(x, y, top - INS_DEPTH / 2 + 0.01) * Cylinder(INS_BORE / 2, INS_DEPTH + 0.02)
             part -= Pos(x, y, top / 2) * Cylinder(M3 / 2, top + 2)
-    for sx in (-1, 1):
-        part = clip_holes(part, sx * BOARD_CLIP_X, BOARD_CLIP_DY)
+    for sy in (-1, 1):
+        part = clip_holes(part, 0.0, sy * cy, across="x")
     return part
 
 
@@ -157,8 +159,9 @@ def preview(parts, path):
         col = [(0.12 * l + 0.05, 0.13 * l + 0.05, 0.15 * l + 0.06) for l in light]
         pc = Poly3DCollection(m.triangles, facecolors=[(0.25 + 0.6 * l * 0.6,) * 3 for l in light], linewidths=0)
         ax.add_collection3d(pc)
-        for cx, cy in clips:   # bought clip, ghosted under the plate
-            b = trimesh.creation.box((CLIP["w"], CLIP["l"], 10), transform=trimesh.transformations.translation_matrix((cx, cy, -5)))
+        for cx, cy, rot in clips:   # bought clip, ghosted under the plate
+            dims = (CLIP["l"], CLIP["w"], 10) if rot else (CLIP["w"], CLIP["l"], 10)
+            b = trimesh.creation.box(dims, transform=trimesh.transformations.translation_matrix((cx, cy, -5)))
             ax.add_collection3d(Poly3DCollection(b.triangles, facecolors=(0.47, 0.75, 0.94, 0.35), linewidths=0))
         lo, hi = m.bounds
         c = (lo + hi) / 2
@@ -211,8 +214,8 @@ def main():
     dxf("tb6600_plate", [(1.5, "base frame"), (6.0, "seat ribs and insert bores"), (20.0, "flange posts")],
         side=(-2.5, "post face, slots and nut channel"))
     dxf("board_plate", [(2.0, "frame and insert bores"), (10.0, "bosses (float holes)")])
-    preview([("tb6600_plate", tb, [(TB["w"] / 2, 0)]),
-             ("board_plate", bd, [(-BOARD_CLIP_X, BOARD_CLIP_DY), (BOARD_CLIP_X, BOARD_CLIP_DY)])],
+    preview([("tb6600_plate", tb, [(TB["w"] / 2, 0, False)]),
+             ("board_plate", bd, [(0, -BOARD_CLIP_Y, True), (0, BOARD_CLIP_Y, True)])],
             OUT / "preview.png")
 
 
