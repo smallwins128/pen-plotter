@@ -34,7 +34,7 @@ th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-sp
 <main>
 <header style="display:grid;gap:8px">
 <h1>Bench board</h1>
-<p class="sub">The black 12 mm panel (1829 × 914) behind the LINNMON, hung on the clip pairs. Everything sits above the bench top (750). Two orientations drawn to scale on wall C; heights are from the floor in mm. Reach bands are estimates for a seated person.</p>
+<p class="sub">The black 12 mm panel (1829 × 914) behind the LINNMON. Drawn to scale on wall C; heights are from the floor in mm. Reach bands are estimates for a seated person.</p>
 <div class="key">
 <span><i style="background:var(--pwr)"></i>220 V</span><span><i style="background:var(--dc)"></i>12 V / light</span>
 <span><i style="background:var(--sk)"></i>SKÅDIS</span><span><i style="background:var(--bin)"></i>grey bins</span>
@@ -43,15 +43,9 @@ th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-sp
 </header>
 
 <section>
-<h2>A · Landscape <span class="tag rec">recommended</span></h2>
-<p class="sub">1829 wide × 914 tall, from 770 to 1684. Everything is inside seated reach. It runs past the bench over the folding table, so rack A comes off the table: its job was holding the bins, and the bins now live on the board.</p>
-<div class="fig"><svg id="optA" viewBox="0 0 980 560" role="img" aria-label="Landscape board on wall C: power band along the bottom, 12 grey bins left, SKÅDIS centre, solder and sewing zones right, light shelf along the top"></svg></div>
-</section>
-
-<section>
-<h2>B · Portrait</h2>
-<p class="sub">914 wide × 1829 tall, from 770 to 2599. Fits behind the bench alone and keeps rack A where it is, but the top half sits above seated reach.</p>
-<div class="fig"><svg id="optB" viewBox="0 0 980 760" role="img" aria-label="Portrait board on wall C: power band, SKÅDIS, bins above it, light shelf, and a high zone for rarely used things"></svg></div>
+<h2>Portrait, standing on the floor</h2>
+<p class="sub">914 wide × 1829 tall, standing on the floor behind the LINNMON and held to the wall by the clip pairs; the floor takes the weight. The bottom 750 hides behind the bench, so it carries the power gear and cable runs. Everything you use sits in the 1080 above the bench top. (Landscape was considered and dropped: it would hang off the wall instead of standing on the floor.)</p>
+<div class="fig"><svg id="optA" viewBox="0 0 980 700" role="img" aria-label="Portrait board standing on the floor behind the bench: hidden power zone below the bench top, power band, SKÅDIS, grey bins and solder zone, light shelf at the top"></svg></div>
 </section>
 
 <section class="two">
@@ -62,15 +56,17 @@ th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-sp
 <li><b>Two 35 mm grommets</b> just above the power band, one each side of the SKÅDIS. Cables go behind the board there and run in the gap the clips leave.</li>
 <li><b>One 10 mm hole</b> beside the light shelf for the 12 V lead, so the light wire stays hidden.</li>
 <li><b>32 mm grid zones</b> (dotted): beside and above the bins and around the solder zone. Drill on demand through the offcut jig; paint is on now, so tape each spot first.</li>
-<li><b>Keep holes clear</b> of the clip rows on the back (two rows, marked ⊓ on the drawings).</li>
+<li><b>Keep holes clear</b> of the clip rows on the back (two rows, marked ⊓).</li>
+<li><b>Skirting:</b> the board stands in front of it, so the wall-side clips need packing at least as thick as the skirting, or the board leans out at the top. Measure the skirting depth.</li>
 </ul>
 </div>
 <div>
 <h2>What sits where</h2>
 <ul>
-<li><b>Power band</b> (bottom 130): main strip with master switch, PD charger, fuse block and two DC jacks.</li>
-<li><b>Bins</b>: 3 rows of 4, smallest sizes left, as on the labels.</li>
-<li><b>SKÅDIS</b>: the hands zone. Pliers, cutters, strippers, tweezers, screwdrivers.</li>
+<li><b>Hidden zone</b> (0 to 700, behind the bench): 12 V brick, cable tie-down row, spare cable loops. Out of sight and out of the way.</li>
+<li><b>Power band</b> (770 to 900): main strip with master switch, PD charger, fuse block and two DC jacks.</li>
+<li><b>Bins</b> (1520 to 1770): 3 rows of 4, smallest sizes left, as on the labels. Just above seated reach: lean in or stand.</li>
+<li><b>SKÅDIS</b> (930 to 1490): the hands zone, all inside seated reach. Pliers, cutters, strippers, tweezers, screwdrivers.</li>
 <li><b>Solder zone</b>: solder reel and wick on a dowel, flux, magnetic bar for small steel tools. Fume fan stands on the bench below it.</li>
 <li><b>Light shelf</b>: one freed panel strip (912 × 150) as a shelf, the 12 V Beacon bar under its front edge.</li>
 </ul>
@@ -110,84 +106,58 @@ function option(id,S,W0,W1,H1,FY,board,items){
  [[1500,"seated reach ≈1500"],[2000,"standing reach ≈2000"]].filter(([h])=>h<H1).forEach(([h,t])=>{
   el('line',{x1:X(W0),y1:Y(h),x2:X(W1),y2:Y(h),stroke:c('mute'),'stroke-dasharray':'2 4'});
   T(X(W1)-4,Y(h)-4,t,{'text-anchor':'end','font-size':9,fill:c('mute')});});
+ // board first: furniture stands in front of it
+ const [bx,by,bw,bh]=board,B=(x0,y0,x1,y1,o)=>R(bx+x0,by+y0,bx+x1,by+y1,o),BT=(x,y,t,o)=>T(X(bx+x),Y(by+y),t,o);
+ B(0,0,bw,bh,{fill:c('board'),stroke:c('ink'),'stroke-width':1.5});
+ items({B,BT,el,X,Y,bx,by,S,c});
  // furniture: desk end, bench, folding table, switches
  R(W0,720,800,750,{fill:c('card'),stroke:c('ink')});T(X((W0+800)/2),Y(720)+12,"desk end",{'font-size':9,fill:c('mute')});
- R(800,710,2000,750,{fill:c('wood'),stroke:c('ink')});[840,1960].forEach(x=>el('line',{x1:X(x),y1:Y(710),x2:X(x),y2:FY,stroke:c('ink'),'stroke-width':2}));
+ R(800,710,2000,750,{fill:c('wood'),stroke:c('ink')});R(800,0,2000,710,{fill:c('card'),opacity:.35});[840,1960].forEach(x=>el('line',{x1:X(x),y1:Y(710),x2:X(x),y2:FY,stroke:c('ink'),'stroke-width':2}));
  T(X(1400),Y(710)+13,"LINNMON 120 × 60 · top 750",{'font-size':9,'font-weight':500});
  R(2040,720,2950,750,{fill:c('card'),stroke:c('ink')});T(X(2500),Y(720)+12,"folding table",{'font-size':9,fill:c('mute')});
  R(2680,1100,2920,1280,{fill:c('card'),stroke:c('warn')});T(X(2800),Y(1280)-5,"switches",{'font-size':9,fill:c('warn')});
  R(2720,220,2840,320,{fill:c('pwr'),stroke:c('ink')});T(X(2780),Y(320)-5,"wall 6 A",{'font-size':9,fill:c('pwr')});
  if(W1>3000){R(3000,0,W1,2050,{fill:c('mute'),opacity:.25});T(X((3000+W1)/2),Y(1000),"door",{'font-size':9,fill:c('mute')});}
- // board
- const [bx,by,bw,bh]=board,B=(x0,y0,x1,y1,o)=>R(bx+x0,by+y0,bx+x1,by+y1,o),BT=(x,y,t,o)=>T(X(bx+x),Y(by+y),t,o);
- B(0,0,bw,bh,{fill:c('board'),stroke:c('ink'),'stroke-width':1.5});
-  items({B,BT,el,X,Y,bx,by,S,c});
  // dims
- T(X(bx+bw/2),Y(by+bh)-6,`panel ${by} → ${by+bh} from floor`,{'font-size':9,fill:c('mute')});
  return{B,BT};
 }
 function grid(ctx,x0,y0,x1,y1){const{el,X,Y,bx,by,S}=ctx;for(let x=x0;x<=x1;x+=32)for(let y=y0;y<=y1;y+=32)el('circle',{cx:X(bx+x),cy:Y(by+y),r:Math.max(.7,2.5*S),fill:c('grid')});}
 function bins(ctx,x0,y0){const{B,BT}=ctx;for(let r=0;r<3;r++)for(let k=0;k<4;k++){B(x0+k*108,y0+r*85,x0+k*108+100,y0+r*85+75,{fill:c('bin'),stroke:c('boardtx'),'stroke-width':.6});}
- BT(x0+212,y0+262,"12 GREY BINS · 3 × 4",{'font-size':9,fill:c('boardtx'),'font-weight':500});}
+}
 function clipRow(ctx,y,xs){const{BT}=ctx;xs.forEach(x=>BT(x,y,"⊓",{'font-size':11,fill:c('mute')}));}
 
-// A: landscape, panel 1829 wide, x 600 → 2429, bottom 770
-option('optA',0.3,0,3100,1780,540,[600,770,1829,914],ctx=>{
- const{B,BT}=ctx;
+// portrait on the floor, panel 914 wide, x 943 → 1857, centred on the bench
+option('optA',0.3,0,3100,2150,670,[943,0,914,1829],ctx=>{
+ const{B,BT,el,X,Y,bx,by,S}=ctx;
+ // hidden zone behind the bench
+ B(20,40,894,700,{fill:'none',stroke:c('mute'),'stroke-dasharray':'3 4'});
+ BT(457,600,"HIDDEN BEHIND THE BENCH",{'font-size':9,fill:c('boardtx'),'font-weight':500});
+ B(560,420,840,500,{fill:c('dc')});BT(700,455,"12 V brick",{'font-size':8,fill:c('card')});
+ B(60,300,840,310,{fill:c('mute')});BT(300,285,"cable tie-down row",{'font-size':8,fill:c('boardtx')});
  // power band
- B(40,15,1789,135,{fill:'none',stroke:c('pwr'),'stroke-dasharray':'4 3'});
- B(60,35,470,95,{fill:c('pwr')});BT(265,57,"MAIN STRIP · master",{'font-size':9,fill:c('card')});
- B(490,35,550,95,{fill:c('dc')});BT(520,105,"PD",{'font-size':8,fill:c('boardtx')});
- B(1350,35,1530,95,{fill:c('dc')});BT(1440,57,"FUSE 12 V",{'font-size':9,fill:c('card')});
- [1560,1610].forEach(x=>{const{el,X,Y,bx,by}=ctx;el('circle',{cx:X(bx+x),cy:Y(by+65),r:5,fill:'none',stroke:c('dc'),'stroke-width':2});});
- BT(1585,105,"DC",{'font-size':8,fill:c('boardtx')});
- // grommets
- [[580,175],[1330,175]].forEach(([x,y])=>{const{el,X,Y,bx,by,S}=ctx;el('circle',{cx:X(bx+x),cy:Y(by+y),r:17.5*S,fill:c('bg'),stroke:c('boardtx')});});
- BT(580,215,"⌀35",{'font-size':8,fill:c('boardtx')});BT(1330,215,"⌀35",{'font-size':8,fill:c('boardtx')});
- // bins left
- bins(ctx,60,165);
- // SKÅDIS centre
- B(620,170,1290-0+90,730,{fill:c('sk')});
- BT(1000,690,"SKÅDIS 760 × 560",{'font-size':10,'font-weight':500});
- BT(1000,450,"pliers · cutters · strippers",{'font-size':9});BT(1000,430,"tweezers · drivers · hex keys",{'font-size':9});
- // solder zone right
- B(1420,170,1790,560,{fill:'none',stroke:c('sol'),'stroke-width':1.5});
- BT(1605,535,"SOLDER + ELECTRONICS",{'font-size':9,fill:c('sol'),'font-weight':500});
- B(1450,460,1760,475,{fill:c('mute')});BT(1605,445,"magnetic bar",{'font-size':8,fill:c('boardtx')});
- B(1450,360,1760,368,{fill:c('wood')});[1500,1580,1660].forEach(x=>{const{el,X,Y,bx,by,S}=ctx;el('circle',{cx:X(bx+x),cy:Y(by+380),r:30*S,fill:'none',stroke:c('sol'),'stroke-width':2});});
- BT(1605,330,"dowel: solder · wick · tape",{'font-size':8,fill:c('boardtx')});
- BT(1605,230,"glue gun + iron holsters",{'font-size':8,fill:c('boardtx')});
- // sewing + art pins above bins
- grid(ctx,60,440,480,560);BT(270,580,"SEWING · thread on pins",{'font-size':9,fill:c('sew'),'font-weight':500});
- // clip strip
- B(60,620,480,640,{fill:c('wood')});BT(270,655,"clip strip · now building",{'font-size':9,fill:c('art'),'font-weight':500});
- // grid zone right of solder
- grid(ctx,1420,590,1790,720);BT(1605,580,"grid · pins",{'font-size':8,fill:c('boardtx')});
- // light shelf
- B(458,760,1370,790,{fill:c('wood')});B(764,735,1064,755,{fill:c('dc')});
- BT(914,812,"LIGHT SHELF 912 × 150 · Beacon 12 V under it",{'font-size':9,fill:c('boardtx'),'font-weight':500});
+ B(20,770,894,900,{fill:'none',stroke:c('pwr'),'stroke-dasharray':'4 3'});
+ B(40,790,450,850,{fill:c('pwr')});BT(245,812,"MAIN STRIP · master",{'font-size':9,fill:c('card')});
+ B(470,790,530,850,{fill:c('dc')});BT(500,870,"PD",{'font-size':8,fill:c('boardtx')});
+ B(600,790,780,850,{fill:c('dc')});BT(690,812,"FUSE 12 V",{'font-size':9,fill:c('card')});
+ [810,850].forEach(x=>el('circle',{cx:X(bx+x),cy:Y(by+820),r:4,fill:'none',stroke:c('dc'),'stroke-width':2}));
+ [[40,915],[874,915]].forEach(([x,y])=>el('circle',{cx:X(bx+x),cy:Y(by+y),r:17.5*S,fill:c('bg'),stroke:c('boardtx')}));
+ // SKÅDIS
+ B(77,930,837,1490,{fill:c('sk')});BT(457,1460,"SKÅDIS 760 × 560",{'font-size':10,'font-weight':500});
+ BT(457,1220,"pliers · cutters · strippers",{'font-size':9});BT(457,1200,"tweezers · drivers · hex keys",{'font-size':9});
+ grid(ctx,12,960,60,1460);grid(ctx,860,960,900,1460);
+ // bins left, solder right
+ bins(ctx,20,1520);
+ B(470,1520,894,1770,{fill:'none',stroke:c('sol'),'stroke-width':1.5});
+ BT(682,1745,"SOLDER + SEWING",{'font-size':9,fill:c('sol'),'font-weight':500});
+ B(490,1680,874,1692,{fill:c('mute')});BT(682,1665,"magnetic bar",{'font-size':8,fill:c('boardtx')});
+ B(490,1600,874,1606,{fill:c('wood')});[540,610,680].forEach(x=>el('circle',{cx:X(bx+x),cy:Y(by+1615),r:26*S,fill:'none',stroke:c('sol'),'stroke-width':2}));
+ BT(760,1620,"dowel",{'font-size':8,fill:c('boardtx')});
+ grid(ctx,490,1530,874,1580);BT(682,1540,"thread pins",{'font-size':8,fill:c('sew')});
+ // light shelf at the top
+ B(1,1785,913,1815,{fill:c('wood')});B(307,1762,607,1780,{fill:c('dc')});
+ BT(457,1835,"LIGHT SHELF · Beacon 12 V under it",{'font-size':9,fill:c('ink')});
  // clip rows on the back
- clipRow(ctx,300,[200,700,1130,1630]);clipRow(ctx,850,[200,700,1130,1630]);
-});
-
-// B: portrait, panel 914 wide, x 943 → 1857, bottom 770
-option('optB',0.255,0,3100,2800,730,[943,770,914,1829],ctx=>{
- const{B,BT}=ctx;
- B(20,15,894,135,{fill:'none',stroke:c('pwr'),'stroke-dasharray':'4 3'});
- B(40,35,450,95,{fill:c('pwr')});BT(245,57,"MAIN STRIP",{'font-size':9,fill:c('card')});
- B(470,35,530,95,{fill:c('dc')});B(620,35,800,95,{fill:c('dc')});BT(710,57,"FUSE 12 V",{'font-size':9,fill:c('card')});
- [[40,175],[874,175]].forEach(([x,y])=>{const{el,X,Y,bx,by,S}=ctx;el('circle',{cx:X(bx+x),cy:Y(by+y),r:17.5*S,fill:c('bg'),stroke:c('boardtx')});});
- B(77,200,837,760,{fill:c('sk')});BT(457,720,"SKÅDIS 760 × 560",{'font-size':10,'font-weight':500});
- BT(457,480,"hands zone",{'font-size':9});
- bins(ctx,20,800);
- B(480,800,894,1050,{fill:'none',stroke:c('sol'),'stroke-width':1.5});BT(687,1020,"SOLDER",{'font-size':9,fill:c('sol'),'font-weight':500});
- B(500,900,870,912,{fill:c('mute')});B(500,850,870,856,{fill:c('wood')});
- B(1,1090,913,1120,{fill:c('wood')});B(307,1065,607,1085,{fill:c('dc')});
- BT(457,1140,"LIGHT SHELF · Beacon under it",{'font-size':9,fill:c('boardtx')});
- grid(ctx,40,1180,874,1500);BT(457,1520,"SEWING + ART · pins, spools, tape rolls",{'font-size':9,fill:c('sew'),'font-weight':500});
- BT(457,1640,"ABOVE REACH · spares, paper roll,",{'font-size':9,fill:c('boardtx')});
- BT(457,1620,"overhead camera arm",{'font-size':9,fill:c('boardtx')});
- clipRow(ctx,400,[150,457,764]);clipRow(ctx,1400,[150,457,764]);
+ clipRow(ctx,1000,[150,457,764]);clipRow(ctx,1720,[150,457,764]);
 });
 })();
 </script>
