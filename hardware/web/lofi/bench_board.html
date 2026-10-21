@@ -34,7 +34,7 @@ th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-sp
 <main>
 <header style="display:grid;gap:8px">
 <h1>Bench board</h1>
-<p class="sub">The black 12 mm panel (1829 × 914) behind the LINNMON. Drawn to scale on wall C; heights are from the floor in mm. Reach bands are estimates for a seated person.</p>
+<p class="sub">The black 12 mm panel (1829 × 914) behind the LINNMON. Drawn to scale on wall C; heights are from the floor in mm. Reach lines are estimates for a 163 cm person reaching across the 60 cm bench; tape-test them (see below).</p>
 <div class="key">
 <span><i style="background:var(--pwr)"></i>220 V</span><span><i style="background:var(--dc)"></i>12 V / light</span>
 <span><i style="background:var(--sk)"></i>SKÅDIS</span><span><i style="background:var(--bin)"></i>grey bins</span>
@@ -65,9 +65,10 @@ th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-sp
 <ul>
 <li><b>Hidden zone</b> (0 to 700, behind the bench): 12 V brick, cable tie-down row, spare cable loops. Out of sight and out of the way.</li>
 <li><b>Power band</b> (770 to 900): main strip with master switch, PD charger, fuse block and two DC jacks.</li>
-<li><b>Bins</b> (1520 to 1770): 3 rows of 4, smallest sizes left, as on the labels. Just above seated reach: lean in or stand.</li>
-<li><b>SKÅDIS</b> (930 to 1490): the hands zone, all inside seated reach. Pliers, cutters, strippers, tweezers, screwdrivers.</li>
-<li><b>Solder zone</b>: solder reel and wick on a dowel, flux, magnetic bar for small steel tools. Fume fan stands on the bench below it.</li>
+<li><b>Bins</b> (940 to 1105): two hook-lip rails of six, smallest sizes left. Low, because you lift and tip them out: they need the easiest reach.</li>
+<li><b>SKÅDIS</b> (1140 to 1700): hand tools on hooks, which are easy to grab by the handle. Daily tools on the lower half, less-used ones higher.</li>
+<li><b>Solder bits</b>: magnetic bar and a solder and tape dowel on the SKÅDIS. Fume fan stands on the bench.</li>
+<li><b>Tape test before drilling:</b> sit at the bench and reach to the wall; tape where your grip stays comfortable. Stand and do the same. Shift the zones to your two tape marks.</li>
 <li><b>Light shelf</b>: one freed panel strip (912 × 150) as a shelf, the 12 V Beacon bar under its front edge.</li>
 </ul>
 </div>
@@ -103,13 +104,11 @@ function option(id,S,W0,W1,H1,FY,board,items){
  R(W0,0,W1,H1,{fill:c('wall')});
  el('line',{x1:X(W0),y1:FY,x2:X(W1),y2:FY,stroke:c('ink'),'stroke-width':2});
  // reach bands (estimates)
- [[1500,"seated reach ≈1500"],[2000,"standing reach ≈2000"]].filter(([h])=>h<H1).forEach(([h,t])=>{
-  el('line',{x1:X(W0),y1:Y(h),x2:X(W1),y2:Y(h),stroke:c('mute'),'stroke-dasharray':'2 4'});
-  T(X(W1)-4,Y(h)-4,t,{'text-anchor':'end','font-size':9,fill:c('mute')});});
+
  // board first: furniture stands in front of it
  const [bx,by,bw,bh]=board,B=(x0,y0,x1,y1,o)=>R(bx+x0,by+y0,bx+x1,by+y1,o),BT=(x,y,t,o)=>T(X(bx+x),Y(by+y),t,o);
  B(0,0,bw,bh,{fill:c('board'),stroke:c('ink'),'stroke-width':1.5});
- items({B,BT,el,X,Y,bx,by,S,c});
+ items({B,BT,T,el,X,Y,bx,by,S,c});
  // furniture: desk end, bench, folding table, switches
  R(W0,720,800,750,{fill:c('card'),stroke:c('ink')});T(X((W0+800)/2),Y(720)+12,"desk end",{'font-size':9,fill:c('mute')});
  R(800,710,2000,750,{fill:c('wood'),stroke:c('ink')});R(800,0,2000,710,{fill:c('card'),opacity:.35});[840,1960].forEach(x=>el('line',{x1:X(x),y1:Y(710),x2:X(x),y2:FY,stroke:c('ink'),'stroke-width':2}));
@@ -128,7 +127,7 @@ function clipRow(ctx,y,xs){const{BT}=ctx;xs.forEach(x=>BT(x,y,"⊓",{'font-size'
 
 // portrait on the floor, panel 914 wide, x 943 → 1857, centred on the bench
 option('optA',0.3,0,3100,2150,670,[943,0,914,1829],ctx=>{
- const{B,BT,el,X,Y,bx,by,S}=ctx;
+ const{B,BT,T,el,X,Y,bx,by,S}=ctx,bw=914;
  // hidden zone behind the bench
  B(20,40,894,700,{fill:'none',stroke:c('mute'),'stroke-dasharray':'3 4'});
  BT(457,600,"HIDDEN BEHIND THE BENCH",{'font-size':9,fill:c('boardtx'),'font-weight':500});
@@ -141,18 +140,23 @@ option('optA',0.3,0,3100,2150,670,[943,0,914,1829],ctx=>{
  B(600,790,780,850,{fill:c('dc')});BT(690,812,"FUSE 12 V",{'font-size':9,fill:c('card')});
  [810,850].forEach(x=>el('circle',{cx:X(bx+x),cy:Y(by+820),r:4,fill:'none',stroke:c('dc'),'stroke-width':2}));
  [[40,915],[874,915]].forEach(([x,y])=>el('circle',{cx:X(bx+x),cy:Y(by+y),r:17.5*S,fill:c('bg'),stroke:c('boardtx')}));
- // SKÅDIS
- B(77,930,837,1490,{fill:c('sk')});BT(457,1460,"SKÅDIS 760 × 560",{'font-size':10,'font-weight':500});
- BT(457,1220,"pliers · cutters · strippers",{'font-size':9});BT(457,1200,"tweezers · drivers · hex keys",{'font-size':9});
- grid(ctx,12,960,60,1460);grid(ctx,860,960,900,1460);
- // bins left, solder right
- bins(ctx,20,1520);
- B(470,1520,894,1770,{fill:'none',stroke:c('sol'),'stroke-width':1.5});
- BT(682,1745,"SOLDER + SEWING",{'font-size':9,fill:c('sol'),'font-weight':500});
- B(490,1680,874,1692,{fill:c('mute')});BT(682,1665,"magnetic bar",{'font-size':8,fill:c('boardtx')});
- B(490,1600,874,1606,{fill:c('wood')});[540,610,680].forEach(x=>el('circle',{cx:X(bx+x),cy:Y(by+1615),r:26*S,fill:'none',stroke:c('sol'),'stroke-width':2}));
- BT(760,1620,"dowel",{'font-size':8,fill:c('boardtx')});
- grid(ctx,490,1530,874,1580);BT(682,1540,"thread pins",{'font-size':8,fill:c('sew')});
+ // bins low, in the easy reach band: two hook-lip rails of six
+ for(let r=0;r<2;r++)for(let k=0;k<6;k++)B(137+k*108,940+r*90,137+k*108+100,940+r*90+75,{fill:c('bin'),stroke:c('boardtx'),'stroke-width':.6});
+ [1015,1105].forEach(y=>B(130,y,784,y+6,{fill:c('mute')}));
+ BT(457,1122,"hook-lip rails",{'font-size':8,fill:c('boardtx')});
+ grid(ctx,20,940,110,1100);BT(65,925,"thread",{'font-size':8,fill:c('sew')});
+ grid(ctx,804,940,894,1100);BT(849,925,"pins",{'font-size':8,fill:c('boardtx')});
+ // SKÅDIS above: most-used tools on its lower half
+ B(77,1140,837,1700,{fill:c('sk')});BT(457,1670,"SKÅDIS 760 × 560",{'font-size':10,'font-weight':500});
+ BT(457,1560,"top half: less-used tools",{'font-size':9});
+ BT(457,1300,"pliers · cutters · strippers",{'font-size':9});BT(457,1280,"tweezers · drivers · hex keys",{'font-size':9});
+ BT(457,1240,"magnetic bar · solder + tape dowel",{'font-size':9});
+ grid(ctx,12,1160,60,1680);grid(ctx,860,1160,900,1680);
+ // estimated comfortable reach for 163 cm, over a 60 cm deep bench
+ el('line',{x1:X(bx-60),y1:Y(1250),x2:X(bx+bw+60),y2:Y(1250),stroke:c('ok'),'stroke-width':1.5,'stroke-dasharray':'6 3'});
+ T(X(bx-64),Y(1250)+3,"easy seated ≈1250",{'text-anchor':'end','font-size':9,fill:c('ok')});
+ el('line',{x1:X(bx-60),y1:Y(1650),x2:X(bx+bw+60),y2:Y(1650),stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'6 3'});
+ T(X(bx-64),Y(1650)+3,"limit standing ≈1650",{'text-anchor':'end','font-size':9,fill:c('warn')});
  // light shelf at the top
  B(1,1785,913,1815,{fill:c('wood')});B(307,1762,607,1780,{fill:c('dc')});
  BT(457,1835,"LIGHT SHELF · Beacon 12 V under it",{'font-size':9,fill:c('ink')});
