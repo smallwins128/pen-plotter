@@ -43,10 +43,26 @@ def panel():
     return R.panel(outline, opening, screws, holes), outline, (nx, ny, len(holes))
 
 
+def slot_meshes(stl):
+    """The panel placed on each window for the inspector: wall frame u, v (window centre), w out of the steel."""
+    import numpy as np
+    import trimesh
+    m = trimesh.load(stl)
+    wins = {"control": E.ctrl_window()[0]}
+    wins["power_left"], wins["power_right"] = (w[0] for w in E.window_panes())
+    for k, poly in wins.items():
+        c = poly.centroid
+        mm = m.copy()
+        mm.vertices = np.column_stack([mm.vertices[:, 0] + c.x, mm.vertices[:, 1] + c.y, R.PLATE_T - mm.vertices[:, 2]])
+        mm.invert()                                       # the w flip mirrors the mesh; keep normals outward
+        mm.export(OUT / f"meccano_{k}.stl")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     p, outline, (nx, ny, n) = panel()
     export_stl(p, str(OUT / "window_meccano.stl"))
+    slot_meshes(OUT / "window_meccano.stl")
     bb = p.bounding_box()
     print(f"window_meccano: {bb.size.X:.1f} x {bb.size.Y:.1f} x {bb.size.Z:.1f} mm, {n} Meccano holes ({nx} x {ny}), {p.volume / 1000:.1f} cm3")
 

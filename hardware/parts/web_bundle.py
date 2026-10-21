@@ -1,6 +1,6 @@
 """Pack the window-insert STLs into one small binary for the enclosure inspector.
 
-    python3 hardware/parts/web_bundle.py      # after window_inserts.py
+    python3 hardware/parts/web_bundle.py      # after window_meccano.py (and window_inserts.py for the logo)
 
 Layout of hardware/web/window_inserts.b64.txt (base64 of): uint32 header length, JSON header (padded to 4 bytes),
 then per part: int16 xyz in 0.01 mm (shared vertices) and uint32 triangle indices.
@@ -16,12 +16,15 @@ import trimesh
 
 HW = pathlib.Path(__file__).resolve().parent.parent
 SRC, DST = HW / "out" / "window_inserts", HW / "web" / "window_inserts.b64.txt"   # base64 text: artifacts serve no raw binary
+# 2026-10-21: the window inserts are the Meccano panels (window_meccano.py); the magnet / acrylic / card / relief / pen
+# designs are retired. The logo mount stays.
+FILES = sorted((HW / "out" / "window_meccano").glob("meccano_*.stl")) + sorted(SRC.glob("logo_*.stl"))
 Q = 100.0   # 0.01 mm steps; ±327 mm fits int16
 
 
 def main():
     head, blobs, off = [], [], 0
-    for f in sorted(SRC.glob("*.stl")):
+    for f in FILES:
         m = trimesh.load(f)
         m.merge_vertices()
         v = np.round(m.vertices * Q).astype(np.int16).tobytes()
@@ -31,7 +34,7 @@ def main():
         off += len(v) + len(i)
         if off % 4:
             blobs.append(b"\0" * (4 - off % 4)); off += 4 - off % 4
-    meta = json.loads((SRC / "meta.json").read_text()) if (SRC / "meta.json").exists() else {}
+    meta = {}
     h = json.dumps(dict(q=Q, parts=head, **meta)).encode()
     h += b" " * (-len(h) % 4)
     DST.write_bytes(base64.b64encode(struct.pack("<I", len(h)) + h + b"".join(blobs)))

@@ -436,10 +436,7 @@ function buildBox(kind) {
     const slot = new THREE.Group(); slot.position.z = D/2 + t;       // insert frame: w = 0 on the steel's outer face
     slot.userData = { slot: WSLOT[i], opt: {} };
     const shape = pts => { const sh = new THREE.Shape(); pts.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath(); return sh; };
-    for (const o of ["fixed", "none", "acrylic", "relief", "card", "pen"]) { const g = new THREE.Group(); g.visible = false; slot.userData.opt[o] = g; slot.add(g); }
-    const ac = new THREE.Mesh(new THREE.ExtrudeGeometry(shape(w.acrylic), { depth: 3, bevelEnabled: false }), M.acrylic);
-    ac.position.z = 3.55; ac.userData = { name: "Window acrylic, 3 mm clear", info: "Opening + 3 mm all round. Sits on the bolted bezel, in a pocket in the back of the acrylic panel." };
-    slot.userData.opt.acrylic.add(ac);
+    for (const o of ["meccano", "open"]) { const g = new THREE.Group(); g.visible = false; slot.userData.opt[o] = g; slot.add(g); }
     panels.add(slot); INSERT_SLOTS.push(slot);
   });
   for (const q of GEN.panels[kind]) {
@@ -578,17 +575,12 @@ const STEEL = new Set(["body", "lid", "lip", "tab"].map(n => M[n]));   // the la
 toggle("t-steel", on => [power, control].forEach(b => b.traverse(o => { if (o.isMesh) o.visible = !on || STEEL.has(o.material); })));
 toggle("t-xray", on => SHELL.forEach(n => { M[n].transparent = on; M[n].opacity = on ? 0.22 : 1; M[n].depthWrite = !on; M[n].needsUpdate = true; }));
 
-// ---------- window inserts: options per window, meshes from window_inserts.bin ----------
-const INS_OPTS = { power_left: ["fixed", "none", "acrylic", "card", "relief", "pen"], power_right: ["fixed", "none", "acrylic", "card", "relief", "pen"], control: ["fixed", "none", "acrylic", "card", "relief", "pen"] };
-const INS_LABEL = { fixed: "Acrylic, screwed", none: "Magnet bezel", acrylic: "Acrylic panel", relief: "Relief", card: "Card", pen: "Pen cup" };
-const INS_PICK = { power_left: "fixed", power_right: "fixed", control: "fixed" };
+// ---------- window inserts: Meccano panel or open, meshes from window_inserts.b64.txt ----------
+const INS_OPTS = { power_left: ["meccano", "open"], power_right: ["meccano", "open"], control: ["meccano", "open"] };
+const INS_LABEL = { meccano: "Meccano panel", open: "Open" };
+const INS_PICK = { power_left: "meccano", power_right: "meccano", control: "meccano" };
 const INS_INFO = {
-  snap: ["Snap bezel (screwed acrylic)", "Black PETG, about 7 mm off the steel. Wraps the acrylic edge, hides the 4 screw heads in pockets, and a lip under the acrylic edge (in the 1 mm gap the rivnut flanges leave) snaps it on."],
-  bezel: ["Bezel (stays on)", "Black PETG, 13 × 3.5 mm round the opening. 4 M3 screws into rivnuts in the steel, heads sunk flush. 4 Ø6 × 1.5 magnets glued flush, N out."],
-  inlay: ["Inlay panel", "Black PETG frame, 4.4 mm, 4 magnets (S in). A 3 mm inlay sits in a pocket in its back, on the bezel: the window acrylic, or a card on a printed backer. Pull the panel off to swap it."],
-  backer: ["Card backer", "Printed, 2.6 mm, same outline as the acrylic. The card (149 × 56) sits in front of it."],
-  relief: ["Contour relief panel", "Black PETG, 2.6 mm plate + raised contour lines. 4 magnets (S in), 1 mm lip locates it in the opening."],
-  cup: ["Pen cup panel", "Black PETG. One open-top cup across the bottom, 70 % of the card height, 22 mm deep inside: drop pens in. 4 magnets (S in)."],
+  meccano: ["Meccano window panel", "Black PETG, 172 × 79 × 3. Countersunk M3 into the 4 window rivnuts, Ø9 flange reliefs behind, 2 mm locating lip. 44 Ø4.1 holes on the Meccano grid (12.7 mm) over the opening: bolt on switches, LEDs, brackets."],
   logo_spine: ["Logo spine (inside)", "Printed. Goes in from inside: its 2 dovetail lugs pass out through the keyhole entries, then it drops 15 mm."],
   logo_plate: ["Logo plate", "Printed face up, 48 × 79 × 4.4. Slides down onto the spine's lugs; a hidden spring finger in its back clicks under the bottom lug."],
 };
@@ -618,43 +610,7 @@ fetch("window_inserts.b64.txt").then(r => { if (!r.ok) throw new Error(r.status)
   }
   const add = (g, name, key, dz = 0) => { if (!geo[name]) return; const m = new THREE.Mesh(geo[name], M.petg); m.position.z = dz; const [n, i] = INS_INFO[key];
     m.userData = { name: `${n} · ${name.replace(/^[a-z]+_/, "").replace(/_/g, " ")}`, info: i }; g.add(m); };
-  for (const s of INSERT_SLOTS) {
-    const k = s.userData.slot, O = s.userData.opt;
-    for (const o of ["none", "acrylic", "relief", "card", "pen"]) add(O[o], `bezel_${k}`, "bezel");   // magnet bezel under every magnet option
-    add(O.fixed, `snapbezel_${k}`, "snap");
-    const FX = H.fixed && H.fixed[k];                  // screwed-on acrylic: sits on the rivnut flanges, 4 M3 screws
-    if (FX) {
-      const sh = new THREE.Shape(); FX.outline.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath();
-      FX.screws.forEach(([x, y]) => sh.holes.push(holeCircle(x, y, 1.7)));
-      const ac = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: FX.fix.t, bevelEnabled: false }), M.acrylic);
-      ac.position.z = FX.fix.flange; ac.userData = { name: "Window acrylic, screwed (169 × 76 × 3)", info: "4 Ø3.4 holes; M3 button screws with nylon washers into the window rivnuts. Rests on the rivnut flanges." };
-      O.fixed.add(ac);
-      FX.screws.forEach(([x, y]) => {
-        const hd = cyl(2.85, 1.65, "screw"); hd.rotation.x = Math.PI / 2; hd.position.set(x, y, FX.fix.flange + FX.fix.t + 0.5 + 0.83);
-        const fl = cyl(4, FX.fix.flange, "rivnut"); fl.rotation.x = Math.PI / 2; fl.position.set(x, y, FX.fix.flange / 2);
-        hd.userData = { name: "M3 button screw + nylon washer", info: "Into the window rivnut." }; fl.userData = { name: "M3 rivnut flange", info: "Ø8 × 1, the acrylic rests on these." };
-        O.fixed.add(hd, fl);
-      });
-    }
-    add(O.acrylic, `inlay_${k}`, "inlay"); add(O.relief, `relief_${k}`, "relief");
-    add(O.card, `inlay_${k}`, "inlay"); add(O.card, `cardbacker_${k}`, "backer");
-    if (H.cards && H.cards[k]) {
-      const sh = new THREE.Shape(); H.cards[k].forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath();
-      const cd = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false }), M.card);
-      cd.position.z = H.card_front_w[k] + 0.02; cd.userData = { name: "Plot card (your plot, 149 × 56)", info: "On the printed backer, in the inlay panel's 3 mm pocket. Template: card_*_template.svg." };
-      O.card.add(cd);
-    }
-    add(O.pen, `cup_${k}`, "cup");
-    const C = H.cups && H.cups[k];                    // demo pens dropped in the cup, leaning back on the plate
-    if (C) [[0.12, 11, 6], [0.2, 9, -4], [0.3, 12, 3], [0.42, 15, -6], [0.55, 10, 5], [0.68, 11, -3]].forEach(([f, d, tilt], j) => {
-      const L = 140, u = C.u0 + f * (C.u1 - C.u0);
-      const pen = new THREE.Group(); pen.position.set(u, C.floor_v, C.w_back + d / 2 + 3); pen.rotation.set(-0.08, 0, tilt * Math.PI / 180);
-      const body = cyl(d / 2, L - 35, "pen", 20); body.position.y = 35 + (L - 35) / 2;
-      const cap = cyl(d / 2 + 0.3, 35, d === 15 ? "dark" : "pencap", 20); cap.position.y = 17.5;
-      body.userData = cap.userData = { name: `Demo pen Ø${d} (capped)`, info: "Illustration only: sizes are typical, not measured." };
-      pen.add(body, cap); O.pen.add(pen);
-    });
-  }
+  for (const s of INSERT_SLOTS) { const k = s.userData.slot; add(s.userData.opt.meccano, `meccano_${k}`, "meccano"); }
   {                                                  // logo mount, power front centre (always on)
     const pg = power.userData.parts.panels, g = new THREE.Group(); g.position.z = P.D / 2 + P.t;
     add(g, "logo_spine", "logo_spine"); add(g, "logo_plate", "logo_plate");
@@ -662,7 +618,7 @@ fetch("window_inserts.b64.txt").then(r => { if (!r.ok) throw new Error(r.status)
     pg.add(g);
   }
   if (document.getElementById("t-steel").getAttribute("aria-pressed") === "true") INSERT_SLOTS.forEach(s => s.traverse(o => { if (o.isMesh) o.visible = false; }));
-  document.getElementById("ins-note").textContent = "Acrylic, screwed: acrylic on the window rivnuts, thin bezel snapped over. Magnet options: a bolted bezel with 4 magnets, panels pull off from the front.";
+  document.getElementById("ins-note").textContent = "Meccano panel: one printed plate per window on the 4 window rivnuts, drilled on the Meccano grid. The magnet, acrylic, card, relief and pen-cup designs are retired.";
 }).catch(e => { document.getElementById("ins-note").textContent = "Insert parts did not load (" + e.message + ")."; });
 const ex = document.getElementById("explode");
 ex.addEventListener("input", () => { explode = +ex.value; document.getElementById("explode-v").textContent = Math.round(explode * 100) + "%"; layout(); });
