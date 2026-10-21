@@ -82,7 +82,20 @@ def main():
         x0, z0, x1, z1 = g.bounds
         ax.add_patch(plt.Rectangle((x0, z0), x1 - x0, z1 - z0, fc="#e7b7a8", ec="#b0533a", alpha=.6, hatch="//"))
         ax.text((x0 + x1) / 2, (z0 + z1) / 2, n, ha="center", va="center", fontsize=7, rotation=90 if x1 - x0 < 40 else 0)
-    ax.add_patch(plt.Rectangle((p["TB1"].bounds[0] - 5, RAIL_Z - 17.5), p["_io_bend"].bounds[0] - p["TB1"].bounds[0], 35, fc="#aab4bb", ec="none", alpha=.6))
+    # two 8-inch rails: A under the drivers (full 203), B under the board (cut to 120); bought clips 25 x 69
+    clips = [p[f"TB{i + 1}"].bounds[0] + TB["wall"] + TB["body"] / 2 for i in range(3)]
+    bcx = (p["board"].bounds[0] + p["board"].bounds[2]) / 2
+    clips += [bcx - 30, bcx + 30]
+    ra = (clips[0] - 12.5, clips[0] - 12.5 + 203.2)
+    rb = (bcx - 60, bcx + 60)
+    for (x0, x1), lab in ((ra, "rail A: full 8 in (203)"), (rb, "rail B: 8 in cut to 120")):
+        ax.add_patch(plt.Rectangle((x0, RAIL_Z - 17.5), x1 - x0, 35, fc="#aab4bb", ec="#6d7780", zorder=1))
+        ax.add_patch(plt.Rectangle((x0, RAIL_Z - 17.5), x1 - x0, 35, fc="none", ec="#3d464d", lw=1, ls=":", zorder=6))
+        ax.text((x0 + x1) / 2, RAIL_Z - 88, lab + f"  (x {x0:.0f} to {x1:.0f})", ha="center", fontsize=7.5, color="#3d464d", zorder=6)
+    screws = [(clips[0] + clips[1]) / 2, (clips[1] + clips[2]) / 2, bcx, rb[1] - 8]
+    print("rail A", [round(v, 1) for v in ra], "rail B", [round(v, 1) for v in rb])
+    print("clip centres", [round(c, 1) for c in clips], "rail screws", [round(v, 1) for v in screws])
+    CLIPS, SCREWS = clips, screws
     for n, g in p.items():
         x0, z0, x1, z1 = g.bounds
         if n == "_io_bend":
@@ -91,10 +104,14 @@ def main():
         if n.startswith("TB"):
             ax.add_patch(plt.Rectangle((x1 - TB["term"], z0 + 10), TB["term"], z1 - z0 - 20, fc="#6fc28a", ec="#1c2328"))
         ax.text((x0 + x1) / 2, (z0 + z1) / 2, n, ha="center", va="center", fontsize=9, weight="bold")
+    for cx in CLIPS:
+        ax.add_patch(plt.Rectangle((cx - 12.5, RAIL_Z - 34.5), 25, 69, fc="none", ec="#d22", lw=1.2, ls="--", zorder=7))
+    for sx in SCREWS:
+        ax.add_patch(plt.Circle((sx, RAIL_Z), 3, fc="#222", zorder=8))
     ax.text(0, ZF + 10, "FRONT (GX sockets) - you stand here", ha="center", fontsize=8); ax.text(0, ZB - 8, "BACK", ha="center", fontsize=8)
     ax.set_xlim(-XW - 15, XW + 15); ax.set_ylim(ZF + 14, ZB - 18);   # front at the bottom: seen from above, standing at the front
     ax.set_aspect("equal"); ax.axis("off")
-    ax.set_title(f"Control box top view: rail at z {RAIL_Z:g}, {spare / 2:.0f} mm spare each side beyond the side keep-outs", fontsize=10)
+    ax.set_title(f"Control box top view: two 8-inch rails at z {RAIL_Z:g} (red dashed = DIN clips, black dots = rail screws); {spare / 2:.0f} mm spare each side", fontsize=9.5)
     fig.tight_layout(); fig.savefig(OUT / "control_layout.png")
 
 
