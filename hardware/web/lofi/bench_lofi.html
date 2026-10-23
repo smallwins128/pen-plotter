@@ -22,7 +22,7 @@ svg{display:block;width:100%;min-width:720px;height:auto;font-family:var(--body)
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <div class="wrap">
   <h1>Fabrication bench: plotter, cabinets, A1</h1>
-  <p class="lead">Top view, front edge at the bottom. The base frame stays: two 1000 rails and two 560 ends, 1000 × 600 outside. A new 560 divider closes the plotter bay at 600. New 600 rails ride on plates on top of the 1000s, and the 700 cross bar runs on them along the table, as it does today. The cabinets sit in the bay beyond the divider.</p>
+  <p class="lead">Top view, front edge at the bottom. The base frame stays: two 1000 rails and two 560 ends, 1000 × 600 outside. A new 560 divider closes the plotter bay at 600. The 700 cross bar keeps riding the 1000s; stop blocks at 600 keep it out of the cabinet bay. The cabinets sit in the bay beyond the divider.</p>
   <div class="sheet">
   <svg viewBox="-120 -170 1760 1020" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bench layout v3, top view">
     <defs>
@@ -51,13 +51,8 @@ svg{display:block;width:100%;min-width:720px;height:auto;font-family:var(--body)
 
     <!-- new rails on top of the 1000s, x 0..600 -->
     <g>
-      <rect x="0" y="-6" width="600" height="14" fill="var(--plot)" opacity=".9"/>
-      <rect x="0" y="592" width="600" height="14" fill="var(--plot)" opacity=".9"/>
-      <g fill="none" stroke="var(--plot)" stroke-width="2.5">
-        <rect x="40" y="-14" width="60" height="30"/><rect x="270" y="-14" width="60" height="30"/><rect x="500" y="-14" width="60" height="30"/>
-        <rect x="40" y="584" width="60" height="30"/><rect x="270" y="584" width="60" height="30"/><rect x="500" y="584" width="60" height="30"/>
-      </g>
-      <text x="300" y="-24" font-size="19" text-anchor="middle" fill="var(--plot)">new rails 600, on plates on top of the 1000s</text>
+      <g fill="var(--plot)"><rect x="575" y="-4" width="20" height="28"/><rect x="575" y="576" width="20" height="28"/></g>
+      <text x="585" y="-24" font-size="19" text-anchor="middle" fill="var(--plot)">stop blocks at 600</text>
       <!-- cross bar 700, spans depth, moves along the table -->
       <rect x="290" y="-50" width="20" height="700" fill="var(--plot)" opacity=".55"/>
       <rect x="267" y="267" width="66" height="66" fill="none" stroke="var(--plot)" stroke-width="3"/>
@@ -68,7 +63,6 @@ svg{display:block;width:100%;min-width:720px;height:auto;font-family:var(--body)
       <text x="170" y="290" font-size="28" text-anchor="middle" font-weight="600" fill="var(--plot)">A3</text>
       <text x="170" y="318" font-size="18" text-anchor="middle" fill="var(--mute)">420 × 297</text>
       <text x="170" y="342" font-size="18" text-anchor="middle" fill="var(--mute)">landscape</text>
-      <text x="300" y="430" font-size="16" text-anchor="middle" fill="var(--mute)">paper on a raised board ⚠</text>
     </g>
 
     <!-- cabinets turned 90° in the bay -->
@@ -110,13 +104,13 @@ svg{display:block;width:100%;min-width:720px;height:auto;font-family:var(--body)
   <div class="grid">
     <div class="card"><h2>New aluminium</h2><ul>
       <li><span class="num">1 × 2040 @ 560</span>: divider at x 600, same as your end pieces.</li>
-      <li><span class="num">2 × 2040 @ 600</span>: new rails on top of the 1000s, same profile so your gantry plates fit.</li>
+      <li>2 stop blocks on the 1000s at x 600 (printed or a T-nut and bolt).</li>
       <li>Cross bar: your 700, unchanged. Same span (580), same axes as today.</li>
       <li>Travel ≈ <span class="num">485</span> along the table, ≈ <span class="num">465</span> along the bar: A3 landscape fits.</li></ul></div>
     <div class="card"><h2>Watch</h2><ul>
-      <li class="warn">Pen height: the bar rides 40 mm + plate higher than today. The paper needs a raised board in the bay.</li>
-      <li class="warn">Plates must sit on the face of the new rail the gantry wheels don't run on.</li>
-      <li>The rail ends at x 600 are now hard ends: the bar can't run into the cabinets even if it loses steps.</li></ul></div>
+      <li>No height change: paper on the deck as today.</li>
+      <li>Stop blocks are the hard end: the bar can't reach the cabinets even if it loses steps.</li>
+      <li>Later, not P0: raised rails on side plates.</li></ul></div>
     <div class="card"><h2>Cabinets and A1</h2><ul>
       <li>Cabinet bay is 360 × 560 inside: the stack fits turned 90° (297 × 452), with 80 behind for the fans and IEC.</li>
       <li>The fans partly face the 40 mm back rail ⚠.</li>
