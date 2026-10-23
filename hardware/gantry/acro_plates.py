@@ -146,9 +146,13 @@ def by_key(ps, key):
 def gantry_layout(ps):
     """Wheel, motor and bar-bolt positions on the gantry plate, plate-local.
 
-    x runs along the rail (direction of travel), y across it. The two round
-    M5 holes on one line are the fixed wheels; the long slots on the same
-    x are the adjustable wheels; the 32 mm bore is the NEMA17 boss.
+    The plate stands on the outside face of a rail: x runs along the rail
+    (direction of travel), y is up. The two round M5 holes on one line are
+    the fixed (top) wheels. The bottom wheels go in the long slots (a 20 mm
+    face) or the short slots 59.25 below (a 40 mm face: a standing 2040).
+    The 32 mm bore is the NEMA17 boss. The vertical pair of M5 holes above
+    the wheels, 20 apart, takes the end-tapped bores of a 2040 bar standing
+    on edge.
     """
     g = by_key(ps, "gantry")[0]
     holes = g["holes"]
@@ -160,6 +164,8 @@ def gantry_layout(ps):
                    and round(h["cx"], 2) in xs]
     bore = [h for h in holes if h["d"] and h["d"] > 30][0]
     nema = [h for h in holes if h["d"] and abs(h["d"] - 3.0) < 0.05]
+    bar = sorted(h["cy"] for h in m5
+                 if abs(h["cx"] - bore["cx"]) < 0.1 and h["cy"] > fixed[0]["cy"])
     fy = fixed[0]["cy"]
     ls = long_slots[0]
     travel = (ls["h"] - ls["w"]) / 2
@@ -171,6 +177,8 @@ def gantry_layout(ps):
         "short_slot_y": short_slots[0]["cy"],
         "bore": (bore["cx"], bore["cy"], bore["d"]),
         "nema_pitch": max(h["cx"] for h in nema) - min(h["cx"] for h in nema),
+        "bar_bores": bar,                              # y of the bar's end bores
+        "bar_x": bore["cx"],
     }
 
 
