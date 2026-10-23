@@ -19,7 +19,9 @@ tool heads. Anything that is not on the path to a clean A3 plot waits.
 - Drivers: 3 × TB6600 and a FluidNC board, moving into the stacked stainless enclosure (see ENCLOSURE_STATE.md).
 - Pen lift: MG996R servo on a whole Ender carriage (~400 g). The lift still resets the controller (FINDINGS 7a-7c);
   the fix is a mechanism that never stalls the servo at end of travel. Not designed yet.
-- Acrylic plates: Allwin has acrylic gantry/mount plates; he will share their STLs (Drive folder below).
+- Acrylic plates: OpenBuilds ACRO set, 6 mm acrylic, one STL with 11 parts (Drive file 1GCvAh8MUwtIzEuWDRKBjuIZjAEE99_Pn,
+  Printables 260803): 2 gantry plates (93.9 × 135.7, NEMA17), carriage (93.9 × 122.7), short motor plate (93.9 × 110),
+  tool plate (93.9 × 80.7), 4 end brackets, 2 links. Roles read from hole patterns, not yet confirmed by Allwin.
 
 ## Decided
 
@@ -36,7 +38,14 @@ tool heads. Anything that is not on the path to a clean A3 plot waits.
 1. Measure real X and Y travel after the divider and stop blocks are in, then set $130 / $131 (the values in
    settings/ were invented once; HANDOFF says so).
 2. Pen-lift mechanism (tracker T17).
-3. Bring Allwin's acrylic plate STLs into a gantry inspector.
+3. Gantry lofi v1 (2026-10-23, https://claude.ai/artifact/LQRCHp84mVaVaTB294fUjW) waits on Allwin's three calls:
+   - bar: 700 × 2040 (the ACRO carriage wheels are fixed at 59.25 = a 40 mm face) or keep the 2020 and print a carriage;
+   - X motors on the plates (ACRO style) or where they are today;
+   - which wheels and spacers he has.
+   Readings from the lofi (unverified, they rest on catalogue wheel/spacer sizes): plates lie flat on the rails' top cell
+   (on the outer face the bottom wheel would hit the deck); reach ≈ 461 × 338 against A3's 450 × 330; the 93.9 plate
+   costs ~28 mm of X against the 65.5 plates; the bar sits ~7 above the rails (params says 15); motors overhang ~48.
+   After the calls: the 3D inspector.
 
 ## Files
 
@@ -45,7 +54,8 @@ tool heads. Anything that is not on the path to a clean A3 plot waits.
 | `hardware/params.py` | Frame, deck, bar and gantry-plate constants. Note: the frame/bar block appears twice (around lines 44 and 170); clean that up before changing values. |
 | `hardware/parts/frame.py`, `cross_bar.py`, `deck.py`, `assembly.py` | build123d models of the machine. `cross_bar.x_travel()`, `deflection()` give travel and sag. |
 | `hardware/web/machine.html` | Older 3D view of the machine (https://claude.ai/artifact/2AN2q4qFQ4fbEECBUUztsq). |
-| `hardware/gantry/` | New home for gantry parts, the acrylic STLs (`hardware/gantry/acrylic/`) and the gantry inspector. |
+| `hardware/gantry/` | Gantry parts and views. `acro_plates.py` reads the STL; `gantry_lofi.py` writes `hardware/web/lofi/gantry_lofi.html`. |
+| `hardware/gantry/acrylic/` | The ACRO STL goes here. Git-ignored: the repo is public and the Printables licence isn't checked. |
 
 ## Inputs
 

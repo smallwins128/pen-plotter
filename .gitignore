@@ -8,3 +8,7 @@ __pycache__/
 # run `python3 hardware/make.py` to regenerate. Commit a STEP deliberately if
 # you need to hand a frozen one to a fabricator.
 hardware/out/
+
+# Third-party STLs: licence not yet checked, repo is public. Local copy only;
+# fetch from Drive (R04 Etch) to run hardware/gantry/*.py.
+hardware/gantry/acrylic/*.stl
