@@ -773,24 +773,39 @@ def p_earth_stud():
                 "Beep: stud ↔ bare steel anywhere on the body", S1)
 
 
+def i_standoff_mf(L=8, w=7, stud=6):
+    """Male-female hex standoff, side view: body with a threaded stud on top."""
+    s = Svg()
+    s.rect((w - 4) / 2, 0, 4, stud, .3, INK, "#fff")
+    _thread(s, (w - 4) / 2, (w + 4) / 2, 0, stud, .8)
+    s.poly([(0, stud), (w, stud), (w, stud + L), (0, stud + L)], .3, INK, "#fff")
+    s.line(w / 3, stud, w / 3, stud + L, .2)
+    s.line(2 * w / 3, stud, 2 * w / 3, stud + L, .2)
+    return s.out(), w, stud + L
+
+
 def standoff_stack(s, cx, cy, k=2.4):
-    s.text(cx, cy - 58, "each of 6", 2.6, "middle", c=MID)
+    """Side view, each of 6: pan screw up through the floor into the standoff; its stud up through the plate; nut on top."""
+    s.text(cx, cy - 62, "each of 6", 2.6, "middle", c=MID)
     s.rect(cx - 16, cy, 32, 1.2 * k, .4, INK, "#ddd")
     s.text(cx + 17, cy + 3, "floor", 2.3, c=MID)
-    s.rect(cx - 3.5 * k / 2, cy - 5 * k, 3.5 * k, 5 * k, .4, INK, "#fff")
-    s.text(cx + 6, cy - 5 * k / 2 + 1, "a", 3, weight=700)
-    py = cy - 5 * k - 2 * k - 8
+    s.rect(cx - 3.5 * k / 2, cy - 8 * k, 3.5 * k, 8 * k, .4, INK, "#fff")          # 8 mm body
+    s.text(cx + 6, cy - 4 * k + 1, "a", 3, weight=700)
+    py = cy - 8 * k - 2 * k - 9
+    s.rect(cx - 1, py - 4, 2, 9 + 2 * k + 4, .35, INK, "#fff")                       # stud through the plate
     s.rect(cx - 16, py, 32, 2 * k, .4, INK, "#f6f6f4")
     s.text(cx + 17, py + 3.5, "plate", 2.3, c=MID)
     s.text(cx - 19, py + 3.5, "b", 3, "end", 700)
-    svg, w, h = i_pan(8, 4, 7, 2.8)
+    nsvg, nw, nh = i_nut(7, 3.2)
     m = k / 1.6
+    yn = py - 9 - nh * m
+    s.g(cx - nw * m / 2, yn, m, nsvg)
+    s.arrow(cx, yn + nh * m + .5, cx, py - 1)
+    svg, w, h = i_pan(6, 4, 7, 2.8)
     yb = cy + 1.2 * k + 7
     s.g(cx - w * m / 2, yb + h * m, m, svg, -m)
     s.arrow(cx, yb + 1, cx, cy + 1.2 * k + 1)
-    yt = py - 8 - h * m
-    s.g(cx - w * m / 2, yt, m, svg)
-    s.arrow(cx, yt + h * m + .5, cx, py - 1)
+    s.text(cx + 8, yb + 6, "M4 × 6 pan", 2.2, c=MID)
 
 
 def p_base_plate(kind, num, stage):
@@ -807,12 +822,16 @@ def p_base_plate(kind, num, stage):
                     s.circ(*P(*h["uv"]), 2.4, .5, fill=ACC)
     caption(s, 68 - E.W / 2 * sc, 140 + E.D / 2 * sc + 10, f"{kind.capitalize()} box floor, from above")
     standoff_stack(s, 262, 140)
-    parts = [(i_standoff(5, 7), 1.6, 6, "B26", "M4 standoff 5 mm F–F"), (i_pan(8, 4, 7, 2.8), 1.3, 12, "B27", "M4 × 8 pan ⚠"), (i_label("plate", 18, 10, "#f6f6f4"), 1, 1, "B25", "base plate 440 × 285")]
-    steps = ["a  Six M4 standoffs onto the floor, screwed from underneath.",
-             "b  Plate on top, six more screws." + (" Set the PSU-bracket M4 rivnuts first (1.3)." if kind == "power" else
-                                                    " Prepare the rail fixings first (2.2): easier with the plate on the bench.")]
-    return page(num, f"Base plate · {kind} box", parts, s.out(), steps,
-                ["Plates: 2 mm mild steel, already cut", "Standoffs stay 5 mm: 6 mm or more hits the window rivnut and PSU panel screws"],
+    parts = [(i_standoff_mf(), 1.4, 6, "B26", "M4 standoff 8 mm M–F"), (i_pan(6, 4, 7, 2.8), 1.3, 6, "B27", "M4 × 6 pan, Phillips"),
+             (i_nut(7, 3.2), 1.6, 6, "B22", "M4 nut ⚠ plain or nyloc"), (i_label("plate", 18, 10, "#f6f6f4"), 1, 1, "B25", "base plate 440 × 285")]
+    steps = ["a  Six standoffs onto the floor: M4 × 6 pan screw up from underneath into the female end.",
+             "b  Plate on, studs through its standoff holes, a nut on each. The plate comes out from inside by undoing 6 nuts." + (
+                 " Set the PSU-bracket M4 rivnuts first (1.3)." if kind == "power" else
+                 " File a 12 × 6 mm notch in the plate's front edge at x +125 first: the window's bottom rivnut needs it.")]
+    notes = ["Plates: 2 mm mild steel, already cut"] + (
+        ["Power: PSU panel's bottom screws clear the plate by only 0.3 mm"] if kind == "power" else
+        ["⚠ notch: at 8 mm the window rivnut overlaps the plate by 0.2 mm"])
+    return page(num, f"Base plate · {kind} box", parts, s.out(), steps, notes,
                 "Plate doesn't rock · no screw head below the feet", stage)
 
 
