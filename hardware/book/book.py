@@ -354,31 +354,41 @@ def page(num, title, parts, body, steps=(), notes=(), check="", stage=""):
         s.text(10, 9, stage.upper(), 2.3, c=MID, weight=600)
     s.text(10, 23, num, 15, weight=700)
     s.text(10 + len(num) * 8.6 + 3, 22.5, title, 4.4, weight=600)
-    # parts box, wrapped at 145 mm
+    # parts box, wrapped at 150 mm: icon, quantity, spec (2 lines max), ID
     if parts:
-        cells = [(svg, w * sc, h * sc, sc, qty, pid) for (svg, w, h), sc, qty, pid in parts]
+        cells = []
+        for pt in parts:
+            (svg, w, h), sc, qty, pid = pt[:4]
+            spec = pt[4] if len(pt) > 4 and pt[4] else NAMES.get(pid, "")
+            lines = wrap(spec, 15)[:2]
+            cw = max(w * sc, 21, max((len(x) for x in lines), default=0) * 1.25)
+            cells.append((svg, w * sc, h * sc, sc, qty, pid, lines, cw))
         rows, row, rw = [], [], 6
         for c in cells:
-            cw = max(c[1], 12) + 6
-            if rw + cw > 150 and row:
+            if rw + c[7] + 5 > 150 and row:
                 rows.append(row)
                 row, rw = [], 6
             row.append(c)
-            rw += cw
+            rw += c[7] + 5
         rows.append(row)
         x0, y = 10, 29
-        bw = max(sum(max(c[1], 12) + 6 for c in r) for r in rows) + 6
-        heights = [max(c[2] for c in r) + 14 for r in rows]
+        bw = max(sum(c[7] + 5 for c in r) for r in rows) + 6
+        heights = [max(c[2] for c in r) + 21 for r in rows]
         s.rect(x0, y, bw, sum(heights) + 2, .4, r=2)
         for r, rh in zip(rows, heights):
             x = x0 + 6
-            for svg, w, h, sc, qty, pid in r:
-                cw = max(w, 12)
-                s.g(x + (cw - w) / 2, y + 3 + (rh - 14 - h) / 2, sc, svg)
-                s.text(x + cw / 2, y + rh - 5.5, f"{qty}x" if isinstance(qty, int) else qty, 3.6, "middle", 700)
-                s.text(x + cw / 2, y + rh - 1.6, pid, 2.3, "middle", c=MID)
-                x += cw + 6
+            for svg, w, h, sc, qty, pid, lines, cw in r:
+                s.g(x + (cw - w) / 2, y + 3 + (rh - 21 - h) / 2, sc, svg)
+                yb = y + rh - 12.5
+                s.text(x + cw / 2, yb, f"{qty}x" if isinstance(qty, int) else qty, 3.4, "middle", 700)
+                for j, ln in enumerate(lines):
+                    s.text(x + cw / 2, yb + 3.4 + j * 2.8, ln, 2.3, "middle", c="#333")
+                s.text(x + cw / 2, y + rh - 1.6, pid, 2.0, "middle", c=MID)
+                x += cw + 5
             y += rh
+        box_bottom = y + 2
+    else:
+        box_bottom = 0
     # text column
     y = 14
     for i, st in enumerate(steps):
@@ -391,7 +401,12 @@ def page(num, title, parts, body, steps=(), notes=(), check="", stage=""):
         for j, ln in enumerate(wrap(n, 66)):
             s.text(TX, y + 1 + j * 3.7, ln, 2.8, c="#a33" if n.startswith(("⚠", "🚫")) else MID)
         y += len(wrap(n, 66)) * 3.7 + 1
-    s.add(body)
+    top, bot = 50.0, PH - 15.0
+    if box_bottom + 3 > top:                     # parts box grew: shrink the drawing into the space left, anchored bottom-left
+        k = (bot - box_bottom - 3) / (bot - top)
+        s.add(f'<g transform="translate(10 {F(bot)}) scale({F(k)}) translate(-10 {F(-bot)})">{body}</g>')
+    else:
+        s.add(body)
     if check:
         ok_box(s, 10, PH - 12, check)
     s.text(PW - 10, PH - 6, num, 2.6, "end", c=MID)
@@ -498,6 +513,8 @@ def draw_shape(s, geom, T, sw=.4, c=INK, fill="#fff"):
 
 
 _CACHE = {}
+NAMES = {r.split("\t")[0]: r.split("\t")[1] for f in ("bom.tsv", "prints.tsv") if (HERE / f).exists()
+         for r in (HERE / f).read_text().strip().splitlines()[1:]}
 
 
 def part_outline(rel):
@@ -518,9 +535,9 @@ RIVNUT3 = (i_rivnut(), 1.6)
 RIVET = (i_rivet(), 1.6)
 
 
-def P_(icon_scale, qty, pid):
+def P_(icon_scale, qty, pid, spec=None):
     (icon, sc) = icon_scale
-    return (icon, sc, qty, pid)
+    return (icon, sc, qty, pid, spec)
 
 
 S0, S1, S2, S3, S4 = ("Stage 0 · Before you start", "Stage 1 · Power box", "Stage 2 · Control box",
@@ -607,9 +624,9 @@ def p_rules():
         s.text(26, y, a, 3.8, weight=700)
         s.text(26, y + 5, b, 3.2, c="#444")
         y += 12.5
-    tools = [(i_meter(), 1.6, 1, "B60"), (i_label("rivnut tool", 26, 9), 1.0, 1, "B61"),
-             (i_label("ferrule crimper", 30, 9), 1.0, 1, "B62"), (i_label("ring crimper", 26, 9), 1.0, 1, "B63"),
-             (i_label("labels", 16, 9), 1.0, 1, "B64")]
+    tools = [(i_meter(), 1.6, 1, "B60", "multimeter, beep + 0.01 V"), (i_label("rivnut tool", 26, 9), 1.0, 1, "B61", "rivnut tool, M3 + M4"),
+             (i_label("ferrule crimper", 30, 9), 1.0, 1, "B62", "ferrule crimper 0.25–6 mm²"), (i_label("ring crimper", 26, 9), 1.0, 1, "B63", "crimper, insulated rings"),
+             (i_label("labels", 16, 9), 1.0, 1, "B64", "wire labels")]
     steps = ["Lay out the tools in the parts box before starting.",
              "Label every wire at both ends as you cut it.",
              "Also on the bench: stripper, screwdrivers, 2.5 / 3 mm hex keys, 5.5 / 7 / 10 mm spanners, iron with a heat-set tip."]
@@ -678,7 +695,7 @@ def p_rivnuts(kind):
     steps = [f"Set {n} M3 rivnuts in the {kind} box: {n_face} in the walls (red) and 6 in the lips for the lid.",
              "Flange on the outside, bulge on the inside. Squeeze the tool until it stops; don't over-pull.",
              "Leave the Ø5 accessory holes empty for now." if kind == "power" else "The 4 lid-top accessory holes stay empty for now."]
-    return page(f"0.2{'a' if kind == 'control' else 'b'}", f"Rivnuts · {kind} box", [P_(RIVNUT3, n, "B29")], s.out(), steps,
+    return page(f"0.2{'a' if kind == 'control' else 'b'}", f"Rivnuts · {kind} box", [P_(RIVNUT3, n, "B29", "M3 rivnut, Ø5 hole, flange Ø8")], s.out(), steps,
                 ["Total both boxes: 39. Buy 50."], "Each takes an M3 screw by hand and doesn't spin", S0)
 
 
@@ -710,7 +727,7 @@ def p_rivets():
     steps = ["8 solid Ø3.2 rivets: 2 per front corner tab, 2 tabs per box, 2 boxes.",
              "Squeeze the tab against the front wall with a clamp first; the gap closes by the rivet, not the hammer.",
              "Dome head outside on a dolly. Peen the tail over from inside with light blows."]
-    return page("0.3", "Corner rivets", [P_(RIVET, 8, "B30")], s.out(), steps,
+    return page("0.3", "Corner rivets", [P_(RIVET, 8, "B30", "solid rivet Ø3.2, dome head")], s.out(), steps,
                 ["Rivet positions drawn approximately: use the holes in the steel."], "Tab tight against the wall, no rocking", S0)
 
 
@@ -747,8 +764,8 @@ def p_earth_stud():
         else:
             s.rect(xx, cy - hh * k, t * k, 2 * hh * k, .35, INK, "#fff")
         xx += t * k
-    parts = [(i_hex(20), 1.0, 1, "B09"), (i_washer(12, 1.4, True), 1.0, 1, "B09"), (i_nut(10, 5), 1.0, 3, "B09"),
-             (i_ring(6.4, WIRE["PE"]), 1.0, 3, "B10")]
+    parts = [(i_hex(20), 1.0, 1, "B09", "M6 × 20 hex bolt"), (i_washer(12, 1.4, True), 1.0, 1, "B09", "M6 serrated washer"), (i_nut(10, 5), 1.0, 3, "B09", "M6 nut"),
+             (i_ring(6.4, WIRE["PE"]), 1.0, 3, "B10", "M6 ring, 0.5–1.5 mm²")]
     steps = ["M6 bolt through the Ø6.5 hole low on the left wall, head outside.",
              "Inside: serrated washer, nut. Tighten hard: this is the bond to the box.",
              "The IEC earth ring goes on next with its own nut (1.5). PSU earth rings go above it under a third nut."]
@@ -790,7 +807,7 @@ def p_base_plate(kind, num, stage):
                     s.circ(*P(*h["uv"]), 2.4, .5, fill=ACC)
     caption(s, 68 - E.W / 2 * sc, 140 + E.D / 2 * sc + 10, f"{kind.capitalize()} box floor, from above")
     standoff_stack(s, 262, 140)
-    parts = [(i_standoff(5, 7), 1.6, 6, "B26"), (i_pan(8, 4, 7, 2.8), 1.3, 12, "B27"), (i_label("plate", 18, 10, "#f6f6f4"), 1, 1, "B25")]
+    parts = [(i_standoff(5, 7), 1.6, 6, "B26", "M4 standoff 5 mm F–F"), (i_pan(8, 4, 7, 2.8), 1.3, 12, "B27", "M4 × 8 pan ⚠"), (i_label("plate", 18, 10, "#f6f6f4"), 1, 1, "B25", "base plate 440 × 285")]
     steps = ["a  Six M4 standoffs onto the floor, screwed from underneath.",
              "b  Plate on top, six more screws." + (" Set the PSU-bracket M4 rivnuts first (1.3)." if kind == "power" else
                                                     " Prepare the rail fixings first (2.2): easier with the plate on the bench.")]
@@ -829,8 +846,8 @@ def p_psus():
         s.circ(dx + sgn * 26, dy + 7.5, .9, .3)
     s.rect(dx - 34, dy + 9, 68, 2, .4, INK, "#f6f6f4")
     caption(s, dx - 34, dy + 16, "printed bracket (P03) each side, M4 into a plate rivnut")
-    parts = [(i_label("24 V PSU", 26, 10), 1, 1, "B13"), (i_label("12 V PSU", 26, 10), 1, 1, "B14"), (i_label("buck", 14, 8), 1, 1, "B15"),
-             (i_label("bracket", 20, 8, "#eee"), 1, "2 sets", "P03"), (i_rivnut(6, 11, 9, 1.2), 1.3, 8, "B28"), (i_pan(8, 4, 7, 2.8), 1.1, 8, "B31")]
+    parts = [(i_label("24 V PSU", 26, 10), 1, 1, "B13", "LRS-350-24"), (i_label("12 V PSU", 26, 10), 1, 1, "B14", "12 V PSU ⚠ model"), (i_label("buck", 14, 8), 1, 1, "B15", "buck 12 → 6 V"),
+             (i_label("bracket", 20, 8, "#eee"), 1, "2 sets", "P03", "PSU bracket"), (i_rivnut(6, 11, 9, 1.2), 1.3, 8, "B28", "M4 rivnut, Ø6 hole"), (i_pan(8, 4, 7, 2.8), 1.1, 8, "B31", "M4 × 8 ⚠ datasheet")]
     steps = ["Read both PSU labels. Write the 12 V model and its rated current in the doc (Open questions 2).",
              "Read the buck's chip: LM2596 (2–3 A) or XL4015 (5 A).",
              "Stand the PSUs on the plate as drawn, terminal strips facing back. Mark the bracket holes on the grid, set M4 rivnuts, bolt down.",
@@ -870,8 +887,8 @@ def p_iec_panel():
     caption(s, px - pw / 2 * sc, py + ph / 2 * sc + 5, "P01 · layout of the parts on it ⚠ not final")
     iec = ("<rect width='20' height='12' rx='1' fill='#fff' stroke='#111' stroke-width='.3'/>"
            "<rect x='3' y='3' width='9' height='6' fill='none' stroke='#111' stroke-width='.3'/><rect x='14' y='3' width='4' height='6' fill='#d33' stroke='#111' stroke-width='.3'/>", 20, 12)
-    parts = [P_(CSK6, 4, "B42"), (iec, 1, 1, "B01"), (i_round(5, "#fff"), 1.6, "1+2", "B02"),
-             (i_round(12, "#fff", 6, WIRE["PE"]), 1, 2, "B04"), (i_round(16, ACC), 1, 1, "B03"), (i_label("C + D", 16, 9, "#eee"), 1, 1, "P02")]
+    parts = [P_(CSK6, 4, "B42", "M3 × 6 countersunk"), (iec, 1, 1, "B01", "IEC C14 3-in-1"), (i_round(5, "#fff"), 1.6, "1+2", "B02", "fuse 5×20 T3.15 A"),
+             (i_round(12, "#fff", 6, WIRE["PE"]), 1, 2, "B04", "LED 12 mm, 12–24 V"), (i_round(16, ACC), 1, 1, "B03", "stop LA38-11ZS Ø22"), (i_label("C + D", 16, 9, "#eee"), 1, 1, "P02", "fit coupons C + D")]
     steps = ["Print the fit coupons C and D first (P02). Pick the IEC frame that snaps in firmly; note the LED and stop hole sizes.",
              "Measure the module's tabs (4.8 or 6.3 mm) and the stop button's AC rating before buying spades.",
              "Into the panel: IEC module (snaps into the 1.5 mm thin zone), 2 LEDs, stop button. Fuse T3.15 A in the drawer.",
@@ -927,16 +944,16 @@ def p_mains(part):
         steps = ["Unplugged. Earth first: IEC earth tab → the stud, on the first ring, own nut.",
                  "Stud → FG of the 24 V PSU, and stud → FG of the 12 V PSU: one wire each, on the second ring stack.",
                  "Leave each earth wire a little longer than L and N will be, so it pulls tight last."]
-        parts = [(i_spade(WIRE["PE"]), 1.2, 1, "B07"), (i_ring(6.4, WIRE["PE"]), 1.1, 3, "B10"), (i_ferrule(WIRE["PE"]), 1.4, 2, "B08"),
-                 (i_label("G/Y 1.0 mm²", 26, 7, "#e9f4e9"), 1, "1 m", "B05")]
+        parts = [(i_spade(WIRE["PE"]), 1.2, 1, "B07", "spade ⚠ 4.8 / 6.3"), (i_ring(6.4, WIRE["PE"]), 1.1, 3, "B10", "M6 ring, 0.5–1.5 mm²"), (i_ferrule(WIRE["PE"]), 1.4, 2, "B08", "ferrule 1.0 mm²"),
+                 (i_label("G/Y 1.0 mm²", 26, 7, "#e9f4e9"), 1, "1 m", "B05", "H05V-K 1.0 mm² G/Y")]
         return page("1.5a", "Mains wiring · earth", parts, s.out(), steps, [], "Beep: IEC earth pin ↔ stud ↔ both PSU cases ↔ body", S1)
     mains_diagram(s, earth=True, live=True)
     steps = ["Live: IEC switched L → stop button NC → Wago L → L of each PSU.",
              "Neutral: IEC switched N → Wago N → N of each PSU.",
              "Ferrules on every end under a screw; spades on the IEC tabs. Shroud the IEC tabs and both PSU input strips.",
              "Tie the mains bundle to the left half of the plate, away from where DC will run."]
-    parts = [(i_spade(WIRE["L"]), 1.2, 4, "B07"), (i_wago(), 1, 2, "B06"), (i_ferrule(WIRE["L"]), 1.4, 8, "B08"),
-             (i_label("brown + blue 1.0 mm²", 36, 7, "#f3ece4"), 1, "1 m ea", "B05"), (i_label("shrouds", 18, 7), 1, 1, "B11")]
+    parts = [(i_spade(WIRE["L"]), 1.2, 4, "B07", "spade ⚠ 4.8 / 6.3"), (i_wago(), 1, 2, "B06", "Wago 221-413"), (i_ferrule(WIRE["L"]), 1.4, 8, "B08", "ferrule 1.0 mm²"),
+             (i_label("brown + blue 1.0 mm²", 36, 7, "#f3ece4"), 1, "1 m ea", "B05", "H05V-K 1.0 mm²"), (i_label("shrouds", 18, 7), 1, 1, "B11", "terminal shrouds")]
     return page("1.5b", "Mains wiring · live and neutral", parts, s.out(), steps,
                 ["⚠ the stop button breaks L only: the IEC rocker is the double-pole switch"],
                 "No beep L↔earth or N↔earth, rocker on and off", S1)
@@ -960,7 +977,7 @@ def p_first_power():
              "Rocker lights; both PSU LEDs on. Meter 24 V and 12 V at the outputs. Trim the 24 V to 24.0 V.",
              "Press the stop: both go dark. Twist to release: both back.",
              "Rocker off, unplug. Wait for the PSU LEDs to fade before touching anything."]
-    return page("1.6", "First mains power-on", [(i_meter(), 1.6, 1, "B60")], s.out(), steps, [],
+    return page("1.6", "First mains power-on", [(i_meter(), 1.6, 1, "B60", "multimeter")], s.out(), steps, [],
                 "24.0 V and 12 V present · stop cuts both", S1)
 
 
@@ -997,8 +1014,8 @@ def p_dc(part):
                  "12 V PSU −V → splitter G2 → buck IN−, fan −, the G2 jack. One 0 V wire to the buck: its IN− and OUT− are the same copper.",
                  "12 V LED straight off the PSU's second +V / −V pair.",
                  "Meter on the buck's output, nothing connected: set 6.0 V."]
-        parts = [(i_label("PCT 2×6", 20, 9), 1, 1, "B16"), (i_label("0.75 mm²", 20, 7, "#fde8cc"), 1, "3 m ea", "B18"),
-                 (i_ferrule(WIRE["P12"]), 1.4, 12, "B08")]
+        parts = [(i_label("PCT 2×6", 20, 9), 1, 1, "B16", "PCT 2×6 splitter"), (i_label("0.75 mm²", 20, 7, "#fde8cc"), 1, "3 m ea", "B18", "0.75 mm² silicone"),
+                 (i_ferrule(WIRE["P12"]), 1.4, 12, "B08", "ferrule 0.75 mm²")]
         return page("1.7a", "DC · 12 V and 6 V", parts, s.out(), steps, ["⚠ wire size: confirm against the 12 V PSU's label"],
                     "Buck reads 6.0 V unloaded", S1)
     box(s, 14, 76, 50, 34, "24 V PSU", "LRS-350-24")
@@ -1020,7 +1037,7 @@ def p_dc(part):
     steps = ["24 V PSU +V → the 24 V toggle. −V → the G1 jack.",
              "24 V LED off the PSU's second +V / −V pair.",
              "1.5 mm² throughout on 24 V and G1: 16 AWG is too thin."]
-    parts = [(i_label("1.5 mm² red + black", 34, 7, "#f9dede"), 1, "3 m ea", "B17"), (i_ferrule(WIRE["P24"]), 1.4, 6, "B08")]
+    parts = [(i_label("1.5 mm² red + black", 34, 7, "#f9dede"), 1, "3 m ea", "B17", "1.5 mm² (not 16 AWG)"), (i_ferrule(WIRE["P24"]), 1.4, 6, "B08", "ferrule 1.5 mm²")]
     return page("1.7b", "DC · 24 V", parts, s.out(), steps, [], "Unplugged: G1↔G2 open · G1, G2 ↔ stud open", S1)
 
 
@@ -1047,7 +1064,7 @@ def fan_page(kind, num, stage):
         s.rect(cx - 30, cy + yy - 2, 22 + 1.2 * k + 6, 4, .35, INK, "#fff")
         s.rect(cx - 30 + 1.2 * k + 2 + 25 * k * .6 + .5, cy + yy - 3.5, .8, 7, .3, INK, "#fff")
         s.rect(cx - 30 + 1.2 * k + 2 + 25 * k * .6 + 1.5, cy + yy - 3, 3, 6, .35, INK, "#eee")
-    parts = [(i_fan(), 1.2, 1, "B20"), (i_pan(35, 4, 7, 2.8), .8, 4, "B21"), (i_washer(9, .8), 1.6, 4, "B21"), (i_nut(7, 3.2, True), 1.6, 4, "B21")]
+    parts = [(i_fan(), 1.2, 1, "B20", "fan 80 × 80 × 25, 12 V"), (i_pan(35, 4, 7, 2.8), .8, 4, "B21", "M4 × 35 pan"), (i_washer(9, .8), 1.6, 4, "B21", "M4 washer"), (i_nut(7, 3.2, True), 1.6, 4, "B21", "M4 nyloc")]
     steps = ["Fan inside, against the grille. Airflow direction: see Open questions 6 (arrow on the fan's side).",
              "M4 × 35 from outside, washer and nyloc inside. Snug, don't crush the fan frame.",
              "Lead: + to 12 V, − to G2 (" + ("1.7a)." if kind == "power" else "2.8).")]
@@ -1113,11 +1130,11 @@ def p_psu_panel(part):
         steps = ["Each rail: source → toggle → jack.",
                  "Voltmeter red lead after the toggle (it doubles as the rail-on light); black lead to that rail's own ground.",
                  "Rings on the jack studs: blue (1.5–2.5) for 24 V and G1, red (0.5–1.5) for 12 V, 6 V, G2."]
-        parts = [(i_ring(4, "#2b62c4"), 1.1, 10, "B19"), (i_ring(4, "#d33"), 1.1, 20, "B19")]
+        parts = [(i_ring(4, "#2b62c4"), 1.1, 10, "B19", "M4 ring, blue 1.5–2.5"), (i_ring(4, "#d33"), 1.1, 20, "B19", "M4 ring, red 0.5–1.5")]
         return page("1.9a", "PSU panel · wiring", parts, s.out(), steps, [], "", S1)
     steps = ["Wire the panel on the bench first (1.9a), leaving 15 cm of slack into the box.",
              "Panel onto the right wall: M3 × 10 from outside through the Ø3.4 holes, washer and nyloc inside."]
-    parts = [P_(M3_10, 4, "B23"), P_(WASH3, 4, "B23"), P_(NYLOC3, 4, "B23"), (i_label("PSU panel", 22, 9, "#eee"), 1, "have", "P05")]
+    parts = [P_(M3_10, 4, "B23", "M3 × 10 pan"), P_(WASH3, 4, "B23", "M3 washer"), P_(NYLOC3, 4, "B23", "M3 nyloc"), (i_label("PSU panel", 22, 9, "#eee"), 1, "have", "P05", "PSU panel")]
     return panel_page("power", "psu", "1.9b", "PSU panel · mount", S1, steps, [],
                       "Powered: each toggle shows its volts · stop: all dark", parts)
 
@@ -1154,8 +1171,8 @@ def p_rails():
     s.line(230.4, 103, 233.6, 103, .3, ACC)
     s.line(232, 101.4, 232, 104.6, .3, ACC)
     s.text(236, 104, "drill Ø4.5, M4 + nyloc", 2.4)
-    parts = [(i_rail(40), 1, 2, "B34"), (i_rivnut(6, 11, 9, 1.2), 1.2, 2, "B28"), (i_pan(10, 4, 7, 2.8), 1.1, 4, "B40"),
-             (i_nut(7, 3.2, True), 1.6, 2, "B40")]
+    parts = [(i_rail(40), 1, 2, "B34", "TS35 rail, 8 in"), (i_rivnut(6, 11, 9, 1.2), 1.2, 2, "B28", "M4 rivnut, Ø6 hole"), (i_pan(10, 4, 7, 2.8), 1.1, 4, "B40", "M4 × 10 pan"),
+             (i_nut(7, 3.2, True), 1.6, 2, "B40", "M4 nyloc")]
     steps = ["Rail A (drivers): along the box on grid row z −2.5. M4 rivnuts in the grid holes at x −140 and −20.",
              "Rail B (board): front to back at x 131. Drill Ø4.5 at z −117 and +47; M4 bolt, nyloc under the plate.",
              "Lay each rail on the plate and mark through its slots before setting or drilling anything."]
@@ -1187,16 +1204,16 @@ def p_plate(which):
     if which == "tb":
         box(s, ex - 28, 108, 56, 18, "TB6600", "")
         s.arrow(ex, 128, ex, 138)
-        parts = [(i_label("TB6600", 20, 9), 1, 3, "B32"), (i_clip(), 1, 3, "B35"), (i_insert(), 2, 6, "B37"), (i_csk(8), 1.6, 6, "B36"),
-                 (i_pan(10), 1.4, 6, "B39"), (i_nut(5.5, 2.4), 1.6, 6, "B39")]
+        parts = [(i_label("TB6600", 20, 9), 1, 3, "B32", "TB6600 driver"), (i_clip(), 1, 3, "B35", "DIN clip 25 × 69"), (i_insert(), 2, 6, "B37", "M3 × 4 insert, OD 4.3"), (i_csk(8), 1.6, 6, "B36", "M3 × 8 flat head ⚠"),
+                 (i_pan(10), 1.4, 6, "B39", "M3 × 10 pan"), (i_nut(5.5, 2.4), 1.6, 6, "B39", "M3 nut")]
         steps = ["Print 3 TB6600 plates at the corrected 89 mm hole pitch (P07).",
                  "Melt the M3 inserts into the clip bosses. Clip under each plate, countersink on the rail side, M3 flat heads.",
                  "Driver onto its plate: M3 × 10 + nut through both flanges."]
         return page("2.3a", "Driver plates", parts, s.out(), steps, [], "Each plate snaps onto a rail offcut and releases", S2)
     box(s, ex - 28, 112, 56, 14, "FluidNC board", "")
     s.arrow(ex, 128, ex, 138)
-    parts = [(i_label("board", 16, 9), 1, 1, "B33"), (i_clip(), 1, 2, "B35"), (i_insert(), 2, 8, "B37"), (i_csk(8), 1.6, 4, "B36"),
-             (i_pan(6), 1.6, 4, "B38")]
+    parts = [(i_label("board", 16, 9), 1, 1, "B33", "FluidNC board"), (i_clip(), 1, 2, "B35", "DIN clip 25 × 69"), (i_insert(), 2, 8, "B37", "M3 × 4 insert, OD 4.3"), (i_csk(8), 1.6, 4, "B36", "M3 × 8 flat head ⚠"),
+             (i_pan(6), 1.6, 4, "B38", "M3 × 6 pan")]
     steps = ["Print the board plate with the rotated clips (P08).",
              "Inserts into the clip bosses and the 4 board bosses. Clips under, M3 flat heads.",
              "Board on with 4 × M3 × 6: USB to the back, driver signals left, I/O right, power to the front."]
@@ -1268,7 +1285,7 @@ def p_gx(part):
         steps = ["Print the three GX plates (P09).",
                  "Sockets into the plates from the front, nut behind, tight. The nut seat stops them turning.",
                  "Solder the socket tails now, on the bench (pin schedule 2.9b). Then the plates go on."]
-        parts = [(i_gx(5), 1, 3, "B41"), (i_gx(4), 1, 1, "B41"), (i_gx(3), 1, 2, "B41"), (i_label("GX plates", 22, 9, "#eee"), 1, 3, "P09")]
+        parts = [(i_gx(5), 1, 3, "B41", "GX16-5 socket"), (i_gx(4), 1, 1, "B41", "GX16-4 socket"), (i_gx(3), 1, 2, "B41", "GX16-3 socket"), (i_label("GX plates", 22, 9, "#eee"), 1, 3, "P09", "GX plates")]
         return page("2.5a", "GX sockets into the plates", parts, s.out(), steps,
                     ["Different pin counts on purpose: nothing mates the wrong socket"], "Each plug mates and locks", S2)
     sc = .52
@@ -1281,14 +1298,14 @@ def p_gx(part):
             s.circ(ox + (u + E.W / 2) * sc, oy - v * sc, 1.1, .3, INK, ACC)
     steps = ["Feed the tails in through the openings first.",
              "Plate on, lip into the opening, countersunk M3 × 6 into the rivnuts (red): 3 + 2 + 2."]
-    return page("2.5b", "GX plates onto the front", [P_(CSK6, 7, "B42")], s.out(), steps, [],
+    return page("2.5b", "GX plates onto the front", [P_(CSK6, 7, "B42", "M3 × 6 countersunk")], s.out(), steps, [],
                 "Backshells tighten without fouling each other", S2)
 
 
 def p_receiving():
     steps = ["Rings on the 5 posts first (2.8), then the panel on.",
              "M3 × 10 from outside through the Ø3.4 holes, washer and nyloc inside."]
-    parts = [P_(M3_10, 4, "B23"), P_(WASH3, 4, "B23"), P_(NYLOC3, 4, "B23"), (i_label("receiving", 24, 9, "#eee"), 1, "have", "P06")]
+    parts = [P_(M3_10, 4, "B23", "M3 × 10 pan"), P_(WASH3, 4, "B23", "M3 washer"), P_(NYLOC3, 4, "B23", "M3 nyloc"), (i_label("receiving", 24, 9, "#eee"), 1, "have", "P06", "receiving panel")]
     return panel_page("control", "receiving", "2.6", "Receiving panel", S2, steps,
                       ["⚠ post order drawn as 24 V, G1, 12 V, 6 V, G2: follow your printed panel's labels"], "Posts don't spin", parts)
 
@@ -1315,7 +1332,7 @@ def p_usb():
     steps = ["Decide the USB-C pass-through (B43) and whether the pendant socket goes in now (recommended: later).",
              "Short USB lead from the panel to the board, along the board's back edge.",
              "Panel on: countersunk M3 × 6 into the 4 rivnuts."]
-    return page("2.7", "USB / antenna panel", [(i_label("USB-C", 16, 8), 1, 1, "B43"), P_(CSK6, 4, "B42"), (i_label("panel", 16, 9, "#eee"), 1, 1, "P10")],
+    return page("2.7", "USB / antenna panel", [(i_label("USB-C", 16, 8), 1, 1, "B43", "USB-C pass-through 🚫"), P_(CSK6, 4, "B42", "M3 × 6 countersunk"), (i_label("panel", 16, 9, "#eee"), 1, 1, "P10", "USB panel")],
                 s.out(), steps, ["🚫 gate: USB-C part (B43) · pendant now or later"], "Laptop sees the board over the panel", S2)
 
 
@@ -1338,7 +1355,7 @@ def p_power_wiring(part):
         steps = ["24 V post → VCC of each TB6600 and the board's VIN, 1.5 mm². G1 post → each GND. One wire per terminal; no daisy chains.",
                  "12 V post → control fan +, G2 → fan −.",
                  "Before powering: read the board's 5 V regulator. A linear 7805 will cook on 24 V."]
-        parts = [(i_label("1.5 mm²", 18, 7, "#f9dede"), 1, "", "B17"), (i_ring(4, "#2b62c4"), 1.1, 2, "B19"), (i_ferrule(), 1.4, 10, "B08")]
+        parts = [(i_label("1.5 mm²", 18, 7, "#f9dede"), 1, "", "B17", "1.5 mm² red + black"), (i_ring(4, "#2b62c4"), 1.1, 2, "B19", "M4 ring, blue 1.5–2.5"), (i_ferrule(), 1.4, 10, "B08", "ferrule 1.5 mm²")]
         return page("2.8a", "Power wiring · duct 1", parts, s.out(), steps, ["⚠ board regulator unverified (Open questions 11)"],
                     "24 V ↔ G1 not a short · G1 ↔ body open", S2)
     box(s, 12, 76, 30, 50, "receiving", "panel")
@@ -1359,7 +1376,7 @@ def p_power_wiring(part):
     steps = ["6 V post → servo socket pin 1. G2 post → pin 2.",
              "The board's PWM goes to pin 3 (2.9a). Pin 4 spare.",
              "Fit the 2200 µF at the servo end, not here (B49)."]
-    return page("2.8b", "Power wiring · servo supply", [(i_ring(4, "#d33"), 1.1, 2, "B19")], s.out(), steps,
+    return page("2.8b", "Power wiring · servo supply", [(i_ring(4, "#d33"), 1.1, 2, "B19", "M4 ring, red 0.5–1.5")], s.out(), steps,
                 [], "6 V post ↔ pin 1 beeps · pin 1 ↔ pin 2 open", S2)
 
 
@@ -1382,7 +1399,7 @@ def p_signals(part):
         steps = ["Step, dir and enable from the board's external-driver header to each TB6600.",
                  "Follow the board's pinout for PUL+ vs PUL− (common anode or cathode). Check each driver's silkscreen: clones reorder terminals.",
                  "0.25–0.5 mm², labelled both ends. Bend with the jig sleeves (P11); guides (P15) along duct 2."]
-        parts = [(i_label("signal wire", 24, 7, "#dcecf4"), 1, "set", "B45"), (i_round(16, "#fff", 4), 1, "4/4/2", "P11"), (i_ferrule("#ccc"), 1.4, 20, "B08")]
+        parts = [(i_label("signal wire", 24, 7, "#dcecf4"), 1, "set", "B45", "0.25–0.5 mm²"), (i_round(16, "#fff", 4), 1, "4/4/2", "P11", "sleeves Ø16/24/40"), (i_ferrule("#ccc"), 1.4, 20, "B08", "ferrule 0.25–0.5 bare")]
         return page("2.9a", "Signals · board to drivers", parts, s.out(), steps,
                     ["⚠ board output type and TB6600 terminal order unverified (Open questions 12)"], "", S2)
     for i, (name, pins, rows) in enumerate((("GX16-5 · steppers", 5, ["A+", "A−", "B+", "B−", "screen → G1"]),
@@ -1404,8 +1421,8 @@ def p_signals(part):
     steps = ["Motors: A+ A− B+ B− on pins 1–4; the cable screen on pin 5 → G1. Never earth a screen through the shell.",
              "Find coil pairs with the meter: continuity = same coil. Don't trust Ender colours.",
              "Endstops: screen at the box end only."]
-    return page("2.9b", "Signals · socket pins", [(i_gx(5), 1, 3, "B41"), (i_label("4-core screened", 30, 7), 1, "10 m", "B46"),
-                                                   (i_label("2-pair screened", 30, 7), 1, "4 m", "B47")], s.out(), steps, [],
+    return page("2.9b", "Signals · socket pins", [(i_gx(5), 1, 3, "B41", "GX16-5 plug"), (i_label("4-core screened", 30, 7), 1, "10 m", "B46", "4-core screened"),
+                                                   (i_label("2-pair screened", 30, 7), 1, "4 m", "B47", "2-pair screened")], s.out(), steps, [],
                 "Continuity table ticked: every pin to its terminal", S2)
 
 
@@ -1450,7 +1467,7 @@ def p_windows():
         caption(s, 232 - (x1 - x0) * .275, 130 + (y1 - y0) * .275 + 5, "172 × 79, 12.7 mm Meccano pitch")
     steps = ["Print three Meccano window panels (P12): one per window slot file.",
              "Lip into the opening, 4 countersunk M3 × 6 into the rivnuts."]
-    return page("3.1", "Window panels", [P_(CSK6, 12, "B42"), (i_label("Meccano", 22, 9, "#eee"), 1, 3, "P12")], s.out(), steps, [],
+    return page("3.1", "Window panels", [P_(CSK6, 12, "B42", "M3 × 6 countersunk"), (i_label("Meccano", 22, 9, "#eee"), 1, 3, "P12", "Meccano panel 172 × 79")], s.out(), steps, [],
                 "Panels flat, heads flush", S3)
 
 
@@ -1487,7 +1504,7 @@ def p_lids():
     steps = ["Power lid first. Ease the snug fit before forcing it (Open questions 13).",
              "6 screws per lid: 3 on top, 3 at the back. Button head M3 over a printed washer; the Ø10 holes clear the rivnut flanges.",
              "Same for the control lid."]
-    return page("3.2", "Lids", [(i_button(8), 1.6, 12, "B51"), (i_round(15, "#eee", 3.4), .9, 14, "P13")], s.out(), steps,
+    return page("3.2", "Lids", [(i_button(8), 1.6, 12, "B51", "M3 × 8 button ⚠"), (i_round(15, "#eee", 3.4), .9, 14, "P13", "washer Ø15")], s.out(), steps,
                 ["⚠ screw length · P13 not modelled yet"], "Lid seats without bowing the walls · no wire pinched", S3)
 
 
@@ -1516,7 +1533,7 @@ def p_stack():
             s.circ(px, py, (4 if how == "round" else 5) * ts * 2, .4, INK, ACC if how == "round" else "#fff")
     s.text(cx, cy + 300.8 / 2 * ts + 4, "FRONT", 2.2, "middle", c=MID)
     caption(s, cx - 456.8 / 2 * ts, cy + 300.8 / 2 * ts + 9, "power lid top: hole, slot, 2 clearance")
-    parts = [(i_label("foot", 14, 7, "#eee"), 1, 4, "P14"), (i_lead(WIRE["P24"]), 1, 5, "B53")]
+    parts = [(i_label("foot", 14, 7, "#eee"), 1, 4, "P14", "foot Ø24 × 6 + peg"), (i_lead(WIRE["P24"]), 1, 5, "B53", "4 mm banana lead")]
     steps = ["Push the 4 printed feet into the control box's base holes.",
              "Lower the control box onto the power lid: the front-left peg finds the round hole, the front-right the slot.",
              "Banana leads, post to post, colour-matched: 24 V, G1, 12 V, 6 V, G2."]
@@ -1536,7 +1553,7 @@ def p_board_top():
     s.text(cx, cy + ld / 2 * ts + 4.5, "FRONT", 2.3, "middle", c=MID)
     steps = ["A board at least 40 cm wide: on a 38 cm board the lid's corner holes sit only 5 mm in from its edges.",
              "Or pads under it. M3 rivnuts in the 4 corner holes if you want it fixed."]
-    return page("3.4", "Laptop board", [(i_label("board", 18, 9, "#efe4d2"), 1, 1, "B54")], s.out(), steps, ["Later: not on the path to the first A3"], "", S3)
+    return page("3.4", "Laptop board", [(i_label("board", 18, 9, "#efe4d2"), 1, 1, "B54", "board ≥ 40 cm")], s.out(), steps, ["Later: not on the path to the first A3"], "", S3)
 
 
 # ============================================================================
@@ -1564,7 +1581,7 @@ def p_checks(part):
         steps = ["Unplugged. Earth: IEC earth pin → stud, both PSU cases, power body, both lids, control body. All beep.",
                  "Isolation: G1 and G2 to earth: open. 24 V to G1: not a short.",
                  "Power box alone, banana leads out, mains on: every jack at its voltage."]
-        return page("4.1", "Checks before motors", [(i_meter(), 1.6, 1, "B60")], s.out(), steps,
+        return page("4.1", "Checks before motors", [(i_meter(), 1.6, 1, "B60", "multimeter")], s.out(), steps,
                     ["Lids beep only if the bond leads go in (Open questions 5)"], "All three pass", S4)
     seq = [("USB in", "board boots"), ("banana leads", ""), ("24 V toggle", "TB LEDs on"), ("6 V toggle", "servo unplugged: 6.0 V on pins 1–2"),
            ("one motor", "toggles off to plug; jog 10 mm"), ("endstops", "press each by hand: status shows it"), ("servo", "pen up/down × 5, no reset"),
