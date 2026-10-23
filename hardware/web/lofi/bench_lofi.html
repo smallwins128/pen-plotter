@@ -1,0 +1,111 @@
+<title>Etch Bench Layout</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* layout: one top-view drawing of the bench, notes beside it; plan-drawing look on paper */
+:root{--bg:#f3f2ee;--paper:#fff;--ink:#1d1d1b;--mute:#76746e;--line:#c9c6bf;--plot:#2f6f9f;--cab:#7a5c2e;--prn:#3d8a4f;--warn:#c8432f;
+--display:"Archivo Narrow","Arial Narrow",Arial,sans-serif;--body:"IBM Plex Sans",Helvetica,Arial,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#1c1c1a;--paper:#262624;--ink:#ecebe6;--mute:#a19f98;--line:#4a4844;--plot:#6fa8d6;--cab:#c49a5c;--prn:#6cc283;--warn:#ec7663;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1c1a;--paper:#262624;--ink:#ecebe6;--mute:#a19f98;--line:#4a4844;--plot:#6fa8d6;--cab:#c49a5c;--prn:#6cc283;--warn:#ec7663;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:16px}
+h1{font-family:var(--display);font-size:2rem;margin:0;letter-spacing:.01em;text-wrap:balance}
+p.lead{margin:0;color:var(--mute);max-width:70ch}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;min-width:720px;height:auto;font-family:var(--body)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px;min-width:0}
+.card h2{font-family:var(--display);font-size:1.1rem;margin:0 0 6px}
+.card ul{margin:0;padding-left:18px;line-height:1.5}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.warn{color:var(--warn)}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<div class="wrap">
+  <h1>Fabrication bench: plotter, cabinets, A1</h1>
+  <p class="lead">Top view of the 1524 × 600 mm table, front edge at the bottom. All three fit side by side if the plotter frame drops to 600 × 500 and the cabinet stack turns 90°.</p>
+  <div class="sheet">
+  <svg viewBox="-60 -150 1700 940" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bench layout, top view">
+    <defs>
+      <pattern id="hatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="14" stroke="var(--warn)" stroke-width="3" opacity=".45"/></pattern>
+      <pattern id="hatchg" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="14" stroke="var(--prn)" stroke-width="3" opacity=".35"/></pattern>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--mute)"/></marker>
+    </defs>
+    <!-- table: x 0..1524, depth 0 (back) .. 600 (front) -->
+    <rect x="0" y="0" width="1524" height="600" fill="none" stroke="var(--ink)" stroke-width="4"/>
+    <text x="0" y="-108" font-size="26" fill="var(--mute)">WALL / BACK</text>
+    <text x="0" y="680" font-size="26" fill="var(--mute)">FRONT · you stand here</text>
+    <line x1="0" y1="-60" x2="1524" y2="-60" stroke="var(--mute)" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+    <text x="762" y="-72" font-size="26" text-anchor="middle" fill="var(--mute)" class="num">1524</text>
+    <line x1="1570" y1="0" x2="1570" y2="600" stroke="var(--mute)" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+    <text x="1584" y="310" font-size="26" fill="var(--mute)" class="num">600</text>
+
+    <!-- plotter frame 600 x 500, depth 50..550 -->
+    <g>
+      <rect x="0" y="50" width="600" height="500" fill="none" stroke="var(--plot)" stroke-width="20" opacity=".25"/>
+      <rect x="0" y="50" width="600" height="500" fill="none" stroke="var(--plot)" stroke-width="3"/>
+      <rect x="90" y="151.5" width="420" height="297" fill="var(--paper)" stroke="var(--plot)" stroke-width="2.5" stroke-dasharray="10 6"/>
+      <text x="300" y="300" font-size="30" text-anchor="middle" font-weight="600" fill="var(--plot)">A3 420 × 297</text>
+      <text x="300" y="336" font-size="22" text-anchor="middle" fill="var(--mute)">landscape</text>
+      <rect x="540" y="0" width="20" height="600" fill="var(--plot)" opacity=".85"/>
+      <rect x="517" y="380" width="66" height="66" fill="none" stroke="var(--plot)" stroke-width="3"/>
+      <text x="280" y="530" font-size="24" text-anchor="middle" fill="var(--plot)">plotter frame 600 × 500 (2040)</text>
+      <text x="530" y="30" font-size="20" text-anchor="end" fill="var(--plot)">cross bar 2020 × 600</text>
+    </g>
+
+    <!-- cabinets turned 90°: 297.4 along the table, 452.4 deep; depth 68..520 -->
+    <g>
+      <rect x="640" y="68" width="297.4" height="452.4" fill="var(--cab)" opacity=".12"/>
+      <rect x="640" y="68" width="297.4" height="452.4" fill="none" stroke="var(--cab)" stroke-width="3"/>
+      <line x1="640" y1="68" x2="640" y2="520.4" stroke="var(--cab)" stroke-width="10"/>
+      <text x="788" y="270" font-size="26" text-anchor="middle" font-weight="600" fill="var(--cab)">cabinets</text>
+      <text x="788" y="302" font-size="20" text-anchor="middle" fill="var(--mute)">297 × 452, stacked</text>
+      <text x="788" y="328" font-size="20" text-anchor="middle" fill="var(--mute)">laptop on top</text>
+      <text x="650" y="420" font-size="18" fill="var(--cab)" transform="rotate(-90 650 420)">GX sockets → plotter</text>
+      <rect x="640" y="0" width="297.4" height="68" fill="url(#hatch)"/>
+      <text x="788" y="44" font-size="18" text-anchor="middle" fill="var(--warn)">IEC · fans · USB: 68 clear</text>
+      <text x="788" y="560" font-size="18" text-anchor="middle" fill="var(--cab)">toggles + voltmeters face you</text>
+    </g>
+
+    <!-- Bambu A1 body ~465 x 410, depth 100..510; bed travel 195 front, 90 back -->
+    <g>
+      <rect x="1000" y="500" width="465" height="195" fill="url(#hatchg)" stroke="var(--prn)" stroke-width="2" stroke-dasharray="8 6"/>
+      <rect x="1000" y="0" width="465" height="90" fill="url(#hatchg)" stroke="var(--prn)" stroke-width="2" stroke-dasharray="8 6"/>
+      <rect x="1000" y="90" width="465" height="410" fill="var(--prn)" opacity=".12"/>
+      <rect x="1000" y="90" width="465" height="410" fill="none" stroke="var(--prn)" stroke-width="3"/>
+      <rect x="1104" y="167" width="256" height="256" fill="none" stroke="var(--prn)" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="1232" y="290" font-size="26" text-anchor="middle" font-weight="600" fill="var(--prn)">Bambu A1</text>
+      <text x="1232" y="320" font-size="20" text-anchor="middle" fill="var(--mute)">~465 × 410 ⚠</text>
+      <text x="1232" y="680" font-size="18" text-anchor="middle" fill="var(--prn)">bed swings 95 past the front edge ⚠</text>
+      <text x="1232" y="54" font-size="18" text-anchor="middle" fill="var(--prn)">bed back 90</text>
+      <line x1="0" y1="600" x2="1524" y2="600" stroke="var(--ink)" stroke-width="4"/>
+    </g>
+
+    <!-- along-table dims -->
+    <g font-size="20" fill="var(--mute)" class="num" text-anchor="middle">
+      <line x1="0" y1="770" x2="600" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="300" y="800">600</text>
+      <line x1="600" y1="770" x2="640" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="620" y="800">40</text>
+      <line x1="640" y1="770" x2="937" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="788" y="800">297</text>
+      <line x1="937" y1="770" x2="1000" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="968" y="800">63</text>
+      <line x1="1000" y1="770" x2="1465" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="1232" y="800">465</text>
+      <line x1="1465" y1="770" x2="1524" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="1494" y="800">59</text>
+    </g>
+  </svg>
+  </div>
+  <div class="grid">
+    <div class="card"><h2>Plotter: 600 × 500</h2><ul>
+      <li>A3 landscape: 420 along the table, 297 deep.</li>
+      <li>Frame centred in depth, 50 clear front and back; the 600 cross bar spans the full table depth.</li>
+      <li>Today's 1000 × 600 frame doesn't fit with the A1 on the same table: 1000 + 297 + 465 = <span class="num">1762</span> &gt; 1524.</li></ul></div>
+    <div class="card"><h2>Cabinets turned 90°</h2><ul>
+      <li>GX front faces the plotter: shortest umbilical.</li>
+      <li>IEC, fans and USB face the wall: mains and USB go straight back. Keep 68 mm clear for air and plugs.</li>
+      <li>Banana panel (toggles, voltmeters) faces you.</li>
+      <li>The laptop still sits on top of the stack.</li></ul></div>
+    <div class="card"><h2>Bambu A1</h2><ul>
+      <li>Bed-slinger: needs about 695 mm front to back with the bed travel (FAQ: 195 front, 90 back).</li>
+      <li class="warn">The table is 600 deep, so the bed swings about 95 mm past the front edge. Fine over open air; nothing can sit there.</li>
+      <li>Body size ⚠ from forum and FAQ figures; measure yours.</li></ul></div>
+  </div>
+</div>
