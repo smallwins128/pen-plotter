@@ -812,7 +812,7 @@ def p_base_plate(kind, num, stage):
              "b  Plate on top, six more screws." + (" Set the PSU-bracket M4 rivnuts first (1.3)." if kind == "power" else
                                                     " Prepare the rail fixings first (2.2): easier with the plate on the bench.")]
     return page(num, f"Base plate · {kind} box", parts, s.out(), steps,
-                ["🚫 gate: plate material (B25)", "⚠ screw length unverified"],
+                ["Plates: 2 mm mild steel, already cut", "Standoffs stay 5 mm: 6 mm or more hits the window rivnut and PSU panel screws"],
                 "Plate doesn't rock · no screw head below the feet", stage)
 
 
