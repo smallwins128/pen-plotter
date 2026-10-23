@@ -15,7 +15,7 @@ B14	12 V PSU	model: read the label	1	1.3	Have
 B15	Buck 12 -> 6 V	type: check (XL4015 preferred)	1	1.3	Have
 B16	PCT 2x6 splitter	2 x (1 in / 3 out)	1	1.7	Have
 B17	DC wire, heavy	1.5 mm² (not 16 AWG), red + black	3 m each	1.7, 2.8	Need
-B18	DC wire, light	0.75 mm² silicone, red + black	3 m each	1.7, 2.8	Need
+B18	DC wire, light	0.75 mm² silicone, red + black	3 m each	1.7, 2.8	Need black (have red 1.0)
 B19	Ring terminal M4	insulated: blue x10, red x20	30	1.9, 2.6	Need
 B20	Fan	80 x 80 x 25, 12 V	2	1.8, 2.10	Have
 B21	Fan screw set	M4 x 35 + nyloc + washer	8	1.8, 2.10	Need
