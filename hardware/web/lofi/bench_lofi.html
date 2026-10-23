@@ -22,9 +22,9 @@ svg{display:block;width:100%;min-width:720px;height:auto;font-family:var(--body)
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <div class="wrap">
   <h1>Fabrication bench: plotter, cabinets, A1</h1>
-  <p class="lead">Top view of the 1524 × 600 mm table, front edge at the bottom. All three fit side by side if the plotter frame drops to 600 × 500 and the cabinet stack turns 90°.</p>
+  <p class="lead">Top view, front edge at the bottom. The old 1000 × 560 frame of 2040 stays as the base. The new A3 axis is two 600 mm 2040 rails running front to back on riser plates: the left one sits on the old end rail, the right one bridges the old front and back rails. The cabinets fit in the rest of the old frame.</p>
   <div class="sheet">
-  <svg viewBox="-60 -150 1700 940" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bench layout, top view">
+  <svg viewBox="-120 -150 1760 960" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bench layout v2, top view">
     <defs>
       <pattern id="hatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
         <line x1="0" y1="0" x2="0" y2="14" stroke="var(--warn)" stroke-width="3" opacity=".45"/></pattern>
@@ -32,80 +32,97 @@ svg{display:block;width:100%;min-width:720px;height:auto;font-family:var(--body)
         <line x1="0" y1="0" x2="0" y2="14" stroke="var(--prn)" stroke-width="3" opacity=".35"/></pattern>
       <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--mute)"/></marker>
     </defs>
-    <!-- table: x 0..1524, depth 0 (back) .. 600 (front) -->
     <rect x="0" y="0" width="1524" height="600" fill="none" stroke="var(--ink)" stroke-width="4"/>
     <text x="0" y="-108" font-size="26" fill="var(--mute)">WALL / BACK</text>
-    <text x="0" y="680" font-size="26" fill="var(--mute)">FRONT · you stand here</text>
     <line x1="0" y1="-60" x2="1524" y2="-60" stroke="var(--mute)" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
-    <text x="762" y="-72" font-size="26" text-anchor="middle" fill="var(--mute)" class="num">1524</text>
-    <line x1="1570" y1="0" x2="1570" y2="600" stroke="var(--mute)" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
-    <text x="1584" y="310" font-size="26" fill="var(--mute)" class="num">600</text>
+    <text x="762" y="-72" font-size="26" text-anchor="middle" fill="var(--mute)" class="num">table 1524</text>
+    <line x1="1580" y1="0" x2="1580" y2="600" stroke="var(--mute)" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+    <text x="1592" y="310" font-size="26" fill="var(--mute)" class="num">600</text>
 
-    <!-- plotter frame 600 x 500, depth 50..550 -->
+    <!-- old base frame 1000 x 560, 2040 lying 20 wide -->
+    <g fill="var(--line)" stroke="var(--mute)" stroke-width="1.5">
+      <rect x="0" y="20" width="1000" height="20"/><rect x="0" y="560" width="1000" height="20"/>
+      <rect x="0" y="40" width="20" height="520"/><rect x="980" y="40" width="20" height="520"/>
+    </g>
+    <text x="1000" y="-20" font-size="20" text-anchor="end" fill="var(--mute)">old base frame 1000 × 560 (2040, stays)</text>
+
+    <!-- new rails 600 front-back at x 0..20 and 480..500, on risers -->
     <g>
-      <rect x="0" y="50" width="600" height="500" fill="none" stroke="var(--plot)" stroke-width="20" opacity=".25"/>
-      <rect x="0" y="50" width="600" height="500" fill="none" stroke="var(--plot)" stroke-width="3"/>
-      <rect x="90" y="151.5" width="420" height="297" fill="var(--paper)" stroke="var(--plot)" stroke-width="2.5" stroke-dasharray="10 6"/>
-      <text x="300" y="300" font-size="30" text-anchor="middle" font-weight="600" fill="var(--plot)">A3 420 × 297</text>
-      <text x="300" y="336" font-size="22" text-anchor="middle" fill="var(--mute)">landscape</text>
-      <rect x="540" y="0" width="20" height="600" fill="var(--plot)" opacity=".85"/>
-      <rect x="517" y="380" width="66" height="66" fill="none" stroke="var(--plot)" stroke-width="3"/>
-      <text x="280" y="530" font-size="24" text-anchor="middle" fill="var(--plot)">plotter frame 600 × 500 (2040)</text>
-      <text x="530" y="30" font-size="20" text-anchor="end" fill="var(--plot)">cross bar 2020 × 600</text>
+      <rect x="0" y="0" width="20" height="600" fill="var(--plot)" opacity=".9"/>
+      <rect x="480" y="0" width="20" height="600" fill="var(--plot)" opacity=".9"/>
+      <g fill="none" stroke="var(--plot)" stroke-width="2.5">
+        <rect x="-15" y="12" width="50" height="36"/><rect x="-15" y="552" width="50" height="36"/>
+        <rect x="465" y="12" width="50" height="36"/><rect x="465" y="552" width="50" height="36"/>
+      </g>
+      <text x="472" y="-20" font-size="20" text-anchor="end" fill="var(--plot)">new rails 2040 × 600, front to back</text>
+      <text x="520" y="70" font-size="18" fill="var(--plot)">riser plate</text>
+      <line x1="518" y1="64" x2="512" y2="48" stroke="var(--plot)" stroke-width="1.5"/>
+      <!-- bar: 2020 x 600 along the table, moves front-back -->
+      <rect x="-60" y="300" width="600" height="20" fill="var(--plot)" opacity=".55"/>
+      <rect x="217" y="277" width="66" height="66" fill="none" stroke="var(--plot)" stroke-width="3"/>
+      <text x="30" y="292" font-size="18" fill="var(--plot)">bar 2020 × 600</text>
+      <rect x="101.5" y="90" width="297" height="420" fill="none" stroke="var(--plot)" stroke-width="2.5" stroke-dasharray="10 6"/>
+      <text x="250" y="170" font-size="28" text-anchor="middle" font-weight="600" fill="var(--plot)">A3</text>
+      <text x="250" y="200" font-size="20" text-anchor="middle" fill="var(--mute)">297 × 420, portrait</text>
+      <text x="250" y="450" font-size="18" text-anchor="middle" fill="var(--mute)">paper on a raised board ⚠</text>
+      <line x1="-80" y1="320" x2="-80" y2="560" stroke="var(--plot)" stroke-width="1.5" marker-end="url(#ar)"/>
+      <text x="-90" y="460" font-size="16" fill="var(--plot)" text-anchor="end" transform="rotate(-90 -90 460)">bar travels</text>
     </g>
 
-    <!-- cabinets turned 90°: 297.4 along the table, 452.4 deep; depth 68..520 -->
+    <!-- cabinets turned 90°, inside the old frame -->
     <g>
-      <rect x="640" y="68" width="297.4" height="452.4" fill="var(--cab)" opacity=".12"/>
-      <rect x="640" y="68" width="297.4" height="452.4" fill="none" stroke="var(--cab)" stroke-width="3"/>
-      <line x1="640" y1="68" x2="640" y2="520.4" stroke="var(--cab)" stroke-width="10"/>
-      <text x="788" y="270" font-size="26" text-anchor="middle" font-weight="600" fill="var(--cab)">cabinets</text>
-      <text x="788" y="302" font-size="20" text-anchor="middle" fill="var(--mute)">297 × 452, stacked</text>
-      <text x="788" y="328" font-size="20" text-anchor="middle" fill="var(--mute)">laptop on top</text>
-      <text x="650" y="420" font-size="18" fill="var(--cab)" transform="rotate(-90 650 420)">GX sockets → plotter</text>
-      <rect x="640" y="0" width="297.4" height="68" fill="url(#hatch)"/>
-      <text x="788" y="44" font-size="18" text-anchor="middle" fill="var(--warn)">IEC · fans · USB: 68 clear</text>
-      <text x="788" y="560" font-size="18" text-anchor="middle" fill="var(--cab)">toggles + voltmeters face you</text>
+      <rect x="580" y="100" width="297.4" height="452.4" fill="var(--cab)" opacity=".12"/>
+      <rect x="580" y="100" width="297.4" height="452.4" fill="none" stroke="var(--cab)" stroke-width="3"/>
+      <line x1="580" y1="100" x2="580" y2="552.4" stroke="var(--cab)" stroke-width="10"/>
+      <rect x="580" y="40" width="297.4" height="60" fill="url(#hatch)"/>
+      <text x="728" y="78" font-size="17" text-anchor="middle" fill="var(--warn)">IEC · fans · USB: 60 clear</text>
+      <text x="728" y="300" font-size="26" text-anchor="middle" font-weight="600" fill="var(--cab)">cabinets</text>
+      <text x="728" y="332" font-size="20" text-anchor="middle" fill="var(--mute)">297 × 452, stacked</text>
+      <text x="728" y="358" font-size="20" text-anchor="middle" fill="var(--mute)">laptop on top</text>
+      <text x="592" y="470" font-size="17" fill="var(--cab)" transform="rotate(-90 592 470)">GX sockets → plotter</text>
+      <text x="728" y="620" font-size="17" text-anchor="middle" fill="var(--cab)">toggles + voltmeters face you</text>
+      
     </g>
 
-    <!-- Bambu A1 body ~465 x 410, depth 100..510; bed travel 195 front, 90 back -->
+    <!-- A1 outside the old frame -->
     <g>
-      <rect x="1000" y="500" width="465" height="195" fill="url(#hatchg)" stroke="var(--prn)" stroke-width="2" stroke-dasharray="8 6"/>
-      <rect x="1000" y="0" width="465" height="90" fill="url(#hatchg)" stroke="var(--prn)" stroke-width="2" stroke-dasharray="8 6"/>
-      <rect x="1000" y="90" width="465" height="410" fill="var(--prn)" opacity=".12"/>
-      <rect x="1000" y="90" width="465" height="410" fill="none" stroke="var(--prn)" stroke-width="3"/>
-      <rect x="1104" y="167" width="256" height="256" fill="none" stroke="var(--prn)" stroke-width="2" stroke-dasharray="6 5"/>
-      <text x="1232" y="290" font-size="26" text-anchor="middle" font-weight="600" fill="var(--prn)">Bambu A1</text>
-      <text x="1232" y="320" font-size="20" text-anchor="middle" fill="var(--mute)">~465 × 410 ⚠</text>
-      <text x="1232" y="680" font-size="18" text-anchor="middle" fill="var(--prn)">bed swings 95 past the front edge ⚠</text>
-      <text x="1232" y="54" font-size="18" text-anchor="middle" fill="var(--prn)">bed back 90</text>
-      <line x1="0" y1="600" x2="1524" y2="600" stroke="var(--ink)" stroke-width="4"/>
+      <rect x="1030" y="500" width="465" height="195" fill="url(#hatchg)" stroke="var(--prn)" stroke-width="2" stroke-dasharray="8 6"/>
+      <rect x="1030" y="0" width="465" height="90" fill="url(#hatchg)" stroke="var(--prn)" stroke-width="2" stroke-dasharray="8 6"/>
+      <rect x="1030" y="90" width="465" height="410" fill="var(--prn)" opacity=".12"/>
+      <rect x="1030" y="90" width="465" height="410" fill="none" stroke="var(--prn)" stroke-width="3"/>
+      <rect x="1134" y="167" width="256" height="256" fill="none" stroke="var(--prn)" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="1262" y="290" font-size="26" text-anchor="middle" font-weight="600" fill="var(--prn)">Bambu A1</text>
+      <text x="1262" y="320" font-size="20" text-anchor="middle" fill="var(--mute)">~465 × 410 ⚠</text>
+      <text x="1262" y="54" font-size="18" text-anchor="middle" fill="var(--prn)">bed back 90</text>
+      <text x="1262" y="680" font-size="18" text-anchor="middle" fill="var(--prn)">bed swings 95 past the front edge ⚠</text>
     </g>
+    <line x1="0" y1="600" x2="1524" y2="600" stroke="var(--ink)" stroke-width="4"/>
+    <text x="0" y="680" font-size="26" fill="var(--mute)">FRONT · you stand here</text>
 
-    <!-- along-table dims -->
     <g font-size="20" fill="var(--mute)" class="num" text-anchor="middle">
-      <line x1="0" y1="770" x2="600" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="300" y="800">600</text>
-      <line x1="600" y1="770" x2="640" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="620" y="800">40</text>
-      <line x1="640" y1="770" x2="937" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="788" y="800">297</text>
-      <line x1="937" y1="770" x2="1000" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="968" y="800">63</text>
-      <line x1="1000" y1="770" x2="1465" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="1232" y="800">465</text>
-      <line x1="1465" y1="770" x2="1524" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="1494" y="800">59</text>
+      <line x1="0" y1="770" x2="500" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="250" y="800">500</text>
+      <line x1="500" y1="770" x2="580" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="540" y="800">80</text>
+      <line x1="580" y1="770" x2="877" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="728" y="800">297</text>
+      <line x1="877" y1="770" x2="1000" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="938" y="800">123</text>
+      <line x1="1000" y1="770" x2="1030" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="1015" y="800">30</text>
+      <line x1="1030" y1="770" x2="1495" y2="770" stroke="var(--mute)" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="1262" y="800">465</text>
+      <line x1="1495" y1="770" x2="1524" y2="770" stroke="var(--mute)" stroke-width="1.5"/><text x="1510" y="800">29</text>
     </g>
   </svg>
   </div>
   <div class="grid">
-    <div class="card"><h2>Plotter: 600 × 500</h2><ul>
-      <li>A3 landscape: 420 along the table, 297 deep.</li>
-      <li>Frame centred in depth, 50 clear front and back; the 600 cross bar spans the full table depth.</li>
-      <li>Today's 1000 × 600 frame doesn't fit with the A1 on the same table: 1000 + 297 + 465 = <span class="num">1762</span> &gt; 1524.</li></ul></div>
-    <div class="card"><h2>Cabinets turned 90°</h2><ul>
-      <li>GX front faces the plotter: shortest umbilical.</li>
-      <li>IEC, fans and USB face the wall: mains and USB go straight back. Keep 68 mm clear for air and plugs.</li>
-      <li>Banana panel (toggles, voltmeters) faces you.</li>
-      <li>The laptop still sits on top of the stack.</li></ul></div>
-    <div class="card"><h2>Bambu A1</h2><ul>
-      <li>Bed-slinger: needs about 695 mm front to back with the bed travel (FAQ: 195 front, 90 back).</li>
-      <li class="warn">The table is 600 deep, so the bed swings about 95 mm past the front edge. Fine over open air; nothing can sit there.</li>
-      <li>Body size ⚠ from forum and FAQ figures; measure yours.</li></ul></div>
+    <div class="card"><h2>New A3 axis: 3 cuts</h2><ul>
+      <li><span class="num">2 × 2040 @ 600</span>: rails, front to back. Ends on riser plates over the old front and back rails; the left one also sits along the old end rail.</li>
+      <li><span class="num">1 × 2020 @ 600</span>: cross bar along the table (480 span + 60 overhang each end, as today).</li>
+      <li>No new short members: the old frame keeps the two rails square through the risers.</li>
+      <li>Travel ≈ <span class="num">485</span> front-back, <span class="num">365</span> along the table, so A3 fits portrait.</li></ul></div>
+    <div class="card"><h2>Watch</h2><ul>
+      <li class="warn">Pen height: the new rails sit about 40 mm plus the plate higher than today. Put the paper on a raised board inside the frame, or the pen won't reach.</li>
+      <li class="warn">The bar's right end overhangs to x 560: cabinets start at 580 or later.</li>
+      <li>The bar's left end hangs 60 past the table edge: keep a wall more than 60 mm away.</li></ul></div>
+    <div class="card"><h2>Cabinets and A1</h2><ul>
+      <li>Cabinets turned 90° inside the old frame: GX toward the plotter, IEC and fans at the back with 60 clear, toggles facing you.</li>
+      <li>The fans sit partly behind the 40 mm back rail ⚠: check the airflow.</li>
+      <li>The A1 gets the 524 to the right; its bed still swings about 95 mm past the front edge ⚠.</li></ul></div>
   </div>
 </div>
