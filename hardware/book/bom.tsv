@@ -7,7 +7,7 @@ B05	Mains wire	H05V-K 1.0 mm²: brown, blue, green/yellow	2 m each	1.1, 1.5	Need
 B06	Lever splicer	genuine Wago 221-413	4	1.5	Need
 B07	Female spade, insulated	match the IEC tabs (4.8 or 6.3)	10	1.5	Need
 B08	Ferrule kit	0.25-2.5 mm², insulated + bare	1	1.5, 1.7, 2.8	Check
-B09	Earth stud set	M6 x 20 bolt, 2 nuts, 2 serrated washers	1	1.1	Need
+B09	Earth stud set	M6 x 30 hex bolt (A2), 3 nuts, 2 serrated washers	1	1.1	Need
 B10	Ring terminal M6	insulated, 0.5-1.5 mm²	6	1.1	Need
 B11	Terminal shrouds	or heat shrink for IEC tabs, PSU inputs	1 set	1.5	Need
 B13	24 V PSU	Mean Well LRS-350-24	1	1.3	Have
@@ -20,13 +20,13 @@ B19	Ring terminal M4	insulated: blue x10, red x20	30	1.9, 2.6	Need
 B20	Fan	80 x 80 x 25, 12 V	2	1.8, 2.10	Have
 B21	Fan screw set	M4 x 35 + nyloc + washer	8	1.8, 2.10	Need
 B23	Banana panel screw set	M3 x 10 + washer + nyloc	8	1.9, 2.6	Need
-B24	Rubber feet	stick-on, power box	4	0.2	Check
+B24	Rubber feet	stick-on, power box	4	0.2	Have
 B25	Base plates	440 x 285; material: decide	2	1.2, 2.1	Decide
 B26	M4 standoff	5 mm, female-female	12	1.2, 2.1	Need
 B27	M4 screw	x 8 (length unverified)	24	1.2, 2.1	Need
 B28	M4 rivnut	for the Ø6 grid (hole unmeasured)	20	1.3, 2.2	Need
-B29	M3 rivnut	for Ø5 holes; 39 needed	50	0.2	Check
-B30	Solid rivet	Ø3.2; 8 needed	15	0.3	Check
+B29	M3 rivnut	for Ø5 holes; 39 needed	50	0.2	Have
+B30	Solid rivet	Ø3.2; 8 needed	15	0.3	Have
 B31	PSU mount screws	thread + length from datasheets	8	1.3	Need
 B32	Stepper driver	TB6600	3	2.3	Have
 B33	Controller	FluidNC board	1	2.3	Have
@@ -49,8 +49,8 @@ B50	Cable management	ties, mounts, sleeving, heat shrink	1 set	2.9	Check
 B51	Lid screw	M3 button head (length unverified)	12	3.2	Need
 B53	Banana lead	4 mm, colour-matched	5	3.3	Check
 B54	Laptop board	>= 40 cm wide	1	3.4	Later
-B60	Multimeter	continuity + DC 0.01 V	1	0.1	Check
-B61	Rivnut tool	M3 + M4	1	0.1	Check
-B62	Ferrule crimper	0.25-6 mm²	1	0.1	Check
-B63	Terminal crimper	insulated rings + spades	1	0.1	Check
-B64	Labels	wire markers or label maker	1	0.1	Check
+B60	Multimeter	continuity + DC 0.01 V	1	0.1	Have
+B61	Rivnut tool	M3 + M4	1	0.1	Have
+B62	Ferrule crimper	0.25-6 mm²	1	0.1	Have
+B63	Terminal crimper	insulated rings + spades	1	0.1	Have
+B64	Labels	wire markers or label maker	1	0.1	Have

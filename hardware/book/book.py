@@ -764,7 +764,7 @@ def p_earth_stud():
         else:
             s.rect(xx, cy - hh * k, t * k, 2 * hh * k, .35, INK, "#fff")
         xx += t * k
-    parts = [(i_hex(20), 1.0, 1, "B09", "M6 × 20 hex bolt"), (i_washer(12, 1.4, True), 1.0, 1, "B09", "M6 serrated washer"), (i_nut(10, 5), 1.0, 3, "B09", "M6 nut"),
+    parts = [(i_hex(30), .8, 1, "B09", "M6 × 30 hex bolt, A2"), (i_washer(12, 1.4, True), 1.0, 2, "B09", "M6 serrated washer"), (i_nut(10, 5), 1.0, 3, "B09", "M6 nut"),
              (i_ring(6.4, WIRE["PE"]), 1.0, 3, "B10", "M6 ring, 0.5–1.5 mm²")]
     steps = ["M6 bolt through the Ø6.5 hole low on the left wall, head outside.",
              "Inside: serrated washer, nut. Tighten hard: this is the bond to the box.",
