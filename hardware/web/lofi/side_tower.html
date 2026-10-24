@@ -26,7 +26,7 @@ ul{margin:0;padding-left:1.15em;display:grid;gap:5px;max-width:70ch}
 <main>
 <header style="display:grid;gap:8px">
 <h1>Side tower</h1>
-<p class="sub">Your slotted-angle rack rebuilt as 60 × 60 × 152 cm, boxed in with two 12 mm ply sides, a ply shelf and a ply top. It replaces the folding table and rack A at the bench end. Lofi: sizes in mm, shelf heights to be set when the frame is built.</p>
+<p class="sub">Your slotted-angle rack rebuilt as 60 × 60 × 152 cm, boxed in with two 12 mm ply sides, a ply shelf and a ply top. It replaces the folding table and rack A. It stands 150 right of the bench, in front of the right end of the horizontal black board. Lofi: sizes in mm; positions marked ≈ are your estimates or mine, to measure.</p>
 </header>
 
 <section>
@@ -36,7 +36,7 @@ ul{margin:0;padding-left:1.15em;display:grid;gap:5px;max-width:70ch}
 
 <section>
 <h2>On wall C</h2>
-<p class="sub">Front view to scale. The tower sits 40 mm right of the bench, its front in line with the bench front.</p>
+<p class="sub">Front view to scale. Board horizontal, 1829 × 914, on a French cleat about 40 off the wall, its right end about a foot from the door. Board height is my assumption (770 to 1684): tell me the real one.</p>
 <div class="fig"><svg id="front" viewBox="0 0 980 640" role="img" aria-label="Wall C front view: desk end, bench with the black board behind it, then the tower, then the switches and the door"></svg></div>
 </section>
 
@@ -46,14 +46,15 @@ ul{margin:0;padding-left:1.15em;display:grid;gap:5px;max-width:70ch}
 <ul>
 <li><b>Two big bays</b>, about 600 × 600 × 740 each: room for SAMLA 22 L and 11 L boxes side by side, or the lab supply and printer filament.</li>
 <li><b>A top at about 1530</b>, around chin height for you: a place for things you look at, not dig into. A plant, a printed part on show, the overhead camera.</li>
-<li><b>The left side faces the bench.</b> It is a second 600 × 1524 board inside your reach: hooks, the hole grid, the screwdriver rack, cables.</li>
+<li><b>The left side faces the bench across the 150 gap.</b> A second 600 × 1524 surface beside you: hooks, the hole grid, the screwdriver rack, cables.</li>
 <li><b>Rigid.</b> The ply sides bolted to the posts stop the slotted angle from wobbling. Add one L-bracket from the top into the wall.</li>
 </ul>
 </div>
 <div>
 <h2>Check before cutting</h2>
 <ul>
-<li><b>Switch gap:</b> the tower's right side ends about 2664 from the window corner; the switch panel was estimated at 2680. Measure. If it is tight, slide the tower left and close the 40 mm gap to the bench.</li>
+<li><b>The tower hides part of the board.</b> At 1524 tall it covers the board's right 624 from 770 up to 1524; only a 160 strip shows above it. Keep that part of the board for things you rarely need, or build the tower one section tall (762): its top then sits near bench height as extra bench, and the whole board stays usable.</li>
+<li><b>Switches:</b> my old estimate put the switch panel 2680 to 2920 from the window corner, which is behind this tower. Check where yours really are; they must stay reachable.</li>
 <li><b>Frame size:</b> build the 60 × 60 frame first and give the shop measured sizes. The shelf drops inside the frame, so it is a few mm under the inside size.</li>
 <li><b>Top between the sides:</b> a top laid over the side panels would need about 624, more than the 610 the sheet gives.</li>
 </ul>
@@ -81,14 +82,12 @@ const pt=(x,y,z)=>[OX+(x+z*DX)*K,OY-(y+z*DY)*K];       // x across, y up, z into
 const quad=(a,b,c2,d,o)=>P([a,b,c2,d],o);
 // floor and wall hint
 el('line',{x1:20,y1:OY,x2:960,y2:OY,stroke:c('ink'),'stroke-width':1.5});
-// black board behind the bench (on the wall plane, z = 640)
-const bz=640,bx0=-1097,bx1=-183;
-quad(pt(bx0,0,bz),pt(bx1,0,bz),pt(bx1,1829,bz),pt(bx0,1829,bz),{fill:c('board'),stroke:c('ink')});
-quad(pt(bx0+80,1170,bz),pt(bx1-80,1170,bz),pt(bx1-80,1730,bz),pt(bx0+80,1730,bz),{fill:c('sk')});
-for(let k=0;k<6;k++)for(let r=0;r<2;r++){const x=bx0+137+k*108,y=960+r*90;quad(pt(x,y,bz),pt(x+100,y,bz),pt(x+100,y+75,bz),pt(x,y+75,bz),{fill:c('bin')});}
-let p=pt((bx0+bx1)/2,1880,bz);T(p[0],p[1],"black board",{'font-size':10,fill:c('mute')});
+// black board, horizontal, on the wall plane (z = 640): 945..2774 along the wall, 770..1684 high
+const bz=640,bx0=945-2150,bx1=2774-2150;
+quad(pt(bx0,770,bz),pt(bx1,770,bz),pt(bx1,1684,bz),pt(bx0,1684,bz),{fill:c('board'),stroke:c('ink')});
+let p=pt(bx0+500,1720,bz);T(p[0],p[1],"black board 1829 × 914 (layout to redo)",{'font-size':10,fill:c('mute')});
 // bench to the left, for scale
-const BX0=-1240,BX1=-40;
+const BX0=-1350,BX1=-150;
 quad(pt(BX0,750,0),pt(BX1,750,0),pt(BX1,750,600),pt(BX0,750,600),{fill:c('wood'),stroke:c('ink')});
 quad(pt(BX0,710,0),pt(BX1,710,0),pt(BX1,750,0),pt(BX0,750,0),{fill:c('wood'),stroke:c('ink')});
 [BX0+40,BX1-40].forEach(x=>el('line',{x1:pt(x,0,0)[0],y1:pt(x,0,0)[1],x2:pt(x,710,0)[0],y2:pt(x,710,0)[1],stroke:c('ink'),'stroke-width':3}));
@@ -147,18 +146,16 @@ el('line',{x1:X(0),y1:FY,x2:X(3100),y2:FY,stroke:c('ink'),'stroke-width':2});
 T(X(10),FY+16,"◄ window corner",{'font-size':10,'text-anchor':'start',fill:c('mute')});
 // desk end
 R(0,720,800,750,{fill:c('card'),stroke:c('ink')});T(X(400),Y(720)+14,"desk end",{'font-size':10,fill:c('mute')});
-// board behind the bench
-R(943,0,1857,1829,{fill:c('board'),stroke:c('ink')});
-R(1020,1170,1780,1730,{fill:c('sk')});T(X(1400),Y(1450),"SKÅDIS",{'font-size':10});
-for(let k=0;k<6;k++)for(let r=0;r<2;r++)R(1080+k*108,960+r*90,1180+k*108,1035+r*90,{fill:c('bin')});
-R(943,908,1857,920,{fill:c('wood')});R(943,1785,1857,1815,{fill:c('wood')});R(1250,1762,1550,1780,{fill:c('dc')});
-R(983,790,1393,850,{fill:c('pwr')});
+// board, horizontal, behind bench and tower
+R(945,770,2774,1684,{fill:c('board'),stroke:c('ink')});
+T(X(1500),Y(1600),"BLACK BOARD 1829 × 914 · height ≈",{'font-size':10,fill:c('boardtx')});
+T(X(1500),Y(1600)+14,"layout to redo once the tower is fixed",{'font-size':9,fill:c('boardtx')});
 // bench
 R(800,710,2000,750,{fill:c('wood'),stroke:c('ink')});R(800,0,2000,710,{fill:c('card'),opacity:.35});
 [840,1960].forEach(x=>el('line',{x1:X(x),y1:Y(710),x2:X(x),y2:FY,stroke:c('ink'),'stroke-width':2.5}));
 T(X(1400),Y(710)+14,"LINNMON · top 750",{'font-size':10});
 // tower 2040..2664
-const x0=2040,x1=2664;
+const x0=2150,x1=2774;
 R(x0,0,x1,1524,{fill:c('plyside'),opacity:.25});
 R(x0,0,x0+12,1524,{fill:c('plyside'),stroke:c('ink')});R(x1-12,0,x1,1524,{fill:c('plyside'),stroke:c('ink')});
 [x0+32,x1-32].forEach(x=>{el('line',{x1:X(x),y1:Y(0),x2:X(x),y2:Y(1524),stroke:c('steel'),'stroke-width':4});});
@@ -174,7 +171,7 @@ R(2720,220,2840,320,{fill:c('pwr'),stroke:c('ink')});
 R(3000,0,3100,2000,{fill:c('mute'),opacity:.35});T(X(3050),Y(1000),"door",{'font-size':9,fill:c('mute')});
 // gap dims
 const dim=(a,b,h,t)=>{el('line',{x1:X(a),y1:Y(h),x2:X(b),y2:Y(h),stroke:c('mute')});[a,b].forEach(v=>el('line',{x1:X(v),y1:Y(h)-4,x2:X(v),y2:Y(h)+4,stroke:c('mute')}));T(X((a+b)/2),Y(h)-6,t,{'font-size':9,fill:c('mute')});};
-dim(2000,2040,1650,"40");dim(2664,2680,1350,"≈16 · measure");
+dim(2000,2150,1720,"150");dim(2774,3000,1720,"≈ a foot");
 }
 
 // ---------- cut sheet ----------
