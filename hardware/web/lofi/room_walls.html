@@ -1,0 +1,630 @@
+<!-- Room R05 Harbor (Copilot harness). Room state lives in the Drive doc "[R05 Harbor] Handoff". -->
+<title>Workshop Room Walls</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one column; wall progress strip, then one elevation per wall, then what to confirm */
+:root{--bg:#f3f5f6;--ink:#1c2328;--mute:#5f6b73;--line:#9aa6ad;--card:#ffffff;
+--wood:#3a3633;--loft:#eceae6;--wall:#2f6fa8;--glass:#a9c7dc;--mirror:#cfdde6;--ghost:#7d8a93;--warn:#c9782a;--ok:#2f7d5b;--curtain:#b49a74;--sky:#cfe3c4;
+--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;
+--wood:#4a4541;--loft:#3a3c3e;--wall:#5b9bd5;--glass:#3d6f8f;--mirror:#4d6575;--ghost:#8a98a1;--warn:#e09a52;--ok:#5fbf94;--curtain:#7d6a50;--sky:#3c5636;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;
+--wood:#4a4541;--loft:#3a3c3e;--wall:#5b9bd5;--glass:#3d6f8f;--mirror:#4d6575;--ghost:#8a98a1;--warn:#e09a52;--ok:#5fbf94;--curtain:#7d6a50;--sky:#3c5636;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:980px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+h1{font-size:1.4rem;margin:0;text-wrap:balance}h2{font-size:1rem;margin:0 0 8px;text-wrap:balance}
+p{margin:0;max-width:65ch}.sub{color:var(--mute)}
+.steps{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--f-mono);font-size:.8rem}
+.steps span{border:1px solid var(--line);border-radius:4px;padding:2px 8px;color:var(--mute)}
+.steps span.on{border-color:var(--ink);color:var(--ink);font-weight:500}
+.steps span.done{border-color:var(--ok);color:var(--ok)}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--f-mono);fill:var(--ink)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}.grid2>div{min-width:0}
+ul,ol{margin:0;padding-left:1.2em;max-width:70ch}li{margin:3px 0}
+.g{color:var(--warn);font-weight:600}.k{color:var(--ok);font-weight:600}
+.wall{display:grid;gap:12px}
+hr{border:0;border-top:1px solid var(--line);margin:8px 0;width:100%}
+</style>
+<main>
+<header style="display:grid;gap:8px">
+<h1>Workshop room · wall by wall</h1>
+<p class="sub">Lofi elevations traced from your two photos. Not to scale. We agree on each wall, then move to the next, then the top view.</p>
+<div class="steps"><span class="done">A · Wardrobes ✓</span><span class="done">B · Window ✓</span><span class="done">C · Whiteboard ✓</span><span class="done">D · Presentation ✓</span><span class="on">Top view</span></div>
+</header>
+
+<section class="wall">
+<div><h2>Top view · proposed</h2>
+<p class="sub">Window at the top. To scale from your measurements: wall A 3.8 m, 2.7 m of floor from the wardrobe front to wall C, 3.0 m of wall C before the entrance. Wardrobe depth (60 cm) and door width (75 cm) are <span class="g">estimated</span>.</p></div>
+<div class="fig"><svg id="planNew" viewBox="0 0 640 790" role="img" aria-label="Proposed top view of the room"></svg></div>
+<div class="grid2">
+<div><h2>The moves</h2><ol>
+<li><b>L-shaped corner: office desk pushed right along B, bench along C.</b> One chair in the inside corner swivels between the two, so the bench needs no sitting space of its own. Behind the bench, a 7×4 ft ply sheet carries the SKÅDIS, drawer cabinets and a shelf (wall C drawing below).</li>
+<li><b>SKÅDIS moves from D to above the bench.</b> Its old spot on D takes framed plots, so the call background shows your work.</li>
+<li><b>Rack split in two.</b> Half A sits on the folding table (kept until a sturdier one replaces it) at the bench's entrance end as staging, with bins on its side. Half B lives in A3 with all the wire, connectors and electricals: take a bin or cut wire there, bring it to the bench. The cat house goes on the office desk's left end. Wall B left of the desk is free.</li>
+<li><b>Plotter stays on D.</b> The enclosure zone is the end nearest A1, next to the A1 socket. Paper lies flat on a shelf under the table.</li>
+<li><b>A3 is storage, lofts hold rarely used things.</b></li>
+<li><b>The middle stays empty</b>: a walkway from the entrance, and room to step back from the plotter.</li>
+</ol></div>
+<div><h2>Goes away</h2><ul>
+<li>Small 3 ft table and the leaning board</li>
+<li>White cabinet at the plotter's end</li>
+<li>Two black cases (old controller and power boxes)</li>
+<li>Whiteboard, unless you want it back somewhere</li>
+</ul>
+<h2 style="margin-top:16px">Check</h2><ul>
+<li><b>Wall C</b>: desk depth 80 + ply/bench 122 + folding table 91 = about 293 cm of the 300 cm. The table runs under the switches; they stay reachable above it as long as rack A sits at the table's bench end.</li>
+<li><b>Camera</b>: with the desk further right, the webcam looks toward the door end of D, and the bench and rack may sit at the left of the frame <span class="g">(unverified)</span>. Angle it toward the posters.</li>
+</ul></div>
+</div>
+</section>
+
+<section class="wall">
+<div><h2>Wall C · bench wall, proposed</h2>
+<p class="sub">Facing wall C from the room: window corner on the left, entrance on the right. To scale; heights in metres from the floor. Dashed means later or optional.</p></div>
+<div class="fig"><svg id="wallCnew" viewBox="0 0 800 530" role="img" aria-label="Proposed bench wall with plywood sheet, SKÅDIS, drawer cabinets, folding table and half rack"></svg></div>
+<ul>
+<li><b>Ply</b>: 18 mm, 7×4 ft, standing on the floor behind the bench. Four wall fixings (circles) only stop it tipping. Spacers 15–20 mm, deeper than the skirting.</li>
+<li><b>0–0.75 m, under the bench</b>: second power strip, a bin for today's cut wire, hooks for bags and cables. Wire stock lives in A3.</li>
+<li><b>0.75–1.05 m, backsplash</b>: power strip and a magnetic bar for the tools you grab most.</li>
+<li><b>1.05–1.61 m</b>: SKÅDIS on the left, drawer cabinet 1 on the right, cabinet 2 above it later.</li>
+<li><b>Shelf at about 1.7 m</b>: rarely used boxes, reached standing.</li>
+<li><b>Folding table + half rack A</b>: interim table beside the bench; rack A back against the wall (60 along it) at the table's bench end, 3 rows × 2 bins on its front, L-bracket to the ply edge. Its right edge ends just short of the switches, so hang no bins on its door side.</li>
+<li><b>Switches and socket</b> sit in the last 40 cm before the door, clear of the ply and the rack. The bench's power comes from that socket along the skirting.</li>
+</ul>
+</section>
+
+<section class="wall">
+<div><h2>A3 · storage cupboard, proposed</h2>
+<p class="sub">Doors open, facing in. Half rack B on the counter holds wire and connectors in SAMLA boxes; four cubbies below take a few large SAMLA boxes. Provisional until the floor inventory.</p></div>
+<div class="fig"><svg id="a3new" viewBox="0 0 800 560" role="img" aria-label="Storage cupboard A3 with half rack B holding SAMLA boxes, wire on cards, SAMLA boxes in the cubbies"></svg></div>
+<ul>
+<li><b>Rack B (55 W × 28 D × 45 H inside)</b>: three SAMLA 11 L stacked (39 × 28 matches its depth): wire cards, connectors and terminals, heat-shrink and Dupont. The 16 cm beside them takes folded servo leads.</li>
+<li><b>Wire</b>: no reels. Each loose coil is wound on a flat card (about 10 × 15 cm, MDF, card or printed), end in a notch, size written on it, filed upright by size. The shielded roll and any big coil hang on the rail on velcro loops.</li>
+<li><b>Beside the rack</b>: a stack of 5 L SAMLA boxes (your 28 × 19 × 12 size), two deep, for jumpers, servo leads, Dupont and offcuts. Cut on top of the stack; tools on the side-wall pegboard.</li>
+<li><b>Cubbies (47 W × 48 D × 35 H)</b>: one 39 × 28 SAMLA in front of each; the 20 cm behind it holds flat things on edge (chassis plates, edge-protector strips, tubing).</li>
+<li><b>Upper-left</b>: two flat SAMLA 11 L (zip ties and anchors; edge guards and clips). <b>Upper-right</b>: SAMLA 22 L, plumbing. <b>Lower-left</b>: SAMLA 22 L, old motors. <b>Lower-right</b>: tool cases and bulky items as now.</li>
+</ul>
+</section>
+
+<section class="wall">
+<div><h2>Top view · now</h2></div>
+<div class="fig"><svg id="planNow" viewBox="0 0 640 790" role="img" aria-label="Current top view of the room"></svg></div>
+</section>
+
+<hr>
+
+<section class="wall">
+<div><h2>Wall D · presentation wall <span class="k">agreed</span></h2>
+<p class="sub">Standing at the window, looking back. The entrance and whiteboard wall (C) are on your left, the wardrobes (A) on your right.</p></div>
+<ul>
+<li>The call background and where plotter work is shown. Posters stay.</li>
+<li>Door stays open against it. The square plate is a blank cover (to check).</li>
+<li>The white cabinet and the two black cases go.</li>
+<li>The SKÅDIS is the only one. It can move to the bench, or stay and you buy a new one.</li>
+</ul>
+<div class="fig"><svg id="wallD" viewBox="0 0 800 470" role="img" aria-label="Elevation of the plotter wall"></svg></div>
+</section>
+
+<hr>
+
+<section class="wall">
+<div><h2>Wall C · whiteboard <span class="k">agreed</span></h2>
+<p class="sub">Standing in the middle of the room, facing the whiteboard. The window (wall B) is on your left; the entrance is on your right.</p></div>
+<div class="fig"><svg id="wallC" viewBox="0 0 800 470" role="img" aria-label="Elevation of the whiteboard wall"></svg></div>
+<ul>
+<li><b>Slotted rack</b> (1×2×6 ft) in the window corner, currently the cat house.</li>
+<li><b>Small table</b> (3 ft long) is going. The leaning board is trash.</li>
+<li><b>Whiteboard</b> is optional. The patch above it is old damp, dry now.</li>
+<li><b>Socket</b>: one outlet, low on the wall. A bench here needs a power strip fed from it.</li>
+<li><b>The opening is the room's entrance.</b> It must stay clear.</li>
+<li><b>Free run, estimated:</b> rack 2 ft + gap 1 ft + table 3 ft + about 1.5 ft to the entrance ≈ 7.5 ft (2.3 m). <span class="g">Unverified</span>: measured off the photo against the 3 ft table. A 4 ft bench beside the 2 ft rack needs 6 ft.</li>
+</ul>
+</section>
+
+<hr>
+
+<section class="wall">
+<div><h2>Wall B · window <span class="k">agreed</span></h2>
+<p class="sub">Standing in the middle of the room, facing the window. The wardrobes (wall A) are on your left; the slotted rack corner (wall C) is on your right.</p></div>
+<div class="fig"><svg id="wallB" viewBox="0 0 800 470" role="img" aria-label="Elevation of the window wall"></svg></div>
+<ul>
+<li><b>Window</b> opens: fresh air for solder fumes.</li>
+<li><b>Office desk</b> stays. Footrest underneath. Power socket below the desk, centre of the wall.</li>
+<li><b>Call light</b>: a tripod by A4. It mostly stays, but gets moved to open A4.</li>
+<li><b>Right of the window</b>: wall space opens up if the rack moves. Keep in mind for the top view.</li>
+<li><b>Peeling paint</b>: old damp, dry now.</li>
+</ul>
+</section>
+
+<hr>
+
+<section class="wall">
+<div><h2>Wall A · wardrobes <span class="k">agreed</span></h2>
+<p class="sub">Standing in the middle of the room, facing the wardrobes. The door is to your left, the window to your right.</p></div>
+<div class="fig"><svg id="wallA" viewBox="0 0 800 470" role="img" aria-label="Elevation of the wardrobe wall"></svg></div>
+<ul>
+<li><b>A1, A4</b>: personal, off-limits. Plan around them.</li>
+<li><b>A2</b>: arts &amp; crafts. <b>A3</b>: workshop storage. Shelf detail later.</li>
+<li><b>Lofts</b>: all four empty. Reachable with a ladder, so they suit things you touch a few times a year.</li>
+<li><b>Plotter</b>: corrected from your wall D photo. The table runs along wall D; only its end sits near A1. A1 and A2 doors open fine.</li>
+<li><b>Socket</b>: one, below the A1 mirror.</li>
+</ul>
+</section>
+</main>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg",c=n=>"var(--"+n+")";
+function kit(s){
+  const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;s.appendChild(e);return e};
+  const T=(x,y,t,o={})=>el('text',Object.assign({x,y,'font-size':12,'text-anchor':'middle'},o),t);
+  return {el,T};
+}
+const FLOOR=400,TOP=40,g={fill:c('card'),'fill-opacity':.85,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'};
+function frame(el,T,l,r){
+  el('rect',{x:20,y:TOP-14,width:760,height:FLOOR-TOP+14,fill:c('wall'),opacity:.12});
+  el('line',{x1:10,y1:FLOOR,x2:790,y2:FLOOR,stroke:c('ink'),'stroke-width':2});
+  el('line',{x1:10,y1:TOP-14,x2:790,y2:TOP-14,stroke:c('line'),'stroke-width':1});
+  T(30,FLOOR+22,l,{'text-anchor':'start','font-size':11,fill:c('mute')});
+  T(770,FLOOR+22,r,{'text-anchor':'end','font-size':11,fill:c('mute')});
+  T(30,450,"solid = on the wall   dashed = standing in front   orange ? = my guess",{'text-anchor':'start','font-size':11,fill:c('mute')});
+}
+
+// ---------- Wall A ----------
+{
+const s=document.getElementById('wallA'),{el,T}=kit(s);
+frame(el,T,"◄ door","window ►");
+const defs=el('defs',{});
+const p=document.createElementNS(NS,'pattern');
+for(const [k,v] of Object.entries({id:'hatch',width:10,height:10,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'}))p.setAttribute(k,v);
+const pl=document.createElementNS(NS,'line');
+for(const [k,v] of Object.entries({x1:0,y1:0,x2:0,y2:10,stroke:'var(--line)','stroke-width':2}))pl.setAttribute(k,v);
+p.appendChild(pl);defs.appendChild(p);
+const X0=60,LOFT=110;
+const U=[["A1",120,1,"mirror","personal"],["A2",190,2,"plain","arts & crafts"],["A3",190,2,"glass","storage"],["A4",180,2,"plain","personal"]];
+let x=X0;
+U.forEach(([lab,w,n,k,use])=>{
+  el('rect',{x,y:TOP,width:w,height:LOFT-TOP,fill:c('loft'),stroke:c('ink'),'stroke-width':1.2});
+  if(w>150)el('line',{x1:x+w/2,y1:TOP,x2:x+w/2,y2:LOFT,stroke:c('line')});
+  T(x+w/2,(TOP+LOFT)/2+4,"loft · empty",{'font-size':11,fill:c('mute')});
+  el('rect',{x,y:LOFT,width:w,height:FLOOR-LOFT,fill:c('wood'),stroke:c('ink'),'stroke-width':1.2});
+  const dw=w/n;
+  for(let i=0;i<n;i++){
+    const dx=x+i*dw;
+    el('rect',{x:dx+4,y:LOFT+4,width:dw-8,height:FLOOR-LOFT-8,fill:'none',stroke:c('line'),'stroke-width':.8});
+    if(k==="mirror")el('rect',{x:dx+18,y:LOFT+30,width:dw-36,height:190,fill:c('mirror'),stroke:c('line')});
+    if(k==="glass")el('rect',{x:dx+(i?14:dw-28),y:LOFT+30,width:14,height:120,fill:c('glass'),stroke:c('line')});
+    const hx=n===1?dx+dw-16:(i?dx+10:dx+dw-10);
+    el('line',{x1:hx,y1:LOFT+120,x2:hx,y2:LOFT+150,stroke:c('loft'),'stroke-width':3,'stroke-linecap':'round'});
+  }
+  if(use==="personal")el('rect',{x:x+1,y:LOFT+1,width:w-2,height:FLOOR-LOFT-2,fill:'url(#hatch)',opacity:.55});
+  T(x+w/2,LOFT+24,lab,{'font-size':15,'font-weight':600,fill:c('loft')});
+  el('rect',{x:x+w/2-52,y:LOFT+32,width:104,height:18,rx:3,fill:c('card')});
+  T(x+w/2,LOFT+45,use,{'font-size':11,fill:use==="personal"?c('mute'):c('ok'),'font-weight':600});
+  x+=w;
+});
+el('rect',Object.assign({x:X0-30,y:FLOOR-150,width:140,height:16},g));
+[X0-24,X0+104].forEach(lx=>el('line',{x1:lx,y1:FLOOR-134,x2:lx,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
+T(X0+40,FLOOR-160,"plotter table end",{'font-size':11,'font-weight':600});
+T(X0+40,FLOOR-112,"(runs along D)",{'font-size':10,fill:c('mute')});
+el('rect',Object.assign({x:X0+300,y:FLOOR-110,width:220,height:12},g,{stroke:c('ghost')}));
+[X0+306,X0+514].forEach(lx=>el('line',{x1:lx,y1:FLOOR-98,x2:lx,y2:FLOOR,stroke:c('ghost'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
+T(X0+410,FLOOR-120,"LINNMON bench · ~1 m out",{'font-size':11,fill:c('ghost')});
+el('rect',Object.assign({x:X0+540,y:FLOOR-56,width:40,height:56,rx:10},g,{stroke:c('ghost')}));
+T(X0+560,FLOOR-64,"bag",{'font-size':10,fill:c('ghost')});
+}
+
+// ---------- Wall B ----------
+{
+const s=document.getElementById('wallB'),{el,T}=kit(s);
+frame(el,T,"◄ wardrobes (A)","rack corner (C) ►");
+// wardrobe end at left, rack cut at right
+el('rect',{x:20,y:TOP-14,width:26,height:FLOOR-TOP+14,fill:c('wood'),stroke:c('ink')});
+T(33,FLOOR-8,"A4",{'font-size':10,fill:c('loft')});
+el('rect',Object.assign({x:744,y:FLOOR-300,width:36,height:300},g,{stroke:c('ghost')}));
+T(762,FLOOR-306,"rack",{'font-size':10,fill:c('ghost')});
+// window + curtains
+const WX=400,WW=230,WY=110,WH=190;
+el('rect',{x:WX,y:WY,width:WW,height:WH,fill:c('sky'),stroke:c('ink'),'stroke-width':1.5});
+el('line',{x1:WX+WW/2,y1:WY,x2:WX+WW/2,y2:WY+WH,stroke:c('ink')});
+T(WX+WW/2,WY+WH+16,"window",{'font-size':11,fill:c('mute')});
+el('line',{x1:WX-70,y1:WY-14,x2:WX+WW+70,y2:WY-14,stroke:c('ink'),'stroke-width':3,'stroke-linecap':'round'});
+[[WX-64,60,'wood'],[WX-14,44,'curtain'],[WX+WW-30,44,'curtain'],[WX+WW+4,60,'wood']].forEach(([cx,cw,col])=>
+  el('rect',{x:cx,y:WY-12,width:cw,height:WH+40,fill:c(col),opacity:.75,stroke:c('ink'),'stroke-width':.8}));
+// pendant lamp (in front)
+el('line',{x1:WX+40,y1:TOP-14,x2:WX+40,y2:95,stroke:c('ghost'),'stroke-dasharray':'4 3'});
+el('polygon',Object.assign({points:`${WX+40},95 ${WX+10},135 ${WX+70},135`},g,{stroke:c('ghost')}));
+T(WX+40,150,"pendant",{'font-size':10,fill:c('ghost')});
+// peeling paint
+el('ellipse',{cx:690,cy:75,rx:34,ry:22,fill:'none',stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'3 3'});
+T(690,112,"peeling paint",{'font-size':10,fill:c('mute')});
+T(690,124,"old, dry now",{'font-size':10,fill:c('mute')});
+// fresh air
+T(WX+WW/2,WY+WH/2,"opens · fresh air",{'font-size':11,fill:c('ok'),'font-weight':600});
+// free wall right of window
+el('rect',{x:WX+WW+70,y:150,width:60,height:180,fill:'none',stroke:c('ok'),'stroke-width':1.5,'stroke-dasharray':'2 4'});
+T(WX+WW+100,236,"free if",{'font-size':9,fill:c('ok')});
+T(WX+WW+100,248,"rack",{'font-size':9,fill:c('ok')});
+T(WX+WW+100,260,"moves",{'font-size':9,fill:c('ok')});
+// socket under the desk, centre
+el('rect',{x:392,y:FLOOR-40,width:22,height:16,fill:c('card'),stroke:c('ink')});
+el('circle',{cx:403,cy:FLOOR-32,r:3,fill:c('ink')});
+T(403,FLOOR-48,"socket",{'font-size':9});
+// desk under window
+const DX=150,DW=520,DY=FLOOR-118;
+el('rect',Object.assign({x:DX,y:DY,width:DW,height:12},g));
+[[DX+8,DX+40],[DX+DW-8,DX+DW-40]].forEach(([a,b])=>{
+  el('line',{x1:a,y1:DY+12,x2:b,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+  el('line',{x1:b,y1:DY+12,x2:a,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+});
+T(DX+DW/2,DY+30,"OFFICE DESK · stays",{'font-size':12,'font-weight':600});
+el('rect',Object.assign({x:DX+250,y:DY-70,width:110,height:62},g));
+T(DX+305,DY-35,"monitor",{'font-size':10});
+el('line',{x1:DX+305,y1:DY-8,x2:DX+305,y2:DY,stroke:c('ink'),'stroke-width':2});
+el('rect',Object.assign({x:DX+400,y:DY-40,width:20,height:12},g));
+el('line',{x1:DX+410,y1:DY-28,x2:DX+410,y2:DY,stroke:c('ink'),'stroke-dasharray':'3 2'});
+T(DX+410,DY-46,"webcam",{'font-size':9});
+el('rect',Object.assign({x:DX+470,y:DY-24,width:16,height:24},g));
+T(DX+478,DY-30,"pens",{'font-size':9});
+// grey box under desk
+el('rect',Object.assign({x:DX+50,y:FLOOR-60,width:80,height:60},g,{stroke:c('ghost')}));
+T(DX+90,FLOOR-26,"footrest",{'font-size':10,fill:c('ghost')});
+// light panel on tripod
+el('rect',Object.assign({x:72,y:FLOOR-260,width:58,height:10},g,{stroke:c('ghost')}));
+el('line',{x1:101,y1:FLOOR-250,x2:101,y2:FLOOR-80,stroke:c('ghost'),'stroke-dasharray':'4 3'});
+el('line',{x1:101,y1:FLOOR-80,x2:76,y2:FLOOR,stroke:c('ghost'),'stroke-dasharray':'4 3'});
+el('line',{x1:101,y1:FLOOR-80,x2:126,y2:FLOOR,stroke:c('ghost'),'stroke-dasharray':'4 3'});
+T(101,FLOOR-280,"call light",{'font-size':10,fill:c('ghost')});
+T(101,FLOOR-268,"(moves for A4)",{'font-size':9,fill:c('ghost')});
+// chair
+el('rect',Object.assign({x:DX+260,y:FLOOR-160,width:90,height:90,rx:12},g,{stroke:c('ghost'),'fill-opacity':.5}));
+T(DX+305,FLOOR-112,"chair",{'font-size':10,fill:c('ghost')});
+}
+
+// ---------- Wall C ----------
+{
+const s=document.getElementById('wallC'),{el,T}=kit(s);
+frame(el,T,"◄ window corner (B)","opening, door side (D) ►");
+// rack in corner: posts + shelves
+const RX=40,RW=130,RT=FLOOR-320;
+[RX,RX+RW].forEach(px=>el('line',{x1:px,y1:RT,x2:px,y2:FLOOR,stroke:c('ink'),'stroke-width':3}));
+[0,1,2,3,4].forEach(i=>el('line',{x1:RX,y1:RT+10+i*76,x2:RX+RW,y2:RT+10+i*76,stroke:c('ink'),'stroke-width':2}));
+T(RX+RW/2,RT-8,"SLOTTED RACK 1×2×6",{'font-size':11,'font-weight':600});
+el('rect',Object.assign({x:RX+14,y:RT+100,width:100,height:62},g,{stroke:c('ghost')}));
+T(RX+64,RT+136,"cat house",{'font-size':10,fill:c('ghost')});
+el('line',{x1:RX+RW-10,y1:RT+10,x2:RX+RW+30,y2:RT-40,stroke:c('ghost'),'stroke-width':2});
+el('polygon',{points:`${RX+RW+30},${RT-40} ${RX+RW+44},${RT-24} ${RX+RW+20},${RT-28}`,fill:c('ghost')});
+T(RX+RW+46,RT-46,"arm lamp",{'font-size':9,fill:c('ghost'),'text-anchor':'start'});
+el('rect',Object.assign({x:RX+RW+2,y:RT+60,width:20,height:150,rx:8},g,{stroke:c('ghost')}));
+T(RX+RW+12,RT+225,"bag",{'font-size':9,fill:c('ghost')});
+el('rect',Object.assign({x:RX+40,y:FLOOR-30,width:30,height:30},g,{stroke:c('warn')}));
+T(RX+55,FLOOR-36,"bin",{'font-size':9,fill:c('warn')});
+// leaning board + spray
+el('polygon',Object.assign({points:`200,${FLOOR} 232,${FLOOR} 250,${FLOOR-150} 222,${FLOOR-150}`},g,{stroke:c('ghost')}));
+T(232,FLOOR-158,"trash",{'font-size':9,fill:c('mute')});
+// whiteboard
+const BX=300,BW=260,BY=110,BH=150;
+el('rect',{x:BX,y:BY,width:BW,height:BH,fill:c('card'),stroke:c('ink'),'stroke-width':2});
+T(BX+BW/2,BY+BH/2,"WHITEBOARD · optional",{'font-size':12,'font-weight':600});
+el('ellipse',{cx:BX+BW-40,cy:62,rx:60,ry:24,fill:'none',stroke:c('mute'),'stroke-width':1.5,'stroke-dasharray':'3 3'});
+T(BX+BW-40,66,"peeling paint",{'font-size':10,fill:c('mute')});
+// small table (going)
+const TX=280,TW=280,TY=FLOOR-120;
+el('rect',Object.assign({x:TX,y:TY,width:TW,height:10},g,{stroke:c('warn')}));
+el('line',{x1:TX+20,y1:TY+10,x2:TX+TW-20,y2:FLOOR,stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+el('line',{x1:TX+TW-20,y1:TY+10,x2:TX+20,y2:FLOOR,stroke:c('warn'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+T(TX+TW/2,TY+30,"small table 3 ft · going",{'font-size':11,'font-weight':600,fill:c('warn')});
+el('rect',Object.assign({x:TX+20,y:TY-26,width:90,height:26},g));
+T(TX+65,TY-9,"riser",{'font-size':9});
+el('rect',Object.assign({x:TX+130,y:TY-30,width:70,height:30},g));
+T(TX+165,TY-11,"wire box",{'font-size':9});
+el('rect',Object.assign({x:TX+215,y:TY-6,width:55,height:6},g));
+T(TX+242,TY-10,"mat",{'font-size':9});
+el('rect',Object.assign({x:TX+60,y:FLOOR-12,width:90,height:12},g,{stroke:c('ghost')}));
+T(TX+105,FLOOR-18,"power strip",{'font-size':9,fill:c('ghost')});
+el('rect',Object.assign({x:TX+TW+6,y:FLOOR-34,width:60,height:34},g,{stroke:c('ghost')}));
+T(TX+TW+36,FLOOR-40,"carton",{'font-size':9,fill:c('ghost')});
+// switch + socket
+el('rect',{x:600,y:180,width:16,height:26,fill:c('card'),stroke:c('ink')});
+T(608,172,"switch",{'font-size':9});
+el('rect',{x:598,y:FLOOR-46,width:26,height:22,fill:c('card'),stroke:c('ink')});
+el('circle',{cx:611,cy:FLOOR-35,r:3,fill:c('ink')});
+T(611,FLOOR-54,"1 outlet, low",{'font-size':9});
+// opening
+const OX=660,OW=110;
+el('rect',{x:OX,y:TOP+30,width:OW,height:FLOOR-TOP-30,fill:c('wood'),stroke:c('ink'),'stroke-width':2});
+el('rect',{x:OX+10,y:TOP+40,width:OW-20,height:FLOOR-TOP-40,fill:c('loft'),opacity:.25});
+el('line',{x1:OX+14,y1:FLOOR-150,x2:OX+OW-14,y2:FLOOR-150,stroke:c('loft'),'stroke-width':4});
+T(OX+OW/2,FLOOR-158,"extrusion",{'font-size':9,fill:c('loft')});
+T(OX+OW/2,TOP+60,"ENTRANCE",{'font-size':11,'font-weight':600,fill:c('loft')});
+T(OX+OW/2,TOP+74,"keep clear",{'font-size':10,fill:c('loft')});
+// estimated free run
+el('line',{x1:RX,y1:FLOOR+8,x2:OX,y2:FLOOR+8,stroke:c('warn'),'stroke-width':1.2});
+[RX,OX].forEach(px=>el('line',{x1:px,y1:FLOOR+2,x2:px,y2:FLOOR+14,stroke:c('warn'),'stroke-width':1.2}));
+T((RX+OX)/2,FLOOR+22,"≈ 7.5 ft corner → entrance (estimated, tape it)",{'font-size':11,fill:c('warn'),'font-weight':600});
+}
+
+// ---------- Top views ----------
+// Measured: wall A 3.8 m; 2.7 m of floor from the wardrobe front to wall C; wall C runs 3.0 m before the entrance.
+// Estimated: wardrobe 0.6 deep, door 0.75 wide, rack 0.6 x 0.3, bench 1.2 x 0.6.
+function plan(id,proposed){
+  const s=document.getElementById(id),{el,T}=kit(s);
+  const S=140,OX=70,OY=60,WD=0.6,W=WD+2.7,L=3.8,DOOR=0.75;
+  const P=(x,y)=>[OX+x*S,OY+y*S];
+  const R=(x,y,w,h,o={},lab,lo={})=>{const [px,py]=P(x,y);el('rect',Object.assign({x:px,y:py,width:w*S,height:h*S},o));
+    if(lab)lab.split('\n').forEach((ln,i,a)=>T(px+w*S/2,py+h*S/2+4+(i-(a.length-1)/2)*13,ln,Object.assign({'font-size':10},lo)));};
+  const zone=(col)=>({fill:c(col),'fill-opacity':.18,stroke:c(col),'stroke-width':1.5});
+  const thing={fill:c('card'),stroke:c('ink'),'stroke-width':1.3};
+  const gone={fill:'none',stroke:c('warn'),'stroke-width':1.3,'stroke-dasharray':'5 4'};
+  const dim=(x1,y1,x2,y2,t,off)=>{const a=P(x1,y1),b=P(x2,y2);el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:c('mute'),'stroke-width':1});
+    [a,b].forEach(q=>el('circle',{cx:q[0],cy:q[1],r:2.5,fill:c('mute')}));
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;T(mx+(off?.[0]||0),my+(off?.[1]||0),t,{'font-size':10,fill:c('mute'),'font-weight':600,'text-anchor':off?.[2]||'middle'});};
+  R(0,0,W,L,{fill:c('wall'),'fill-opacity':.06});
+  const wall=(x1,y1,x2,y2)=>{const a=P(x1,y1),b=P(x2,y2);el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:c('ink'),'stroke-width':6,'stroke-linecap':'square'})};
+  const WX0=1.55,WX1=2.65;
+  wall(0,0,WX0,0);wall(WX1,0,W,0);
+  wall(W,0,W,3.0);wall(W,3.0+DOOR,W,L);
+  wall(0,L,W,L);wall(0,0,0,L);
+  {const a=P(WX0,0),b=P(WX1,0);el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:c('glass'),'stroke-width':6});
+   T((a[0]+b[0])/2,a[1]-10,"WINDOW · opens",{'font-size':10,fill:c('ok'),'font-weight':600});}
+  // entrance: hinge at the C/D corner, leaf rests along D
+  {const e=P(W,3.0),h=P(W,L),o=P(W-DOOR,L);
+   el('path',{d:`M${e[0]},${e[1]} A${DOOR*S},${DOOR*S} 0 0 0 ${o[0]},${o[1]}`,fill:'none',stroke:c('line'),'stroke-dasharray':'3 3'});
+   el('line',{x1:h[0],y1:h[1]-3,x2:o[0],y2:o[1]-3,stroke:c('curtain'),'stroke-width':5});
+   const ty=(e[1]+h[1])/2;T(e[0]+14,ty,"ENTRANCE",{'font-size':10,'font-weight':600,transform:`rotate(90 ${e[0]+14} ${ty})`});}
+  T(OX+W*S/2,OY-30,"B · window",{'font-size':11,fill:c('mute')});
+  T(OX+W*S/2,OY+L*S+34,"D · presentation wall (call background)",{'font-size':11,fill:c('mute')});
+  T(OX-40,OY+L*S/2,"A · wardrobes · 3.8 m",{'font-size':11,fill:c('mute'),transform:`rotate(-90 ${OX-40} ${OY+L*S/2})`});
+  T(OX+W*S+30,OY+0.25*S,"C",{'font-size':11,fill:c('mute')});
+  [["A4",0.05,1.0,'personal'],["A3",1.05,1.0,'rack B'],["A2",2.05,1.0,'arts'],["A1",3.05,0.65,'personal']].forEach(([n,y,h,u])=>{
+    const st=(u==='storage'||u==='rack B')&&proposed?zone('wall'):{fill:c('wood'),'fill-opacity':.85,stroke:c('ink'),'stroke-width':1};
+    R(0,y,WD,h,st,`${n}\n${u}`,{fill:(u==='storage'||u==='rack B')&&proposed?c('ink'):c('loft'),'font-size':10});
+  });
+  [[WD+0.02,3.35],[1.65,0.04],[W-0.04,2.75]].forEach(([x,y])=>{const [px,py]=P(x,y);
+    el('rect',{x:px-6,y:py-6,width:12,height:12,fill:c('warn'),stroke:c('ink')});});
+  {const [px,py]=P(0.85,0.35);el('circle',{cx:px,cy:py,r:9,fill:'none',stroke:c('ghost'),'stroke-width':1.5});T(px,py+24,"light",{'font-size':9,fill:c('ghost')});}
+  // plotter table along D: 1524 x 600, ends at the open door leaf
+  const PX1=W-DOOR-0.03,PX0=PX1-1.524,PY=L-0.6;
+  if(proposed){
+    R(W-1.6,0.02,1.6,0.8,thing,"office desk 160×80");
+    R(W-1.6+0.08,0.08,0.28,0.3,{fill:c('card'),stroke:c('curtain'),'stroke-width':1.5,rx:8},"cat",{'font-size':9});
+    R(W-1.55,0.82,0.89,1.15,{fill:c('ok'),'fill-opacity':.08,stroke:c('ok'),'stroke-dasharray':'2 3'});
+    R(W-1.2,1.0,0.5,0.5,{fill:'none',stroke:c('ghost'),'stroke-dasharray':'4 3',rx:10},"one chair\nswivels",{fill:c('ghost'),'font-size':9});
+    R(WD+0.05,0.05,W-1.6-WD-0.1,0.6,{fill:'none',stroke:c('line'),'stroke-dasharray':'2 4'},"free",{fill:c('mute'),'font-size':10});
+    {const a=P(W-0.8,0.75),l=P(WD+0.6,2.9),r=P(W-0.05,2.5);
+     el('path',{d:`M${a[0]},${a[1]} L${l[0]},${l[1]} M${a[0]},${a[1]} L${r[0]},${r[1]}`,stroke:c('mute'),'stroke-dasharray':'2 4'});
+     T(l[0]+4,l[1]+12,"webcam view",{'font-size':9,fill:c('mute'),'text-anchor':'start'});}
+    R(W-0.66,0.82,0.6,1.2,zone('ok'),"BENCH\n120×60",{'font-size':11,'font-weight':600});
+    R(W-0.05,0.8,0.04,1.22,{fill:c('curtain'),stroke:c('ink'),'stroke-width':1});
+    {const [sx,sy]=P(W-0.05,1.41);T(sx-8,sy,"PLY 7×4",{'font-size':9,'font-weight':600,'text-anchor':'middle',transform:`rotate(-90 ${sx-8} ${sy})`});}
+    R(W-0.61,2.04,0.6,0.91,{fill:'none',stroke:c('warn'),'stroke-dasharray':'5 4'},"",{});
+    R(W-0.31,2.06,0.3,0.6,zone('warn'),"RACK A",{'font-size':8});
+    {const [tx,ty]=P(W-0.46,2.75);T(tx,ty,"folding",{'font-size':8,fill:c('warn')});T(tx,ty+11,"table",{'font-size':8,fill:c('warn')});}
+    R(W-0.05,2.6,0.04,0.4,{fill:c('card'),stroke:c('warn')});
+    {const [sx,sy]=P(W-0.05,2.8);T(sx-6,sy,"switches",{'font-size':8,'text-anchor':'middle',transform:`rotate(-90 ${sx-6} ${sy})`});}
+    {const a=P(W-0.04,2.75),b=P(W-0.04,2.02);el('line',{x1:a[0]-8,y1:a[1],x2:b[0]-8,y2:b[1],stroke:c('warn'),'stroke-width':2});}
+    dim(W+0.12,0,W+0.12,3.0,"3.0 m",[6,4,"start"]);
+    dim(W+0.3,2.04,W+0.3,2.95,"table 91",[6,4,"start"]);
+    R(WD+0.2,2.05,1.55,1.05,{fill:'none',stroke:c('ok'),'stroke-dasharray':'1 5','stroke-width':2},"clear floor",{fill:c('ok'),'font-size':11});
+    R(PX0,PY,1.524,0.6,zone('ink'));
+    R(PX0,PY,0.524,0.6,{fill:c('ok'),'fill-opacity':.25,stroke:c('ok'),'stroke-dasharray':'4 3'},"enclosure\nzone",{'font-size':9});
+    R(PX0+0.524,PY,1.0,0.6,{fill:'none',stroke:'none'},"PLOTTER\npaper shelf under",{'font-size':10});
+    {const [fx,fy]=P(PX1-0.65,L-0.04);el('line',{x1:fx,y1:fy,x2:fx+0.6*S,y2:fy,stroke:c('ok'),'stroke-width':4});
+     T(fx+0.3*S,fy+16,"framed plots here",{'font-size':9,fill:c('ok')});}
+  }else{
+    R(1.0,0.02,1.6,0.8,thing,"office desk 160×80");
+    R(1.55,0.9,0.5,0.5,{fill:'none',stroke:c('ghost'),'stroke-dasharray':'4 3',rx:10},"chair",{fill:c('ghost')});
+    R(W-0.32,0.04,0.3,0.6,thing,"rack +\ncat",{'font-size':9});
+    R(1.4,1.8,1.2,0.6,thing,"LINNMON bench",{'font-size':10});
+    R(W-0.47,1.2,0.45,0.9,gone,"small\ntable",{'font-size':9,fill:c('warn')});
+    R(PX0,PY,1.524,0.6,thing);
+    R(PX0+0.5,PY,1.0,0.6,{fill:'none',stroke:'none'},"PLOTTER",{'font-size':10,'font-weight':600});
+    R(PX0+0.03,PY+0.04,0.46,0.52,gone,"black\ncases",{'font-size':9,fill:c('warn')});
+    if(PX0-WD>0.15)R(WD+0.02,PY+0.1,PX0-WD-0.04,0.48,gone,"white\ncabinet",{'font-size':9,fill:c('warn')});
+    {const [sx,sy]=P(PX1-0.7,L-0.04);el('line',{x1:sx,y1:sy,x2:sx+0.55*S,y2:sy,stroke:c('ink'),'stroke-width':4});
+     T(sx+0.27*S,sy+16,"SKÅDIS",{'font-size':9});}
+  }
+  dim(WD,L+0.5,W,L+0.5,"2.7 m from wardrobe front",[0,-6]);
+  const ly=OY+L*S+112;
+  [["warn","socket"],["ok","work"],["warn","staging"],["wall","storage"],["ink","machine"]].forEach(([col,t],i)=>{
+    const x=OX+i*96;el('rect',{x,y:ly-9,width:12,height:12,fill:c(col),'fill-opacity':i?.3:1,stroke:c(col)});T(x+18,ly+1,t,{'font-size':10,'text-anchor':'start'});});
+  T(OX+W*S,ly+24,"1 m",{'font-size':9,fill:c('mute'),'text-anchor':'end'});
+  el('line',{x1:OX+W*S-S,y1:ly+32,x2:OX+W*S,y2:ly+32,stroke:c('mute'),'stroke-width':2});
+}
+plan('planNew',true);plan('planNow',false);
+
+// ---------- Wall C, proposed ----------
+{
+const s=document.getElementById('wallCnew'),{el,T}=kit(s);
+const S=170,OX=50,FY=470,X=m=>OX+m*S,Y=h=>FY-h*S;
+const box=(x0,h0,x1,h1,o={},lab,lo={})=>{el('rect',Object.assign({x:X(x0),y:Y(h1),width:(x1-x0)*S,height:(h1-h0)*S},o));
+  if(lab)lab.split('\n').forEach((ln,i,a)=>T((X(x0)+X(x1))/2,(Y(h0)+Y(h1))/2+4+(i-(a.length-1)/2)*12,ln,Object.assign({'font-size':10},lo)));};
+const dashed={fill:'none',stroke:c('ghost'),'stroke-dasharray':'4 3'};
+el('rect',{x:X(0),y:Y(2.45),width:3.85*S,height:2.45*S,fill:c('wall'),opacity:.12});
+el('line',{x1:X(0)-10,y1:FY,x2:X(3.85)+10,y2:FY,stroke:c('ink'),'stroke-width':2});
+el('line',{x1:X(0),y1:Y(2.45),x2:X(0),y2:FY,stroke:c('ink'),'stroke-width':4});
+box(0,0,3.0,0.08,{fill:c('curtain'),opacity:.6});
+T(X(0)+4,FY+16,"◄ window corner (B)",{'text-anchor':'start','font-size':11,fill:c('mute')});
+T(X(3.85),FY+16,"entrance ►",{'text-anchor':'end','font-size':11,fill:c('mute')});
+// door
+box(3.0,0,3.75,2.1,{fill:c('wood'),stroke:c('ink'),'stroke-width':1.5},"ENTRANCE",{fill:c('loft'),'font-weight':600});
+// switch zone, last 40 cm before the door
+box(2.6,0.75,3.0,2.2,{fill:'none',stroke:c('warn'),'stroke-dasharray':'3 3'});
+T(X(2.8),Y(2.2)-6,"switches: reach over the table",{'font-size':9,fill:c('warn')});
+box(2.68,1.1,2.92,1.28,{fill:c('card'),stroke:c('ink')});
+T(X(2.8),Y(1.28)-5,"switches",{'font-size':9});
+box(2.72,0.22,2.84,0.32,{fill:c('warn'),stroke:c('ink')});
+T(X(2.78),Y(0.32)-5,"socket",{'font-size':9});
+// office desk end in the corner
+box(0,0.72,0.8,0.75,{fill:c('card'),stroke:c('ink'),'stroke-width':1.5});
+[0.04,0.76].forEach(x=>el('line',{x1:X(x),y1:Y(0.72),x2:X(x),y2:FY,stroke:c('ink'),'stroke-width':2}));
+T(X(0.4),Y(0.75)-8,"office desk (end)",{'font-size':10});
+// ply sheet
+box(0.8,0,2.02,2.13,{fill:c('loft'),stroke:c('ink'),'stroke-width':1.5});
+T(X(1.41),Y(2.13)-8,"18 mm PLY · 7×4 ft · stands on the floor",{'font-size':11,'font-weight':600});
+[[0.88,2.04],[1.94,2.04],[0.88,1.0],[1.94,1.0]].forEach(([x,h])=>el('circle',{cx:X(x),cy:Y(h),r:4,fill:'none',stroke:c('ink'),'stroke-width':1.5}));
+// top shelf
+box(0.82,1.68,2.0,1.71,{fill:c('wood'),stroke:c('ink')});
+box(0.9,1.71,1.3,1.93,dashed,"rarely\nused",{'font-size':9,fill:c('ghost')});
+box(1.36,1.71,1.76,1.88,dashed,"boxes",{'font-size':9,fill:c('ghost')});
+// SKÅDIS
+box(0.84,1.07,1.60,1.63,{fill:c('card'),stroke:c('ok'),'stroke-width':2});
+for(let i=0;i<12;i++)for(let j=0;j<4;j++)el('rect',{x:X(0.89+i*0.06),y:Y(1.56-j*0.12),width:2,height:8,fill:c('line')});
+T(X(1.22),Y(1.07)-8,"SKÅDIS 76×56",{'font-size':10,'font-weight':600,fill:c('ok')});
+// drawer cabinets
+box(1.63,1.07,1.995,1.295,{fill:c('card'),stroke:c('ink'),'stroke-width':1.5});
+for(let i=1;i<6;i++)el('line',{x1:X(1.63+i*0.061),y1:Y(1.295),x2:X(1.63+i*0.061),y2:Y(1.07),stroke:c('line')});
+for(let j=1;j<5;j++)el('line',{x1:X(1.63),y1:Y(1.07+j*0.045),x2:X(1.995),y2:Y(1.07+j*0.045),stroke:c('line')});
+T(X(1.81),Y(1.07)-8,"drawers 1",{'font-size':10,'font-weight':600});
+box(1.63,1.32,1.995,1.545,dashed,"drawers 2\nlater",{'font-size':9,fill:c('ghost')});
+// backsplash: power strip + magnetic bar
+box(0.86,0.8,1.3,0.86,{fill:c('card'),stroke:c('warn'),'stroke-width':1.5},"power strip",{'font-size':8});
+el('line',{x1:X(1.36),y1:Y(0.94),x2:X(1.86),y2:Y(0.94),stroke:c('ink'),'stroke-width':5,'stroke-linecap':'round'});
+T(X(1.61),Y(0.94)-8,"magnetic tool bar",{'font-size':9});
+// bench
+box(0.8,0.71,2.0,0.75,{fill:c('card'),stroke:c('ink'),'stroke-width':1.5});
+[0.84,1.96].forEach(x=>el('line',{x1:X(x),y1:Y(0.71),x2:X(x),y2:FY,stroke:c('ink'),'stroke-width':2}));
+T(X(1.41),Y(0.75)+16,"BENCH 120×60 · top ~0.75 m",{'font-size':10,'font-weight':600});
+// under the bench
+box(0.9,0.52,1.3,0.57,{fill:c('card'),stroke:c('warn'),'stroke-width':1.5},"strip 2",{'font-size':8});
+el('line',{x1:X(1.0),y1:Y(0.33),x2:X(1.7),y2:Y(0.33),stroke:c('ink'),'stroke-width':2});
+box(1.0,0.2,1.5,0.42,{fill:'none',stroke:c('ghost'),'stroke-dasharray':'4 3'},"today's cut wire",{'font-size':9,fill:c('ghost')});
+[1.82,1.9].forEach(x=>el('path',{d:`M${X(x)},${Y(0.5)} v10 a4,4 0 0 0 8,0`,fill:'none',stroke:c('ink'),'stroke-width':1.5}));
+T(X(1.86),Y(0.5)-6,"hooks",{'font-size':9});
+// folding table (interim) with half rack A at its bench end
+box(2.04,0.72,2.95,0.75,{fill:c('curtain'),stroke:c('ink'),'stroke-width':1.5});
+el('line',{x1:X(2.1),y1:Y(0.72),x2:X(2.89),y2:FY,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+el('line',{x1:X(2.89),y1:Y(0.72),x2:X(2.1),y2:FY,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'});
+T(X(2.5),Y(0.72)+16,"folding table 91 (interim)",{'font-size':9});
+[2.05,2.6].forEach(x=>el('line',{x1:X(x),y1:Y(1.5),x2:X(x),y2:Y(0.75),stroke:c('warn'),'stroke-width':3}));
+[0.78,1.03,1.27,1.5].forEach(h=>el('line',{x1:X(2.05),y1:Y(h),x2:X(2.6),y2:Y(h),stroke:c('warn'),'stroke-width':2}));
+[1.33,1.09,0.84].forEach(h=>[2.13,2.37].forEach(x=>box(x,h,x+0.16,h+0.1,{fill:c('card'),stroke:c('ok'),'stroke-width':1.5})));
+T(X(2.33),Y(1.5)-20,"RACK A",{'font-size':10,'font-weight':600,fill:c('warn')});
+T(X(2.33),Y(1.5)-8,"against wall · 3×2 bins",{'font-size':9,fill:c('warn')});
+el('line',{x1:X(2.0),y1:Y(1.45),x2:X(2.07),y2:Y(1.45),stroke:c('ink'),'stroke-width':3});
+// heights
+[[1.07,"1.05"],[1.63,"1.61"],[2.13,"2.13"]].forEach(([h,t])=>T(X(0.8)-6,Y(h)+4,t,{'font-size':9,fill:c('mute'),'text-anchor':'end'}));
+// widths along the floor
+const dimH=(x0,x1,t)=>{const yy=FY+40;el('line',{x1:X(x0),y1:yy,x2:X(x1),y2:yy,stroke:c('mute')});
+  [x0,x1].forEach(x=>el('line',{x1:X(x),y1:yy-5,x2:X(x),y2:yy+5,stroke:c('mute')}));
+  T((X(x0)+X(x1))/2,yy-5,t,{'font-size':10,fill:c('mute'),'font-weight':600});};
+dimH(0,0.8,"desk 80");dimH(0.8,2.02,"ply 122");dimH(2.04,2.95,"table 91");
+}
+
+// ---------- A3 storage cupboard, proposed ----------
+{
+const s=document.getElementById('a3new'),{el,T}=kit(s);
+const S=230,OX=70,FY=520,X=m=>OX+m*S,Y=h=>FY-h*S;
+const box=(x0,h0,x1,h1,o={},lab,lo={})=>{el('rect',Object.assign({x:X(x0),y:Y(h1),width:(x1-x0)*S,height:(h1-h0)*S},o));
+  if(lab)lab.split('\n').forEach((ln,i,a)=>T((X(x0)+X(x1))/2,(Y(h0)+Y(h1))/2+4+(i-(a.length-1)/2)*11,ln,Object.assign({'font-size':8},lo)));};
+const dashed={fill:'none',stroke:c('ghost'),'stroke-dasharray':'4 3'};
+const samla={fill:c('glass'),'fill-opacity':.35,stroke:c('ink'),'stroke-width':1.2};
+const note=(x,h,t,o={})=>T(x,h,t,Object.assign({'font-size':10,'text-anchor':'start',fill:c('mute')},o));
+const NX=X(1.0)+28;
+box(0,0,1.0,2.1,{fill:c('loft'),stroke:c('ink'),'stroke-width':2});
+el('line',{x1:X(0)-20,y1:FY,x2:X(1.0)+20,y2:FY,stroke:c('ink'),'stroke-width':2});
+// rail
+el('line',{x1:X(0.04),y1:Y(1.9),x2:X(0.96),y2:Y(1.9),stroke:c('ink'),'stroke-width':4,'stroke-linecap':'round'});
+box(0.3,1.82,0.75,2.02,dashed,"folded fabric",{fill:c('ghost')});
+note(NX,Y(1.9),"rail: fabric, mic pop filter (as now)");
+// counter + drawers
+box(0,0.9,1.0,0.94,{fill:c('card'),stroke:c('ink'),'stroke-width':1.5});
+box(0.02,0.76,0.49,0.9,{fill:c('wood'),stroke:c('ink')},"solder, flux, tape",{fill:c('loft')});
+box(0.51,0.76,0.98,0.9,{fill:c('wood'),stroke:c('ink')},"ties, shrink stock",{fill:c('loft')});
+note(NX,Y(0.83),"drawers: consumables");
+// four cubbies 47 W x 48 D x 35 H
+el('line',{x1:X(0.5),y1:Y(0.76),x2:X(0.5),y2:FY,stroke:c('ink'),'stroke-width':2});
+el('line',{x1:X(0),y1:Y(0.4),x2:X(1.0),y2:Y(0.4),stroke:c('ink'),'stroke-width':2});
+// C1 upper-left: two flat 11 L
+box(0.05,0.42,0.44,0.56,samla,"11 L · ties, anchors");
+box(0.05,0.57,0.44,0.71,samla,"11 L · edge guards");
+// C2 upper-right: one 22 L
+box(0.55,0.42,0.94,0.70,samla,"SAMLA 22 L\nplumbing\n(hydroponics)");
+// C3 lower-left: one 22 L, heavy
+box(0.05,0.02,0.44,0.30,samla,"SAMLA 22 L\nold motors\n(heavy, low)");
+// C4 lower-right: as now
+box(0.54,0.02,0.96,0.38,dashed,"tool cases, filament,\nspare power (as now)",{fill:c('ghost')});
+note(NX,Y(0.62),"cubbies 47 W × 48 D × 35 H: one 39 × 28 box in front,");
+note(NX,Y(0.62)+13,"flat things (chassis plates, strips) on edge in the 20 cm behind");
+note(NX,Y(0.2),"bottom row: heaviest things");
+// rack B on the counter: 55 W x 28 D x 45 H inside; boxes, no rods
+const RB0=0.04,RB1=0.63,RBOT=0.94,RT=1.40;
+[RB0,RB1].forEach(x=>el('line',{x1:X(x),y1:Y(RT),x2:X(x),y2:Y(RBOT),stroke:c('ink'),'stroke-width':4}));
+el('line',{x1:X(RB0),y1:Y(RT),x2:X(RB1),y2:Y(RT),stroke:c('ink'),'stroke-width':3});
+T(X((RB0+RB1)/2),Y(RT)-8,"RACK B · 55×28×45",{'font-size':10,'font-weight':600});
+box(RB0+0.02,0.95,RB0+0.41,1.09,samla,"11 L · shrink");
+box(RB0+0.02,1.10,RB0+0.41,1.24,samla,"11 L · connectors");
+box(RB0+0.02,1.25,RB0+0.41,1.39,samla,"11 L · WIRE CARDS",{'font-weight':600});
+box(RB0+0.43,0.95,RB1-0.01,1.39,{fill:c('card'),stroke:c('ok'),'stroke-width':1.5},"servo\nleads\n(folded)");
+note(NX,Y(1.32),"rack B: three SAMLA 11 L (39 × 28 fits its 28 cm depth)");
+note(NX,Y(1.32)+13,"top box: wire wound on flat cards, filed by size");
+note(NX,Y(1.02),"16 cm slot beside them: servo leads, folded");
+// big coils hang on the rail
+[0.12,0.2].forEach(x=>{el('line',{x1:X(x),y1:Y(1.9),x2:X(x),y2:Y(1.82),stroke:c('ink')});el('circle',{cx:X(x),cy:Y(1.74),r:9,fill:'none',stroke:c('warn'),'stroke-width':3});});
+note(NX,Y(1.9)+13,"also on the rail: shielded roll and big coils on velcro loops");
+// counter right of the rack: small SAMLA stack
+box(0.66,0.94,0.97,1.08,samla,"5 L jumpers");
+box(0.66,1.08,0.97,1.22,samla,"5 L offcuts");
+box(0.66,1.22,0.97,1.36,samla,"5 L Dupont");
+note(NX,Y(1.5),"beside the rack: 5 L SAMLA stack (2 deep), small wire");
+T(X(0.81),Y(1.4),"cut on top",{'font-size':9,fill:c('warn'),'font-weight':600});
+box(0.9,1.45,0.99,1.78,{fill:c('ink'),opacity:.75});
+note(NX,Y(1.66),"side-wall pegboard: cutter, stripper, crimper");
+T(X(0.5)+160,FY+22,"cupboard, cubbies and rack: your measurements; drawing approximate",{'font-size':10,fill:c('mute')});
+}
+
+// ---------- Wall D ----------
+{
+const s=document.getElementById('wallD'),{el,T}=kit(s);
+frame(el,T,"◄ entrance (C corner)","wardrobes (A) ►");
+// dark band high on the wall
+el('rect',{x:20,y:120,width:760,height:8,fill:c('wall'),opacity:.5});
+// door leaf open flat against the wall
+el('rect',{x:24,y:TOP+40,width:70,height:FLOOR-TOP-40,fill:c('curtain'),stroke:c('ink'),'stroke-width':1.5});
+el('circle',{cx:84,cy:FLOOR-150,r:5,fill:c('ink')});
+T(59,TOP+64,"DOOR",{'font-size':11,'font-weight':600});
+T(59,TOP+78,"open,",{'font-size':9});
+T(59,TOP+90,"flat",{'font-size':9});
+el('rect',{x:70,y:FLOOR-14,width:8,height:14,fill:c('ink')});
+T(74,FLOOR-20,"stop",{'font-size':8});
+// SKÅDIS
+const SX=120,SY=170,SW=210,SH=105;
+el('rect',{x:SX,y:SY,width:SW,height:SH,fill:c('loft'),stroke:c('ink'),'stroke-width':1.5});
+for(let i=0;i<14;i++)for(let j=0;j<5;j++)el('rect',{x:SX+10+i*14,y:SY+10+j*18,width:3,height:9,fill:c('line')});
+T(SX+SW/2,SY-8,"SKÅDIS ~76×56",{'font-size':11,'font-weight':600});
+el('circle',{cx:SX+16,cy:SY+60,r:14,fill:'none',stroke:c('ok'),'stroke-width':4});
+T(SX+16,SY+92,"phones",{'font-size':8});
+el('rect',{x:SX+100,y:SY+62,width:80,height:8,fill:c('wall')});
+T(SX+140,SY+56,"cars",{'font-size':8});
+// posters
+[[390,140,60,70],[460,150,40,50],[350,215,30,35],[390,215,40,50],[460,210,55,65],[340,275,55,65],[405,275,40,45],[455,285,24,28],[485,285,40,50]].forEach(([x,y,w,h])=>
+  el('rect',{x,y,width:w,height:h,fill:c('card'),stroke:c('ink'),'stroke-width':2}));
+T(430,370-20,"",{});
+T(570,200,"comic posters",{'font-size':11,fill:c('mute'),'text-anchor':'start'});
+// small plate right
+el('rect',{x:720,y:230,width:20,height:20,fill:c('card'),stroke:c('warn'),'stroke-width':1.5});
+T(730,222,"plate?",{'font-size':9,fill:c('warn')});
+// plotter table along the wall
+const PX=110,PW=610,PY=FLOOR-128;
+el('rect',Object.assign({x:PX,y:PY,width:PW,height:12},g));
+[PX+8,PX+PW-8].forEach(lx=>el('line',{x1:lx,y1:PY+12,x2:lx,y2:FLOOR,stroke:c('ink'),'stroke-width':1.5,'stroke-dasharray':'6 4'}));
+el('rect',Object.assign({x:PX+10,y:PY-46,width:390,height:46},g,{'fill-opacity':.6}));
+T(PX+205,PY-18,"PLOTTER (LINNMON frame)",{'font-size':12,'font-weight':600});
+el('rect',Object.assign({x:PX+410,y:PY-34,width:190,height:34},g,{stroke:c('ghost')}));
+T(PX+505,PY-14,"2 black cases",{'font-size':10,fill:c('ghost')});
+T(PX+505,PY-40,"enclosure zone 524",{'font-size':9,fill:c('ok')});
+T(PX+PW/2,PY+28,"table ~1524 × 600 (from repo)",{'font-size':10,fill:c('mute')});
+// under table
+el('rect',Object.assign({x:PX+180,y:FLOOR-60,width:160,height:60},g,{stroke:c('ghost')}));
+T(PX+260,FLOOR-26,"bag / box",{'font-size':9,fill:c('ghost')});
+el('rect',Object.assign({x:PX+430,y:FLOOR-70,width:60,height:70},g,{stroke:c('ghost')}));
+T(PX+460,FLOOR-30,"card",{'font-size':9,fill:c('ghost')});
+// white unit right end
+el('rect',Object.assign({x:730,y:FLOOR-120,width:46,height:120},g,{stroke:c('warn')}));
+T(753,FLOOR-56,"white",{'font-size':9,fill:c('warn')});
+T(753,FLOOR-44,"unit?",{'font-size':9,fill:c('warn')});
+}
+})();
+</script>
