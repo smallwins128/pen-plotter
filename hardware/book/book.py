@@ -7,6 +7,7 @@ Run the part scripts first so the STLs exist (gx_plates.py, din_mounts.py, windo
     python3 hardware/book/book.py      # writes hardware/book/build_book.html
 """
 import math
+import os
 import pathlib
 import sys
 from html import escape
@@ -24,6 +25,8 @@ INK, FAINT, MID, ACC = "#111", "#c4c4c4", "#777", "#d33"
 WIRE = dict(L="#8a5a2b", N="#2b62c4", PE="#2f9a4a", P24="#d33", P12="#e07b00", P6="#a5c", G="#111", SIG="#2a8fbf")
 PW, PH = 297, 210                      # A4 landscape, mm
 TX = 168                               # text column left edge
+AUDIT = os.environ.get("AUDIT") == "1"   # audit copy: a write-in "have" box under every part, plus a contents page
+TOC = []                               # (num, title, stage, part count) as pages are drawn
 
 F = lambda x: f"{x:.2f}".rstrip("0").rstrip(".")  # noqa: E731
 
@@ -348,6 +351,7 @@ def ok_box(s, x, y, text):
 
 def page(num, title, parts, body, steps=(), notes=(), check="", stage=""):
     """parts: [(icon, scale, qty, id)]; body: drawing svg; steps: numbered text lines; notes: ⚠/🚫 lines."""
+    TOC.append((num, title, stage, len(parts)))
     s = Svg()
     s.rect(0, 0, PW, PH, 0, fill="#fff")
     if stage:
@@ -373,17 +377,21 @@ def page(num, title, parts, body, steps=(), notes=(), check="", stage=""):
         rows.append(row)
         x0, y = 10, 29
         bw = max(sum(c[7] + 5 for c in r) for r in rows) + 6
-        heights = [max(c[2] for c in r) + 21 for r in rows]
+        extra = 7 if AUDIT else 0
+        heights = [max(c[2] for c in r) + 21 + extra for r in rows]
         s.rect(x0, y, bw, sum(heights) + 2, .4, r=2)
         for r, rh in zip(rows, heights):
             x = x0 + 6
             for svg, w, h, sc, qty, pid, lines, cw in r:
-                s.g(x + (cw - w) / 2, y + 3 + (rh - 21 - h) / 2, sc, svg)
-                yb = y + rh - 12.5
+                s.g(x + (cw - w) / 2, y + 3 + (rh - extra - 21 - h) / 2, sc, svg)
+                yb = y + rh - extra - 12.5
                 s.text(x + cw / 2, yb, f"{qty}x" if isinstance(qty, int) else qty, 3.4, "middle", 700)
                 for j, ln in enumerate(lines):
                     s.text(x + cw / 2, yb + 3.4 + j * 2.8, ln, 2.3, "middle", c="#333")
-                s.text(x + cw / 2, y + rh - 1.6, pid, 2.0, "middle", c=MID)
+                s.text(x + cw / 2, y + rh - extra - 1.6, pid, 2.0, "middle", c=MID)
+                if AUDIT:
+                    s.text(x + cw / 2 - 7.5, y + rh - 2.2, "have", 2.0, "end", c=ACC)
+                    s.rect(x + cw / 2 - 6.5, y + rh - 5.6, 13, 4.4, .35, ACC, r=.6)
                 x += cw + 5
             y += rh
         box_bottom = y + 2
@@ -568,6 +576,10 @@ def p_cover():
     s.text(10, 62, "One complete A3 artwork. Built once, in the case.", 3.4)
     s.text(PW - 10, 40, "Power box below · control box on top", 2.8, "end", c=MID)
     s.text(PW - 10, 45, "450 × 295 inside · 1.2 mm 304 stainless", 2.8, "end", c=MID)
+    if AUDIT:
+        s.rect(PW - 112, 54, 102, 16, .6, ACC, r=2)
+        s.text(PW - 61, 61, "AUDIT COPY", 5, "middle", 800, ACC)
+        s.text(PW - 61, 67, "Write what you have in the red boxes, then send the counts back.", 2.4, "middle", c=ACC)
     return f'<svg class="page" id="cover" viewBox="0 0 {PW} {PH}" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">{s.out()}</svg>'
 
 
@@ -1663,12 +1675,44 @@ PAGES = [p_cover, p_legend, p_rules, lambda: p_rivnuts("control"), lambda: p_riv
          p_windows, p_lids, p_stack, p_board_top, lambda: p_checks("a"), lambda: p_checks("b")]
 
 
+def p_contents(entries, offset):
+    """Contents: one line per page with its PDF page number and an audited tick box."""
+    s = Svg()
+    s.text(10, 23, "Contents", 15, weight=700)
+    cols = [entries[:(len(entries) + 1) // 2], entries[(len(entries) + 1) // 2:]]
+    for ci, col in enumerate(cols):
+        x0 = 10 + ci * 143
+        y = 40
+        s.text(x0, y, "page", 2.4, c=MID)
+        s.text(x0 + 12, y, "step", 2.4, c=MID)
+        s.text(x0 + 30, y, "title", 2.4, c=MID)
+        if AUDIT:
+            s.text(x0 + 128, y, "done", 2.4, "middle", c=ACC)
+        s.line(x0, y + 1.5, x0 + 136, y + 1.5, .3)
+        last = None
+        for pg, (num, title, stage, n) in col:
+            if stage and stage != last:
+                y += 7
+                s.text(x0, y, stage.upper(), 2.3, c=MID, weight=600)
+                last = stage
+            y += 5.6
+            s.text(x0 + 6, y, str(pg + offset), 3, "end")
+            s.text(x0 + 12, y, num, 3, weight=700)
+            s.text(x0 + 30, y, title + (f"  ·  {n} parts" if n else ""), 3)
+            if AUDIT and n:
+                s.rect(x0 + 125.5, y - 3.4, 4.4, 4.4, .35, ACC, r=.5)
+    return f'<svg class="page" id="contents" viewBox="0 0 {PW} {PH}" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">{s.out()}</svg>'
+
+
 def html():
+    TOC.clear()
     pages = [p() for p in PAGES]
     if BOM.exists():
         pages += table_pages(BOM, "BOM", ["ID", "Item", "Spec", "Qty", "Step", "Status"], [12, 44, 120, 22, 40, 30], num="BOM")
     if PRINTS.exists():
         pages += table_pages(PRINTS, "Prints", ["ID", "Part", "Script → STL", "Qty", "Step", "Status"], [12, 60, 110, 18, 30, 30], num="Prints")
+    entries = list(TOC)
+    pages.insert(1, p_contents([(i, t) for i, t in enumerate(entries)], 3))     # cover = page 1, contents = page 2
     body = "\n".join(pages)
     return f"""<title>Etch Build Book</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1685,6 +1729,6 @@ body{{background:var(--desk);padding-block:16px;padding-left:max(16px,env(safe-a
 
 
 if __name__ == "__main__":
-    out = HERE / "build_book.html"
+    out = HERE / ("build_book_audit.html" if AUDIT else "build_book.html")
     out.write_text(html())
     print("wrote", out, len(PAGES), "drawn pages")
