@@ -1,0 +1,152 @@
+<!-- Room R05 Harbor (Copilot harness). Printer tower: two open 12 mm ply boxes, stacked, A1 in the top box. Room state lives in the Drive doc "[R05 Harbor] Handoff". -->
+<title>Printer Tower</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one column; front and side views, cut list, sheet layout */
+:root{--bg:#f2f3f1;--ink:#1d2124;--mute:#62696e;--line:#a3aaae;--card:#ffffff;--wall:#ece9e4;
+--ply:#e3cfa6;--edge:#c9ad7c;--clip:#2a2a2a;--printer:#cfd6db;--bed:#7a8790;--samla:#cfe0ea;--warn:#c0612a;--ok:#2f7d5b;
+--f-disp:"Barlow Condensed",system-ui,sans-serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141719;--ink:#e4e7e8;--mute:#98a1a6;--line:#525a5f;--card:#1b1f22;--wall:#24272a;
+--ply:#8a7550;--edge:#6e5d3f;--clip:#0c0c0c;--printer:#55616a;--bed:#9aa6ae;--samla:#3a4a55;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141719;--ink:#e4e7e8;--mute:#98a1a6;--line:#525a5f;--card:#1b1f22;--wall:#24272a;
+--ply:#8a7550;--edge:#6e5d3f;--clip:#0c0c0c;--printer:#55616a;--bed:#9aa6ae;--samla:#3a4a55;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:980px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:26px}
+h1{font-family:var(--f-disp);font-weight:800;font-size:2.1rem;margin:0;text-transform:uppercase}
+h2{font-family:var(--f-disp);font-weight:800;font-size:1.35rem;margin:0 0 6px;text-transform:uppercase;letter-spacing:.02em}
+p{margin:0;max-width:68ch}.sub{color:var(--mute)}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:600px}
+svg text{font-family:var(--f-mono)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+td,th{border-bottom:1px solid var(--line);padding:7px 12px 7px 0;text-align:left;vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);font-weight:500}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500}
+.tw{overflow-x:auto}
+ul{margin:0;padding-left:1.15em;display:grid;gap:5px;max-width:70ch}
+</style>
+<main>
+<header style="display:grid;gap:8px">
+<h1>Printer tower</h1>
+<p class="sub">One open carcass instead of two boxes: two full-height sides, a printer shelf, a top and two bottom rails, joined with printed connectors. The two boxes shared a panel anyway, so merging them saves wood and two joints. 600 wide × 1200 tall × 500 deep. Storage bay below (488 clear), printer bay above (676 clear) for the Bambu A1.</p>
+</header>
+
+<section>
+<h2>Front and side</h2>
+<div class="fig"><svg id="views" viewBox="0 0 980 560" role="img" aria-label="Front and side views of two stacked open boxes, the A1 printer in the top box, SAMLA boxes in the bottom box"></svg></div>
+</section>
+
+<section>
+<h2>Cut list</h2>
+<div class="tw"><table>
+<tr><th>Piece</th><th>Size (mm)</th><th>Qty</th><th>Ply</th><th>Why it is needed</th></tr>
+<tr><td>Side</td><td class="n">1200 × 500</td><td class="n">2</td><td class="n">12</td><td>Full height; everything hangs off these</td></tr>
+<tr><td>Printer shelf</td><td class="n">576 × 500</td><td class="n">1</td><td class="n">12</td><td>Carries the A1 (8.3 kg) and its shaking; must not flex</td></tr>
+<tr><td>Top</td><td class="n">576 × 500</td><td class="n">1</td><td class="n">12</td><td>Ties the sides together at the top; keeps dust off the printer</td></tr>
+<tr><td>Bottom rails</td><td class="n">576 × 100</td><td class="n">2</td><td class="n">12</td><td>Front and back at floor level: tie the feet. The storage boxes stand on the floor between them, so no full bottom panel</td></tr>
+<tr><td>Back rail (optional)</td><td class="n">576 × 100</td><td class="n">1</td><td class="n">12</td><td>Across the back just under the top, if it sways sideways</td></tr>
+</table></div>
+<p class="sub" style="margin-top:8px">4 panels and 2 rails, plus 1 optional rail. About 1.8 m² of ply, against about 2.4 m² for two separate boxes. 576 = 600 − 2 × 12: the shelf, top and bottom fit between the sides.</p>
+</section>
+
+<section>
+<h2>8 mm or 12 mm</h2>
+<ul>
+<li><b>The printer shelf stays 12 mm.</b> It spans 576 with an 8.3 kg bed-slinger shaking it. Stiffness goes with thickness cubed, so 12 mm is about 3.4 times stiffer than 8 mm. A bouncy shelf shows up as ringing on your prints.</li>
+<li><b>The sides and top could be 8 or 9 mm</b>, but the connectors grip panel edges and screws bite into them. Thin edges hold screws poorly and the carcass racks more easily. Saving here is small: fewer pieces already saved more than thinner ply would.</li>
+<li><b>One sheet of one thickness</b> is simpler to buy and cut. All 12 mm fits on one 7 × 4 sheet.</li>
+</ul>
+</section>
+
+<section>
+<h2>From one 7 × 4 sheet</h2>
+<div class="fig"><svg id="sheet" viewBox="0 0 980 480" role="img" aria-label="7 by 4 ft sheet: two 500 strips, each a 1200 side plus a 576 piece; a third narrow strip gives the third 576 piece and rails"></svg></div>
+<ul style="margin-top:10px">
+<li><b>Cuts 1 and 2:</b> rip two strips 500 wide; the third strip is about 214.</li>
+<li><b>Each 500 strip:</b> crosscut at 1200 and 1776: one side and one 576 × 500 piece, about 350 over.</li>
+<li><b>Narrow strip:</b> rip it to 100 and crosscut three 576 rails: two for the bottom, one for the optional back rail.</li>
+</ul>
+</section>
+
+<section>
+<h2>Check before cutting</h2>
+<ul>
+<li><b>Bed travel:</b> the A1's bed slides front and back past its frame. With the printer at home, push the bed to each end and measure. The box is 500 deep and open both ends, so the bed overhangs into air; leave a gap between the tower's back and the black board.</li>
+<li><b>Connector gap:</b> if the printed connectors leave a gap between panels (the photo shows a few mm), the box grows by that gap. The sizes here assume panels touching. Measure your connector first, or design it for zero gap.</li>
+<li><b>Power:</b> the A1 draws up to 1300 W at 220 V while heating (spec sheet), so it needs its own socket, not the bench's 6 A point.</li>
+<li><b>Anchor</b> the top of the tower to the wall or board: the bed moving back and forth rocks a tall stack.</li>
+</ul>
+</section>
+</main>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg",c=n=>"var(--"+n+")";
+function kit(s){const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;s.appendChild(e);return e};
+ const T=(x,y,t,o={})=>{const{fill,...a}=o;a.style='fill:'+(fill||'var(--ink)');return el('text',Object.assign({x,y,'font-size':11,'text-anchor':'middle'},a),t);};return{el,T};}
+
+// ---------- front + side views ----------
+{
+const s=document.getElementById('views'),{el,T}=kit(s);
+const S=0.36,FY=520,t=12,W=600,D=500,HT=1200,SH=500;   // shelf top surface at 512
+const view=(OX,width,label,side)=>{
+ const X=m=>OX+m*S,Y=h=>FY-h*S,R=(x0,h0,x1,h1,o)=>el('rect',Object.assign({x:X(x0),y:Y(h1),width:(x1-x0)*S,height:(h1-h0)*S},o));
+ el('line',{x1:X(-80),y1:FY,x2:X(width+80),y2:FY,stroke:c('ink'),'stroke-width':1.5});
+ if(!side){
+  R(0,0,t,HT,{fill:c('edge'),stroke:c('ink')});R(W-t,0,W,HT,{fill:c('edge'),stroke:c('ink')});
+  R(t,HT-t,W-t,HT,{fill:c('ply'),stroke:c('ink')});R(t,SH,W-t,SH+t,{fill:c('ply'),stroke:c('ink')});
+  R(t,0,W-t,100,{fill:c('ply'),stroke:c('ink'),opacity:.55});T(X(W/2),Y(50)+4,"bottom rail",{'font-size':9});
+  [[t,t],[W-t,t],[t,SH],[W-t,SH],[t,SH+t],[W-t,SH+t],[t,HT-t],[W-t,HT-t]].forEach(([x,y])=>el('rect',{x:X(x)-5,y:Y(y)-5,width:10,height:10,fill:c('clip')}));
+  const pb=SH+t,px0=(W-385)/2+20;
+  R(px0,pb,px0+385,pb+70,{fill:c('printer'),stroke:c('ink')});
+  R(px0+20,pb+70,px0+330,pb+80,{fill:c('bed'),stroke:c('ink')});
+  R(px0+330,pb+70,px0+365,pb+430,{fill:c('printer'),stroke:c('ink')});
+  R(px0+20,pb+380,px0+365,pb+410,{fill:c('printer'),stroke:c('ink')});
+  el('circle',{cx:X(px0-28),cy:Y(pb+330),r:70*S,fill:'none',stroke:c('ink'),'stroke-width':2});
+  T(X(px0-28),Y(pb+330)+4,"spool",{'font-size':9});
+  T(X(px0+180),Y(pb+230),"A1",{'font-size':14,'font-weight':600});
+  T(X(px0+180),Y(pb+230)+16,"385 × 410 × 430",{'font-size':10,fill:c('mute')});
+  T(X(W/2),Y(pb+545),"≈ 240 free above the printer",{'font-size':9,fill:c('ok')});
+  [[t+8,4],[t+300,4]].forEach(([x,y])=>{R(x,y,x+280,y+280,{fill:c('samla'),stroke:c('ink')});T(X(x+140),Y(y+140)+4,"22 L",{'font-size':10});});
+  [[t+8,t+290],[t+300,t+290]].forEach(([x,y])=>{R(x,y,x+280,y+140,{fill:c('samla'),stroke:c('ink')});T(X(x+140),Y(y+70)+4,"11 L",{'font-size':10});});
+ }else{
+  R(0,0,D,HT,{fill:c('ply'),stroke:c('ink')});
+  R(0,SH,D,SH+t,{fill:c('edge'),stroke:c('ink')});R(0,HT-t,D,HT,{fill:c('edge'),stroke:c('ink')});R(0,0,t,100,{fill:c('edge'),stroke:c('ink')});R(D-t,0,D,100,{fill:c('edge'),stroke:c('ink')});
+  const pb=SH+t,pz=45;
+  R(pz,pb,pz+410,pb+70,{fill:c('printer'),stroke:c('ink')});
+  R(pz-60,pb+70,pz+470,pb+80,{fill:c('bed'),stroke:c('ink')});
+  R(pz+180,pb+70,pz+230,pb+430,{fill:c('printer'),stroke:c('ink')});
+  T(X(pz-60),Y(pb+80)-10,"bed overhang?",{'font-size':9,fill:c('warn'),'text-anchor':'start'});
+  T(X(-30),Y(300),"front",{'font-size':10,fill:c('mute'),'text-anchor':'end'});
+  T(X(D+30),Y(300),"back",{'font-size':10,fill:c('mute'),'text-anchor':'start'});
+ }
+ T(X(width/2),Y(HT)-14,label,{'font-size':12,'font-weight':600});
+ const dimV=(x,h0,h1,t2)=>{el('line',{x1:X(x),y1:Y(h0),x2:X(x),y2:Y(h1),stroke:c('mute')});
+  [h0,h1].forEach(h=>el('line',{x1:X(x)-4,y1:Y(h),x2:X(x)+4,y2:Y(h),stroke:c('mute')}));
+  T(X(x)-6,(Y(h0)+Y(h1))/2,t2,{'font-size':10,fill:c('mute'),'text-anchor':'end'});};
+ const dimH=(h,x0,x1,t2)=>{el('line',{x1:X(x0),y1:Y(h),x2:X(x1),y2:Y(h),stroke:c('mute')});
+  [x0,x1].forEach(x=>el('line',{x1:X(x),y1:Y(h)-4,x2:X(x),y2:Y(h)+4,stroke:c('mute')}));
+  T((X(x0)+X(x1))/2,Y(h)+14,t2,{'font-size':10,fill:c('mute')});};
+ if(!side){dimV(-40,0,SH,"500");dimV(-40,SH,HT,"700");dimH(-40,0,W,"600 wide");}
+ else{dimH(-40,0,D,"500 deep");}
+};
+view(110,600,"FRONT",false);
+view(560,500,"SIDE",true);
+}
+
+// ---------- sheet ----------
+{
+const s=document.getElementById('sheet'),{el,T}=kit(s);
+const K=0.38,OX=80,OY=40,X=v=>OX+v*K,Y=v=>OY+v*K;   // 7 x 4 sheet landscape: 2134 across, 1220 down
+el('rect',{x:X(0),y:Y(0),width:2134*K,height:1220*K,fill:c('wall'),stroke:c('ink'),'stroke-width':2});
+const piece=(x,y,w,h,f,a,b)=>{el('rect',{x:X(x),y:Y(y),width:w*K,height:h*K,fill:c(f),stroke:c('ink')});
+ T(X(x+w/2),Y(y+h/2),a,{'font-size':10,'font-weight':600});if(b)T(X(x+w/2),Y(y+h/2)+14,b,{'font-size':9,fill:c('mute')});};
+piece(0,0,1200,500,'edge',"SIDE","1200 × 500");piece(1203,0,576,500,'ply',"PRINTER SHELF","576 × 500");
+piece(0,503,1200,500,'edge',"SIDE","1200 × 500");piece(1203,503,576,500,'ply',"TOP","576 × 500");
+piece(0,1006,576,100,'ply',"BOTTOM RAIL","");piece(579,1006,576,100,'ply',"BOTTOM RAIL","");piece(1158,1006,576,100,'ply',"BACK RAIL","");
+T(X(1955),Y(250),"≈350 over",{'font-size':9,fill:c('mute')});T(X(1955),Y(753),"≈350 over",{'font-size':9,fill:c('mute')});
+[501.5,1004.5].forEach((y,i)=>{el('line',{x1:X(-30),y1:Y(y),x2:X(2164),y2:Y(y),stroke:c('warn'),'stroke-width':3,'stroke-dasharray':'8 4'});T(X(-30)-10,Y(y)+4,String(i+1),{'font-size':12,'font-weight':600,fill:c('warn')});});
+T(X(1067),Y(1220)+26,"7 × 4 ft sheet, 2134 × 1220 · 12 mm · bottom made as two rails from the narrow strip",{'font-size':10,fill:c('mute')});
+}
+})();
+</script>
