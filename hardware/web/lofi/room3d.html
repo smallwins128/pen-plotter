@@ -1,5 +1,5 @@
 <!-- Room R05 Harbor (Copilot harness). 3D model of the workshop room; state lives in "[R05 Harbor] Handoff". -->
-<title>Workshop Room 3D</title>
+<title>Harbor Now 3D</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -29,15 +29,15 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 <main>
 <header style="display:grid;gap:4px">
-<h1>Workshop room · 3D</h1>
-<p class="sub">Built from your measurements (wall A 3.8 m, 2.7 m floor from the wardrobe front, wall C 3.0 m to the door) and photos. Drag to orbit, pinch or scroll to zoom. Tap anything to see its name and notes. Orange dashed labels are planned, not built yet.</p>
+<h1>Harbor · now · 3D</h1>
+<p class="sub">Built from your measurements (wall A 3.8 m, 2.7 m floor from the wardrobe front, wall C 3.0 m to the door) and photos. Drag to orbit, pinch or scroll to zoom. Tap anything to see its name and notes. Only what is in the room today (photo and measurements of 2026-10-25); orange dashed means in the room but position or identity unconfirmed. Ideas live on the Plans page.</p>
 </header>
 <div id="view" role="img" aria-label="3D model of the workshop room"></div>
 <div class="bar" id="views"></div>
-<div class="bar"><button id="tLabels" aria-pressed="false">All labels</button><button id="tPlanned" aria-pressed="true">Planned items</button></div>
+<div class="bar"><button id="tLabels" aria-pressed="false">All labels</button><button id="tPlanned" aria-pressed="true">Unconfirmed items</button></div>
 <div id="info">Tap an item in the room or the list below.</div>
 <section class="grid" id="list"></section>
-<p class="sub">Estimated, not measured: ceiling height 2.9 m, wardrobe depth 60 cm, door 75 cm, exact panel position.</p>
+<p class="sub">Estimated, not measured: ceiling height 2.9 m, wardrobe depth 60 cm, door 75 cm; board contents placed from a photo.</p>
 </main>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
@@ -52,30 +52,27 @@ const W=3.3, L=3.8, H=2.9;
 const ITEMS=[
  {id:'A4',label:'A4 · personal',box:[0,0.6,0,2.1,0.05,1.05],c:'#3a3633',status:'built',note:'Personal wardrobe. Off-limits.'},
  {id:'A3',label:'A3 · storage',box:[0,0.6,0,2.1,1.05,2.05],c:'#2f6fa8',status:'built',op:0.25,note:'Workshop storage. Counter at 0.9 m with 2 drawers; four 47 × 48 × 35 cubbies below; hanging rail at the top. Rack B sits on the counter.'},
- {id:'A2',label:'A2 · arts',box:[0,0.6,0,2.1,2.05,3.05],c:'#3a3633',status:'built',note:'Arts and crafts. Pens and paper for the plotter can live here.'},
+ {id:'A2',label:'A2 · arts',box:[0,0.6,0,2.1,2.05,3.05],c:'#3a3633',status:'built',note:'Arts and crafts.'},
  {id:'A1',label:'A1 · personal',box:[0,0.6,0,2.1,3.05,3.7],c:'#3a3633',status:'built',note:'Personal. Socket below its mirror feeds the plotter end.'},
- {id:'loft',label:'Lofts',box:[0,0.6,2.1,2.6,0.05,3.7],c:'#d8d4cc',status:'built',note:'Four lofts, empty. Ladder access: rarely used things.'},
+ {id:'loft',label:'Lofts',box:[0,0.6,2.1,2.6,0.05,3.7],c:'#d8d4cc',status:'built',note:'Four lofts. Ladder access: rarely used things.'},
  {id:'counter',label:null,box:[0.02,0.6,0.88,0.92,1.08,2.02],c:'#f0f0ee',status:'built',note:'A3 counter.'},
- {id:'rackB',label:'Rack B',box:[0.04,0.34,0.92,1.4,1.1,1.68],c:'#1c2328',wire:true,shelves:[1.4],status:'built',note:'Half rack in A3: 55 × 28 × 45 inside. Three SAMLA 11 L (wire cards, connectors, heat-shrink) + folded servo leads. 5 L stack beside it.'},
- {id:'samlaB',label:null,box:[0.06,0.33,0.94,1.36,1.12,1.52],c:'#a9c7dc',status:'planned',op:0.6,note:'SAMLA 11 L ×3 in rack B.'},
- {id:'desk',label:'Office desk',box:[1.7,3.3,0.72,0.75,0,0.8],c:'#26292c',status:'built',legs:true,note:'160 × 80, pushed right. Cat house on its left end. Socket under the desk, centre of wall B.'},
- {id:'monitor',label:null,box:[2.35,2.95,0.8,1.15,0.12,0.16],c:'#111',status:'built',note:'Monitor.'},
- {id:'cat',label:'Cat house',box:[1.75,2.05,0.75,0.98,0.1,0.42],c:'#c9a0b4',status:'planned',note:'Moves onto the desk from the rack shelf.'},
- {id:'chair',label:'Chair',box:[2.15,2.6,0.42,0.5,1.0,1.45],c:'#555',status:'built',legs:true,note:'One chair swivels between desk and bench.'},
- {id:'light',label:'Call light',box:[0.83,0.87,0,1.6,0.35,0.39],c:'#aaa',status:'built',note:'Tripod light for calls. Moves to open A4.'},
- {id:'bench',label:'Bench',box:[2.68,3.27,0.71,0.74,0.82,2.02],c:'#1f1f1f',status:'built',legs:true,note:'LINNMON 120 × 60 along wall C, in an L with the desk.'},
- {id:'panel',label:'Ply panel',box:[3.276,3.288,0.1,1.93,0.86,1.77],c:'#d9c39a',status:'planned',note:'12 mm ply, 6 × 3 ft. Hangs on 2 wall strips + 2 panel strips (top and bottom), screwed through. Currently leaning, unpainted.'},
- {id:'skadis',label:'SKÅDIS',box:[3.26,3.275,0.85,1.41,0.93,1.69],c:'#f4f4f2',status:'planned',note:'76 × 56 on the panel, low. Daily hand tools.'},
- {id:'drawers',label:'Drawer cabinet',box:[3.12,3.275,1.45,1.675,1.14,1.505],c:'#222',status:'planned',note:'30 drawers, above the SKÅDIS over the top strip. M3/M4/M5 hardware. Not bought yet.'},
- {id:'post',label:'Light post',box:[3.2,3.24,0.74,1.95,2.0,2.04],c:'#333',status:'built',note:'Extrusion post with the bar light at the bench end (R06 Beacon).'},
- {id:'ftable',label:'Folding table',box:[2.69,3.3,0.72,0.75,2.04,2.95],c:'#b98b5b',status:'built',legs:true,note:'Interim, until a sturdier one. Switches stay reachable above it.'},
- {id:'rackA',label:'Rack A',box:[3.0,3.3,0.75,1.5,2.06,2.66],c:'#1c2328',wire:true,shelves:[0.78,1.03,1.27,1.5],status:'built',note:'Half rack against the wall, staging. 3 rows × 2 bins. Keep it left of the switches; bracket it to the wall.'},
- {id:'switch',label:'Switches',box:[3.29,3.3,1.1,1.28,2.7,2.9],c:'#f5f5f5',status:'built',note:'Within 40 cm of the door. Keep clear.'},
+ {id:'rackB',label:'Rack B',box:[0.04,0.34,0.92,1.4,1.1,1.68],c:'#1c2328',wire:true,shelves:[1.4],status:'built',note:'Half rack in A3 for wire, connectors and electricals.'},
+ {id:'desk',label:'Office desk',box:[1.7,3.3,0.72,0.75,0,0.8],c:'#26292c',status:'check',legs:true,note:'160 × 80 along the window wall, as placed on 2026-10-16. Not in the latest photo: confirm it is still here.'},
+ {id:'monitor',label:null,box:[2.35,2.95,0.8,1.15,0.12,0.16],c:'#111',status:'check',note:'Monitor on the office desk.'},
+ {id:'trestle',label:'Black trestle table',box:[2.7,3.3,0.71,0.74,0.0,0.6],c:'#1f1f1f',status:'check',legs:true,note:'Black table on trestle legs at the window corner of wall C (photo 2026-10-25). Which table it is and which way it runs: to confirm.'},
+ {id:'light',label:'Light stand',box:[2.95,3.0,0,1.95,0.6,0.65],c:'#333',status:'built',note:'Tripod light stand by the board, at the window end.'},
+ {id:'board',label:'Black board',box:[3.248,3.26,0.925,1.839,0.55,2.379],c:'#1f1f1f',status:'built',note:'12 mm ply, 1829 × 914, painted black, horizontal on a French cleat about 40 mm off the wall. Bottom edge 900 to 950 from the floor, left edge 500 to 600 from the window corner (measured 2026-10-25).'},
+ {id:'skadis',label:'SKÅDIS',box:[3.235,3.248,1.21,1.77,0.565,1.325],c:'#f4f4f2',status:'built',note:'Left end of the board: pliers, crimpers, rivet tool. Position from the photo.'},
+ {id:'ledge',label:'Ledge',box:[3.1,3.248,1.005,1.02,0.53,1.42],c:'#2a2a2a',status:'built',note:'Narrow shelf under the SKÅDIS with printed parts on show.'},
+ {id:'bins',label:'Grey bins',box:[3.13,3.245,1.085,1.46,1.34,1.81],c:'#9aa0a3',op:0.85,status:'built',note:'Grey bins on three hook-lip rails, right of the SKÅDIS. Screws sorted G01 to G08.'},
+ {id:'drivers',label:'Screwdriver rack',box:[3.2,3.245,1.61,1.645,1.34,1.77],c:'#2f5fd0',status:'built',note:'Blue rack above the bins.'},
+ {id:'switch',label:'Switch',box:[3.29,3.3,1.2,1.3,2.52,2.6],c:'#f5f5f5',status:'built',note:'Single light switch between the board and the door, clear of the board (photo).'},
+ {id:'socket',label:'Socket',box:[3.29,3.3,0.25,0.33,0.48,0.56],c:'#e0702a',status:'built',note:'Low socket near the window corner (photo).'},
+ {id:'skadis2',label:'Spare SKÅDIS',box:[3.2,3.28,0,0.56,2.56,2.96],c:'#f4f4f2',status:'built',note:'Leaning against wall C by the door.'},
+ {id:'horse1',label:'Sawhorses',box:[1.8,2.4,0,0.7,1.5,1.62],c:'#e0702a',op:0.9,status:'check',note:'Two plastic sawhorses for the island bench; on the floor, position from the photo.'},
+ {id:'horse2',label:null,box:[1.8,2.4,0,0.7,2.1,2.22],c:'#e0702a',op:0.9,status:'check',note:'Second sawhorse.'},
  {id:'plotT',label:'Plotter table',box:[1.02,2.54,0.72,0.75,3.2,3.8],c:'#e8e8e8',status:'built',legs:true,note:'1524 × 600 along wall D.'},
  {id:'plotter',label:'Plotter',box:[1.56,2.5,0.75,0.95,3.25,3.75],c:'#9aa6ad',wire:true,status:'built',note:'Pen plotter (R04 Etch).'},
- {id:'encl',label:'Enclosure zone',box:[1.04,1.54,0.75,0.95,3.22,3.78],c:'#2f7d5b',status:'planned',op:0.35,note:'Stainless electronics enclosure goes here, next to the A1 socket.'},
- {id:'samla55',label:'SAMLA 55 L',box:[1.1,1.89,0.02,0.2,3.22,3.79],c:'#a9c7dc',status:'planned',op:0.6,note:'Under the plotter: flat paper and finished plots.'},
- {id:'plots',label:'Framed plots',box:[1.95,2.55,1.2,1.75,3.79,3.8],c:'#2f7d5b',status:'planned',note:'Presentation wall D: call background.'},
  {id:'door',label:'Door',box:[2.55,3.3,0,2.05,3.76,3.79],c:'#b07a3c',status:'built',op:0.3,note:'Hinged at the C/D corner, rests open against wall D.'}
 ];
 
@@ -114,7 +111,7 @@ flat(1.55,2.65,0.9,2.1,0.005,0xcfe3f0);
 const meshes=[],labelObjs=[];let allLabels=false;
 ITEMS.forEach(it=>{
   const [x0,x1,y0,y1,z0,z1]=it.box;const g=new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0);
-  const planned=it.status==='planned';
+  const planned=it.status!=='built';
   const mat=new THREE.MeshStandardMaterial({color:it.c,roughness:.7,transparent:planned||!!it.op||it.wire,opacity:it.wire?0.12:(it.op??(planned?0.55:1))});
   const m=new THREE.Mesh(g,mat);m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);m.userData=it;scene.add(m);meshes.push(m);
   const edges=new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:it.wire?0x1c2328:0x000000,transparent:true,opacity:it.wire?0.9:0.25}));
@@ -127,7 +124,7 @@ ITEMS.forEach(it=>{
 });
 
 // views
-const VIEWS={Overview:[[W+1.7,4.0,L+1.9],[W/2,0.7,L/2]],Top:[[W/2,7.2,L/2+0.01],[W/2,0,L/2]],Bench:[[1.0,1.7,1.4],[3.2,1.1,1.6]],A3:[[2.2,1.5,1.55],[0.3,1.1,1.55]],Plotter:[[1.8,1.8,1.7],[1.8,0.9,3.6]]};
+const VIEWS={Overview:[[W+1.7,4.0,L+1.9],[W/2,0.7,L/2]],Top:[[W/2,7.2,L/2+0.01],[W/2,0,L/2]],Board:[[1.0,1.6,1.46],[3.2,1.35,1.46]],A3:[[2.2,1.5,1.55],[0.3,1.1,1.55]],Plotter:[[1.8,1.8,1.7],[1.8,0.9,3.6]]};
 const vb=document.getElementById('views');
 const go=(k)=>{const [p,t]=VIEWS[k];camera.position.set(...p);controls.target.set(...t);controls.update();[...vb.children].forEach(b=>b.setAttribute('aria-pressed',b.textContent===k));};
 Object.keys(VIEWS).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>go(k);vb.appendChild(b);});
@@ -139,12 +136,12 @@ const select=(it)=>{
   if(sel){sel.material.emissive.setHex(0);}
   if(!allLabels)labelObjs.forEach(o=>o.visible=false);
   sel=meshes.find(m=>m.userData.id===it.id);if(sel){sel.material.emissive.setHex(0x334455);if(sel.userData.labelObj&&sel.visible)sel.userData.labelObj.visible=true;}
-  info.innerHTML='';const b=document.createElement('b');b.textContent=(it.label||it.id)+' ';const t=document.createElement('span');t.className='tag'+(it.status==='planned'?' planned':'');t.textContent=it.status;
+  info.innerHTML='';const b=document.createElement('b');b.textContent=(it.label||it.id)+' ';const t=document.createElement('span');t.className='tag'+(it.status!=='built'?' planned':'');t.textContent=it.status;
   const p=document.createElement('div');p.textContent=it.note;info.append(b,t,p);};
 ITEMS.filter(i=>i.label).forEach(it=>{const btn=document.createElement('button');btn.className='item';
   const d=document.createElement('span');d.className='dot';d.style.background=it.c;
   const n=document.createElement('span');n.textContent=it.label;
-  const t=document.createElement('span');t.className='tag'+(it.status==='planned'?' planned':'');t.textContent=it.status;
+  const t=document.createElement('span');t.className='tag'+(it.status!=='built'?' planned':'');t.textContent=it.status;
   btn.append(d,n,t);btn.onclick=()=>select(it);list.appendChild(btn);});
 const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();let down=null;
 renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
@@ -155,7 +152,7 @@ renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clie
 // toggles
 const tog=(id,fn)=>{const b=document.getElementById(id);b.onclick=()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);fn(on);};};
 tog('tLabels',on=>{allLabels=on;wallLabels.forEach(o=>o.visible=on);labelObjs.forEach(o=>o.visible=on&&(o.parent&&meshes.find(m=>m.userData.labelObj===o)?.visible!==false));if(!on&&sel&&sel.userData.labelObj)sel.userData.labelObj.visible=true;});
-tog('tPlanned',on=>{meshes.forEach(m=>{if(m.userData.status==='planned'){m.visible=on;m.userData.edges.visible=on;if(m.userData.labelObj)m.userData.labelObj.visible=on;}});});
+tog('tPlanned',on=>{meshes.forEach(m=>{if(m.userData.status!=='built'){m.visible=on;m.userData.edges.visible=on;if(m.userData.labelObj)m.userData.labelObj.visible=on;}});});
 
 const theme=()=>{scene.background=new THREE.Color(css('scene')||'#e9edf0');};
 theme();matchMedia('(prefers-color-scheme: dark)').addEventListener('change',theme);

@@ -1,0 +1,217 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0}</style></head><body>
+<!-- Room R05 Harbor (Copilot harness). Bench power lofi. Room state lives in the Drive doc "[R05 Harbor] Handoff". -->
+<title>Bench Power</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* layout: one column; bench wall elevation with the power runs, then the one-line diagram, the 6 A budget, the buy list */
+:root{--bg:#f3f5f6;--ink:#1c2328;--mute:#5f6b73;--line:#9aa6ad;--card:#ffffff;
+--wood:#3a3633;--loft:#eceae6;--wall:#2f6fa8;--ghost:#7d8a93;--curtain:#b49a74;
+--ac:#c9611f;--dc12:#2f6fa8;--lab:#2f7d5b;--usb:#7a4fa8;--bad:#b3261e;
+--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;
+--wood:#4a4541;--loft:#2c3134;--wall:#5b9bd5;--ghost:#8a98a1;--curtain:#7d6a50;
+--ac:#f08a4b;--dc12:#6fb0ea;--lab:#5fbf94;--usb:#b48ce0;--bad:#ff7a6b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14191c;--ink:#e3e8eb;--mute:#93a0a8;--line:#56636b;--card:#1b2226;
+--wood:#4a4541;--loft:#2c3134;--wall:#5b9bd5;--ghost:#8a98a1;--curtain:#7d6a50;
+--ac:#f08a4b;--dc12:#6fb0ea;--lab:#5fbf94;--usb:#b48ce0;--bad:#ff7a6b;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:980px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+h1{font-size:1.4rem;margin:0;text-wrap:balance}h2{font-size:1rem;margin:0 0 8px;text-wrap:balance}
+p{margin:0;max-width:65ch}.sub{color:var(--mute)}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--f-mono);fill:var(--ink)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--f-mono);font-size:.8rem}
+.key span{display:flex;align-items:center;gap:6px}.key i{width:22px;height:4px;border-radius:2px;display:inline-block}
+table{border-collapse:collapse;font-size:.9rem;width:100%}
+td,th{border-bottom:1px solid var(--line);padding:6px 12px 6px 0;text-align:left;vertical-align:top}
+th{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);font-weight:500}
+td:first-child{font-family:var(--f-mono);white-space:nowrap}
+.tw{overflow-x:auto}
+ul{margin:0;padding-left:1.2em;max-width:70ch;display:grid;gap:4px}
+.bad{color:var(--bad);font-weight:600}
+</style>
+<main>
+<p style="margin:0;font:500 .85rem 'IBM Plex Mono',ui-monospace,monospace"><a href="./" style="color:inherit">← Harbor Plans</a></p>
+
+<header style="display:grid;gap:8px">
+<h1>Bench power</h1>
+<p class="sub">One 6 A wall point feeds the bench. All mains equipment is bought ready-made; you only wire the low-voltage side. Lofi, not to scale for small parts. Bench, rack and socket positions come from the wall C plan.</p>
+<div class="key"><span><i style="background:var(--ac)"></i>220 V</span><span><i style="background:var(--dc12)"></i>12 V, fused</span><span><i style="background:var(--lab)"></i>lab supply 0–60 V</span><span><i style="background:var(--usb)"></i>USB-C PD</span></div>
+</header>
+
+<section>
+<h2>Wall C · where everything sits</h2>
+<div class="fig"><svg id="elev" viewBox="0 0 740 560" role="img" aria-label="Bench wall elevation: wall socket near the entrance, lead along the floor to the bench, main strip and 12 V fuse block on the panel's bottom strip, 12 V brick under the bench, lab supply on rack A, light bar on the boom arm, fume extractor on the bench"></svg></div>
+</section>
+
+<section>
+<h2>One-line diagram</h2>
+<div class="fig"><svg id="tree" viewBox="0 0 740 330" role="img" aria-label="Power tree from wall socket to strip to each load, and from the 12 V brick through the fuse block to each 12 V line"></svg></div>
+</section>
+
+<section>
+<h2>6 A budget</h2>
+<p class="sub">A 6 A point gives about 1380 W at 230 V. Wattages are typical figures, not measured.</p>
+<div class="fig"><svg id="budget" viewBox="0 0 740 150" role="img" aria-label="Load bar: about 660 W of bench loads against a 1380 W limit; a 2000 W heat gun would overflow it"></svg></div>
+</section>
+
+<section>
+<h2>Buy list</h2>
+<div class="tw"><table>
+<tr><th>Item</th><th>Spec</th><th>Why</th></tr>
+<tr><td>Main strip</td><td>6 A, earthed, surge-protected, master switch, 4–6 sockets, ~3 m lead</td><td>One switch kills the bench when you leave</td></tr>
+<tr><td>Lab supply</td><td>0–60 V, 5 A, with current limit</td><td>Covers 36 V. Current limit saves prototypes from shorts</td></tr>
+<tr><td>12 V brick</td><td>Sealed plug-in adapter, 12 V 10 A (120 W)</td><td>No open mains terminals on the bench</td></tr>
+<tr><td>Fuse block</td><td>4–6 way automotive blade, fuses 2 A and 3 A</td><td>One fuse per 12 V line</td></tr>
+<tr><td>12 V wire</td><td>1.5 mm² brick to block; 0.75 mm² for each line</td><td>The trunk carries the sum of all lines</td></tr>
+<tr><td>Outputs</td><td>DC 5.5×2.1 jacks or XT30, 2–3 of them</td><td>Plug-in spare 12 V on the bench</td></tr>
+<tr><td>USB-C PD</td><td>65 W charger and a few PD trigger boards</td><td>Phone charging, and fixed 5/9/12/15/20 V for tests</td></tr>
+<tr><td>Beacon</td><td>12 V LED strip or COB in a 30 cm aluminium channel with diffuser</td><td>Replaces the 220 V batten so the light runs off the fuse block</td></tr>
+<tr><td>Smart plug</td><td>One of your Home Assistant plugs</td><td>On the 12 V brick: light and extractor from HA</td></tr>
+</table></div>
+</section>
+
+<section>
+<h2>Rules</h2>
+<ul>
+<li><span class="bad">No heat gun on this strip.</span> About 2000 W is well over 6 A. Run it from a 16 A point elsewhere.</li>
+<li>Mains stays inside bought boxes: strip, brick, lab supply, charger. You only wire 12 V.</li>
+<li>Put the smart plug on the 12 V brick only. Not on the iron or the lab supply.</li>
+<li>Master switch off when you leave the room.</li>
+</ul>
+</section>
+</main>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg",c=n=>"var(--"+n+")";
+function kit(s){const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;s.appendChild(e);return e};
+  const T=(x,y,t,o={})=>el('text',Object.assign({x,y,'font-size':11,'text-anchor':'middle'},o),t);return{el,T};}
+
+// ---------- elevation ----------
+{
+const s=document.getElementById('elev'),{el,T}=kit(s);
+const S=230,X=m=>60+(m-0.7)*S,FY=500,Y=h=>FY-h*S;
+const box=(x0,h0,x1,h1,o={},lab,lo={})=>{el('rect',Object.assign({x:X(x0),y:Y(h1),width:(x1-x0)*S,height:(h1-h0)*S},o));
+  if(lab)lab.split('\n').forEach((ln,i,a)=>T((X(x0)+X(x1))/2,(Y(h0)+Y(h1))/2+4+(i-(a.length-1)/2)*12,ln,Object.assign({'font-size':10},lo)));};
+const run=(pts,col,o={})=>el('polyline',Object.assign({points:pts.map(([x,h])=>X(x)+','+Y(h)).join(' '),fill:'none',stroke:c(col),'stroke-width':3,'stroke-linejoin':'round','stroke-linecap':'round'},o));
+el('rect',{x:X(0.7),y:Y(2.1),width:(3.12-0.7)*S,height:2.1*S,fill:c('wall'),opacity:.08});
+el('line',{x1:X(0.7),y1:FY,x2:X(3.12),y2:FY,stroke:c('ink'),'stroke-width':2});
+// entrance edge
+box(3.0,0,3.12,2.05,{fill:c('wood'),stroke:c('ink'),'stroke-width':1.5});
+T(X(3.0)-4,Y(2.05)+14,"entrance ►",{'text-anchor':'end','font-size':10,fill:c('mute')});
+// ply panel (3 ft wide, continues up)
+box(0.94,0.78,1.854,2.1,{fill:c('loft'),stroke:c('ink'),'stroke-width':1.2});
+T(X(1.4),Y(2.1)+16,"PLY PANEL 3 ft (continues up)",{'font-size':10,fill:c('mute')});
+box(0.94,0.78,1.854,0.93,{fill:c('curtain'),opacity:.35});
+// bench
+box(0.8,0.71,2.0,0.75,{fill:c('card'),stroke:c('ink'),'stroke-width':1.5});
+[0.84,1.96].forEach(x=>el('line',{x1:X(x),y1:Y(0.71),x2:X(x),y2:FY,stroke:c('ink'),'stroke-width':2}));
+T(X(0.9),Y(0.71)+14,"BENCH 120×60",{'font-size':10,'font-weight':600,'text-anchor':'start'});
+// folding table + rack A
+box(2.04,0.72,2.95,0.75,{fill:c('curtain'),stroke:c('ink'),'stroke-width':1.5});
+el('line',{x1:X(2.1),y1:Y(0.72),x2:X(2.89),y2:FY,stroke:c('ink'),'stroke-width':1.2,'stroke-dasharray':'6 4'});
+el('line',{x1:X(2.89),y1:Y(0.72),x2:X(2.1),y2:FY,stroke:c('ink'),'stroke-width':1.2,'stroke-dasharray':'6 4'});
+[2.05,2.6].forEach(x=>el('line',{x1:X(x),y1:Y(1.5),x2:X(x),y2:Y(0.75),stroke:c('ghost'),'stroke-width':3}));
+[0.78,1.03,1.27,1.5].forEach(h=>el('line',{x1:X(2.05),y1:Y(h),x2:X(2.6),y2:Y(h),stroke:c('ghost'),'stroke-width':2}));
+[1.33,1.09].forEach(h=>[2.13,2.37].forEach(x=>box(x,h,x+0.16,h+0.1,{fill:'none',stroke:c('ghost'),'stroke-dasharray':'3 2'})));
+T(X(2.33),Y(1.5)-8,"RACK A",{'font-size':10,fill:c('mute'),'font-weight':600});
+// lab supply on rack A bottom shelf
+box(2.09,0.78,2.37,0.96,{fill:c('card'),stroke:c('lab'),'stroke-width':2});
+box(2.12,0.86,2.24,0.93,{fill:c('lab'),opacity:.25});
+T(X(2.18),Y(0.895)+3,"36.0V",{'font-size':8,fill:c('lab')});
+[2.28,2.32].forEach((x,i)=>el('circle',{cx:X(x),cy:Y(0.83),r:3,fill:i?c('ink'):c('bad')}));
+T(X(2.23),Y(0.96)-6,"LAB SUPPLY 0–60 V",{'font-size':9,'font-weight':600,fill:c('lab')});
+run([[2.28,0.8],[2.2,0.765],[1.9,0.76],[1.6,0.765]],'lab',{'stroke-width':2});
+T(X(2.0),Y(0.76)-5,"leads",{'font-size':8,fill:c('lab')});
+box(2.39,0.84,2.55,0.94,{fill:'none',stroke:c('ghost'),'stroke-dasharray':'3 2'},"bin",{'font-size':8,fill:c('ghost')});
+// wall socket
+box(2.72,0.22,2.84,0.32,{fill:c('ac'),stroke:c('ink')});
+T(X(2.78),Y(0.32)-6,"WALL 6 A",{'font-size':9,'font-weight':600,fill:c('ac')});
+// mains lead: socket → floor → bench leg → behind bench → strip
+run([[2.78,0.22],[2.78,0.03],[1.93,0.03],[1.93,0.66],[1.42,0.66],[1.42,0.8]],'ac');
+T(X(2.35),Y(0.03)-6,"lead along skirting",{'font-size':9,fill:c('ac')});
+// main strip on bottom strip
+box(1.04,0.8,1.44,0.87,{fill:c('card'),stroke:c('ac'),'stroke-width':2});
+[1.08,1.15,1.22,1.29,1.36].forEach(x=>el('rect',{x:X(x),y:Y(0.85),width:10,height:8,rx:2,fill:'none',stroke:c('ac')}));
+el('rect',{x:X(1.41)-2,y:Y(0.855),width:6,height:9,fill:c('bad')});
+el('line',{x1:X(1.2),y1:Y(0.88),x2:X(1.2),y2:Y(1.07),stroke:c('ac')});
+T(X(1.2),Y(1.14),"MAIN STRIP · master switch",{'font-size':9,'font-weight':600,fill:c('ac')});
+T(X(1.2),Y(1.14)+12,"iron · laptop · PD · lab · 12V",{'font-size':8,fill:c('mute')});
+// PD charger
+box(1.07,0.88,1.12,0.95,{fill:c('usb'),stroke:c('ink')});
+T(X(1.13)+4,Y(0.95)+8,"PD",{'font-size':8,fill:c('usb'),'text-anchor':'start'});
+// smart plug + 12V brick under bench
+el('rect',{x:X(1.33)-1,y:Y(0.885),width:10,height:10,fill:c('dc12'),stroke:c('ink')});
+run([[1.35,0.8],[1.35,0.52]],'ac',{'stroke-width':2});
+box(1.2,0.45,1.5,0.52,{fill:c('card'),stroke:c('dc12'),'stroke-width':2},"12 V 10 A brick",{'font-size':8});
+T(X(1.35),Y(0.45)+12,"under the top · on HA smart plug",{'font-size':8,fill:c('dc12')});
+// fuse block on bottom strip
+box(1.48,0.8,1.72,0.88,{fill:c('card'),stroke:c('dc12'),'stroke-width':2});
+[1.52,1.57,1.62,1.67].forEach(x=>el('rect',{x:X(x),y:Y(0.86),width:6,height:9,fill:c('dc12')}));
+el('line',{x1:X(1.56),y1:Y(0.88),x2:X(1.56),y2:Y(1.0),stroke:c('dc12')});
+T(X(1.56),Y(1.03),"FUSE BLOCK",{'font-size':9,'font-weight':600,fill:c('dc12')});
+run([[1.5,0.49],[1.6,0.49],[1.6,0.8]],'dc12',{'stroke-width':3});
+// DC jacks
+[1.76,1.81].forEach(x=>el('circle',{cx:X(x),cy:Y(0.84),r:4,fill:c('card'),stroke:c('dc12'),'stroke-width':2}));
+T(X(1.785),Y(0.88)-4,"DC out",{'font-size':8,fill:c('dc12')});
+run([[1.7,0.84],[1.74,0.84]],'dc12',{'stroke-width':2});
+// boom arm + Beacon light bar
+run([[2.05,1.45],[1.75,1.62],[1.25,1.62]],'ink',{'stroke-width':4});
+el('circle',{cx:X(2.05),cy:Y(1.45),r:5,fill:c('ink')});
+box(1.1,1.5,1.4,1.55,{fill:c('card'),stroke:c('dc12'),'stroke-width':2});
+el('line',{x1:X(1.25),y1:Y(1.62),x2:X(1.25),y2:Y(1.55),stroke:c('ink'),'stroke-width':2});
+T(X(1.25),Y(1.5)+14,"BEACON · 12 V bar",{'font-size':9,'font-weight':600,fill:c('dc12')});
+T(X(1.25),Y(1.5)+26,"(220 V batten swapped)",{'font-size':8,fill:c('mute')});
+T(X(1.95),Y(1.62)-6,"boom arm",{'font-size':9,fill:c('mute')});
+run([[1.66,0.88],[1.66,1.0],[1.88,1.0],[1.88,1.5],[1.6,1.6],[1.4,1.53]],'dc12',{'stroke-width':2,'stroke-dasharray':'5 3'});
+// fume extractor on bench left
+box(0.84,0.75,1.0,0.97,{fill:c('card'),stroke:c('dc12'),'stroke-width':2});
+el('circle',{cx:X(0.92),cy:Y(0.86),r:13,fill:'none',stroke:c('dc12'),'stroke-width':1.5});
+el('line',{x1:X(0.92)-9,y1:Y(0.86),x2:X(0.92)+9,y2:Y(0.86),stroke:c('dc12')});
+el('line',{x1:X(0.92),y1:Y(0.86)-9,x2:X(0.92),y2:Y(0.86)+9,stroke:c('dc12')});
+T(X(0.92),Y(0.97)-6,"fume fan",{'font-size':9,'font-weight':600,fill:c('dc12')});
+run([[1.52,0.8],[1.52,0.77],[1.0,0.77]],'dc12',{'stroke-width':2,'stroke-dasharray':'5 3'});
+// heights
+[[0.75,"0.75 bench"],[1.5,"1.50"]].forEach(([h,t])=>T(X(0.7)+4,Y(h)+4,t,{'font-size':9,fill:c('mute'),'text-anchor':'start'}));
+}
+
+// ---------- one-line diagram ----------
+{
+const s=document.getElementById('tree'),{el,T}=kit(s);
+const node=(x,y,w,t,sub,col)=>{el('rect',{x,y,width:w,height:40,rx:4,fill:c('card'),stroke:c(col),'stroke-width':2});
+  T(x+w/2,y+17,t,{'font-size':11,'font-weight':600});if(sub)T(x+w/2,y+31,sub,{'font-size':9,fill:c('mute')});};
+const wire=(x1,y1,x2,y2,col)=>el('path',{d:`M${x1},${y1} H${(x1+x2)/2} V${y2} H${x2}`,fill:'none',stroke:c(col),'stroke-width':2.5});
+node(10,135,100,"WALL","6 A · 1380 W",'ac');
+wire(110,155,140,155,'ac');
+node(140,135,120,"MAIN STRIP","master switch",'ac');
+const loads=[["Soldering iron","~60 W",'ac',15],["Laptop","~65 W",'ac',70],["USB-C PD 65 W","phone · triggers",'usb',125],["Lab supply","0–60 V 5 A · ~350 W",'lab',180],["Smart plug → 12 V brick","10 A · 120 W",'dc12',255]];
+loads.forEach(([t,sub,col,y])=>{wire(260,155,300,y+20,'ac');node(300,y,180,t,sub,col);});
+wire(480,275,510,275,'dc12');
+node(510,255,100,"FUSE BLOCK","12 V",'dc12');
+const f=[["F1 2 A","Beacon bar",15],["F2 2 A","fume fan",75],["F3 3 A","DC out ×2",135],["F4","spare",195]];
+f.forEach(([t,sub,y])=>{wire(610,275,640,y+20,'dc12');node(640,y,92,t,sub,'dc12');});
+el('rect',{x:10,y:200,width:120,height:40,rx:4,fill:'none',stroke:c('bad'),'stroke-width':1.5,'stroke-dasharray':'5 3'});
+T(70,217,"heat gun ~2000 W",{'font-size':10,fill:c('bad'),'font-weight':600});T(70,231,"not here: 16 A point",{'font-size':9,fill:c('bad')});
+}
+
+// ---------- 6 A budget bar ----------
+{
+const s=document.getElementById('budget'),{el,T}=kit(s);
+const CAP=1380,MAX=2700,W=700,OX=20,k=W/MAX,y=40,h=34;
+const segs=[["lab",350,'lab'],["12 V",120,'dc12'],["iron",60,'ac'],["laptop",65,'ac'],["PD",65,'usb']];
+el('rect',{x:OX,y,width:CAP*k,height:h,fill:'none',stroke:c('line')});
+let x=OX;segs.forEach(([t,w,col])=>{el('rect',{x,y,width:w*k,height:h,fill:c(col),opacity:.8});if(w*k>30)T(x+w*k/2,y+h/2+4,t,{'font-size':9,fill:c('card'),'font-weight':600});x+=w*k;});
+const used=segs.reduce((a,b)=>a+b[1],0);
+T(OX+used*k/2,y-8,`bench ≈ ${used} W`,{'font-size':10,'font-weight':600});
+el('rect',{x:OX,y:y+h+16,width:2000*k,height:14,fill:'none',stroke:c('bad'),'stroke-dasharray':'5 3'});
+T(OX+2000*k+6,y+h+27,"heat gun 2000 W",{'font-size':9,fill:c('bad'),'text-anchor':'start'});
+el('line',{x1:OX+CAP*k,y1:y-16,x2:OX+CAP*k,y2:y+h+40,stroke:c('bad'),'stroke-width':2});
+T(OX+CAP*k+4,y-6,"6 A limit 1380 W",{'font-size':10,fill:c('bad'),'text-anchor':'start','font-weight':600});
+[0,500,1000,1500,2000,2500].forEach(v=>{el('line',{x1:OX+v*k,y1:y+h+40,x2:OX+v*k,y2:y+h+46,stroke:c('mute')});T(OX+v*k,y+h+58,v+" W",{'font-size':9,fill:c('mute')});});
+}
+})();
+</script>
+
+</body></html>
