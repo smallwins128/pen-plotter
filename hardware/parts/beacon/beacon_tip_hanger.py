@@ -1,6 +1,7 @@
 """R06 Beacon: tip hanger for the single lifted arm (Allwin's sketch, 2026-10-27).
 
-A printed U that hangs from ONE M4 rod through the rails' 41 cm holes, its two tabs just outside the rails. It hangs
+A printed U that pivots on the rails' 41 cm holes, its two tabs just outside the rails: one M4 x 20 per side, head
+inside the rails, nut sunk in a hex pocket on the tab's outer face. It hangs
 plumb whatever the rail angle, so the batten levels itself. The 32 cm crossbar bolts flat under the base through its
 11 and 21 cm holes (50 mm either side of its centre); the batten clips go on the crossbar's end holes.
 
@@ -21,7 +22,8 @@ OUT = pathlib.Path(__file__).resolve().parents[2] / "out" / "beacon"
 
 STRIP_T, GAP = 7.5, 90.0                       # strip thickness; rail inner faces = dowel length
 CLR = 0.5                                      # gap to each rail face (washers take it up)
-TAB_T, TAB_HALF = 8.0, 10.0                    # tab thickness; half-width of its neck (and tip radius)
+TAB_T, TAB_HALF = 10.0, 10.0                   # tab thickness; half-width of its neck (and tip radius)
+PIV_NUT = dict(af=7.3, depth=3.4)              # M4 nut pocket on each tab's outer face (nut 7.0 AF x 3.2)
 DROP = 35.0                                    # pivot to base top (Allwin 2026-10-27)
 BASE_HALF_X, BASE_T = 22.0, 9.0                # base: 44 deep along the arm, 9 thick (room for a nut slot)
 FLARE_Z = 13.0                                 # height of the neck-to-base flare
@@ -60,6 +62,12 @@ def pivot_hole():
     return unary_union([Point(0, 0).buffer(r, 32), SPoly([(-r, 0), (0, r * math.sqrt(2)), (r, 0)])])
 
 
+def pivot_nut_outline():
+    """Hex pocket in (x, z) around the pivot, a vertex up (as printed) so its roof is self-supporting."""
+    r = PIV_NUT["af"] / math.sqrt(3)
+    return SPoly([(r * math.cos(math.radians(90 + 60 * k)), r * math.sin(math.radians(90 + 60 * k))) for k in range(6)])
+
+
 def rail_clearance():
     """Gap from the rails' undersides to the base top, over the base's depth, with the hanger plumb."""
     lowest = -BASE_HALF_X * math.tan(RAIL_RISE) - (15.0 / 2) / math.cos(RAIL_RISE)
@@ -75,6 +83,9 @@ def build():
         y0, y1 = sorted((s * TAB_IN, s * TAB_OUT))
         part += prism_xz(tab_outline(), y0, y1)
     part -= prism_xz(pivot_hole(), -TAB_OUT - 1, TAB_OUT + 1)
+    for s in (-1, 1):                                              # nut pockets on the tabs' outer faces
+        y0, y1 = sorted((s * (TAB_OUT - PIV_NUT["depth"]), s * (TAB_OUT + 0.01)))
+        part -= prism_xz(pivot_nut_outline(), y0, y1)
     for s in (-1, 1):
         y = s * CROSS_Y
         part -= Pos(0, y, BASE_TOP - BASE_T / 2) * Cylinder(BOLT / 2, BASE_T + 2)

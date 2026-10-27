@@ -2,7 +2,8 @@
 
 The arm is a pinned truss. Two 42 cm rails (on edge, 90 mm apart on dowel rungs) pivot on the LOWER ears and rise
 11.5 deg; two 32 cm ties (outside the rails) hang from the UPPER ears and bolt to the rails' 31 cm holes. Every
-joint is an M4 bolt through a strip's existing 4 mm hole, washer, ear, washer, nut on the inside.
+joint is an M4 x 20 bolt from outside through a strip's existing 4 mm hole and a washer into the ear, with the
+nut sunk in a hex pocket on the ear's inner face.
 
     python3 beacon_wall_plate.py        # writes out/beacon_wall_plate.stl and .step
 
@@ -24,7 +25,8 @@ GAP = 90.0                                        # rail inner faces = dowel len
 PIVOT_X, PIVOT_DZ = 22.0, 120.0                   # pivot distance from the wall; upper-to-lower pivot spacing
 SLOT = 5.0                                        # lower pivot slot, +/- along z: closes the triangle, sets level
 BOLT = 4.4                                        # M4 clearance
-EAR_T, CLR = 8.0, 0.5                             # ear thickness; gap to each strip face (take up with washers)
+EAR_T, CLR = 10.0, 0.5                            # ear thickness; gap to each strip face (take up with washers)
+NUT = dict(af=7.3, depth=3.4)                     # M4 nut pocket on each ear's inner face (nut 7.0 AF x 3.2)
 EAR_R = 10.0                                      # ear tip radius around the pivot
 BASE_T = 8.0                                      # plate thickness
 TOP, BOTTOM = 20.0, -145.0                        # plate z extent
@@ -63,6 +65,14 @@ def hole_outline(zc, slot):
     return unary_union([body, roof])
 
 
+def nut_pocket_outline(zc, slot):
+    """Hex pocket in (x, z), a vertex toward +x (up, as printed) so its roof is self-supporting; slotted to match."""
+    r = NUT["af"] / math.sqrt(3)
+    hexes = [SPoly([(PIVOT_X + r * math.cos(math.radians(60 * k)), zc + d + r * math.sin(math.radians(60 * k)))
+                    for k in range(6)]) for d in (-slot, slot)]
+    return unary_union(hexes).convex_hull
+
+
 def strip_end_clearance():
     """Smallest gap between a strip's back corners and the plate face, over the slot travel. Must stay positive."""
     worst = 99.0
@@ -87,6 +97,10 @@ def build():
             plate += prism_xz(ear_outline(zc, slot), y0, y1)
     for (zc, slot) in ((0.0, 0.0), (-PIVOT_DZ, SLOT)):
         plate -= prism_xz(hole_outline(zc, slot), -HALF_W - 1, HALF_W + 1)
+    for side in (-1, 1):                                   # nut pockets on the ears' inner faces
+        for (zc, slot, span) in ((0.0, 0.0, TIE_EAR), (-PIVOT_DZ, SLOT, RAIL_EAR)):
+            y0, y1 = sorted((side * span[0], side * (span[0] + NUT["depth"])))
+            plate -= prism_xz(nut_pocket_outline(zc, slot), y0 - (0.01 if side < 0 else 0), y1 + (0.01 if side > 0 else 0))
     for z in SCREW["z"]:                                   # countersunk wall screws on the centre line
         plate -= Pos(BASE_T / 2, 0, z) * Rot(0, 90, 0) * Cylinder(SCREW["d"] / 2, BASE_T + 2)
         k = SCREW["head"] / 2
