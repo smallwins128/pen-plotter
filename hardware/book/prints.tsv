@@ -2,7 +2,7 @@ ID	Part	Script -> STL	Qty	Step	Status
 P01	IEC panel	not modelled; needs P02 results	1	1.4	To model
 P02	Fit coupons C + D	fit_kit.py -> fit_kit/	1 set	1.4	Ready
 P03	PSU brackets	not modelled; needs PSU hole patterns	2 sets	1.3	To model
-P04	Base plate rest pads Ø20 x 5	not modelled; Al plate only	6	1.2, 2.1	To model
+P04	Base plate rest pads	dropped: mild steel plate kept	-	1.2, 2.1	Dropped
 P05	PSU panel	link_panel.py (psu)	1	1.9	Printed
 P06	Receiving panel	link_panel.py (ctrl)	1	2.6	Printed
 P07	TB6600 plate, 89 pitch	din_mounts.py -> tb6600_plate.stl	3	2.3	Ready
