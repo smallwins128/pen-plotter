@@ -34,7 +34,9 @@ TIP_R = 10.0                                    # round end around each pivot
 # wall plate
 BASE_T = 6.0                                    # wall face thickness (Allwin: at least 5)
 TOP, BOTTOM = 20.0, -162.0
-SCREW = dict(d=4.5, head=9.0, at=((-24.0, 0.0), (24.0, 0.0), (0.0, -152.0)))   # (y, z): 4 mm screws in plugs
+SCREW = dict(d=4.5, head=9.0, at=((-24.0, 0.0), (24.0, 0.0), (0.0, -152.0)))   # (y, z): CSK drywall screws in plugs
+SCREW_BOSS = dict(r=8.0, t=8.0)                 # raised boss round each screw: room for the countersink and a 3.5 mm
+                                                # straight hole under it (#6 3.5 mm or #8 4.2 mm, bugle heads up to 9 mm)
 SPINE_HALF, BAND_HALF = 13.0, 33.0
 FILLET, ROUND = 12.0, 3.0
 
@@ -116,10 +118,13 @@ def wall_plate():
     plate += prism_xz(pivot_outline(-PIVOT_DZ, SLOT, 16.0, BASE_T), -FIN_T / 2, FIN_T / 2)       # lower fin
     plate -= prism_xz(roofed_outline(PIVOT_X, 0.0, 0.0), -BLOCK_T, BLOCK_T)
     plate -= prism_xz(roofed_outline(PIVOT_X, -PIVOT_DZ, SLOT), -BLOCK_T, BLOCK_T)
+    bt = SCREW_BOSS["t"]
     for y, z in SCREW["at"]:
-        plate -= Pos(BASE_T / 2, y, z) * Rot(0, 90, 0) * Cylinder(SCREW["d"] / 2, BASE_T + 2)
-        k = SCREW["head"] / 2
-        plate -= Pos(BASE_T - k / 2 + 0.01, y, z) * Rot(0, 90, 0) * Cone(SCREW["d"] / 2 - 0.01, k + 0.01, k)
+        plate += Pos(bt / 2, y, z) * Rot(0, 90, 0) * Cylinder(SCREW_BOSS["r"], bt)
+    for y, z in SCREW["at"]:
+        plate -= Pos(bt / 2, y, z) * Rot(0, 90, 0) * Cylinder(SCREW["d"] / 2, bt + 2)
+        k = SCREW["head"] / 2                                     # 90 deg countersink, flush at the boss face
+        plate -= Pos(bt - k / 2 + 0.01, y, z) * Rot(0, 90, 0) * Cone(SCREW["d"] / 2 - 0.01, k + 0.01, k)
     for y in (-6.0, 6.0):                                                                     # cable-tie slots
         plate -= Pos(BASE_T / 2, y, -30.0) * Box(BASE_T + 2, 3.0, 6.0)
     return plate
