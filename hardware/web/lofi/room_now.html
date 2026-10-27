@@ -36,13 +36,13 @@ a{color:inherit}
 <h1>Harbor · now</h1>
 <p class="sub">Only what is in the room today. This page is updated in place whenever something is built or moved; ideas live on the what-if pages linked at the bottom.</p>
 <p style="margin:0;font:500 .9rem var(--f-mono);display:flex;gap:16px;flex-wrap:wrap"><b>Wall C · 2D</b><a href="room3d.html">3D model →</a><a href="https://claude.ai/artifact/JniK5NgVpUBrsZM7s7fa1b">Plans (what-ifs) →</a></p>
-<div class="stamp"><span>as of 2026-10-25</span><span>source: Allwin's photo + two measurements</span><span><b class="m">solid</b> = measured</span><span><b class="e">dashed</b> = read off the photo</span></div>
+<div class="stamp"><span>as of 2026-10-27</span><span>source: Allwin's photo, two measurements and his notes</span><span><b class="m">solid</b> = measured</span><span><b class="e">dashed</b> = read off the photo</span></div>
 </header>
 
 <section>
 <h2>Wall C as built</h2>
 <p class="sub">Front view to scale, window corner on the left, door on the right. Heights and distances in mm.</p>
-<div class="fig"><svg id="wallC" viewBox="0 0 980 640" role="img" aria-label="Wall C today: black board mounted horizontally with SKÅDIS, ledge, bins and screwdriver rack; black trestle table at the window corner; sawhorses on the floor; light switch and door on the right"></svg></div>
+<div class="fig"><svg id="wallC" viewBox="0 0 980 640" role="img" aria-label="Wall C today: black board mounted horizontally with SKÅDIS, ledge, bins and screwdriver rack; UTESPELARE desk end at the window corner; LINNMON bench under the board; sawhorses on the floor; light switch and door on the right"></svg></div>
 </section>
 
 <section>
@@ -55,7 +55,8 @@ a{color:inherit}
 <tr><td>Board right edge to door</td><td class="n">≈ 400 (photo) · ≈ 620 (from the 3.0 m wall)</td><td><span class="e">do not agree</span>: measure wall C to the door frame</td></tr>
 <tr><td>SKÅDIS, ledge, bins, screwdriver rack</td><td class="n">see drawing</td><td><span class="e">read off the photo</span></td></tr>
 <tr><td>Light switch</td><td class="n">≈ 180 right of the board, ≈ 1250 high</td><td><span class="e">photo</span>; clear of the board</td></tr>
-<tr><td>Black trestle table (LINNMON)</td><td class="n">at the window corner</td><td><span class="e">photo</span>; exact position and orientation to confirm</td></tr>
+<tr><td>UTESPELARE desk (laptop + monitor)</td><td class="n">160 × 80 along the window wall, end at wall C</td><td>Allwin, 2026-10-27; was misread as a trestle table</td></tr>
+<tr><td>LINNMON bench</td><td class="n">120 × 60, under the board, 800–2000 from the window corner</td><td>Allwin, 2026-10-27; <span class="e">position to confirm</span></td></tr>
 <tr><td>Sawhorses</td><td class="n">2, about LINNMON leg height</td><td>Allwin; for the island top (3 × 2 ft folding-table top)</td></tr>
 </table></div>
 </section>
@@ -100,14 +101,18 @@ T(X(bx(1560)),Y(by(450)),"empty",{'font-size':11,fill:c('boardtx')});
 // switch, socket
 R(BX+BW+150,1200,BX+BW+230,1300,Object.assign({fill:c('card'),stroke:c('warn')},EST));T(X(BX+BW+190),Y(1300)-5,"switch",{'font-size':9,fill:c('warn')});
 R(480,250,560,330,Object.assign({fill:c('orange'),stroke:c('ink')},EST));T(X(520),Y(330)-5,"socket",{'font-size':9,fill:c('orange')});
-// LINNMON / trestle table at the window corner (position to confirm)
-R(0,710,600,750,Object.assign({fill:c('wood'),stroke:c('ink')},EST));
-[[60,0],[540,0]].forEach(([x])=>{el('line',{x1:X(x-60),y1:FY,x2:X(x+40),y2:Y(710),stroke:c('ink'),'stroke-width':2});el('line',{x1:X(x+60),y1:FY,x2:X(x-40),y2:Y(710),stroke:c('ink'),'stroke-width':2});});
-T(X(300),Y(750)-6,"black trestle table (LINNMON)",{'font-size':9});
+// UTESPELARE end-on at the window corner (laptop + monitor desk, runs along the window wall)
+R(0,720,800,750,{fill:c('board'),stroke:c('ink')});
+[40,760].forEach(x=>el('line',{x1:X(x),y1:FY,x2:X(x),y2:Y(720),stroke:c('ink'),'stroke-width':3}));
+T(X(400),Y(750)-6,"UTESPELARE (end on): laptop + monitor",{'font-size':9});
+// LINNMON under the board (Allwin 2026-10-27; confirm it is in)
+R(800,710,2000,750,Object.assign({fill:c('wood'),stroke:c('ink')},EST));
+[840,1960].forEach(x=>el('line',{x1:X(x),y1:FY,x2:X(x),y2:Y(710),stroke:c('ink'),'stroke-width':2,'stroke-dasharray':'5 3'}));
+T(X(1400),Y(750)-6,"LINNMON 120 × 60 · top 750",{'font-size':9});
 // second SKÅDIS leaning by the door, sawhorses on the floor
 R(2560,0,2960,560,Object.assign({fill:c('sk'),stroke:c('ink')},EST));T(X(2760),Y(300),"spare SKÅDIS",{'font-size':9});
 [1500,2100].forEach(x=>{R(x,620,x+420,700,{fill:c('orange'),stroke:c('ink'),opacity:.85});el('line',{x1:X(x+40),y1:FY,x2:X(x+120),y2:Y(620),stroke:c('mute'),'stroke-width':3});el('line',{x1:X(x+380),y1:FY,x2:X(x+300),y2:Y(620),stroke:c('mute'),'stroke-width':3});});
-T(X(1920),Y(700)-6,"sawhorses (island legs, on the floor)",{'font-size':9});
+T(X(1920),Y(400),"sawhorses in front (island legs)",{'font-size':9});
 // dims
 const dimH=(a,b,h,t)=>{el('line',{x1:X(a),y1:Y(h),x2:X(b),y2:Y(h),stroke:c('mute')});[a,b].forEach(v=>el('line',{x1:X(v),y1:Y(h)-4,x2:X(v),y2:Y(h)+4,stroke:c('mute')}));T((X(a)+X(b))/2,Y(h)-6,t,{'font-size':9,fill:c('mute')});};
 const dimV=(x,a,b,t)=>{el('line',{x1:X(x),y1:Y(a),x2:X(x),y2:Y(b),stroke:c('mute')});[a,b].forEach(v=>el('line',{x1:X(x)-4,y1:Y(v),x2:X(x)+4,y2:Y(v),stroke:c('mute')}));T(X(x)+6,(Y(a)+Y(b))/2+3,t,{'font-size':9,fill:c('mute'),'text-anchor':'start'});};

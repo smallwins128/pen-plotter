@@ -30,7 +30,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 <main>
 <header style="display:grid;gap:4px">
 <h1>Harbor · now · 3D</h1>
-<p class="sub">Built from your measurements (wall A 3.8 m, 2.7 m floor from the wardrobe front, wall C 3.0 m to the door) and photos. Drag to orbit, pinch or scroll to zoom. Tap anything to see its name and notes. Only what is in the room today (photo and measurements of 2026-10-25); orange dashed means in the room but position or identity unconfirmed. Ideas live on the Plans page.</p>
+<p class="sub">Built from your measurements (wall A 3.8 m, 2.7 m floor from the wardrobe front, wall C 3.0 m to the door) and photos. Drag to orbit, pinch or scroll to zoom. Tap anything to see its name and notes. Only what is in the room today (photo and measurements of 2026-10-25, desk and bench from Allwin on 2026-10-27); orange dashed means in the room but position or identity unconfirmed. Ideas live on the Plans page.</p>
 </header>
 <div id="view" role="img" aria-label="3D model of the workshop room"></div>
 <div class="bar" id="views"></div>
@@ -57,10 +57,11 @@ const ITEMS=[
  {id:'loft',label:'Lofts',box:[0,0.6,2.1,2.6,0.05,3.7],c:'#d8d4cc',status:'built',note:'Four lofts. Ladder access: rarely used things.'},
  {id:'counter',label:null,box:[0.02,0.6,0.88,0.92,1.08,2.02],c:'#f0f0ee',status:'built',note:'A3 counter.'},
  {id:'rackB',label:'Rack B',box:[0.04,0.34,0.92,1.4,1.1,1.68],c:'#1c2328',wire:true,shelves:[1.4],status:'built',note:'Half rack in A3 for wire, connectors and electricals.'},
- {id:'desk',label:'Office desk',box:[1.7,3.3,0.72,0.75,0,0.8],c:'#26292c',status:'check',legs:true,note:'160 × 80 along the window wall, as placed on 2026-10-16. Not in the latest photo: confirm it is still here.'},
- {id:'monitor',label:null,box:[2.35,2.95,0.8,1.15,0.12,0.16],c:'#111',status:'check',note:'Monitor on the office desk.'},
- {id:'trestle',label:'Black trestle table',box:[2.7,3.3,0.71,0.74,0.0,0.6],c:'#1f1f1f',status:'check',legs:true,note:'Black table on trestle legs at the window corner of wall C (photo 2026-10-25). Which table it is and which way it runs: to confirm.'},
+ {id:'desk',label:'UTESPELARE desk',box:[1.7,3.3,0.72,0.75,0,0.8],c:'#1f1f1f',status:'built',legs:true,note:'IKEA UTESPELARE, 160 × 80, black, along the window wall: the laptop and monitor desk (Allwin, 2026-10-27). Its right end meets wall C under the board\'s window end.'},
+ {id:'monitor',label:null,box:[2.35,2.95,0.8,1.15,0.12,0.16],c:'#111',status:'built',note:'Monitor on the UTESPELARE.'},
+ {id:'laptop',label:null,box:[1.95,2.28,0.75,0.77,0.3,0.52],c:'#8a9096',status:'built',note:'Laptop on the UTESPELARE.'},
  {id:'light',label:'Light stand',box:[2.95,3.0,0,1.95,0.6,0.65],c:'#333',status:'built',note:'Tripod light stand by the board, at the window end.'},
+ {id:'linnmon',label:'LINNMON bench',box:[2.7,3.3,0.71,0.75,0.8,2.0],c:'#f0f0ee',status:'check',legs:true,note:'LINNMON 120 × 60, top 750, under the board, from the UTESPELARE end towards the door (Allwin, 2026-10-27). Confirm it is in place.'},
  {id:'board',label:'Black board',box:[3.248,3.26,0.925,1.839,0.55,2.379],c:'#1f1f1f',status:'built',note:'12 mm ply, 1829 × 914, painted black, horizontal on a French cleat about 40 mm off the wall. Bottom edge 900 to 950 from the floor, left edge 500 to 600 from the window corner (measured 2026-10-25).'},
  {id:'skadis',label:'SKÅDIS',box:[3.235,3.248,1.21,1.77,0.565,1.325],c:'#f4f4f2',status:'built',note:'Left end of the board: pliers, crimpers, rivet tool. Position from the photo.'},
  {id:'ledge',label:'Ledge',box:[3.1,3.248,1.005,1.02,0.53,1.42],c:'#2a2a2a',status:'built',note:'Narrow shelf under the SKÅDIS with printed parts on show.'},
