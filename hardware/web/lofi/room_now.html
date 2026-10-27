@@ -36,7 +36,7 @@ a{color:inherit}
 <h1>Harbor · now</h1>
 <p class="sub">Only what is in the room today. This page is updated in place whenever something is built or moved; ideas live on the what-if pages linked at the bottom.</p>
 <p style="margin:0;font:500 .9rem var(--f-mono);display:flex;gap:16px;flex-wrap:wrap"><b>Wall C · 2D</b><a href="room3d.html">3D model →</a><a href="https://claude.ai/artifact/JniK5NgVpUBrsZM7s7fa1b">Plans (what-ifs) →</a></p>
-<div class="stamp"><span>as of 2026-10-27</span><span>source: Allwin's photo, two measurements and his notes</span><span><b class="m">solid</b> = measured</span><span><b class="e">dashed</b> = read off the photo</span></div>
+<div class="stamp"><span>as of 2026-10-27</span><span>source: Allwin's photos, two measurements and his notes</span><span><b class="m">solid</b> = measured</span><span><b class="e">dashed</b> = read off the photo</span></div>
 </header>
 
 <section>
@@ -57,6 +57,7 @@ a{color:inherit}
 <tr><td>Light switch</td><td class="n">≈ 180 right of the board, ≈ 1250 high</td><td><span class="e">photo</span>; clear of the board</td></tr>
 <tr><td>UTESPELARE desk (laptop + monitor)</td><td class="n">160 × 80 along the window wall, end at wall C</td><td>Allwin, 2026-10-27; was misread as a trestle table</td></tr>
 <tr><td>LINNMON bench</td><td class="n">120 × 60, under the board, 800–2000 from the window corner</td><td>Allwin, 2026-10-27; <span class="e">position to confirm</span></td></tr>
+<tr><td>Printer tower</td><td class="n">≈ 600 × 600 × 1520, 1980–2580 from the window corner</td><td><span class="e">photo 2026-10-27</span>; slotted-angle rack with ply shelf, top and one side; in progress</td></tr>
 <tr><td>Sawhorses</td><td class="n">2, about LINNMON leg height</td><td>Allwin; for the island top (3 × 2 ft folding-table top)</td></tr>
 </table></div>
 </section>
@@ -97,7 +98,7 @@ T(X(bx(425)),Y(by(95))-5,"ledge: printed parts on show",{'font-size':9,fill:c('b
 T(X(bx(1030)),Y(by(140))+14,"grey bins on hook-lip rails",{'font-size':9,fill:c('boardtx')});
 R(bx(790),by(685),bx(1220),by(720),Object.assign({fill:c('blue'),stroke:c('ink')},EST));
 T(X(bx(1005)),Y(by(720))-5,"screwdriver rack",{'font-size':9,fill:c('boardtx')});
-T(X(bx(1560)),Y(by(450)),"empty",{'font-size':11,fill:c('boardtx')});
+T(X(bx(1340)),Y(by(450)),"empty",{'font-size':11,fill:c('boardtx')});
 // switch, socket
 R(BX+BW+150,1200,BX+BW+230,1300,Object.assign({fill:c('card'),stroke:c('warn')},EST));T(X(BX+BW+190),Y(1300)-5,"switch",{'font-size':9,fill:c('warn')});
 R(480,250,560,330,Object.assign({fill:c('orange'),stroke:c('ink')},EST));T(X(520),Y(330)-5,"socket",{'font-size':9,fill:c('orange')});
@@ -109,6 +110,11 @@ T(X(400),Y(750)-6,"UTESPELARE (end on): laptop + monitor",{'font-size':9});
 R(800,710,2000,750,Object.assign({fill:c('wood'),stroke:c('ink')},EST));
 [840,1960].forEach(x=>el('line',{x1:X(x),y1:FY,x2:X(x),y2:Y(710),stroke:c('ink'),'stroke-width':2,'stroke-dasharray':'5 3'}));
 T(X(1400),Y(750)-6,"LINNMON 120 × 60 · top 750",{'font-size':9});
+// printer tower in front of the board's right end (photo 2026-10-27; in progress)
+R(1980,0,2580,1520,{fill:'none',stroke:c('ink'),'stroke-width':3,'stroke-dasharray':'5 3'});
+[820,1508].forEach(h=>R(1980,h,2580,h+12,Object.assign({fill:c('wood'),stroke:c('ink')},EST)));
+T(X(2280),Y(1520)-6,"printer tower (in progress)",{'font-size':9,fill:c('warn')});
+T(X(2280),Y(1170),"Bambu A1 bay",{'font-size':9,fill:c('warn')});
 // second SKÅDIS leaning by the door, sawhorses on the floor
 R(2560,0,2960,560,Object.assign({fill:c('sk'),stroke:c('ink')},EST));T(X(2760),Y(300),"spare SKÅDIS",{'font-size':9});
 [1500,2100].forEach(x=>{R(x,620,x+420,700,{fill:c('orange'),stroke:c('ink'),opacity:.85});el('line',{x1:X(x+40),y1:FY,x2:X(x+120),y2:Y(620),stroke:c('mute'),'stroke-width':3});el('line',{x1:X(x+380),y1:FY,x2:X(x+300),y2:Y(620),stroke:c('mute'),'stroke-width':3});});
