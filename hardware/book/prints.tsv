@@ -6,11 +6,11 @@ P04	Base plate rest pads	dropped: mild steel plate kept	-	1.2, 2.1	Dropped
 P05	PSU panel	link_panel.py (psu)	1	1.9	Printed
 P06	Receiving panel	link_panel.py (ctrl)	1	2.6	Printed
 P07	TB6600 plate, 89 pitch	din_mounts.py -> tb6600_plate.stl	3	2.3	Ready
-P08	Board plate	din_mounts.py -> board_plate.stl	1	2.3	Ready
-P09	GX plates	gx_plates.py -> gx_plate_*.stl	3	2.5	Ready
+P08	Board plate	din_mounts.py -> board_plate.stl	1	2.3	Printed
+P09	GX plates	gx_plates.py -> gx_plate_*.stl	3	2.5	Printed
 P10	USB / antenna panel	not modelled; gate B43	1	2.7	To model
-P11	Bend-jig sleeves Ø16/24/40	bend_jig.py -> bend_sleeve_d*.stl	4/4/2	2.9	Ready
-P12	Meccano window panels	window_meccano.py -> meccano_*.stl	3	3.1	Ready
+P11	Bend-jig sleeves Ø16/24/40	bend_jig.py -> bend_sleeve_d*.stl	4/4/2	2.9	Dropped
+P12	Meccano window panels	window_meccano.py -> meccano_*.stl	3	3.1	Printed
 P13	Lid washers	not modelled	14	3.2	To model
 P14	Stacking feet	not modelled	4	3.3	To model
 P15	Wire guides	wire_jig.py	as needed	2.9	Printed
