@@ -36,13 +36,13 @@ a{color:inherit}
 <h1>Harbor · now</h1>
 <p class="sub">Only what is in the room today. This page is updated in place whenever something is built or moved; ideas live on the what-if pages linked at the bottom.</p>
 <p style="margin:0;font:500 .9rem var(--f-mono);display:flex;gap:16px;flex-wrap:wrap"><b>Wall C · 2D</b><a href="room3d.html">3D model →</a><a href="https://claude.ai/artifact/JniK5NgVpUBrsZM7s7fa1b">Plans (what-ifs) →</a></p>
-<div class="stamp"><span>as of 2026-10-27</span><span>source: Allwin's photos, two measurements and his notes</span><span><b class="m">solid</b> = measured</span><span><b class="e">dashed</b> = read off the photo</span></div>
+<div class="stamp"><span>as of 2026-10-28</span><span>source: Allwin's photos, two measurements and his notes</span><span><b class="m">solid</b> = measured</span><span><b class="e">dashed</b> = read off the photo</span></div>
 </header>
 
 <section>
 <h2>Wall C as built</h2>
 <p class="sub">Front view to scale, window corner on the left, door on the right. Heights and distances in mm.</p>
-<div class="fig"><svg id="wallC" viewBox="0 0 980 640" role="img" aria-label="Wall C today: black board mounted horizontally with SKÅDIS, ledge, bins and screwdriver rack; UTESPELARE desk end at the window corner; LINNMON bench under the board; sawhorses on the floor; light switch and door on the right"></svg></div>
+<div class="fig"><svg id="wallC" viewBox="0 -130 980 770" role="img" aria-label="Wall C today: black board mounted horizontally with SKÅDIS, ledge, bins and screwdriver rack; UTESPELARE desk end at the window corner; LINNMON bench under the board; sawhorses on the floor; light switch and door on the right; the Beacon light arm and batten above the board, mounting next"></svg></div>
 </section>
 
 <section>
@@ -59,6 +59,7 @@ a{color:inherit}
 <tr><td>LINNMON bench</td><td class="n">120 × 60, under the board, 800–2000 from the window corner</td><td>Allwin, 2026-10-27; <span class="e">position to confirm</span></td></tr>
 <tr><td>Printer tower</td><td class="n">≈ 600 × 600 × 1520, 1980–2580 from the window corner</td><td><span class="e">photo 2026-10-27</span>; slotted-angle rack with ply shelf, top and one side; in progress</td></tr>
 <tr><td>Sawhorses</td><td class="n">2, about LINNMON leg height</td><td>Allwin; for the island top (3 × 2 ft folding-table top)</td></tr>
+<tr><td>Beacon light arm (R06)</td><td class="n">wall plate ≈ 1100 from the window corner, bottom ≈ 2165, top ≈ 2350 · batten 1100 long, from the board's left edge (550) to 1650, ≈ 400 out, centre ≈ 2225 high</td><td>Built 2026-10-27 (black PLA plate and hanger, wood beam and ties, Philips WiZ batten clipped in). <span class="e">Not fixed yet</span>: mounting 2026-10-28. Over the workbench, at least a foot higher than first drawn, and with the batten's left end in line with the board's left edge (Allwin 2026-10-28). Exact spot and heights <span class="e">to measure</span> once it's up.</td></tr>
 </table></div>
 </section>
 
@@ -77,7 +78,7 @@ const S=0.29,OX=20,FY=610,X=m=>OX+m*S,Y=h=>FY-h*S;
 const R=(x0,h0,x1,h1,o)=>el('rect',Object.assign({x:X(x0),y:Y(h1),width:(x1-x0)*S,height:(h1-h0)*S},o));
 const EST={'stroke-dasharray':'5 3'};
 // wall, floor, skirting
-R(0,0,3150,2000,{fill:c('wall')});
+R(0,0,3150,2450,{fill:c('wall')});
 R(0,0,3000,100,{fill:c('door'),opacity:.35});
 el('line',{x1:X(0),y1:FY,x2:X(3150),y2:FY,stroke:c('ink'),'stroke-width':2});
 T(X(10),FY+18,"◄ window corner",{'text-anchor':'start',fill:c('mute')});
@@ -119,10 +120,14 @@ T(X(2280),Y(1170),"Bambu A1 bay",{'font-size':9,fill:c('warn')});
 R(2560,0,2960,560,Object.assign({fill:c('sk'),stroke:c('ink')},EST));T(X(2760),Y(300),"spare SKÅDIS",{'font-size':9});
 [1500,2100].forEach(x=>{R(x,620,x+420,700,{fill:c('orange'),stroke:c('ink'),opacity:.85});el('line',{x1:X(x+40),y1:FY,x2:X(x+120),y2:Y(620),stroke:c('mute'),'stroke-width':3});el('line',{x1:X(x+380),y1:FY,x2:X(x+300),y2:Y(620),stroke:c('mute'),'stroke-width':3});});
 T(X(1920),Y(400),"sawhorses in front (island legs)",{'font-size':9});
+// Beacon (R06): wall plate about 300 above the board's top; batten's left end in line with the board's left edge (Allwin 2026-10-28)
+R(1067,2165,1133,2348,Object.assign({fill:c('board'),stroke:c('ink')},EST));
+R(550,2204,1650,2247,Object.assign({fill:c('card'),stroke:c('warn')},EST));
+T(X(1045),Y(2204)+12,"Beacon arm + batten · fixing 10-28",{'font-size':9,fill:c('warn'),'text-anchor':'end'});
 // dims
 const dimH=(a,b,h,t)=>{el('line',{x1:X(a),y1:Y(h),x2:X(b),y2:Y(h),stroke:c('mute')});[a,b].forEach(v=>el('line',{x1:X(v),y1:Y(h)-4,x2:X(v),y2:Y(h)+4,stroke:c('mute')}));T((X(a)+X(b))/2,Y(h)-6,t,{'font-size':9,fill:c('mute')});};
 const dimV=(x,a,b,t)=>{el('line',{x1:X(x),y1:Y(a),x2:X(x),y2:Y(b),stroke:c('mute')});[a,b].forEach(v=>el('line',{x1:X(x)-4,y1:Y(v),x2:X(x)+4,y2:Y(v),stroke:c('mute')}));T(X(x)+6,(Y(a)+Y(b))/2+3,t,{'font-size':9,fill:c('mute'),'text-anchor':'start'});};
-dimH(0,BX,1950,"500–600");dimH(BX,BX+BW,1950,"board 1829");dimH(BX+BW,3000,1950,"≈400–620 ?");
+dimH(0,BX,2410,"500–600");dimH(BX,BX+BW,2410,"board 1829");dimH(BX+BW,3000,2410,"≈400–620 ?");
 dimV(BX+BW+40,0,BY,"900–950");dimV(BX+BW+40,BY,BY+BH,"914");
 })();
 </script>
