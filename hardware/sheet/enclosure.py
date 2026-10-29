@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Cut files for the two stacked 1 mm stainless enclosures, with checks.
+"""Cut files for the two stacked 304 stainless enclosures (sheet T below), with checks.
 
     python3 hardware/sheet/enclosure.py            # build, check, write hardware/out/sheet/
     python3 hardware/sheet/enclosure.py --report   # checks only
 
 One set of dimensions drives every part: the body and lid of each box (one
-folded blank each, 1 mm 304 stainless) and the two base plates (flat, 2 mm).
+folded blank each, T mm 304 stainless) and the two base plates (flat, 2 mm).
 Each flat pattern is written as DXF R12 in the layer convention of the
 earlier SMPS drawings:
 
     Visible         the cut: outline, holes, cutouts, vents
     Visible Narrow  bend-zone edges, either side of each bend line (not cut)
     Bend Center     bend lines, CENTER2 linetype (not cut)
-    Bend Notes      "Up 90° R1" beside every bend line
+    Bend Notes      BEND_NOTE beside every bend line
     Leaders         what each hole is for
     Title           part name, material, quantity, view, bend data
 
@@ -44,9 +44,11 @@ OUT = HERE.parent / "out" / "sheet"
 # ============================================================================
 # DIMENSIONS (mm)
 # ============================================================================
-T = 1.0                    # sheet, 304 stainless
-R = 1.0                    # inner bend radius
+T = 1.2                    # sheet, 304 stainless (1.0 until v5; the vendor only has 1.2)
+R = 1.2                    # inner bend radius (= t)
 K = 0.44
+BEND_NOTE = f"Up 90° R{R:g}"
+STEEL = f"{T:.1f} mm 304 stainless, brushed, film on"
 BA = math.pi / 2 * (R + K * T)          # bend allowance, 90 deg
 S = R + T                               # setback: outer mold line to the start of the bend
 BD = 2 * S - BA                         # bend deduction, 90 deg
@@ -146,11 +148,13 @@ def gx_openings():
 
 
 def gx_plate(rect, g):
-    """The inspector's plate (chamfered, after Allwin's sketch): opening + 10 (5 sideways for the two small groups)."""
-    mx = 10.0 if g == "steppers" else 5.0
-    b = sbox(rect[0] - mx, rect[1] - 10, rect[2] + mx, rect[3] + 10)
+    """GX printed plate (rounded corners): opening + 12 where a rivnut sits (its countersunk screw and
+    the Ø9 flange relief need the room), + 10 below the steppers (no rivnut), + 5 sideways for the two small groups."""
+    small = g != "steppers"
+    mx = 5.0 if small else 12.0
+    b = sbox(rect[0] - mx, rect[1] - (12.0 if small else 10.0), rect[2] + mx, rect[3] + 12.0)
     c = 7.0 if g == "steppers" else 5.0
-    return b.buffer(-c, join_style=2).buffer(c, join_style=3)
+    return b.buffer(-c, join_style=2).buffer(c, join_style=1)
 
 
 def _rect_window(x0, x1, cy):
@@ -331,7 +335,7 @@ def mirror_x(p):
 # ============================================================================
 def body(kind):
     Hb = T + H[kind]                       # outer mold height (base underside to top of the top lips)
-    p = Part(f"{kind}_body", f"{kind.upper()} BOX · BODY", "1.0 mm 304 stainless, brushed, film on")
+    p = Part(f"{kind}_body", f"{kind.upper()} BOX · BODY", STEEL)
     xe = WO / 2 - S                         # base face half-width in the flat
     yb0, yb1 = ZB + S, ZF - S               # base face, flat Y (= folded z)
     base = sbox(-xe, yb0, xe, yb1)
@@ -348,31 +352,31 @@ def body(kind):
         p.solid.append(face); p.faces[side] = face
         zone = sbox(min(sgn * xe, sgn * (xe + BA)), yb0, max(sgn * xe, sgn * (xe + BA)), zs - S)   # base→wall
         p.solid.append(zone)
-        add_bend(p, (sgn * (xe + BA / 2), yb0), (sgn * (xe + BA / 2), zs - S), "Up 90° R1", zone)
+        add_bend(p, (sgn * (xe + BA / 2), yb0), (sgn * (xe + BA / 2), zs - S), BEND_NOTE, zone)
         # top lip: full wall length
         xt0, xt1 = x_top, x_top + sgn * BA
         ztop = sbox(min(xt0, xt1), yb0, max(xt0, xt1), zs - S)
         lip = sbox(min(xt1, xt1 + sgn * (LIPO - S)), yb0, max(xt1, xt1 + sgn * (LIPO - S)), zs - S)
         p.solid += [ztop, lip]
-        add_bend(p, ((xt0 + xt1) / 2, yb0), ((xt0 + xt1) / 2, zs - S), "Up 90° R1", ztop)
+        add_bend(p, ((xt0 + xt1) / 2, yb0), ((xt0 + xt1) / 2, zs - S), BEND_NOTE, ztop)
         p.fold.append((f"{side} top lip", *sorted((sgn * (WO / 2), sgn * (WO / 2 - LIPO))), Hb - T, Hb, ZB + 0.0 + S, zs - S))
         # back lip: y from 16.5 to Hb-3
-        vb0, vb1 = LIPO + FOLD_GAP, Hb - 3.0          # clear of the base back lip
+        vb0, vb1 = LIPO + FOLD_GAP, Hb - T - 2.0      # clear of the base back lip; 2.0 under the top lip
         xa, xb = M_(0, vb0)[0], M_(0, vb1)[0]
         zb_zone = sbox(min(xa, xb), yb0 - BA, max(xa, xb), yb0)
         blip = sbox(min(xa, xb), yb0 - BA - (LIPO - S), max(xa, xb), yb0 - BA)
         p.solid += [zb_zone, blip]
-        add_bend(p, (xa, yb0 - BA / 2), (xb, yb0 - BA / 2), "Up 90° R1", zb_zone)
+        add_bend(p, (xa, yb0 - BA / 2), (xb, yb0 - BA / 2), BEND_NOTE, zb_zone)
         for xe_, away in ((xa, -sgn), (xb, sgn)):
             relief_notch(p, (xe_, yb0), (away, 0), (0, 1), (0, -1))
         p.fold.append((f"{side} back lip", *sorted((sgn * (WO / 2), sgn * (WO / 2 - LIPO))), vb0, vb1, ZB, ZB + T))
         # corner tab at the front edge: y from 8 to Hb-3
-        tv0, tv1 = 8.0, Hb - 3.0
+        tv0, tv1 = 8.0, Hb - T - 2.0
         xa, xb = M_(0, tv0)[0], M_(0, tv1)[0]
         tz = sbox(min(xa, xb), zs - S, max(xa, xb), zs - S + BA)
         tab = sbox(min(xa, xb), zs - S + BA, max(xa, xb), zs - S + BA + (LIPO - S))
         p.solid += [tz, tab]
-        add_bend(p, (xa, zs - S + BA / 2), (xb, zs - S + BA / 2), "Up 90° R1", tz)
+        add_bend(p, (xa, zs - S + BA / 2), (xb, zs - S + BA / 2), BEND_NOTE, tz)
         for xe_, away in ((xa, -sgn), (xb, sgn)):
             relief_notch(p, (xe_, zs - S), (away, 0), (0, -1), (0, 1))
         p.fold.append((f"{side} corner tab", *sorted((sgn * (WO / 2 - T), sgn * (WO / 2 - LIPO))), tv0, tv1, zs - T, zs))
@@ -401,13 +405,13 @@ def body(kind):
     fz = sbox(-xe, yb1, xe, yb1 + BA)
     front = sbox(-WO / 2, yb1 + BA, WO / 2, MF(0, Hb - S)[1])
     p.solid += [fz, front]; p.faces["front"] = front
-    add_bend(p, (-xe, yb1 + BA / 2), (xe, yb1 + BA / 2), "Up 90° R1", fz)
+    add_bend(p, (-xe, yb1 + BA / 2), (xe, yb1 + BA / 2), BEND_NOTE, fz)
     yt = MF(0, Hb - S)[1]
     flx = WO / 2 - LIPO - FOLD_GAP          # front top lip ends clear of the side top lips
     ftz = sbox(-flx, yt, flx, yt + BA)
     flip = sbox(-flx, yt + BA, flx, yt + BA + (LIPO - S))
     p.solid += [ftz, flip]
-    add_bend(p, (-flx, yt + BA / 2), (flx, yt + BA / 2), "Up 90° R1", ftz)
+    add_bend(p, (-flx, yt + BA / 2), (flx, yt + BA / 2), BEND_NOTE, ftz)
     for xe_, away in ((-flx, -1), (flx, 1)):
         relief_notch(p, (xe_, yt), (away, 0), (0, -1), (0, 1))
     p.fold.append(("front top lip", -flx, flx, Hb - T, Hb, ZF - LIPO, ZF))
@@ -426,7 +430,7 @@ def body(kind):
     bz = sbox(-bx, yb0 - BA, bx, yb0)
     blip = sbox(-bx, yb0 - BA - (LIPO - S), bx, yb0 - BA)
     p.solid += [bz, blip]
-    add_bend(p, (-bx, yb0 - BA / 2), (bx, yb0 - BA / 2), "Up 90° R1", bz)
+    add_bend(p, (-bx, yb0 - BA / 2), (bx, yb0 - BA / 2), BEND_NOTE, bz)
     for xe_, away in ((-bx, -1), (bx, 1)):
         relief_notch(p, (xe_, yb0), (away, 0), (0, 1), (0, -1))
     p.fold.append(("base back lip", -bx, bx, 0, LIPO, ZB, ZB + T))
@@ -525,7 +529,7 @@ def lid(kind):
     L = WO / 2 + CLR + T                     # lid half-width, outer
     zl0, zl1 = ZB - T, ZF + CLR + T          # lid back outer face, lid front-return outer face
     Hl = Hb + T - 1.0                        # lid back, from the top's outer face to its bottom edge
-    p = Part(f"{kind}_lid", f"{kind.upper()} BOX · LID", "1.0 mm 304 stainless, brushed, film on")
+    p = Part(f"{kind}_lid", f"{kind.upper()} BOX · LID", STEEL)
     xe = L - S
     y0, y1 = zl0 + S, zl1 - S
     top = sbox(-xe, y0, xe, y1); p.solid.append(top); p.faces["top"] = top
@@ -537,21 +541,21 @@ def lid(kind):
         z = sbox(x0, y0 + G, x1, y1 - G)
         lip = sbox(lx0, y0 + G, lx1, y1 - G)
         p.solid += [z, lip]
-        add_bend(p, (sgn * (xe + BA / 2), y0 + G), (sgn * (xe + BA / 2), y1 - G), "Up 90° R1", z)
+        add_bend(p, (sgn * (xe + BA / 2), y0 + G), (sgn * (xe + BA / 2), y1 - G), BEND_NOTE, z)
         relief_notch(p, (sgn * xe, y0 + G), (0, -1), (-sgn, 0), (sgn, 0))
         relief_notch(p, (sgn * xe, y1 - G), (0, 1), (-sgn, 0), (sgn, 0))
         p.fold.append((f"lid {('left','right')[sgn > 0]} return", *sorted((sgn * L, sgn * (L - T))), Hb + T - LIPO, Hb + T, zl0 + S + G, zl1 - S - G))
     # front return
     fz = sbox(-xe, y1, xe, y1 + BA); flip = sbox(-xe, y1 + BA, xe, y1 + BA + LIPO - S)
     p.solid += [fz, flip]
-    add_bend(p, (-xe, y1 + BA / 2), (xe, y1 + BA / 2), "Up 90° R1", fz)
+    add_bend(p, (-xe, y1 + BA / 2), (xe, y1 + BA / 2), BEND_NOTE, fz)
     p.fold.append(("lid front return", -xe, xe, Hb + T - LIPO, Hb + T, zl1 - T, zl1))
     # back: (u = x, v = y above base underside) -> X = u, Y = y0 - BA - ((Hb + T - v) - S)
     MBk = Map(1, 0, 0, 1, 0, y0 - BA - (Hb + T) + S)
     bz = sbox(-xe, y0 - BA, xe, y0)
     back = sbox(-xe, MBk(0, Hb + T - Hl)[1], xe, y0 - BA)
     p.solid += [bz, back]; p.faces["back"] = back
-    add_bend(p, (-xe, y0 - BA / 2), (xe, y0 - BA / 2), "Up 90° R1", bz)
+    add_bend(p, (-xe, y0 - BA / 2), (xe, y0 - BA / 2), BEND_NOTE, bz)
     p.fold.append(("lid top", -L, L, Hb, Hb + T, zl0, zl1))
     p.fold.append(("lid back", -L, L, Hb + T - Hl, Hb + T, zl0, zl0 + T))
     # back side returns: from 16.5 below the top's outer face to the bottom edge
@@ -563,7 +567,7 @@ def lid(kind):
         lx0, lx1 = sorted((sgn * (xe + BA), sgn * (xe + BA + LIPO - S)))
         lip = sbox(lx0, yb, lx1, ya)
         p.solid += [z, lip]
-        add_bend(p, (sgn * (xe + BA / 2), yb), (sgn * (xe + BA / 2), ya), "Up 90° R1", z)
+        add_bend(p, (sgn * (xe + BA / 2), yb), (sgn * (xe + BA / 2), ya), BEND_NOTE, z)
         relief_notch(p, (sgn * xe, ya), (0, 1), (-sgn, 0), (sgn, 0))
         corner_relief(p, x0, x1, y0 - BA, y0)
         p.fold.append((f"lid back {('left','right')[sgn > 0]} return", *sorted((sgn * L, sgn * (L - T))), Hb + T - Hl, Hb + T - h0, zl0, zl0 + LIPO))
@@ -880,7 +884,7 @@ def write_dxf(p, path):
     minx, miny, maxx, maxy = o.bounds
     ty = miny - 12
     lines = [p.title, f"Material: {p.material}   Qty: {p.qty}   Units: mm",
-             "Drawn from the INSIDE face. All bends: UP 90°, inner radius R1." if p.bends else "Flat part, no bends.",
+             f"Drawn from the INSIDE face. All bends: UP 90°, inner radius R{R:g}." if p.bends else "Flat part, no bends.",
              f"Flat assumes K {K}, bend allowance {BA:.2f}, deduction {BD:.2f} per bend. Shop's value wins: re-run if different." if p.bends else "",
              *p.notes, f"Flat size: {maxx - minx:.1f} x {maxy - miny:.1f}"]
     for i, s in enumerate([l for l in lines if l]):
@@ -1064,7 +1068,7 @@ INSPECTOR = HERE.parent / "web" / "enclosure_inspector.html"
 def sync_inspector(parts):
     """Write the generator's numbers into the 3D inspector, so the preview is the cut files, not a copy of them."""
     by = {p.name: p for p in parts}
-    gen = dict(clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
+    gen = dict(t=T, clr=CLR, tabGap=TAB_GAP, foldGap=FOLD_GAP, lidHole=HOLE["lidclr"][0], lidReturnInset=FOLD_GAP - (S - T),
                frontLipHalf=WO / 2 - LIPO - FOLD_GAP, baseLipHalf=W / 2 - FOLD_GAP, backLipFrom=LIPO + FOLD_GAP,
                fan={k: list(v) for k, v in FAN.items()}, plate={}, accLid=[list(q) for q in ACC_LID], accD=HOLE["acc"][0],
                gx=[dict(group=g, open=[[round(a, 2), round(b, 2)] for a, b in list(sbox(*rect).buffer(-3, join_style=1, quad_segs=4).buffer(3, join_style=1, quad_segs=4).exterior.coords)[:-1]],
