@@ -20,7 +20,7 @@ NAV = ('<p style="margin:0;font:500 .85rem \'IBM Plex Mono\',ui-monospace,monosp
        '<a href="./" style="color:inherit">← {back}</a></p>\n')
 SETS = {
     "now": ("Harbor Now", ["room3d.html"]),
-    "plans": ("Harbor Plans", ["skadis_rail.html", "skadis_layout.html", "printer_tower.html", "island_bench.html", "bench_power.html", "side_tower.html"]),
+    "plans": ("Harbor Plans", ["car_rack.html", "skadis_rail.html", "skadis_layout.html", "printer_tower.html", "island_bench.html", "bench_power.html", "side_tower.html"]),
 }
 
 for folder, (back, pages) in SETS.items():
