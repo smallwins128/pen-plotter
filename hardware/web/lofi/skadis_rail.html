@@ -1,0 +1,132 @@
+<!-- Room R05 Harbor (Copilot harness). WHAT-IF: SKÅDIS rail system (hooks + plates), 3D inspector. Not built. Models: hardware/parts/harbor/skadis_rail.py; build_harbor.py embeds the STLs from hardware/out/harbor/. -->
+<title>SKÅDIS Rail</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one column; what-if stamp, the 3D inspector with view buttons and a lift slider, then the numbers */
+:root{--bg:#f2f3f1;--ink:#1d2124;--mute:#62696e;--line:#a3aaae;--card:#ffffff;--panel:#e9ebe8;--print:#45494d;--plate:#4f9fc9;--board:#f7f7f4;--warn:#c0612a;
+--f-disp:"Barlow Condensed",system-ui,sans-serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141719;--ink:#e4e7e8;--mute:#98a1a6;--line:#525a5f;--card:#1b1f22;--panel:#202528;--print:#8a8f94;--plate:#5fb0da;--board:#8d8f8a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141719;--ink:#e4e7e8;--mute:#98a1a6;--line:#525a5f;--card:#1b1f22;--panel:#202528;--print:#8a8f94;--plate:#5fb0da;--board:#8d8f8a;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:1000px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+h1{font-family:var(--f-disp);font-weight:800;font-size:2.1rem;margin:0;text-transform:uppercase}
+h2{font-family:var(--f-disp);font-weight:800;font-size:1.35rem;margin:0 0 6px;text-transform:uppercase;letter-spacing:.02em}
+p{margin:0;max-width:70ch}.sub{color:var(--mute)}
+.stamp{font-family:var(--f-mono);font-size:.8rem;border:1px solid var(--warn);color:var(--warn);border-radius:3px;padding:2px 10px;justify-self:start}
+.viewer{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+canvas{display:block;width:100%;height:min(62vh,520px);touch-action:none;cursor:grab}
+.bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{font:500 .8rem var(--f-mono);padding:6px 10px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:4px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+label{font:.8rem var(--f-mono);color:var(--mute);display:flex;gap:8px;align-items:center}
+input[type=range]{width:160px}
+.hint{font:.75rem var(--f-mono);color:var(--mute);margin-left:auto}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}.two>div{min-width:0}
+ul{margin:0;padding-left:1.15em;display:grid;gap:5px;max-width:70ch}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+td,th{border-bottom:1px solid var(--line);padding:6px 12px 6px 0;text-align:left;vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);font-weight:500}
+td:first-child{font-family:var(--f-mono)}
+</style>
+<main>
+<header style="display:grid;gap:10px">
+<span class="stamp">WHAT-IF · fit test not printed · 2026-10-30</span>
+<h1>SKÅDIS rail</h1>
+<p class="sub">One hook type on the board; every holder is a plate that drops onto the hooks. The hook pushes into a slot and drops 7 mm; its front is a dovetail rail. Each plate has a sleeve per hook: a dovetail groove, open at the bottom, with a roof it rests on. Shown: three hooks and the fit strip (sleeves at 0.15, 0.25 and 0.35 mm clearance).</p>
+</header>
+
+<section class="viewer">
+<canvas id="v" aria-label="3D view of the SKÅDIS hook and fit strip; drag to rotate, scroll or pinch to zoom"></canvas>
+<div class="bar">
+<div class="seg" id="seg">
+<button data-v="asm" aria-pressed="true">On the board</button>
+<button data-v="hook" aria-pressed="false">Hook</button>
+<button data-v="strip" aria-pressed="false">Fit strip</button>
+</div>
+<label>lift plate <input id="lift" type="range" min="0" max="45" value="0"></label>
+<label><input id="ghost" type="checkbox"> see-through plate</label>
+<span class="hint">drag · scroll / pinch</span>
+</div>
+</section>
+
+<section class="two">
+<div>
+<h2>How it goes on</h2>
+<ul>
+<li>Hook: lip and neck through a slot, push down 7 mm. The lip now sits behind the board, 6 mm below the slot.</li>
+<li>Plate: hold it just above the hooks, lower it; the sleeve's flared mouth finds the rail, the plate slides down and sits on the sleeve roof.</li>
+<li>Foot: the plate's bottom edge reaches back to the board, so a heavy tool can't tip it in.</li>
+<li>Off: lift the plate straight up. Hooks stay on the board.</li>
+</ul>
+</div>
+<div>
+<h2>Grid rule</h2>
+<ul>
+<li>Hooks in one row of slots, so sleeves sit on a 40 mm pitch.</li>
+<li>Plate widths 36 / 76 / 116 … (40 n − 4), leaving 4 mm between plates.</li>
+<li>One sleeve holds a small plate (the 26 mm rail stops it turning); two for anything wider.</li>
+</ul>
+</div>
+</section>
+
+<section>
+<h2>Numbers</h2>
+<table>
+<tr><th>Part</th><th>Size</th><th>Note</th></tr>
+<tr><td>Hook</td><td>16 × 13 × 28 mm, ≈ 2.3 g</td><td>Print upright as shown; the neck bridges 5.4 mm. No supports.</td></tr>
+<tr><td>Rail</td><td>7 → 11 mm dovetail, 2.5 deep</td><td>34° flanks, lead-in chamfer on top</td></tr>
+<tr><td>Fit strip</td><td>116 × 43 × 9 mm, ≈ 27 g</td><td>Print front face down, sleeves up. No supports.</td></tr>
+<tr><td>SKÅDIS</td><td>board 5, slots 5 × 15, 40 pitch</td><td>Community figures, not IKEA's: measure board thickness and slot width</td></tr>
+</table>
+</section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const cv=document.getElementById('v');
+  if(!window.THREE){cv.replaceWith(Object.assign(document.createElement('p'),{textContent:'3D view could not load.',style:'padding:16px'}));return;}
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const B64={hook:"@@STL:skadis_hook@@",strip:"@@STL:skadis_fit_strip@@",board:"@@STL:skadis_board_piece@@"};
+  // model frame: x along the board, y out of it, z up -> three: x, z, -y
+  function parse(b64){const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer,dv=new DataView(bin),n=dv.getUint32(80,true);
+    const pos=new Float32Array(n*9);
+    for(let i=0;i<n;i++){const o=84+i*50+12;for(let k=0;k<3;k++){const x=dv.getFloat32(o+k*12,true),y=dv.getFloat32(o+k*12+4,true),z=dv.getFloat32(o+k*12+8,true);pos.set([x,z,-y],i*9+k*3);}}
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.computeVertexNormals();return geo;}
+  const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(35,1.6,1,5000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x667788,0.8));const dl=new THREE.DirectionalLight(0xffffff,0.65);dl.position.set(-150,200,-250);scene.add(dl);
+  const dl2=new THREE.DirectionalLight(0xffffff,0.35);dl2.position.set(200,80,250);scene.add(dl2);
+  const hm=new THREE.MeshStandardMaterial({roughness:.7,flatShading:true});
+  const pm=new THREE.MeshStandardMaterial({roughness:.6,flatShading:true,transparent:true,opacity:1});
+  const bm=new THREE.MeshStandardMaterial({roughness:.9,flatShading:true,transparent:true,opacity:.55});
+  const gh=parse(B64.hook),gs=parse(B64.strip),gb=parse(B64.board);
+  const hooks=[-40,0,40].map(x=>{const m=new THREE.Mesh(gh,hm);m.position.x=x;scene.add(m);return m;});
+  const strip=new THREE.Mesh(gs,pm),board=new THREE.Mesh(gb,bm);scene.add(strip);scene.add(board);
+  let view='asm',th=-2.2,ph=0.35,dist=260,target=new THREE.Vector3(0,12,0);
+  function setView(v){view=v;document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
+    hooks.forEach((m,i)=>m.visible=v==='asm'||(v==='hook'&&i===1));strip.visible=v!=='hook';board.visible=v==='asm';
+    if(v==='hook'){target.set(0,14,-2);dist=110;th=-2.6;ph=0.45;}else if(v==='strip'){target.set(0,12,-5);dist=260;}else{target.set(0,12,0);dist=260;}
+    strip.position.y=v==='asm'?+document.getElementById('lift').value:0;draw();}
+  document.querySelectorAll('#seg button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.v)));
+  document.getElementById('lift').addEventListener('input',e=>{if(view!=='asm')setView('asm');strip.position.y=+e.target.value;draw();});
+  document.getElementById('ghost').addEventListener('change',e=>{pm.opacity=e.target.checked?.35:1;pm.depthWrite=!e.target.checked;draw();});
+  const place=()=>{cam.position.set(target.x+dist*Math.cos(ph)*Math.cos(th),target.y+dist*Math.sin(ph),target.z+dist*Math.cos(ph)*Math.sin(th));cam.lookAt(target);};
+  const size=()=>{const w=cv.clientWidth,h=cv.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();};
+  const paint=()=>{hm.color.set(css('--print'));pm.color.set(css('--plate'));bm.color.set(css('--board'));scene.background=new THREE.Color(css('--panel'));};
+  function draw(){place();renderer.render(scene,cam);}
+  const pts=new Map();let drag=null;
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);drag=[e.clientX,e.clientY];});
+  cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;
+    if(pts.size===2){const q=[...pts.values()],d0=Math.hypot(q[0][0]-q[1][0],q[0][1]-q[1][1]);pts.set(e.pointerId,[e.clientX,e.clientY]);const r=[...pts.values()],d1=Math.hypot(r[0][0]-r[1][0],r[0][1]-r[1][1]);if(d0>0)dist=Math.min(900,Math.max(40,dist*d0/d1));draw();return;}
+    pts.set(e.pointerId,[e.clientX,e.clientY]);th+=(e.clientX-drag[0])*0.008;ph=Math.max(-1.4,Math.min(1.4,ph+(e.clientY-drag[1])*0.008));drag=[e.clientX,e.clientY];draw();});
+  const up=e=>{pts.delete(e.pointerId);drag=[...pts.values()][0]||null;};
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();dist=Math.min(900,Math.max(40,dist*(1+e.deltaY*0.001)));draw();},{passive:false});
+  new ResizeObserver(()=>{size();draw();}).observe(cv);
+  const rp=()=>{paint();draw();};matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',rp);
+  new MutationObserver(rp).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  paint();size();setView('asm');
+})();
+</script>

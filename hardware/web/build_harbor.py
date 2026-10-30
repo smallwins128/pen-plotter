@@ -4,8 +4,12 @@ Sub-pages ship as extra files of one artifact, so each needs its own document
 shell and a link back to its index page.
 
     python3 build_harbor.py   # writes build/now/ and build/plans/
+
+Pages may embed an STL as "@@STL:name@@" (base64 of hardware/out/harbor/name.stl); run the part's script first.
 """
+import base64
 import os
+import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOFI = os.path.join(HERE, "lofi")
@@ -16,7 +20,7 @@ NAV = ('<p style="margin:0;font:500 .85rem \'IBM Plex Mono\',ui-monospace,monosp
        '<a href="./" style="color:inherit">← {back}</a></p>\n')
 SETS = {
     "now": ("Harbor Now", ["room3d.html"]),
-    "plans": ("Harbor Plans", ["skadis_layout.html", "printer_tower.html", "island_bench.html", "bench_power.html", "side_tower.html"]),
+    "plans": ("Harbor Plans", ["skadis_rail.html", "skadis_layout.html", "printer_tower.html", "island_bench.html", "bench_power.html", "side_tower.html"]),
 }
 
 for folder, (back, pages) in SETS.items():
@@ -28,5 +32,7 @@ for folder, (back, pages) in SETS.items():
         i = body.find("<main>")
         if i >= 0:
             body = body[:i + 6] + "\n" + NAV.format(back=back) + body[i + 6:]
+        body = re.sub(r"@@STL:(\w+)@@", lambda m: base64.b64encode(open(
+            os.path.join(HERE, "..", "out", "harbor", m.group(1) + ".stl"), "rb").read()).decode(), body)
         with open(os.path.join(out, name), "w", encoding="utf-8") as f:
             f.write(SHELL.format(body=body))

@@ -114,6 +114,18 @@ def fit_strip():
     return part
 
 
+def board_piece():
+    """A 140 x 90 piece of SKÅDIS around the three test hooks, for the 3D inspector (not printed)."""
+    b = box(-70, 70, -BOARD["t"], 0, -30, 60)
+    for cx in range(-60, 61, 20):
+        zc0 = NECK["z"] + BOARD["slot_h"] / 2 - (0 if (cx // 20) % 2 == 0 else 20)   # hook slots: floor at the neck
+        for zc in (zc0 + 40 * k for k in range(-2, 3)):
+            if -22 < zc < 52:
+                b -= box(cx - BOARD["slot_w"] / 2, cx + BOARD["slot_w"] / 2, -BOARD["t"] - 1, 1,
+                         zc - BOARD["slot_h"] / 2, zc + BOARD["slot_h"] / 2)
+    return b
+
+
 def main():
     import numpy as np, trimesh
     from trimesh.transformations import rotation_matrix
@@ -128,6 +140,7 @@ def main():
             m.apply_transform(rotation_matrix(np.radians(rot), [1, 0, 0]))   # front face down on the bed
         m.apply_translation(-m.bounds[0])
         m.export(str(OUT / f"{name}_print.stl"))
+    export_stl(board_piece(), str(OUT / "skadis_board_piece.stl"))
 
 
 if __name__ == "__main__":
