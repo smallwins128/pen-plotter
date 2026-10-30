@@ -32,7 +32,7 @@ td:first-child{font-family:var(--f-mono)}
 </style>
 <main>
 <header style="display:grid;gap:10px">
-<span class="stamp">WHAT-IF · fit test not printed · v2 2026-10-30</span>
+<span class="stamp">WHAT-IF · fit test not printed · v3 2026-10-30</span>
 <h1>SKÅDIS rail</h1>
 <p class="sub">One hook type on the board; every holder is a plate that drops onto the hooks. The hook pushes into a slot and drops 7 mm; its front is a dovetail rail. Each plate has a sleeve per hook: a dovetail groove, open at the bottom, with a roof it rests on. Below: five generic plates, the fit strip (sleeves at 0.15, 0.25 and 0.35 mm clearance) and the hook.</p>
 </header>
@@ -43,7 +43,8 @@ td:first-child{font-family:var(--f-mono)}
 <div class="seg" id="seg">
 <button data-v="wall" aria-pressed="true">Plates on the wall</button>
 <button data-v="hole_bar" aria-pressed="false">Hole bar</button>
-<button data-v="slot_bar" aria-pressed="false">Slot bar</button>
+<button data-v="fork_bar" aria-pressed="false">Fork bar</button>
+<button data-v="clip_bar" aria-pressed="false">Clip bar</button>
 <button data-v="cup" aria-pressed="false">Cup</button>
 <button data-v="tray" aria-pressed="false">Tray</button>
 <button data-v="shelf" aria-pressed="false">Shelf</button>
@@ -79,14 +80,15 @@ td:first-child{font-family:var(--f-mono)}
 <section>
 <h2>Plates</h2>
 <table>
-<tr><th>Plate</th><th>Width · sleeves</th><th>Takes</th><th>PLA (solid, ≈)</th></tr>
-<tr><td>Hole bar</td><td>116 · 3</td><td>Two rows of holes, Ø3–8 and Ø5–12: small drivers shaft-first, hex keys long leg first, the line tester</td><td>113 g (≈ 45 g at 15 % infill)</td></tr>
-<tr><td>Slot bar</td><td>76 · 2</td><td>Open-front slots 6 / 10 / 14 / 18: caliper beam, scissors blade, spanner, anything with a waist</td><td>62 g</td></tr>
-<tr><td>Cup</td><td>36 · 1</td><td>Pens, markers, a knife point-down</td><td>28 g</td></tr>
-<tr><td>Tray</td><td>76 · 2</td><td>Tapes, utility knife, travel adapter</td><td>40 g</td></tr>
-<tr><td>Shelf</td><td>116 · 3</td><td>Remote, tapes, small boxes</td><td>57 g</td></tr>
+<tr><th>Plate</th><th>Width · sleeves</th><th>Takes</th><th>PLA, solid (≈)</th></tr>
+<tr><td>Hole bar</td><td>116 · 3</td><td>Two rows of holes, Ø3–7 and Ø6–12: small drivers shaft-first, hex keys long leg first, the line tester</td><td>45 g</td></tr>
+<tr><td>Fork bar</td><td>76 · 2</td><td>Open-front slots 12 / 16 / 20: scissors blade-down, cutters and pliers jaws-down, handles resting on top</td><td>36 g</td></tr>
+<tr><td>Clip bar</td><td>116 · 3</td><td>Three tabs, one tape each: the tape's belt clip slides down behind a 3.5 mm fin. Gap and fin are guesses until a clip is measured</td><td>37 g</td></tr>
+<tr><td>Cup</td><td>36 · 1</td><td>Pens, markers, a knife point-down</td><td>26 g</td></tr>
+<tr><td>Tray</td><td>76 · 2</td><td>Utility knife, travel adapter, spare tapes</td><td>33 g</td></tr>
+<tr><td>Shelf</td><td>116 · 3</td><td>Remote, small boxes</td><td>46 g</td></tr>
 </table>
-<p class="sub" style="margin-top:8px">All print standing on their bottom edge, as they hang, with no supports: sleeves, foot and floors start on the bed; the bars' shelves have a 45° underside.</p>
+<p class="sub" style="margin-top:8px">All print standing on their bottom edge, as they hang, with no supports: sleeves, foot and floors start on the bed; the bars' shelves are a thin top on 45° ribs (bridges up to 37 mm between ribs). Plates start level with the hook's bottom; the rail's tip hides behind them.</p>
 </section>
 
 <section>
@@ -107,7 +109,7 @@ td:first-child{font-family:var(--f-mono)}
   if(!window.THREE){cv.replaceWith(Object.assign(document.createElement('p'),{textContent:'3D view could not load.',style:'padding:16px'}));return;}
   const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const B64={hook:"@@STL:skadis_hook@@",strip:"@@STL:skadis_fit_strip@@",board:"@@STL:skadis_board_piece@@",wall:"@@STL:skadis_board_wall@@",
-    hole_bar:"@@STL:plate_hole_bar@@",slot_bar:"@@STL:plate_slot_bar@@",cup:"@@STL:plate_cup@@",tray:"@@STL:plate_tray@@",shelf:"@@STL:plate_shelf@@"};
+    hole_bar:"@@STL:plate_hole_bar@@",fork_bar:"@@STL:plate_fork_bar@@",clip_bar:"@@STL:plate_clip_bar@@",cup:"@@STL:plate_cup@@",tray:"@@STL:plate_tray@@",shelf:"@@STL:plate_shelf@@"};
   // model frame: x along the board, y out of it, z up -> three: x, z, -y
   function parse(b64){const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer,dv=new DataView(bin),n=dv.getUint32(80,true);
     const pos=new Float32Array(n*9);
@@ -122,13 +124,13 @@ td:first-child{font-family:var(--f-mono)}
   const bm=new THREE.MeshStandardMaterial({roughness:.9,flatShading:true,transparent:true,opacity:.55});
   const G={};for(const k in B64)G[k]=parse(B64[k]);
   // sleeve x positions per plate; dx keeps 2-sleeve plates on hook columns (multiples of 40)
-  const PL={hole_bar:{xs:[-40,0,40],dx:0},slot_bar:{xs:[-20,20],dx:20},cup:{xs:[0],dx:0},tray:{xs:[-20,20],dx:20},shelf:{xs:[-40,0,40],dx:0},strip:{xs:[-40,0,40],dx:0}};
-  const WALL=[['hole_bar',-120,0],['slot_bar',-20,0],['cup',40,0],['tray',-140,-80],['shelf',-40,-80],['cup',40,-80]];
+  const PL={hole_bar:{xs:[-40,0,40],dx:0},fork_bar:{xs:[-20,20],dx:20},clip_bar:{xs:[-40,0,40],dx:0},cup:{xs:[0],dx:0},tray:{xs:[-20,20],dx:20},shelf:{xs:[-40,0,40],dx:0},strip:{xs:[-40,0,40],dx:0}};
+  const WALL=[['hole_bar',-120,0],['fork_bar',-20,0],['cup',40,0],['clip_bar',-120,-80],['tray',-20,-80],['cup',40,-80]];
   const dyn=new THREE.Group();scene.add(dyn);let lifts=[];
   const add=(geo,mat,x,y,lift)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,0);dyn.add(m);if(lift)lifts.push([m,y]);return m;};
   const hang=(k,dx,dz)=>{PL[k].xs.forEach(x=>add(G.hook,hm,dx+x,dz));add(G[k],pm,dx,dz,true);};
-  const VIEWS={wall:{t:[-60,-15,0],d:640},hook:{t:[0,14,-2],d:110,th:-2.6,ph:.45},strip:{t:[0,12,-5],d:260}};
-  let view='wall',th=-2.2,ph=0.35,dist=640,target=new THREE.Vector3(-60,-15,0);
+  const VIEWS={wall:{t:[-60,-10,0],d:600},hook:{t:[0,14,-2],d:110,th:-2.6,ph:.45},strip:{t:[0,12,-5],d:260}};
+  let view='wall',th=-2.2,ph=0.35,dist=600,target=new THREE.Vector3(-60,-10,0);
   function setView(v){view=v;document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
     dyn.clear();lifts=[];
     if(v==='hook')add(G.hook,hm,0,0);

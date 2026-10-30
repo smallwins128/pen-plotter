@@ -31,7 +31,7 @@ LIP = dict(t=3.0, h=13.0, chamfer=1.5)                   # behind the board; 13 
 FLANGE = dict(w=16.0, t=2.0, h=28.0)                     # rests on the board's front
 RAIL = dict(root=7.0, front=11.0, d=2.5, lead=1.0)       # dovetail, 34 deg flanks; lead-in chamfer on top
 CLR = 0.25                                               # per side, groove over rail; the fit strip tests 0.15-0.35
-BOSS = dict(w=22.0, wall=1.6, roof=2.5)                  # sleeve boss around each groove
+BOSS = dict(w=18.0, wall=1.6, roof=2.5)                  # sleeve boss around each groove
 PLATE_T = 2.4                                            # plate body
 GAP = 4.0                                                # between neighbouring plates
 

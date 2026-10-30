@@ -1,7 +1,8 @@
 """R05 Harbor: generic plates for the SKÅDIS rail (2026-10-30). Nothing tool-shaped: each plate takes a family of tools.
 
     HOLE BAR  116  two rows of graded holes: small drivers drop in shaft-first, hex keys long-leg-first
-    SLOT BAR   76  open-front slots 6 / 10 / 14 / 18: caliper beam, scissors, spanner, anything with a waist
+    FORK BAR   76  three open-front slots 12 / 16 / 20: scissors blade-down, cutters and pliers jaws-down, handles on top
+    CLIP BAR  116  three 34 mm tabs for tape measures: the tape's belt clip slides down over a 3.5 mm fin
     CUP        36  pens, markers, the line tester, a knife point-down
     TRAY       76  walled tray with a low front: tapes, utility knife, adapter
     SHELF     116  shallow shelf with a lip: remote, tapes, small boxes
@@ -9,8 +10,8 @@
     python3 skadis_plates.py      # writes out/harbor/plate_*.stl (+ .step)
 
 Frame as in skadis_rail.py (x along the board, y out of it, z up, hook bottom z = 0). Every plate prints upright as
-modelled, standing on its bottom edge: sleeves, foot and floors start on the bed, and shelves that sit higher have a
-45 deg underside, so nothing needs supports.
+modelled, standing on its bottom edge: sleeves, foot and floors start on the bed. Shelves that sit higher are a thin
+top plate on 45 deg ribs (light, and no supports; the plate bridges at most 37 mm between ribs).
 """
 import pathlib
 
@@ -19,40 +20,79 @@ from build123d import Cylinder, Pos, export_step, export_stl
 from skadis_rail import CLR, FLANGE, GAP, OUT, PLATE_T, Y_BODY, BOSS, board_piece, box, plate, prism_yz, sleeve_xs
 
 Y_F = Y_BODY + PLATE_T                   # plate front face
-Z0 = -12.0                               # plate bottom (foot), below the hook
+Z0 = 0.0                                 # plate bottom (foot), level with the hook's bottom
 Z_ROOF = FLANGE["h"] + CLR + BOSS["roof"]  # top of the sleeve roofs; a plate is at least this tall
 WALL = 2.0
 
 
-def wedge_shelf(w, depth, z_top, t):
-    """Shelf across the plate's front, flat top at z_top, t thick at the front and a 45 deg underside back to the
-    plate, so it prints upright without supports."""
-    prof = [(Y_F - 0.1, z_top), (Y_F + depth, z_top), (Y_F + depth, z_top - t), (Y_F - 0.1, z_top - t - depth)]
-    return prism_yz(prof, -w / 2, w / 2)
-
-
-def hole_bar():
-    w, depth, top = 3 * 40 - GAP, 30.0, 44.0
-    part = plate(sleeve_xs(w), w, Z0, top) + wedge_shelf(w, depth, top, 8.0)
-    rows = ((Y_F + 9.0, [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0, 8.0]),     # hex keys, precision drivers
-            (Y_F + 22.0, [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]))      # bigger drivers, the line tester
-    for y, ds in rows:
-        pitch = (w - 14) / (len(ds) - 1)
-        for i, d in enumerate(ds):
-            part -= Pos(-w / 2 + 7 + i * pitch, y, top - 30) * Cylinder(d / 2 + 0.2, 70)
+def rib_shelf(w, depth, z_top, t, rib_xs, rib_w=2.4):
+    """Shelf across the plate's front: a t-thick top plate at z_top, held by 45 deg ribs at rib_xs (plus both ends)
+    that run from its front edge back down to the plate."""
+    part = box(-w / 2, w / 2, Y_F - 0.1, Y_F + depth, z_top - t, z_top)
+    rib = [(Y_F - 0.1, z_top - t + 0.1), (Y_F + depth, z_top - t + 0.1), (Y_F - 0.1, z_top - t - depth)]
+    for x in sorted(set([-w / 2 + rib_w / 2, w / 2 - rib_w / 2] + list(rib_xs))):
+        part += prism_yz(rib, x - rib_w / 2, x + rib_w / 2)
     return part
 
 
-def slot_bar():
-    w, depth, top = 2 * 40 - GAP, 34.0, 44.0
-    part = plate(sleeve_xs(w), w, Z0, top) + wedge_shelf(w, depth, top, 8.0)
-    widths = [6.0, 10.0, 14.0, 18.0]
-    pitch = w / len(widths)
-    for i, sw in enumerate(widths):
-        x = -w / 2 + pitch * (i + 0.5)
-        y0 = Y_F + 10.0
-        part -= box(x - sw / 2, x + sw / 2, y0, Y_F + depth + 1, top - 60, top + 1)
-        part -= Pos(x, y0, top - 30) * Cylinder(sw / 2, 70)
+def spread(segments, ds, gap=4.0):
+    """Hole centres for diameters ds, filled into free x segments [(x0, x1)] left to right."""
+    xs, i = [], 0
+    for x0, x1 in segments:
+        room = [d for d in ds[i:]]
+        n = 0
+        while n < len(room) and sum(room[:n + 1]) + gap * (n + 2) <= x1 - x0:
+            n += 1
+        if n == 0:
+            continue
+        pitch = (x1 - x0) / n
+        xs += [x0 + pitch * (k + 0.5) for k in range(n)]
+        i += n
+    return list(zip(xs, ds[:len(xs)]))
+
+
+def hole_bar():
+    w, depth, top, t = 3 * 40 - GAP, 30.0, 44.0, 4.0
+    ribs = sleeve_xs(w)
+    part = plate(ribs, w, Z0, top) + rib_shelf(w, depth, top, t, ribs)
+    edges = [-w / 2 + 2.4] + [x for r in ribs for x in (r - 1.2, r + 1.2)] + [w / 2 - 2.4]
+    segs = [(edges[i], edges[i + 1]) for i in range(0, len(edges), 2)]
+    rows = ((Y_F + 9.0, [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0]),          # hex keys, precision drivers
+            (Y_F + 21.0, [6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]))           # bigger drivers, the line tester
+    for y, ds in rows:
+        for x, d in spread(segs, ds):
+            part -= Pos(x, y, top - t / 2) * Cylinder(d / 2 + 0.2, t + 2)
+    return part
+
+
+def fork_bar():
+    """Scissors and cutters: three open-front slots in a thin shelf, a rib under every finger."""
+    w, depth, top, t = 2 * 40 - GAP, 36.0, 44.0, 5.0
+    widths = [12.0, 16.0, 20.0]
+    fingers = (w - sum(widths)) / (len(widths) + 1)
+    xs, x = [], -w / 2 + fingers
+    for sw in widths:
+        xs.append(x + sw / 2)
+        x += sw + fingers
+    ribs = [x - sw / 2 - fingers / 2 for x, sw in zip(xs, widths)][1:]          # under the inner fingers
+    part = plate(sleeve_xs(w), w, Z0, top) + rib_shelf(w, depth, top, t, ribs, rib_w=min(4.0, fingers))
+    for x, sw in zip(xs, widths):
+        y0 = Y_F + 12.0
+        part -= box(x - sw / 2, x + sw / 2, y0, Y_F + depth + 1, top - t - 1, top + 1)
+        part -= Pos(x, y0, top - t / 2) * Cylinder(sw / 2, t + 2)
+    return part
+
+
+def clip_bar():
+    """Tape measures: a fin parallel to the plate, joined at the bottom, open at the top. The tape's belt clip slides
+    down into the gap behind the fin. Gap and fin are guesses until a clip is measured."""
+    w, gap, fin, top = 3 * 40 - GAP, 3.0, 3.5, Z_ROOF + 4
+    part = plate(sleeve_xs(w), w, Z0, top)
+    for x in sleeve_xs(w):                                      # one 34 mm tab per tape, in front of each sleeve
+        part += box(x - 17, x + 17, Y_F - 0.1, Y_F + gap + fin, Z0, Z0 + 4.0)                  # joins at the bottom
+        part += box(x - 17, x + 17, Y_F + gap, Y_F + gap + fin, Z0, top)                       # the fin ("belt")
+    part -= prism_yz([(Y_F + gap - 0.1, top + 0.1), (Y_F + gap + 1.5, top + 0.1), (Y_F + gap - 0.1, top - 1.6)],
+                     -w, w)                                                                    # lead-in on its back
     return part
 
 
@@ -80,7 +120,7 @@ def shelf():
     return tray(w=3 * 40 - GAP, d=62.0, back=Z_ROOF + 2, front=10.0)
 
 
-PLATES = {"hole_bar": hole_bar, "slot_bar": slot_bar, "cup": cup, "tray": tray, "shelf": shelf}
+PLATES = {"hole_bar": hole_bar, "fork_bar": fork_bar, "clip_bar": clip_bar, "cup": cup, "tray": tray, "shelf": shelf}
 
 
 def main():
