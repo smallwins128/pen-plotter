@@ -30,7 +30,7 @@ NECK = dict(w=4.4, h=7.0, z=6.0, len=BOARD["t"] + 0.4)   # through the slot; dro
 LIP = dict(t=3.0, h=13.0, chamfer=1.5)                   # behind the board; 13 < 15 so it passes, then hangs 6 below
 FLANGE = dict(w=11.0, t=2.0, h=20.0)                     # rests on the board's front; as wide as the rail
 RAIL = dict(root=7.0, front=11.0, d=2.5, lead=1.0)       # dovetail, 34 deg flanks; lead-in chamfer on top
-CLR = 0.25                                               # per side, groove over rail; the fit strip tests 0.15-0.35
+CLR = 0.25                                               # per side, groove over rail; picked from the fit strip (Allwin, 2026-10-30)
 BOSS = dict(w=18.0, wall=1.6, roof=2.5)                  # sleeve boss around each groove
 PLATE_T = 2.4                                            # plate body
 GAP = 4.0                                                # between neighbouring plates
