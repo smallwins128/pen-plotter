@@ -15,8 +15,9 @@ the groove clearance that slides on without rattling becomes CLR.
     python3 skadis_rail.py       # writes out/harbor/skadis_hook*.stl, skadis_fit_strip*.stl, .step, preview PNG
 
 Frame: x along the board (slot centre x = 0), y out of the board (board front y = 0), z up (hook bottom z = 0).
-Print: hook upright as modelled (lip and flange stand on the bed, the neck bridges 5.4 mm). Plate front face down,
-sleeves up; the grooves' dovetail flanks overhang 34 deg, so no supports.
+Print: everything upright as modelled. Hook: lip and flange stand on the bed, the neck bridges 5.4 mm. Plates: stand
+on their bottom edge; sleeves run from the bed, so the dovetail flanks are vertical walls and the roof a short bridge.
+The fit strip prints the same way as the real plates, so the clearance it picks holds for them.
 """
 import pathlib
 
@@ -78,49 +79,64 @@ def hook():
     return part
 
 
-def sleeve(x, clr, z_top):
-    """Boss with a dovetail groove: open at the bottom, roof at z_top + clr (the rail's top)."""
+def groove(x, clr, z_top, z_bot):
+    """The dovetail groove a sleeve wraps: roof at z_top + clr (the rail's top), open below z_bot, flared mouth."""
     zr = z_top + clr
-    b = box(x - BOSS["w"] / 2, x + BOSS["w"] / 2, Y_RAIL, Y_BODY + 0.1, zr - FLANGE["h"] - 2, zr + BOSS["roof"])
-    groove = [(px + x, py) for px, py in dovetail(RAIL["root"] + 2 * clr, RAIL["front"] + 2 * clr, Y_RAIL - 0.1,
-                                                  RAIL["d"] + clr + 0.1)]
-    b -= prism_xy(groove, zr - FLANGE["h"] - 3, zr)
-    lead = [(px + x, py) for px, py in dovetail(RAIL["front"] + 2 * clr + 2, RAIL["front"] + 2 * clr, Y_RAIL - 0.1, 1.0)]
-    b -= prism_xy(lead, zr - FLANGE["h"] - 3, zr - FLANGE["h"] - 2 + 1.0)                 # flared mouth
-    return b
+    g = prism_xy([(px + x, py) for px, py in dovetail(RAIL["root"] + 2 * clr, RAIL["front"] + 2 * clr, Y_RAIL - 0.1,
+                                                      RAIL["d"] + clr + 0.1)], z_bot - 1, zr)
+    g += prism_xy([(px + x, py) for px, py in dovetail(RAIL["front"] + 2 * clr + 2, RAIL["front"] + 2 * clr,
+                                                       Y_RAIL - 0.1, 1.0)], z_bot - 1, z_bot + 1.0)
+    return g
 
 
-def plate(sleeves, w, z0, z1):
-    """Plate body (back face at Y_BODY) from z0 to z1, centred on x = 0, with sleeves [(x, clr)] and a foot that
-    reaches back to the board at the bottom so the plate can't tip in."""
+def sleeve(x, clr, z_top, z_bot):
+    """Boss around a groove, from the plate's bottom edge (z_bot) to just over the roof. Reaching the bed means it
+    prints upright with no overhang."""
+    return box(x - BOSS["w"] / 2, x + BOSS["w"] / 2, Y_RAIL, Y_BODY + 0.1, z_bot, z_top + clr + BOSS["roof"])
+
+
+def plate(sleeves, w, z0, z1, clr=CLR):
+    """Plate body (back face at Y_BODY) from z0 to z1, centred on x = 0, with sleeves at x (a list of x, or of
+    (x, clr) pairs) and a foot that reaches back to the board along the bottom, so a tall plate can't flex in.
+    The foot is notched at each sleeve so the hook's flange passes through it as the plate slides down."""
+    sleeves = [s if isinstance(s, tuple) else (s, clr) for s in sleeves]
     part = box(-w / 2, w / 2, Y_BODY, Y_BODY + PLATE_T, z0, z1)
     part += box(-w / 2, w / 2, 0.0, Y_BODY + 0.1, z0, z0 + 4.0)
-    for x, clr in sleeves:
-        part += sleeve(x, clr, FLANGE["h"])
+    for x, c in sleeves:
+        part -= box(x - FLANGE["w"] / 2 - 1, x + FLANGE["w"] / 2 + 1, -1, Y_RAIL + 0.3, z0 - 1, z1 + 1)
+        part += sleeve(x, c, FLANGE["h"], z0)
+        part -= groove(x, c, FLANGE["h"], z0)
     return part
 
 
+def sleeve_xs(w):
+    """Sleeve positions for a plate w wide: one per 40 mm, centred."""
+    n = round((w + GAP) / 40)
+    return [40.0 * (i - (n - 1) / 2) for i in range(n)]
+
+
 def fit_strip():
-    """Three sleeves at 0.15 / 0.25 / 0.35 clearance on a 40 mm pitch, labelled on the back."""
+    """Three sleeves at 0.15 / 0.25 / 0.35 clearance on a 40 mm pitch, each labelled on the front."""
     sl = [(-40.0, 0.15), (0.0, 0.25), (40.0, 0.35)]
     part = plate(sl, 3 * 40 - GAP, -12.0, FLANGE["h"] + 0.35 + BOSS["roof"])
     for x, clr in sl:
         with BuildPart() as t:
-            with BuildSketch(Plane.XZ.offset(-Y_BODY)):
-                with Locations((x, -5.0)):
+            with BuildSketch(Plane(origin=(0, Y_BODY + PLATE_T, 0), x_dir=(-1, 0, 0), z_dir=(0, 1, 0))):
+                with Locations((-x, 8.0)):
                     Text(f"{clr:.2f}".lstrip("0"), font_size=4.0)
             extrude(amount=-0.6)
         part -= t.part
     return part
 
 
-def board_piece():
-    """A 140 x 90 piece of SKÅDIS around the three test hooks, for the 3D inspector (not printed)."""
-    b = box(-70, 70, -BOARD["t"], 0, -30, 60)
-    for cx in range(-60, 61, 20):
-        zc0 = NECK["z"] + BOARD["slot_h"] / 2 - (0 if (cx // 20) % 2 == 0 else 20)   # hook slots: floor at the neck
-        for zc in (zc0 + 40 * k for k in range(-2, 3)):
-            if -22 < zc < 52:
+def board_piece(x0=-70, x1=70, z0=-30, z1=60):
+    """A piece of SKÅDIS for the 3D inspector (not printed). Hook slots (columns at multiples of 40) have their floor
+    at the neck, z = NECK z; the columns between are staggered 20 mm."""
+    b = box(x0, x1, -BOARD["t"], 0, z0, z1)
+    for cx in range(int(x0 // 20) * 20 + 20, int(x1), 20):
+        zc0 = NECK["z"] + BOARD["slot_h"] / 2 - (0 if (cx // 20) % 2 == 0 else 20)
+        for zc in (zc0 + 40 * k for k in range(-10, 11)):
+            if z0 + 8 < zc < z1 - 8:
                 b -= box(cx - BOARD["slot_w"] / 2, cx + BOARD["slot_w"] / 2, -BOARD["t"] - 1, 1,
                          zc - BOARD["slot_h"] / 2, zc + BOARD["slot_h"] / 2)
     return b
@@ -130,14 +146,14 @@ def main():
     import numpy as np, trimesh
     from trimesh.transformations import rotation_matrix
     OUT.mkdir(parents=True, exist_ok=True)
-    for name, part, rot in (("skadis_hook", hook(), None), ("skadis_fit_strip", fit_strip(), -90)):
+    for name, part, rot in (("skadis_hook", hook(), None), ("skadis_fit_strip", fit_strip(), None)):
         bb = part.bounding_box()
         print(f"{name}: {bb.size.X:.1f} x {bb.size.Y:.1f} x {bb.size.Z:.1f} mm, volume {part.volume / 1000:.2f} cm3")
         export_stl(part, str(OUT / f"{name}.stl"))
         export_step(part, str(OUT / f"{name}.step"))
         m = trimesh.load(str(OUT / f"{name}.stl"))
         if rot is not None:
-            m.apply_transform(rotation_matrix(np.radians(rot), [1, 0, 0]))   # front face down on the bed
+            m.apply_transform(rotation_matrix(np.radians(rot), [1, 0, 0]))
         m.apply_translation(-m.bounds[0])
         m.export(str(OUT / f"{name}_print.stl"))
     export_stl(board_piece(), str(OUT / "skadis_board_piece.stl"))
