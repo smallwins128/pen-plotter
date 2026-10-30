@@ -1,11 +1,11 @@
 """R05 Harbor: plates for the SKÅDIS rail (2026-10-30, v4 after Allwin's review). Simple shapes, light on filament.
 
-    HOLES L   156  one row of 6 holes, Ø7-12 at 26 mm pitch: screwdrivers, files (handles up to ~25 mm across)
-    HOLES S   116  one row of 7 holes, Ø2.5-6 at 16.5 mm pitch: precision drivers, hex keys (long leg down)
-    LEGS       36  a ring with a bridge: each handle of a cutter or pliers drops through its own hole, the bridge
-                   sits in the V under the pivot. Tools hang side-on (their plane is square to the board)
-    SCISSORS   36  a ring with one slot: scissors go in tip-down, the finger rings rest on the rim
-    CLIP       36  one tab for a tape measure: its belt clip slides down behind a 3.5 mm fin
+    HOLES L   116  one row of 6 holes, Ø7-12 at 19.3 mm pitch: screwdrivers, files
+    HOLES S   116  one row of 7 holes, Ø2.5-6 at 16.6 mm pitch: precision drivers, hex keys (long leg down)
+    LEGS L/S   36  two holes side by side with a bridge: each handle of a cutter or pliers drops through its own
+                   hole, the bridge sits in the V under the pivot; tools hang flat against the board
+    SCISSORS   36  L/S: one slot along the board; scissors go in tip-down, the finger rings rest on the rim
+    CLIP       24  one tape measure: its belt clip slides down behind a 3 mm fin
     ADAPTER    36  a bare sleeve plate with two M3 holes, to bolt onto a cup or tray you already have (bolt head
                    behind the plate, nut inside the cup)
 
@@ -14,7 +14,7 @@
 Frame as in skadis_rail.py (x along the board, y out of it, z up, hook bottom z = 0). Every plate prints upright as
 modelled, standing on its bottom edge: sleeves, foot and rings start on the bed, which is also the orientation the
 loads want (rings and sleeves are loaded along their layers, not across them). The hole bars' shelves are a thin top
-on 45 deg ribs, bridging at most one hole between ribs. Handle sizes behind the hole pitch are estimates.
+on 45 deg ribs at the ends and mid-way only. Handle sizes behind the hole pitch are estimates.
 """
 import pathlib
 
@@ -39,19 +39,22 @@ def rib_shelf(w, depth, z_top, t, rib_xs, rib_w=2.4):
 
 
 def hole_bar(w, ds, depth, hole_y, t=4.0, top=36.0):
-    """One row of holes ds evenly across w, centred hole_y in front of the plate; a rib at each end and between every
-    two holes, so the shelf never bridges more than one hole pitch."""
+    """One row of holes ds evenly across w, centred hole_y in front of the plate. Ribs only at the two ends and in
+    the gap nearest the middle, so the shelf bridges about half its width (~55 mm on a 116 bar; the A1 bridges
+    that cleanly in PLA)."""
     pitch = w / len(ds)
     xs = [-w / 2 + pitch * (i + 0.5) for i in range(len(ds))]
-    ribs = [(xs[i] + xs[i + 1]) / 2 for i in range(len(xs) - 1)]
-    part = plate(sleeve_xs(w), w, Z0, top) + rib_shelf(w, depth, top, t, ribs)
+    gaps = [(xs[i] + xs[i + 1]) / 2 for i in range(len(xs) - 1)]
+    part = plate(sleeve_xs(w), w, Z0, top) + rib_shelf(w, depth, top, t, [min(gaps, key=abs)])
     for x, d in zip(xs, ds):
         part -= Pos(x, Y_F + hole_y, top - t / 2) * Cylinder(d / 2 + 0.2, t + 2)
     return part
 
 
 def holes_l():
-    return hole_bar(4 * 40 - GAP, [7.0, 8.0, 9.0, 10.0, 11.0, 12.0], depth=28.0, hole_y=15.0)
+    """Screwdrivers and files: 6 holes at 19.3 mm pitch on three hooks. A handle wider than ~19 mm needs the hole
+    next to it left empty."""
+    return hole_bar(3 * 40 - GAP, [7.0, 8.0, 9.0, 10.0, 11.0, 12.0], depth=28.0, hole_y=15.0)
 
 
 def holes_s():
@@ -70,26 +73,47 @@ def ring(w, holes, wall, h):
     return part
 
 
-def legs():
-    """Cutters and pliers: two 18 x 16 holes one behind the other, an 8 mm bridge between them."""
+def legs(hole=(16.0, 14.0), bridge=6.0, wall=2.5, h=12.0):
+    """Cutters and pliers, flat against the board: two holes side by side (x) with a bridge between them. Each handle
+    drops through its own hole and the bridge sits in the V under the pivot. hole = (along the board, out of it)."""
     w = 1 * 40 - GAP
     part = plate(sleeve_xs(w), w, Z0, Z_ROOF + 2)
-    hw, hd, wall, bridge = 18.0, 16.0, 3.0, 8.0
-    return part + ring(w, [(-hw / 2, hw / 2, wall, wall + hd), (-hw / 2, hw / 2, wall + hd + bridge, wall + 2 * hd + bridge)],
-                       wall, 12.0)
+    hx, hy = hole
+    x_in = bridge / 2
+    return part + ring(w, [(-x_in - hx, -x_in, wall, wall + hy), (x_in, x_in + hx, wall, wall + hy)], wall, h)
 
 
-def scissors():
-    """Scissors: one 26 x 9 slot along the board, thin walls; tip-down, the finger rings rest on the rim."""
+def legs_l():
+    """Big pliers and cutters. The ring is 42 wide, wider than the 36 plate: don't hang two of these on neighbouring
+    hooks (next to anything else it clears by 1 mm)."""
+    return legs((16.0, 14.0), 5.0, 2.5, 12.0)
+
+
+def legs_s():
+    """Small cutters and pliers: fits within the 36 mm plate."""
+    return legs((12.0, 11.0), 5.0, 2.5, 10.0)
+
+
+def scissors(slot=(26.0, 9.0), wall=2.5, h=8.0):
+    """Scissors: one slot along the board, thin walls; tip-down, the finger rings rest on the rim."""
     w = 1 * 40 - GAP
     part = plate(sleeve_xs(w), w, Z0, Z_ROOF + 2)
-    return part + ring(w, [(-13.0, 13.0, 2.5, 11.5)], 2.5, 8.0)
+    sx, sy = slot
+    return part + ring(w, [(-sx / 2, sx / 2, wall, wall + sy)], wall, h)
+
+
+def scissors_l():
+    return scissors((26.0, 9.0), 2.5, 8.0)
+
+
+def scissors_s():
+    return scissors((18.0, 7.0), 2.0, 7.0)
 
 
 def clip():
     """One tape measure: a fin parallel to the plate, joined at the bottom, open at the top; the tape's belt clip
     slides down into the gap behind it. Gap and fin are guesses until a clip is measured."""
-    w, gap, fin, top = 1 * 40 - GAP, 3.0, 3.5, Z_ROOF + 4
+    w, gap, fin, top = 24.0, 3.0, 3.0, Z_ROOF + 4                 # just wider than the sleeve boss
     part = plate(sleeve_xs(w), w, Z0, top)
     part += box(-w / 2, w / 2, Y_F - 0.1, Y_F + gap + fin, Z0, Z0 + 4.0)                     # joins at the bottom
     part += box(-w / 2, w / 2, Y_F + gap, Y_F + gap + fin, Z0, top)                          # the fin ("belt")
@@ -108,14 +132,16 @@ def adapter():
     return part
 
 
-PLATES = {"holes_l": holes_l, "holes_s": holes_s, "legs": legs, "scissors": scissors, "clip": clip, "adapter": adapter}
+PLATES = {"holes_l": holes_l, "holes_s": holes_s, "legs_l": legs_l, "legs_s": legs_s, "scissors_l": scissors_l,
+          "scissors_s": scissors_s, "clip": clip, "adapter": adapter}
 
 
 # One print job (Bambu A1, 256 x 256). Everything upright as modelled. The A1 slings its bed along Y, so each plate is
 # turned to put its thin wall along Y (it then can't whip back and forth); hooks are small and squat, left as they are.
 BED, MARGIN, SPACE = 256.0, 8.0, 6.0
-JOB = [("holes_l", 1), ("holes_s", 1), ("legs", 3), ("scissors", 1), ("clip", 1), ("adapter", 2)]
+JOB = [("holes_l", 1), ("holes_s", 1), ("legs_l", 2), ("legs_s", 2), ("scissors_l", 1), ("scissors_s", 2), ("clip", 1)]
 SPARE_HOOKS = 2
+HOOKS = {"holes_l": 3, "holes_s": 3, "legs_l": 1, "legs_s": 1, "scissors_l": 1, "scissors_s": 1, "clip": 1, "adapter": 1}
 
 
 def pack(items):
@@ -169,7 +195,7 @@ def main():
         m.apply_translation(-m.bounds[0])                                     # upright, bottom edge on the bed
         m.export(str(OUT / f"plate_{name}_print.stl"))
         meshes[name] = m
-    export_stl(board_piece(-200, 80, -110, 75), str(OUT / "skadis_board_wall.stl"))   # for the inspector's wall view
+    export_stl(board_piece(-200, 80, -190, 75), str(OUT / "skadis_board_wall.stl"))   # for the inspector's wall view
 
     export_stl(hook(), str(OUT / "_hook.stl"))
     export_stl(fit_strip(), str(OUT / "_strip.stl"))
@@ -179,7 +205,7 @@ def main():
     for name, n in JOB:
         for _ in range(n):
             items.append((name, meshes[name].copy().apply_transform(turn)))
-    n_hooks = sum(len(sleeve_xs(round(meshes[name].extents[0]))) * n for name, n in JOB) + SPARE_HOOKS
+    n_hooks = sum(HOOKS[name] * n for name, n in JOB) + SPARE_HOOKS
     items += [("hook", h.copy()) for _ in range(n_hooks)]
     write_bed("bed_harbor_skadis", items)
     write_bed("bed_fit_test", [("fit_strip", strip.copy().apply_transform(turn))] + [("hook", h.copy()) for _ in range(3)])
