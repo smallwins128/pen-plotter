@@ -1,17 +1,20 @@
-"""R05 Harbor: generic plates for the SKÅDIS rail (2026-10-30). Nothing tool-shaped: each plate takes a family of tools.
+"""R05 Harbor: plates for the SKÅDIS rail (2026-10-30, v4 after Allwin's review). Simple shapes, light on filament.
 
-    HOLE BAR  116  two rows of graded holes: small drivers drop in shaft-first, hex keys long-leg-first
-    FORK BAR   76  three open-front slots 12 / 16 / 20: scissors blade-down, cutters and pliers jaws-down, handles on top
-    CLIP BAR  116  three 34 mm tabs for tape measures: the tape's belt clip slides down over a 3.5 mm fin
-    CUP        36  pens, markers, the line tester, a knife point-down
-    TRAY       76  walled tray with a low front: tapes, utility knife, adapter
-    SHELF     116  shallow shelf with a lip: remote, tapes, small boxes
+    HOLES L   156  one row of 6 holes, Ø7-12 at 26 mm pitch: screwdrivers, files (handles up to ~25 mm across)
+    HOLES S   116  one row of 7 holes, Ø2.5-6 at 16.5 mm pitch: precision drivers, hex keys (long leg down)
+    LEGS       36  a ring with a bridge: each handle of a cutter or pliers drops through its own hole, the bridge
+                   sits in the V under the pivot. Tools hang side-on (their plane is square to the board)
+    SCISSORS   36  a ring with one slot: scissors go in tip-down, the finger rings rest on the rim
+    CLIP       36  one tab for a tape measure: its belt clip slides down behind a 3.5 mm fin
+    ADAPTER    36  a bare sleeve plate with two M3 holes, to bolt onto a cup or tray you already have (bolt head
+                   behind the plate, nut inside the cup)
 
     python3 skadis_plates.py      # writes out/harbor/plate_*.stl (+ .step)
 
 Frame as in skadis_rail.py (x along the board, y out of it, z up, hook bottom z = 0). Every plate prints upright as
-modelled, standing on its bottom edge: sleeves, foot and floors start on the bed. Shelves that sit higher are a thin
-top plate on 45 deg ribs (light, and no supports; the plate bridges at most 37 mm between ribs).
+modelled, standing on its bottom edge: sleeves, foot and rings start on the bed, which is also the orientation the
+loads want (rings and sleeves are loaded along their layers, not across them). The hole bars' shelves are a thin top
+on 45 deg ribs, bridging at most one hole between ribs. Handle sizes behind the hole pitch are estimates.
 """
 import pathlib
 
@@ -35,97 +38,126 @@ def rib_shelf(w, depth, z_top, t, rib_xs, rib_w=2.4):
     return part
 
 
-def spread(segments, ds, gap=4.0):
-    """Hole centres for diameters ds, filled into free x segments [(x0, x1)] left to right."""
-    xs, i = [], 0
-    for x0, x1 in segments:
-        room = [d for d in ds[i:]]
-        n = 0
-        while n < len(room) and sum(room[:n + 1]) + gap * (n + 2) <= x1 - x0:
-            n += 1
-        if n == 0:
-            continue
-        pitch = (x1 - x0) / n
-        xs += [x0 + pitch * (k + 0.5) for k in range(n)]
-        i += n
-    return list(zip(xs, ds[:len(xs)]))
-
-
-def hole_bar():
-    w, depth, top, t = 3 * 40 - GAP, 30.0, 44.0, 4.0
-    ribs = sleeve_xs(w)
-    part = plate(ribs, w, Z0, top) + rib_shelf(w, depth, top, t, ribs)
-    edges = [-w / 2 + 2.4] + [x for r in ribs for x in (r - 1.2, r + 1.2)] + [w / 2 - 2.4]
-    segs = [(edges[i], edges[i + 1]) for i in range(0, len(edges), 2)]
-    rows = ((Y_F + 9.0, [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0]),          # hex keys, precision drivers
-            (Y_F + 21.0, [6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]))           # bigger drivers, the line tester
-    for y, ds in rows:
-        for x, d in spread(segs, ds):
-            part -= Pos(x, y, top - t / 2) * Cylinder(d / 2 + 0.2, t + 2)
+def hole_bar(w, ds, depth, hole_y, t=4.0, top=36.0):
+    """One row of holes ds evenly across w, centred hole_y in front of the plate; a rib at each end and between every
+    two holes, so the shelf never bridges more than one hole pitch."""
+    pitch = w / len(ds)
+    xs = [-w / 2 + pitch * (i + 0.5) for i in range(len(ds))]
+    ribs = [(xs[i] + xs[i + 1]) / 2 for i in range(len(xs) - 1)]
+    part = plate(sleeve_xs(w), w, Z0, top) + rib_shelf(w, depth, top, t, ribs)
+    for x, d in zip(xs, ds):
+        part -= Pos(x, Y_F + hole_y, top - t / 2) * Cylinder(d / 2 + 0.2, t + 2)
     return part
 
 
-def fork_bar():
-    """Scissors and cutters: three open-front slots in a thin shelf, a rib under every finger."""
-    w, depth, top, t = 2 * 40 - GAP, 36.0, 44.0, 5.0
-    widths = [12.0, 16.0, 20.0]
-    fingers = (w - sum(widths)) / (len(widths) + 1)
-    xs, x = [], -w / 2 + fingers
-    for sw in widths:
-        xs.append(x + sw / 2)
-        x += sw + fingers
-    ribs = [x - sw / 2 - fingers / 2 for x, sw in zip(xs, widths)][1:]          # under the inner fingers
-    part = plate(sleeve_xs(w), w, Z0, top) + rib_shelf(w, depth, top, t, ribs, rib_w=min(4.0, fingers))
-    for x, sw in zip(xs, widths):
-        y0 = Y_F + 12.0
-        part -= box(x - sw / 2, x + sw / 2, y0, Y_F + depth + 1, top - t - 1, top + 1)
-        part -= Pos(x, y0, top - t / 2) * Cylinder(sw / 2, t + 2)
+def holes_l():
+    return hole_bar(4 * 40 - GAP, [7.0, 8.0, 9.0, 10.0, 11.0, 12.0], depth=28.0, hole_y=15.0)
+
+
+def holes_s():
+    return hole_bar(3 * 40 - GAP, [2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0], depth=20.0, hole_y=11.0)
+
+
+def ring(w, holes, wall, h):
+    """Ring standing on the bed in front of the plate: outer box around holes [(x0, x1, y0, y1)] (y from the plate's
+    front face), walls `wall` thick, `h` tall."""
+    x0 = min(hx0 for hx0, _, _, _ in holes) - wall
+    x1 = max(hx1 for _, hx1, _, _ in holes) + wall
+    y1 = max(hy1 for _, _, _, hy1 in holes) + wall
+    part = box(x0, x1, Y_F - 0.1, Y_F + y1, Z0, Z0 + h)
+    for hx0, hx1, hy0, hy1 in holes:
+        part -= box(hx0, hx1, Y_F + hy0, Y_F + hy1, Z0 - 1, Z0 + h + 1)
     return part
 
 
-def clip_bar():
-    """Tape measures: a fin parallel to the plate, joined at the bottom, open at the top. The tape's belt clip slides
-    down into the gap behind the fin. Gap and fin are guesses until a clip is measured."""
-    w, gap, fin, top = 3 * 40 - GAP, 3.0, 3.5, Z_ROOF + 4
-    part = plate(sleeve_xs(w), w, Z0, top)
-    for x in sleeve_xs(w):                                      # one 34 mm tab per tape, in front of each sleeve
-        part += box(x - 17, x + 17, Y_F - 0.1, Y_F + gap + fin, Z0, Z0 + 4.0)                  # joins at the bottom
-        part += box(x - 17, x + 17, Y_F + gap, Y_F + gap + fin, Z0, top)                       # the fin ("belt")
-    part -= prism_yz([(Y_F + gap - 0.1, top + 0.1), (Y_F + gap + 1.5, top + 0.1), (Y_F + gap - 0.1, top - 1.6)],
-                     -w, w)                                                                    # lead-in on its back
-    return part
-
-
-def cup():
-    w, d, h = 1 * 40 - GAP, 32.0, 62.0
+def legs():
+    """Cutters and pliers: two 18 x 16 holes one behind the other, an 8 mm bridge between them."""
+    w = 1 * 40 - GAP
     part = plate(sleeve_xs(w), w, Z0, Z_ROOF + 2)
-    part += box(-w / 2, w / 2, Y_BODY, Y_F + d, Z0, Z0 + h)      # own back wall above the plate
-    part -= box(-w / 2 + WALL, w / 2 - WALL, Y_F, Y_F + d - WALL, Z0 + WALL, Z0 + h + 1)
+    hw, hd, wall, bridge = 18.0, 16.0, 3.0, 8.0
+    return part + ring(w, [(-hw / 2, hw / 2, wall, wall + hd), (-hw / 2, hw / 2, wall + hd + bridge, wall + 2 * hd + bridge)],
+                       wall, 12.0)
+
+
+def scissors():
+    """Scissors: one 26 x 9 slot along the board, thin walls; tip-down, the finger rings rest on the rim."""
+    w = 1 * 40 - GAP
+    part = plate(sleeve_xs(w), w, Z0, Z_ROOF + 2)
+    return part + ring(w, [(-13.0, 13.0, 2.5, 11.5)], 2.5, 8.0)
+
+
+def clip():
+    """One tape measure: a fin parallel to the plate, joined at the bottom, open at the top; the tape's belt clip
+    slides down into the gap behind it. Gap and fin are guesses until a clip is measured."""
+    w, gap, fin, top = 1 * 40 - GAP, 3.0, 3.5, Z_ROOF + 4
+    part = plate(sleeve_xs(w), w, Z0, top)
+    part += box(-w / 2, w / 2, Y_F - 0.1, Y_F + gap + fin, Z0, Z0 + 4.0)                     # joins at the bottom
+    part += box(-w / 2, w / 2, Y_F + gap, Y_F + gap + fin, Z0, top)                          # the fin ("belt")
+    part -= prism_yz([(Y_F + gap - 0.1, top + 0.1), (Y_F + gap + 1.5, top + 0.1), (Y_F + gap - 0.1, top - 1.6)],
+                     -w, w)                                                                  # lead-in on its back
     return part
 
 
-def tray(w=2 * 40 - GAP, d=48.0, back=Z_ROOF + 2, front=26.0):
-    part = plate(sleeve_xs(w), w, Z0, back)
-    side = [(Y_F - 0.1, Z0), (Y_F + d, Z0), (Y_F + d, Z0 + front), (Y_F - 0.1, back)]   # sides slope to the front
-    part += prism_yz(side, -w / 2, w / 2)
-    inner = [(Y_F, Z0 + WALL), (Y_F + d - WALL, Z0 + WALL), (Y_F + d - WALL, Z0 + 200),
-             (Y_F, Z0 + 200)]
-    part -= prism_yz(inner, -w / 2 + WALL, w / 2 - WALL)
-    part -= prism_yz([(Y_F + d - WALL - 0.1, Z0 + front), (Y_F + d + 1, Z0 + front), (Y_F + d + 1, Z0 + 200),
-                      (Y_F + d - WALL - 0.1, Z0 + 200)], -w, w)
+def adapter():
+    """Bare sleeve plate for a bought cup or tray: two M3 clearance holes beside the sleeve. The bolt head sits in the
+    gap behind the plate (4.4 mm deep), the nut inside the cup."""
+    w = 1 * 40 - GAP
+    part = plate(sleeve_xs(w), w, Z0, Z_ROOF + 2)
+    for x in (-13.0, 13.0):
+        part -= Pos(x, Y_F - PLATE_T / 2, 18.0) * Cylinder(1.7, PLATE_T + 2, rotation=(90, 0, 0))
     return part
 
 
-def shelf():
-    return tray(w=3 * 40 - GAP, d=62.0, back=Z_ROOF + 2, front=10.0)
+PLATES = {"holes_l": holes_l, "holes_s": holes_s, "legs": legs, "scissors": scissors, "clip": clip, "adapter": adapter}
 
 
-PLATES = {"hole_bar": hole_bar, "fork_bar": fork_bar, "clip_bar": clip_bar, "cup": cup, "tray": tray, "shelf": shelf}
+# One print job (Bambu A1, 256 x 256). Everything upright as modelled. The A1 slings its bed along Y, so each plate is
+# turned to put its thin wall along Y (it then can't whip back and forth); hooks are small and squat, left as they are.
+BED, MARGIN, SPACE = 256.0, 8.0, 6.0
+JOB = [("holes_l", 1), ("holes_s", 1), ("legs", 3), ("scissors", 1), ("clip", 1), ("adapter", 2)]
+SPARE_HOOKS = 2
+
+
+def pack(items):
+    """Column packer: items [(name, mesh)] already on the bed at the origin; tallest-in-Y first, columns left to
+    right. Returns the placed meshes or raises if the bed is full."""
+    items = sorted(items, key=lambda it: -it[1].extents[1])
+    placed, x, y, col_w = [], MARGIN, MARGIN, 0.0
+    for name, m in items:
+        dx, dy = m.extents[:2]
+        if y + dy > BED - MARGIN:
+            x, y, col_w = x + col_w + SPACE, MARGIN, 0.0
+        if x + dx > BED - MARGIN:
+            raise RuntimeError(f"bed full at {name}")
+        placed.append((name, m.copy().apply_translation([x - m.bounds[0][0], y - m.bounds[0][1], -m.bounds[0][2]])))
+        y, col_w = y + dy + SPACE, max(col_w, dx)
+    return placed
+
+
+def write_bed(name, items):
+    import trimesh
+    placed = pack(items)
+    scene = trimesh.Scene()
+    for i, (n, m) in enumerate(placed):
+        scene.add_geometry(m, node_name=f"{n}_{i}", geom_name=f"{n}_{i}")
+    trimesh.util.concatenate([m for _, m in placed]).export(str(OUT / f"{name}.stl"))
+    try:
+        scene.export(str(OUT / f"{name}.3mf"))
+    except Exception as e:                                  # 3MF needs extra packages; the STL is enough
+        print(f"  ({name}.3mf skipped: {e})")
+    lo = min(m.bounds[0][0] for _, m in placed), min(m.bounds[0][1] for _, m in placed)
+    hi = max(m.bounds[1][0] for _, m in placed), max(m.bounds[1][1] for _, m in placed)
+    print(f"{name}: {len(placed)} parts, uses {hi[0] - lo[0]:.0f} x {hi[1] - lo[1]:.0f} of {BED:.0f} x {BED:.0f},"
+          f" {sum(m.volume for _, m in placed) / 1000 * 1.24:.0f} g PLA solid")
+    return placed
 
 
 def main():
-    import trimesh
+    import numpy as np, trimesh
+    from trimesh.transformations import rotation_matrix
+    from skadis_rail import fit_strip, hook
     OUT.mkdir(parents=True, exist_ok=True)
+    meshes = {}
     for name, fn in PLATES.items():
         part = fn()
         bb = part.bounding_box()
@@ -136,7 +168,21 @@ def main():
         m = trimesh.load(str(OUT / f"plate_{name}.stl"))
         m.apply_translation(-m.bounds[0])                                     # upright, bottom edge on the bed
         m.export(str(OUT / f"plate_{name}_print.stl"))
+        meshes[name] = m
     export_stl(board_piece(-200, 80, -110, 75), str(OUT / "skadis_board_wall.stl"))   # for the inspector's wall view
+
+    export_stl(hook(), str(OUT / "_hook.stl"))
+    export_stl(fit_strip(), str(OUT / "_strip.stl"))
+    h, strip = trimesh.load(str(OUT / "_hook.stl")), trimesh.load(str(OUT / "_strip.stl"))
+    turn = rotation_matrix(np.radians(90), [0, 0, 1])
+    items = []
+    for name, n in JOB:
+        for _ in range(n):
+            items.append((name, meshes[name].copy().apply_transform(turn)))
+    n_hooks = sum(len(sleeve_xs(round(meshes[name].extents[0]))) * n for name, n in JOB) + SPARE_HOOKS
+    items += [("hook", h.copy()) for _ in range(n_hooks)]
+    write_bed("bed_harbor_skadis", items)
+    write_bed("bed_fit_test", [("fit_strip", strip.copy().apply_transform(turn))] + [("hook", h.copy()) for _ in range(3)])
 
 
 if __name__ == "__main__":
