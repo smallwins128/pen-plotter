@@ -6,7 +6,7 @@ hook on its back: a dovetail groove open at the bottom and closed at the top, so
 rails and sits on its roof. Plates are generic (no tool-shaped pockets), so they can be swapped and re-used.
 
 Grid rule: hooks go in one row of slots, so sleeves sit on a 40 mm pitch. A plate is 40 n - 4 wide (4 mm gap to its
-neighbour). One sleeve is enough for a small plate (the 26 mm rail stops it turning); use two for anything wider.
+neighbour). One sleeve is enough for a small plate (the 20 mm rail stops it turning); use two for anything wider.
 
 SKÅDIS numbers are community measurements, not IKEA's: board 5 thick, slots 5 x 15 (measured up to 5.2 wide),
 40 mm apart in a row, rows staggered 20 mm. Print the fit test (one strip, three hooks) before any real plate:
@@ -28,7 +28,7 @@ OUT = pathlib.Path(__file__).resolve().parents[2] / "out" / "harbor"
 BOARD = dict(t=5.0, slot_w=5.0, slot_h=15.0, pitch=40.0)
 NECK = dict(w=4.4, h=7.0, z=6.0, len=BOARD["t"] + 0.4)   # through the slot; drops 7 to sit on the slot's floor
 LIP = dict(t=3.0, h=13.0, chamfer=1.5)                   # behind the board; 13 < 15 so it passes, then hangs 6 below
-FLANGE = dict(w=16.0, t=2.0, h=28.0)                     # rests on the board's front
+FLANGE = dict(w=11.0, t=2.0, h=20.0)                     # rests on the board's front; as wide as the rail
 RAIL = dict(root=7.0, front=11.0, d=2.5, lead=1.0)       # dovetail, 34 deg flanks; lead-in chamfer on top
 CLR = 0.25                                               # per side, groove over rail; the fit strip tests 0.15-0.35
 BOSS = dict(w=18.0, wall=1.6, roof=2.5)                  # sleeve boss around each groove
@@ -125,7 +125,7 @@ def sleeve_xs(w):
 def fit_strip():
     """Three sleeves at 0.15 / 0.25 / 0.35 clearance on a 40 mm pitch, each labelled on the front."""
     sl = [(-40.0, 0.15), (0.0, 0.25), (40.0, 0.35)]
-    part = plate(sl, 3 * 40 - GAP, -12.0, FLANGE["h"] + 0.35 + BOSS["roof"])
+    part = plate(sl, 3 * 40 - GAP, 0.0, FLANGE["h"] + 0.35 + BOSS["roof"])
     for x, clr in sl:
         with BuildPart() as t:
             with BuildSketch(Plane(origin=(0, Y_BODY + PLATE_T, 0), x_dir=(-1, 0, 0), z_dir=(0, 1, 0))):

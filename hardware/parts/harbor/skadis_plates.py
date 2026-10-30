@@ -40,8 +40,8 @@ def rib_shelf(w, depth, z_top, t, rib_xs, rib_w=2.4):
 
 def hole_bar(w, ds, depth, hole_y, t=4.0):
     """L profile: the hole shelf is the plate's bottom edge and prints flat on the bed (round holes, no bridging);
-    the plate rises behind it only where the sleeves are, joined by a strip along the bottom. Small fillet ribs at
-    the two ends only, clear of the handles. One row of holes ds evenly across w, centred hole_y out from the plate."""
+    the plate rises behind it only where the sleeves are, joined by a strip along the bottom. A 4 mm fillet runs
+    along the whole joint and small ribs sit at the two ends; anything taller would block the handles. One row of holes ds evenly across w, centred hole_y out from the plate."""
     pitch = w / len(ds)
     xs = [-w / 2 + pitch * (i + 0.5) for i in range(len(ds))]
     part = plate(sleeve_xs(w), w, Z0, Z_ROOF, strip=t + 6.0)
@@ -49,6 +49,8 @@ def hole_bar(w, ds, depth, hole_y, t=4.0):
     fil = [(Y_F - 0.1, Z0 + t - 0.1), (Y_F + 8.0, Z0 + t - 0.1), (Y_F - 0.1, Z0 + t + 6.0)]
     for x in (-w / 2, w / 2 - 2.4):
         part += prism_yz(fil, x, x + 2.4)
+    part += prism_yz([(Y_F - 0.1, Z0 + t - 0.1), (Y_F + 4.0, Z0 + t - 0.1), (Y_F - 0.1, Z0 + t + 4.0)],
+                     -w / 2, w / 2)                                  # 45 deg fillet along the whole joint, under the handles
     for x, d in zip(xs, ds):
         part -= Pos(x, Y_F + hole_y, Z0 + t / 2) * Cylinder(d / 2 + 0.2, t + 2)
     return part
@@ -90,8 +92,16 @@ def legs(xs, w, hole, bridge, wall, h):
 
 def legs_l():
     """Pliers, needle-nose, crimpers, 6-8 inch cutters: 20 x 16 holes, 6 mm bridge. The ring is 52 wide, so it rides
-    on two hooks (40 apart) and takes two hook spaces."""
-    return legs([-20.0, 20.0], 52.0, (20.0, 16.0), 6.0, 3.0, 12.0)                 # plate as wide as the ring
+    on two hooks (40 apart) and takes two hook spaces. 45 deg gussets on the ring's outer walls run up to the sleeve
+    columns; the handles splay inward to the pivot, away from them."""
+    hole, bridge, wall, h = (20.0, 16.0), 6.0, 3.0, 12.0
+    part = legs([-20.0, 20.0], 52.0, hole, bridge, wall, h)                       # plate as wide as the ring
+    x_out = bridge / 2 + hole[0]                                                  # inner face of the outer wall
+    rise = min(hole[1] + 2 * wall, Z_ROOF - h)
+    gus = [(Y_F - 0.1, Z0 + h - 0.1), (Y_F + rise, Z0 + h - 0.1), (Y_F - 0.1, Z0 + h + rise)]
+    for x0 in (-x_out - wall, x_out):
+        part += prism_yz(gus, x0, x0 + wall)
+    return part
 
 
 def legs_s():
