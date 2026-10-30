@@ -32,7 +32,7 @@ td:first-child{font-family:var(--f-mono)}
 </style>
 <main>
 <header style="display:grid;gap:10px">
-<span class="stamp">WHAT-IF · fit test not printed · v5 2026-10-30</span>
+<span class="stamp">WHAT-IF · fit test not printed · v6 2026-10-30</span>
 <h1>SKÅDIS rail</h1>
 <p class="sub">One hook type on the board; every holder is a plate that drops onto the hooks. The hook pushes into a slot and drops 7 mm; its front is a dovetail rail. Each plate has a sleeve per hook: a dovetail groove, open at the bottom, with a roof it rests on. Below: five generic plates, the fit strip (sleeves at 0.15, 0.25 and 0.35 mm clearance) and the hook.</p>
 </header>
@@ -42,6 +42,7 @@ td:first-child{font-family:var(--f-mono)}
 <div class="bar">
 <div class="seg" id="seg">
 <button data-v="wall" aria-pressed="true">Plates on the wall</button>
+<button data-v="bed" aria-pressed="false">Print bed</button>
 <button data-v="holes_l" aria-pressed="false">Holes L</button>
 <button data-v="holes_s" aria-pressed="false">Holes S</button>
 <button data-v="legs_l" aria-pressed="false">Pliers L</button>
@@ -83,15 +84,15 @@ td:first-child{font-family:var(--f-mono)}
 <h2>Plates</h2>
 <table>
 <tr><th>Plate</th><th>Width · sleeves</th><th>Takes</th><th>PLA, 100 % (≈)</th></tr>
-<tr><td>Holes L</td><td>116 · 3</td><td>One row, Ø7–12 at 19.3 mm pitch: screwdrivers, files. A handle wider than ≈ 19 mm needs the next hole left empty</td><td>38 g</td></tr>
-<tr><td>Holes S</td><td>116 · 3</td><td>One row, Ø2.5–6 at 16.6 mm pitch: precision drivers, hex keys long leg down</td><td>33 g</td></tr>
-<tr><td>Pliers L ×2</td><td>36 (ring 42) · 1</td><td>Two 16 × 14 holes side by side, 5 mm bridge: tools hang flat against the board, one handle per hole. Ring is wider than the plate: not on neighbouring hooks</td><td>11 g</td></tr>
-<tr><td>Pliers S ×2</td><td>36 · 1</td><td>Two 12 × 11 holes, 5 mm bridge</td><td>10 g</td></tr>
-<tr><td>Scissors L / S ×1 / ×2</td><td>36 · 1</td><td>One slot along the board, 26 × 9 / 18 × 7: tip-down, finger rings on the rim</td><td>8 / 7 g</td></tr>
-<tr><td>Clip</td><td>24 · 1</td><td>One tape by its belt clip, behind a 3 mm fin (gap and fin are guesses)</td><td>8 g</td></tr>
+<tr><td>Holes L</td><td>116 · 3</td><td>L profile, hole face on the bed. 6 holes Ø7–12 at 19.3 mm pitch: screwdrivers, files. Handles over ≈ 19 mm across need the next hole left empty</td><td>29 g</td></tr>
+<tr><td>Holes S</td><td>116 · 3</td><td>L profile. 7 holes Ø2.5–6 at 16.6 mm pitch: precision drivers, hex keys long leg down</td><td>26 g</td></tr>
+<tr><td>Pliers L ×2</td><td>76 · 2</td><td>Two 20 × 16 holes side by side, 6 mm bridge, ring 52 wide: pliers, needle-nose, crimpers, 6–8 inch cutters, hanging flat against the board</td><td>17 g</td></tr>
+<tr><td>Pliers S ×2</td><td>36 · 1</td><td>Two 13 × 11 holes, 5 mm bridge: flush cutters, small pliers</td><td>7 g</td></tr>
+<tr><td>Scissors L / S ×1 / ×2</td><td>31 / 22 · 1</td><td>One slot along the board, 26 × 9 / 18 × 7: tip-down, finger rings on the rim</td><td>6 / 5 g</td></tr>
+<tr><td>Clip</td><td>24 · 1</td><td>One tape by its belt clip, behind a 3 mm fin (gap and fin are guesses)</td><td>7 g</td></tr>
 <tr><td>Adapter</td><td>36 · 1</td><td>Bare sleeve with two M3 holes, for a bought cup or tray (not in this print job)</td><td>6 g</td></tr>
 </table>
-<p class="sub" style="margin-top:8px">All print standing on their bottom edge, as they hang, with no supports: sleeves, foot and rings start on the bed; the hole bars' shelves are a thin top on three 45° ribs (ends and middle). On the A1's bed each plate is turned so its thin wall runs along the bed's travel. Plates start level with the hook's bottom; the rail's tip hides behind them.</p>
+<p class="sub" style="margin-top:8px">All print standing up as they hang, with no supports. Hole bars are L-shaped: the hole face lies on the bed, the plate rises behind it only at the sleeves, with small ribs at the two ends. Ring plates are trimmed to a column in front of each sleeve and a 4 mm strip along the bottom. On the A1 each plate is turned so its thin wall runs along the bed's travel; the Print bed view shows the job (10 plates, 18 hooks).</p>
 </section>
 
 <section>
@@ -112,7 +113,7 @@ td:first-child{font-family:var(--f-mono)}
   if(!window.THREE){cv.replaceWith(Object.assign(document.createElement('p'),{textContent:'3D view could not load.',style:'padding:16px'}));return;}
   const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const B64={hook:"@@STL:skadis_hook@@",strip:"@@STL:skadis_fit_strip@@",board:"@@STL:skadis_board_piece@@",wall:"@@STL:skadis_board_wall@@",
-    holes_l:"@@STL:plate_holes_l@@",holes_s:"@@STL:plate_holes_s@@",legs_l:"@@STL:plate_legs_l@@",legs_s:"@@STL:plate_legs_s@@",scissors_l:"@@STL:plate_scissors_l@@",scissors_s:"@@STL:plate_scissors_s@@",clip:"@@STL:plate_clip@@",adapter:"@@STL:plate_adapter@@"};
+    holes_l:"@@STL:plate_holes_l@@",holes_s:"@@STL:plate_holes_s@@",legs_l:"@@STL:plate_legs_l@@",legs_s:"@@STL:plate_legs_s@@",scissors_l:"@@STL:plate_scissors_l@@",scissors_s:"@@STL:plate_scissors_s@@",clip:"@@STL:plate_clip@@",adapter:"@@STL:plate_adapter@@",bed:"@@STL:bed_harbor_skadis@@"};
   // model frame: x along the board, y out of it, z up -> three: x, z, -y
   function parse(b64){const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer,dv=new DataView(bin),n=dv.getUint32(80,true);
     const pos=new Float32Array(n*9);
@@ -127,16 +128,17 @@ td:first-child{font-family:var(--f-mono)}
   const bm=new THREE.MeshStandardMaterial({roughness:.9,flatShading:true,transparent:true,opacity:.55});
   const G={};for(const k in B64)G[k]=parse(B64[k]);
   // sleeve x positions per plate; dx keeps 2-sleeve plates on hook columns (multiples of 40)
-  const PL={holes_l:{xs:[-40,0,40],dx:0},holes_s:{xs:[-40,0,40],dx:0},legs_l:{xs:[0],dx:0},legs_s:{xs:[0],dx:0},scissors_l:{xs:[0],dx:0},scissors_s:{xs:[0],dx:0},clip:{xs:[0],dx:0},adapter:{xs:[0],dx:0},strip:{xs:[-40,0,40],dx:0}};
-  const WALL=[['holes_l',-120,0],['legs_l',0,0],['legs_s',40,0],['holes_s',-120,-80],['legs_l',-40,-80],['legs_s',0,-80],['clip',40,-80],['scissors_l',-160,-160],['scissors_s',-120,-160],['scissors_s',-80,-160]];
+  const PL={holes_l:{xs:[-40,0,40],dx:0},holes_s:{xs:[-40,0,40],dx:0},legs_l:{xs:[-20,20],dx:20},legs_s:{xs:[0],dx:0},scissors_l:{xs:[0],dx:0},scissors_s:{xs:[0],dx:0},clip:{xs:[0],dx:0},adapter:{xs:[0],dx:0},strip:{xs:[-40,0,40],dx:0}};
+  const WALL=[['holes_l',-120,0],['legs_l',-20,0],['legs_s',40,0],['holes_s',-120,-80],['legs_l',-20,-80],['legs_s',40,-80],['scissors_l',-160,-160],['scissors_s',-120,-160],['scissors_s',-80,-160],['clip',-40,-160]];
   const dyn=new THREE.Group();scene.add(dyn);let lifts=[];
   const add=(geo,mat,x,y,lift)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,0);dyn.add(m);if(lift)lifts.push([m,y]);return m;};
   const hang=(k,dx,dz)=>{PL[k].xs.forEach(x=>add(G.hook,hm,dx+x,dz));add(G[k],pm,dx,dz,true);};
-  const VIEWS={wall:{t:[-60,-55,0],d:700},hook:{t:[0,14,-2],d:110,th:-2.6,ph:.45},strip:{t:[0,12,-5],d:260}};
+  const VIEWS={bed:{t:[128,10,-128],d:520,th:-1.9,ph:0.75},wall:{t:[-60,-55,0],d:700},hook:{t:[0,14,-2],d:110,th:-2.6,ph:.45},strip:{t:[0,12,-5],d:260}};
   let view='wall',th=-2.2,ph=0.35,dist=700,target=new THREE.Vector3(-60,-55,0);
   function setView(v){view=v;document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
     dyn.clear();lifts=[];
     if(v==='hook')add(G.hook,hm,0,0);
+    else if(v==='bed'){const b=new THREE.Mesh(new THREE.BoxGeometry(256,1,256),bm);b.position.set(128,-0.5,-128);dyn.add(b);add(G.bed,pm,0,0);}
     else if(v==='wall'){add(G.wall,bm,0,0);WALL.forEach(([k,dx,dz])=>hang(k,dx,dz));}
     else{add(G.board,bm,0,0);hang(v==='asm'?'strip':v,PL[v==='asm'?'strip':v].dx,0);}
     const c=VIEWS[v]||{t:[(PL[v]||PL.strip).dx,15,-15],d:300};target.set(...c.t);dist=c.d;th=c.th??-2.2;ph=c.ph??0.35;

@@ -38,16 +38,19 @@ def rib_shelf(w, depth, z_top, t, rib_xs, rib_w=2.4):
     return part
 
 
-def hole_bar(w, ds, depth, hole_y, t=4.0, top=36.0):
-    """One row of holes ds evenly across w, centred hole_y in front of the plate. Ribs only at the two ends and in
-    the gap nearest the middle, so the shelf bridges about half its width (~55 mm on a 116 bar; the A1 bridges
-    that cleanly in PLA)."""
+def hole_bar(w, ds, depth, hole_y, t=4.0):
+    """L profile: the hole shelf is the plate's bottom edge and prints flat on the bed (round holes, no bridging);
+    the plate rises behind it only where the sleeves are, joined by a strip along the bottom. Small fillet ribs at
+    the two ends only, clear of the handles. One row of holes ds evenly across w, centred hole_y out from the plate."""
     pitch = w / len(ds)
     xs = [-w / 2 + pitch * (i + 0.5) for i in range(len(ds))]
-    gaps = [(xs[i] + xs[i + 1]) / 2 for i in range(len(xs) - 1)]
-    part = plate(sleeve_xs(w), w, Z0, top) + rib_shelf(w, depth, top, t, [min(gaps, key=abs)])
+    part = plate(sleeve_xs(w), w, Z0, Z_ROOF, strip=t + 6.0)
+    part += box(-w / 2, w / 2, Y_F - 0.1, Y_F + depth, Z0, Z0 + t)
+    fil = [(Y_F - 0.1, Z0 + t - 0.1), (Y_F + 8.0, Z0 + t - 0.1), (Y_F - 0.1, Z0 + t + 6.0)]
+    for x in (-w / 2, w / 2 - 2.4):
+        part += prism_yz(fil, x, x + 2.4)
     for x, d in zip(xs, ds):
-        part -= Pos(x, Y_F + hole_y, top - t / 2) * Cylinder(d / 2 + 0.2, t + 2)
+        part -= Pos(x, Y_F + hole_y, Z0 + t / 2) * Cylinder(d / 2 + 0.2, t + 2)
     return part
 
 
@@ -73,48 +76,43 @@ def ring(w, holes, wall, h):
     return part
 
 
-def legs(hole=(16.0, 14.0), bridge=6.0, wall=2.5, h=12.0):
+def ring_plate(xs, w, holes, wall, h):
+    """A ring on the bed in front of a trimmed plate: sleeve columns at xs, a 4 mm strip along the bottom."""
+    return plate(xs, w, Z0, Z_ROOF, strip=4.0) + ring(w, holes, wall, h)
+
+
+def legs(xs, w, hole, bridge, wall, h):
     """Cutters and pliers, flat against the board: two holes side by side (x) with a bridge between them. Each handle
     drops through its own hole and the bridge sits in the V under the pivot. hole = (along the board, out of it)."""
-    w = 1 * 40 - GAP
-    part = plate(sleeve_xs(w), w, Z0, Z_ROOF + 2)
-    hx, hy = hole
-    x_in = bridge / 2
-    return part + ring(w, [(-x_in - hx, -x_in, wall, wall + hy), (x_in, x_in + hx, wall, wall + hy)], wall, h)
+    hx, hy, b = hole[0], hole[1], bridge / 2
+    return ring_plate(xs, w, [(-b - hx, -b, wall, wall + hy), (b, b + hx, wall, wall + hy)], wall, h)
 
 
 def legs_l():
-    """Big pliers and cutters. The ring is 42 wide, wider than the 36 plate: don't hang two of these on neighbouring
-    hooks (next to anything else it clears by 1 mm)."""
-    return legs((16.0, 14.0), 5.0, 2.5, 12.0)
+    """Pliers, needle-nose, crimpers, 6-8 inch cutters: 20 x 16 holes, 6 mm bridge. The ring is 52 wide, so it rides
+    on two hooks (40 apart) and takes two hook spaces."""
+    return legs([-20.0, 20.0], 52.0, (20.0, 16.0), 6.0, 3.0, 12.0)                 # plate as wide as the ring
 
 
 def legs_s():
-    """Small cutters and pliers: fits within the 36 mm plate."""
-    return legs((12.0, 11.0), 5.0, 2.5, 10.0)
-
-
-def scissors(slot=(26.0, 9.0), wall=2.5, h=8.0):
-    """Scissors: one slot along the board, thin walls; tip-down, the finger rings rest on the rim."""
-    w = 1 * 40 - GAP
-    part = plate(sleeve_xs(w), w, Z0, Z_ROOF + 2)
-    sx, sy = slot
-    return part + ring(w, [(-sx / 2, sx / 2, wall, wall + sy)], wall, h)
+    """Flush cutters and small pliers: 13 x 11 holes, 5 mm bridge; fits one hook space."""
+    return legs([0.0], BOSS["w"], (13.0, 11.0), 5.0, 2.5, 10.0)
 
 
 def scissors_l():
-    return scissors((26.0, 9.0), 2.5, 8.0)
+    """Scissors, tip-down, the finger rings rest on the rim: slot 26 x 9 along the board."""
+    return ring_plate([0.0], BOSS["w"], [(-13.0, 13.0, 2.5, 11.5)], 2.5, 8.0)
 
 
 def scissors_s():
-    return scissors((18.0, 7.0), 2.0, 7.0)
+    return ring_plate([0.0], BOSS["w"], [(-9.0, 9.0, 2.0, 9.0)], 2.0, 7.0)
 
 
 def clip():
     """One tape measure: a fin parallel to the plate, joined at the bottom, open at the top; the tape's belt clip
     slides down into the gap behind it. Gap and fin are guesses until a clip is measured."""
     w, gap, fin, top = 24.0, 3.0, 3.0, Z_ROOF + 4                 # just wider than the sleeve boss
-    part = plate(sleeve_xs(w), w, Z0, top)
+    part = plate([0.0], BOSS["w"], Z0, top, strip=4.0)
     part += box(-w / 2, w / 2, Y_F - 0.1, Y_F + gap + fin, Z0, Z0 + 4.0)                     # joins at the bottom
     part += box(-w / 2, w / 2, Y_F + gap, Y_F + gap + fin, Z0, top)                          # the fin ("belt")
     part -= prism_yz([(Y_F + gap - 0.1, top + 0.1), (Y_F + gap + 1.5, top + 0.1), (Y_F + gap - 0.1, top - 1.6)],
@@ -141,7 +139,9 @@ PLATES = {"holes_l": holes_l, "holes_s": holes_s, "legs_l": legs_l, "legs_s": le
 BED, MARGIN, SPACE = 256.0, 8.0, 6.0
 JOB = [("holes_l", 1), ("holes_s", 1), ("legs_l", 2), ("legs_s", 2), ("scissors_l", 1), ("scissors_s", 2), ("clip", 1)]
 SPARE_HOOKS = 2
-HOOKS = {"holes_l": 3, "holes_s": 3, "legs_l": 1, "legs_s": 1, "scissors_l": 1, "scissors_s": 1, "clip": 1, "adapter": 1}
+SLEEVES = {"holes_l": [-40.0, 0.0, 40.0], "holes_s": [-40.0, 0.0, 40.0], "legs_l": [-20.0, 20.0], "legs_s": [0.0],
+           "scissors_l": [0.0], "scissors_s": [0.0], "clip": [0.0], "adapter": [0.0]}
+HOOKS = {k: len(v) for k, v in SLEEVES.items()}
 
 
 def pack(items):

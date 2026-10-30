@@ -95,12 +95,19 @@ def sleeve(x, clr, z_top, z_bot):
     return box(x - BOSS["w"] / 2, x + BOSS["w"] / 2, Y_RAIL, Y_BODY + 0.1, z_bot, z_top + clr + BOSS["roof"])
 
 
-def plate(sleeves, w, z0, z1, clr=CLR):
+def plate(sleeves, w, z0, z1, clr=CLR, strip=None):
     """Plate body (back face at Y_BODY) from z0 to z1, centred on x = 0, with sleeves at x (a list of x, or of
     (x, clr) pairs) and a foot that reaches back to the board along the bottom, so a tall plate can't flex in.
-    The foot is notched at each sleeve so the hook's flange passes through it as the plate slides down."""
+    The foot is notched at each sleeve so the hook's flange passes through it as the plate slides down.
+    strip: if set, the body is trimmed to a full-width strip that tall along the bottom plus a column in front of
+    each sleeve; nothing else is printed."""
     sleeves = [s if isinstance(s, tuple) else (s, clr) for s in sleeves]
-    part = box(-w / 2, w / 2, Y_BODY, Y_BODY + PLATE_T, z0, z1)
+    if strip is None:
+        part = box(-w / 2, w / 2, Y_BODY, Y_BODY + PLATE_T, z0, z1)
+    else:
+        part = box(-w / 2, w / 2, Y_BODY, Y_BODY + PLATE_T, z0, z0 + strip)
+        for x, _ in sleeves:
+            part += box(x - BOSS["w"] / 2, x + BOSS["w"] / 2, Y_BODY, Y_BODY + PLATE_T, z0, z1)
     part += box(-w / 2, w / 2, 0.0, Y_BODY + 0.1, z0, z0 + 4.0)
     for x, c in sleeves:
         part -= box(x - FLANGE["w"] / 2 - 1, x + FLANGE["w"] / 2 + 1, -1, Y_RAIL + 0.3, z0 - 1, z1 + 1)
