@@ -33,9 +33,9 @@ td:first-child{font-family:var(--f-mono)}
 <p style="margin:0;font:500 .85rem 'IBM Plex Mono',ui-monospace,monospace"><a href="./" style="color:inherit">← Harbor Plans</a></p>
 
 <header style="display:grid;gap:10px">
-<span class="stamp">WHAT-IF · lofi · 2026-10-30</span>
+<span class="stamp">WHAT-IF · STLs ready, not printed · 2026-10-30</span>
 <h1>Car rack</h1>
-<p class="sub">Your 300 × 35 × 6 wood strips as shelves for Hot Wheels, three cars each. Two printed brackets per strip hang on the SKÅDIS rail system; the strip just rests in their ledges. Two sliding saddles split each strip into three ≈100 mm bays. The strips aren't cut true, so nothing grips the wood: every pocket has 1.5 mm or more of slack. Car sizes are estimates (≈ 75 × 32 × 35); measure one with the caliper.</p>
+<p class="sub">Your 300 × 35 × 6 wood strips as shelves for Hot Wheels, three cars each. Two printed brackets per strip hang on the SKÅDIS rail system; the strip just rests in their ledges. Four sliding saddles, one at each end and two between, make three ≈90 mm bays. The strips aren't cut true, so nothing grips the wood: every pocket has 1.5 mm or more of slack. Car sizes are estimates (≈ 75 × 32 × 35); measure one with the caliper.</p>
 </header>
 
 <section>
@@ -53,7 +53,7 @@ td:first-child{font-family:var(--f-mono)}
 <div>
 <h2>Divider saddle</h2>
 <div class="fig"><svg id="saddle" viewBox="-12 -42 62 48" role="img" aria-label="Divider saddle seen end-on: a loose tunnel around the strip with a fin on top; slid on from the strip's end" style="min-width:300px"></svg></div>
-<p class="sub" style="margin-top:6px">Tunnel 38.5 × 7.5 inside, loose on a rough strip; 10 mm long, slides on from the strip's end. Fin 25 tall, 1.6 thick.</p>
+<p class="sub" style="margin-top:6px">Tunnel 38.5 × 7.5 inside, loose on a rough strip; 10 mm long, slides on from the strip's end. The fin (25 tall, 2 thick) sits at one end of the tunnel so the part prints lying on it.</p>
 </div>
 </section>
 
@@ -62,7 +62,7 @@ td:first-child{font-family:var(--f-mono)}
 <h2>How it goes up</h2>
 <ul>
 <li>Hooks in two slots of one row, 240 mm apart (6 hook spaces). Brackets slide down onto them.</li>
-<li>Slide two saddles onto the strip from its ends, lay the strip in the ledges, nudge the saddles to split it in thirds.</li>
+<li>Slide four saddles onto the strip from its ends, lay the strip in the ledges, then push one to each end and set the middle two at thirds.</li>
 <li>The ledge's front lip stops the strip walking forward; the bracket plate stops it going back.</li>
 <li>Next strip up: two hook rows higher (80 mm). That leaves ≈ 60 mm over a strip for a ≈ 35 mm car and your fingers.</li>
 </ul>
@@ -80,10 +80,11 @@ td:first-child{font-family:var(--f-mono)}
 
 <section>
 <h2>Parts per strip</h2>
+<p class="sub" style="margin-bottom:8px">Two racks on one A1 bed: 4 brackets, 8 saddles, 4 hooks, 144 × 204 mm, ≈ 86 g at 100 % infill. Source: hardware/parts/harbor/car_rack.py.</p>
 <div class="tw"><table>
 <tr><th>Part</th><th>Per strip</th><th>Size</th><th>Notes</th></tr>
-<tr><td>Bracket</td><td>2 (+ 2 hooks)</td><td>36 wide, ledge 38 deep inside, lip 3 over the strip</td><td>Plate trimmed to a sleeve column like the ring plates; ledge on the bed, so no supports. ≈ 7 g each (estimate)</td></tr>
-<tr><td>Saddle</td><td>2</td><td>Tunnel 38 × 7.5 inside, 10 long, fin 25 tall</td><td>Prints standing on its end (profile on the bed). ≈ 3 g each (estimate)</td></tr>
+<tr><td>Bracket</td><td>2 (+ 2 hooks)</td><td>36 wide, ledge 38 deep inside, lip 3 over the strip</td><td>Plate trimmed to a sleeve column like the ring plates; ledge on the bed, so no supports. ≈ 11 g each (CAD)</td></tr>
+<tr><td>Saddle</td><td>4</td><td>Tunnel 38.5 × 7.5 inside, 10 long, fin 2 thick and 25 tall at one end</td><td>Prints lying on its fin, the tunnel rising from it. ≈ 4.5 g each (CAD)</td></tr>
 <tr><td>Strip</td><td>1</td><td>300 × 35 × 6, yours</td><td>Untouched: no drilling or cutting</td></tr>
 </table></div>
 </section>
@@ -109,16 +110,16 @@ const row=z0=>{
   el('rect',{x:x-18,y:-(z0+LEDGE+STRIP+LIP),width:36,height:LIP+STRIP,fill:c('print'),opacity:.85});   // front lip
  });
  el('rect',{x:-150,y:-(z0+LEDGE+STRIP),width:300,height:STRIP,fill:c('wood'),stroke:c('ink'),'stroke-width':.4});
- [-100,0,100].forEach(cx=>{const zb=z0+LEDGE+STRIP;
+ [-97.5,0,97.5].forEach(cx=>{const zb=z0+LEDGE+STRIP;
   el('rect',{x:cx-CAR.l/2,y:-(zb+CAR.h*0.7),width:CAR.l,height:CAR.h*0.55,rx:6,fill:c('car')});
   el('rect',{x:cx-CAR.l/4,y:-(zb+CAR.h),width:CAR.l/2,height:CAR.h*0.35,rx:5,fill:c('car'),opacity:.85});
   [-1,1].forEach(d=>el('circle',{cx:cx+d*CAR.l*0.3,cy:-(zb+6),r:6,fill:c('ink')}));});
- [-50,50].forEach(x=>{const zb=z0+LEDGE;
+ [-145,-50,50,145].forEach(x=>{const zb=z0+LEDGE;
   el('rect',{x:x-5,y:-(zb+STRIP+SL+1.6),width:10,height:STRIP+SL+1.6+1.2,fill:'none',stroke:c('print'),'stroke-width':1.4});
   el('rect',{x:x-0.8,y:-(zb+STRIP+SL+1.6+25),width:1.6,height:25,fill:c('print')});});
 };
 row(-80);row(0);
-T(0,-108,"two rows, 80 mm apart · three ≈100 mm bays per strip",{fill:c('mute')});
+T(0,-108,"two rows, 80 mm apart · three ≈90 mm bays per strip",{fill:c('mute')});
 T(-120,116,"hook",{fill:c('mute')});T(120,116,"hook",{fill:c('mute')});
 el('line',{x1:-120,y1:110,x2:120,y2:110,stroke:c('mute'),'stroke-width':.5});T(0,107,"240",{'font-size':6,fill:c('mute')});
 T(-50,-62,"saddle",{'font-size':6,fill:c('mute')});
