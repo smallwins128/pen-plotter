@@ -11,6 +11,8 @@ import pathlib
 import numpy as np
 import trimesh
 
+import fume
+
 HW = pathlib.Path(__file__).resolve().parents[2]
 SRC = HW / "out" / "fume"
 TPL, DST = pathlib.Path(__file__).with_name("fume_viewer.tpl.html"), HW / "web" / "fume_viewer.html"
@@ -19,6 +21,7 @@ Q = 100.0
 
 def main():
     summary = json.loads((SRC / "summary.json").read_text())
+    summary["body"].setdefault("cy", fume.CY)
     parts = []
     for m in summary["layers"]:
         mesh = trimesh.load(SRC / f"{m['name']}.stl")

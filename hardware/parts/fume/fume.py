@@ -6,7 +6,7 @@ fan: 90 wide instead of 108. L4 carries every heat-set insert.
     L6 face    grille, flush and screwless; a lip in the pad pocket + 4 magnets that pull on the L5 screw heads
     L5 filter  front carbon pad; 4 x M3 x 16 countersunk from its front (hidden under L6) into L4's front inserts
     L4 spacer  plenum in front of the fan, grid that carries the front pad, DC jack + switch in its right side, inserts
-    L3 fan     80 x 80 x 25 fan in a pocket on a back ring, the handle on top
+    L3 fan     80 x 80 x 25 fan in a pocket on a back ring; 2 x M4 inserts on top for a 5-hole Meccano strip handle
     L2 filter  rear carbon pad
     L1 back    exhaust grille; 6 x M3 x 45 countersunk from the back: 4 through the fan holes, 2 in the chin, into L4
 
@@ -34,16 +34,20 @@ from window_inserts import slab  # noqa: E402
 OUT = HERE.parent.parent / "out" / "fume"
 
 # --- body (the reference sketch: portrait, fan high, a chin below) ---
-W, H, R = 90.0, 125.0, 8.0            # outline and corner radius (R 8 keeps 2.4 of wall at the fan's square corners)
+W, R = 90.0, 8.0                      # width and corner radius (R 8 keeps 2.4 of wall at the fan's square corners)
 WALL, INNER = 2.4, 1.6                # outer wall, wall around each layer's air opening
-CY = H - W / 2                        # fan centre height: the fan square sits in the top W x W
+CY = 80.0                             # fan centre height: chin below, as in the sketch
 
 # --- bought parts (unverified until measured: see NEED below) ---
 FAN, FAN_T, FAN_GAP = 80.0, 25.0, 0.2           # 80 x 80 x 25, same as the enclosure fans (71.5 hole square measured)
 FAN_HOLE = 71.5
 PAD, PAD_T, PAD_CLIP = 80.0, 10.0, 16.0         # carbon pad cut 80 square, 16 mm snipped off each corner (clears the screws)
 JACK_D, SWITCH_D = 8.0, 6.0                     # panel DC jack (M8 thread type), mini toggle (MTS-102)
-HANDLE_PITCH, HANDLE_SCREW, HANDLE_FOOT = 64.0, 4.0, 10.0   # cabinet pull: hole centres, thread, foot width
+MECCANO = 12.7                                  # Meccano hole pitch
+HANDLE_PITCH = 4 * MECCANO                      # 5-hole strip: its end holes, three holes between them (2026-10-31)
+M4_INSERT_BORE, M4_INSERT_DEPTH = 5.7, 7.0      # M4 heat-set insert (unmeasured: typical OD 5.6-6.0, length 6-8)
+TOP_WALL = M4_INSERT_DEPTH + 1.5                # above the fan pocket: the insert plus a floor
+H = CY + FAN / 2 + FAN_GAP + TOP_WALL           # 128.7
 MAGNET_D, MAGNET_T = 6.0, 2.0                   # 4 discs in the face pull on the steel L5 screw heads
 
 # --- fit (from fit_kit.py where tested) ---
@@ -213,7 +217,9 @@ def l4_spacer():
 
 def l3_fan():
     hx = HANDLE_PITCH / 2
-    handle_cols = unary_union([box(sx * hx - HANDLE_FOOT / 2, CY + FAN / 2 + FAN_GAP, sx * hx + HANDLE_FOOT / 2, H) for sx in (-1, 1)])
+    handle_cols = unary_union([Point(sx * hx, H).buffer(M4_INSERT_BORE / 2 + 2.0).union(
+        box(sx * hx - M4_INSERT_BORE / 2 - 2.0, CY + FAN / 2 + FAN_GAP, sx * hx + M4_INSERT_BORE / 2 + 2.0, H))
+        for sx in (-1, 1)])
     wire = box(26, CY - FAN / 2 - FAN_GAP - INNER - 0.5, 34, CY - FAN / 2)       # fan lead into the chin
     shape = framed(FAN_POCKET, handle_cols.intersection(OUTLINE)).difference(wire)
     p = slab(shape, 0, FAN_T + FAN_GAP)
@@ -221,17 +227,11 @@ def l3_fan():
     p += slab(ring, FAN_T + FAN_GAP - 0.01, T3)
     for x, y in SCREWS:
         p = through(p, x, y, T3)
-    # handle: M4 countersunk from inside the fan pocket (fan out) up through the top wall into the pull;
-    # the head sits flush with the pocket roof so the fan slides in over it
+    # handle: 2 x M4 heat-set inserts down into the top, 50.8 apart, for standoffs and a 5-hole Meccano strip.
+    # Horizontal in the print, so the bore is a teardrop (L3 prints flipped: "up" in the print is -z here).
     zc = (FAN_T + FAN_GAP) / 2
-    y0 = CY + FAN / 2 + FAN_GAP
-    hd = 8.0                                                         # M4 flat head
     for sx in (-1, 1):
-        x = sx * hx
-        # print orientation: L3 is flipped (back ring on the bed), so "up" in the print is -z here
-        p -= teardrop("y", x, (y0 + H) / 2, zc, HANDLE_SCREW + 0.5, H - y0 + 2, -1)
-        h = (hd - HANDLE_SCREW - 0.5) / 2
-        p -= Pos(x, y0 + h / 2 - 0.01, zc) * (Rot(-90, 0, 0) * Cone(hd / 2 + 0.01, (HANDLE_SCREW + 0.5) / 2, h + 0.02))
+        p -= teardrop("y", sx * hx, H - M4_INSERT_DEPTH / 2 + 0.01, zc, M4_INSERT_BORE, M4_INSERT_DEPTH, -1)
     return p
 
 
@@ -275,8 +275,8 @@ def checks():
     add("pad still covers the fan disc", PAD_POCKET.distance(Point(0, CY)) * 0 + 1.0,
         PAD_POCKET.buffer(-0.5).contains(Point(0, CY).buffer(GRILLE_D / 2)), "")
     hx = HANDLE_PITCH / 2
-    add("handle feet inside the flat top", W / 2 - R - (hx + HANDLE_FOOT / 2), W / 2 - R - (hx + HANDLE_FOOT / 2) >= 0)
-    add("top wall under the handle", H - (CY + FAN / 2 + FAN_GAP), H - (CY + FAN / 2 + FAN_GAP) >= 4.0)
+    add("top inserts on the flat top", W / 2 - R - (hx + M4_INSERT_BORE / 2), W / 2 - R - (hx + M4_INSERT_BORE / 2) >= 2)
+    add("floor under the top inserts", TOP_WALL - M4_INSERT_DEPTH, TOP_WALL - M4_INSERT_DEPTH >= 1.2)
     add("switch hole below the plenum", (CY - OPEN_D / 2 - INNER) - (SWITCH_Y + SWITCH_D / 2),
         (CY - OPEN_D / 2 - INNER) - (SWITCH_Y + SWITCH_D / 2) >= 1.5)
     front = T5
@@ -312,14 +312,14 @@ def main():
     fl, fb = pick_screw(front)
     bl, bb = pick_screw(back)
     summary = dict(
-        body=dict(w=W, h=H, depth=round(z, 1), r=R), grille_holes=n_holes,
+        body=dict(w=W, h=H, cy=CY, depth=round(z, 1), r=R), grille_holes=n_holes,
         open_area_pct=round(100 * (math.pi / 4 * HOLE_D ** 2) / (HOLE_PITCH ** 2 * math.sqrt(3) / 2)),
         layers=meta, total_cm3=round(sum(m["cm3"] for m in meta), 1),
         total_g_petg=round(sum(m["g_petg"] for m in meta)),
         screws=dict(front=f"4 x M3 x {fl} CSK", back=f"6 x M3 x {bl} CSK",
                     front_fit=f"grip {front:.1f}, bite {fb:.1f}", back_fit=f"grip {back:.1f}, bite {bb:.1f}",
                     inserts="10 x M3 heat-set in L4 (4 front, 6 back)",
-                    handle=f"2 x M{HANDLE_SCREW:.0f} countersunk (length after the pull is measured)"),
+                    handle=f"2 x M4 heat-set in the top, {HANDLE_PITCH:.1f} apart (5-hole Meccano strip on M4 standoffs)"),
         checks=res, failed=[c for c in res if not c["ok"]])
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
     for m in meta:
