@@ -8,7 +8,7 @@ grille are one print. Only M3 x 50 countersunk are on hand, so the inserts sit w
     P1 face    grille, flush and screwless; a lip in the pad pocket + 4 magnets that snap onto 4 magnets in P2
     P2 filter  front carbon pad on a rib grid, 3.5 mm plenum behind it; the 6 screw heads, hidden under P1
                (the 4 fan screws sit 2.1 deep with a magnet on each)
-    P3 body    fan pocket, rear pad pocket and exhaust grille in one; DC jack + switch in the chin; 2 x M4 inserts on top
+    P3 body    fan pocket, rear pad pocket and exhaust grille in one; DC jack + switch in the chin; 2 x M3 inserts on top
                for a 5-hole Meccano strip handle; 6 M3 inserts: 4 on bosses under the fan corners, 2 at the chin face
 
 Air: grille -> front pad -> plenum -> fan -> rear pad -> grille. Layers are walls with a hollow where there is room,
@@ -42,17 +42,17 @@ CY = 80.0                             # fan centre height: chin below, as in the
 # --- bought parts (unverified until measured: see NEED below) ---
 FAN, FAN_T, FAN_GAP = 80.0, 25.0, 0.2           # 80 x 80 x 25, same as the enclosure fans (71.5 hole square measured)
 FAN_HOLE = 71.5
-PAD, PAD_T, PAD_CLIP = 80.0, 10.0, 16.0         # carbon pad cut 80 square, 16 mm snipped off each corner (clears the screws)
-JACK_D, SWITCH_D = 8.0, 6.0                     # panel DC jack (M8 thread type), mini toggle (MTS-102)
+PAD, PAD_T, PAD_CLIP = 80.0, 10.0, 16.0         # pad cut 80 square, 16 snipped off each corner; pocket 10 (pad 9 measured)
+JACK_D, SWITCH_D = 12.0, 6.0                    # panel DC jack and switch holes (Allwin, 2026-10-31); fan is 12 V
 MECCANO = 12.7                                  # Meccano hole pitch
 HANDLE_PITCH = 4 * MECCANO                      # 5-hole strip: its end holes, three holes between them (2026-10-31)
-M4_INSERT_BORE, M4_INSERT_DEPTH = 5.7, 7.0      # M4 heat-set insert (unmeasured: typical OD 5.6-6.0, length 6-8)
-TOP_WALL = M4_INSERT_DEPTH + 1.5                # above the fan pocket: the insert plus a floor
-H = CY + FAN / 2 + FAN_GAP + TOP_WALL           # 128.7
+TOP_INSERT_BORE, TOP_INSERT_DEPTH = 4.2, 4.5    # handle: M3 inserts too (only M3 in this build), M3 standoffs
+TOP_WALL = TOP_INSERT_DEPTH + 1.5               # above the fan pocket: the insert plus a floor
+H = CY + FAN / 2 + FAN_GAP + TOP_WALL           # 126.2
 MAGNET_D, MAGNET_T = 6.0, 2.0                   # 4 discs in the face pull on the steel L5 screw heads
 
 # --- fit (from fit_kit.py where tested) ---
-M3_CLEAR, INSERT_BORE, INSERT_DEPTH = 3.4, 4.2, 6.0
+M3_CLEAR, INSERT_BORE, INSERT_DEPTH = 3.4, 4.2, 4.5   # M3 heat-set inserts are 4 long (measured)
 CSK_D = 6.4
 BOSS_R = 4.0
 LIP_H, LIP_W, LIP_GAP = 3.0, 1.6, 0.15          # face-plate lip into the front pad pocket
@@ -68,7 +68,7 @@ FT = FAN_T + FAN_GAP           # P3: fan pocket depth
 GRILLE_T = 2.4                 # back grille: 1.2 skin + 1.2 ribs
 T3 = FT + PAD_T + GRILLE_T     # P3: fan pocket, rear pad pocket, grille
 SCREW_L = 50.0                 # the only M3 countersunk length on hand
-JACK_Z = 12.0                  # jack and switch, depth into P3 (the chin is open from its front face to the grille)
+JACK_Z, SWITCH_Z = 11.0, 27.0  # side by side in the chin's right wall, depth into P3 (the chin is open to the front)
 LAYERS = [("P1_face", T6), ("P2_filter", T5), ("P3_body", T3)]
 
 # --- fixings ---
@@ -76,7 +76,7 @@ FAN_SCREWS = [(sx * FAN_HOLE / 2, CY + sy * FAN_HOLE / 2) for sx in (-1, 1) for 
 CHIN_SCREWS = [(-36.0, 9.0), (36.0, 9.0)]
 SCREWS = FAN_SCREWS + CHIN_SCREWS
 MAGNET_XY = FAN_SCREWS                          # over the front screw heads
-JACK_Y, SWITCH_Y = 18.0, 31.0
+JACK_Y = SWITCH_Y = 22.0       # above the chin screw boss
 
 
 def rrect(w, h, r, cx=0.0, cy=0.0):
@@ -201,8 +201,8 @@ def p3_body():
     """Fan pocket (0..FT), rear pad pocket (FT..FT+PAD_T), grille. The fan sits on the four corner bosses and on the
     pad. Prints back down (grille on the bed); "up" in the print is -z here."""
     hx = HANDLE_PITCH / 2
-    handle_cols = unary_union([Point(sx * hx, H).buffer(M4_INSERT_BORE / 2 + 2.0).union(
-        box(sx * hx - M4_INSERT_BORE / 2 - 2.0, CY + FAN / 2 + FAN_GAP, sx * hx + M4_INSERT_BORE / 2 + 2.0, H))
+    handle_cols = unary_union([Point(sx * hx, H).buffer(TOP_INSERT_BORE / 2 + 2.0).union(
+        box(sx * hx - TOP_INSERT_BORE / 2 - 2.0, CY + FAN / 2 + FAN_GAP, sx * hx + TOP_INSERT_BORE / 2 + 2.0, H))
         for sx in (-1, 1)])
     wire = box(26, CY - FAN / 2 - FAN_GAP - INNER - 0.5, 34, CY - FAN / 2)       # fan lead into the chin
     p = slab(framed(FAN_POCKET, handle_cols.intersection(OUTLINE)).difference(wire), 0, FT)
@@ -215,11 +215,11 @@ def p3_body():
     for x, y in CHIN_SCREWS:                                         # inserts at the front face of the chin
         p -= Pos(x, y, blind / 2) * Cylinder(M3_CLEAR / 2, blind + 0.02)
         p -= Pos(x, y, INSERT_DEPTH / 2 - 0.01) * Cylinder(INSERT_BORE / 2, INSERT_DEPTH)
-    for y, d in ((JACK_Y, JACK_D), (SWITCH_Y, SWITCH_D)):            # right side, in the chin
-        p -= teardrop("x", W / 2 - WALL / 2, y, JACK_Z, d + 0.2, WALL + 2, -1)
-    zc = FT / 2                                                      # handle: M4 inserts down into the top
+    for y, z, d in ((JACK_Y, JACK_Z, JACK_D), (SWITCH_Y, SWITCH_Z, SWITCH_D)):   # right side, in the chin
+        p -= teardrop("x", W / 2 - WALL / 2, y, z, d + 0.2, WALL + 2, -1)
+    zc = FT / 2                                                      # handle: M3 inserts down into the top
     for sx in (-1, 1):
-        p -= teardrop("y", sx * hx, H - M4_INSERT_DEPTH / 2 + 0.01, zc, M4_INSERT_BORE, M4_INSERT_DEPTH, -1)
+        p -= teardrop("y", sx * hx, H - TOP_INSERT_DEPTH / 2 + 0.01, zc, TOP_INSERT_BORE, TOP_INSERT_DEPTH, -1)
     return p
 
 
@@ -246,11 +246,17 @@ def checks():
     add("pad still covers the fan disc", PAD_POCKET.distance(Point(0, CY)) * 0 + 1.0,
         PAD_POCKET.buffer(-0.5).contains(Point(0, CY).buffer(GRILLE_D / 2)), "")
     hx = HANDLE_PITCH / 2
-    add("top inserts on the flat top", W / 2 - R - (hx + M4_INSERT_BORE / 2), W / 2 - R - (hx + M4_INSERT_BORE / 2) >= 2)
-    add("floor under the top inserts", TOP_WALL - M4_INSERT_DEPTH, TOP_WALL - M4_INSERT_DEPTH >= 1.2)
-    sw_gap = (CY - FAN / 2 - FAN_GAP - INNER) - (SWITCH_Y + SWITCH_D / 2)
-    add("switch hole below the fan pocket wall", sw_gap, sw_gap >= 1.5)
-    add("jack nut room in the chin (depth)", JACK_Z - JACK_D / 2, JACK_Z - JACK_D / 2 >= 3)
+    add("top inserts on the flat top", W / 2 - R - (hx + TOP_INSERT_BORE / 2), W / 2 - R - (hx + TOP_INSERT_BORE / 2) >= 2)
+    add("floor under the top inserts", TOP_WALL - TOP_INSERT_DEPTH, TOP_WALL - TOP_INSERT_DEPTH >= 1.2)
+    top = CY - FAN / 2 - FAN_GAP - INNER
+    add("jack hole below the fan pocket wall", top - (JACK_Y + JACK_D / 2), top - (JACK_Y + JACK_D / 2) >= 1.5)
+    boss_top = CHIN_SCREWS[1][1] + BOSS_R
+    add("jack hole above the chin screw boss", JACK_Y - JACK_D / 2 - boss_top, JACK_Y - JACK_D / 2 - boss_top >= 1.0)
+    add("jack hole clear of the body's front face", JACK_Z - JACK_D / 2, JACK_Z - JACK_D / 2 >= 3)
+    gap = (SWITCH_Z - SWITCH_D / 2) - (JACK_Z + JACK_D / 2)
+    add("web between jack and switch holes", gap, gap >= 4)
+    g = FT + PAD_T - (SWITCH_Z + SWITCH_D / 2)                      # the chin runs back to the grille
+    add("switch hole in front of the grille", g, g >= 1.5)
     add("fan-screw seat leaves a boss under the head", T5 - MAG_SEAT, T5 - MAG_SEAT >= 6)
     blind = T3 - 1.2
     fan_in = SCREW_L - (T5 - MAG_SEAT)             # screw length past P2, into P3
@@ -286,7 +292,7 @@ def main():
                     chin_fit=f"{chin_in:.1f} into the body, tip {T3 - 1.2 - chin_in:.1f} short of the back",
                     inserts="6 x M3 heat-set in the body (4 under the fan corners, 2 at the chin)",
                     magnets="8 x Ø6 x 2: 4 on the fan-screw heads in the filter part, 4 in the face",
-                    handle=f"2 x M4 heat-set in the top, {HANDLE_PITCH:.1f} apart (5-hole Meccano strip on M4 standoffs)"),
+                    handle=f"2 x M3 heat-set in the top, {HANDLE_PITCH:.1f} apart (5-hole Meccano strip on M3 standoffs)"),
         checks=res, failed=[c for c in res if not c["ok"]])
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
     for m in meta:

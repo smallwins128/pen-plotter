@@ -61,20 +61,20 @@ li{margin:3px 0}
         <li><b>One set of screws</b>: <span id="ss"></span>, all from the front of the filter part into <span id="si"></span>. The 4 fan screws pass through the fan's own corner holes. The back shows no screws.</li>
         <li><b>Face</b>: no screws. A 3 mm lip drops into the pad pocket, and magnets hold it on (<span id="sm"></span>). The 4 fan screws sit 2 mm deep, and a magnet clings to each steel head (use zinc-plated steel screws, not stainless). The face's magnets snap onto them.</li>
         <li><b>Filters</b>: front: pull the face off. Rear: also pick out the 4 magnets, undo the 6 screws, and lift out the filter part and the fan.</li>
-        <li><b>Handle</b>: 2 × M4 heat-set inserts in the top, 50.8 mm apart, which matches the end holes of a 5-hole Meccano strip. Fit two M4 standoffs and screw the strip on top.</li>
+        <li><b>Handle</b>: 2 × M3 heat-set inserts in the top, 50.8 mm apart, which matches the end holes of a 5-hole Meccano strip. Fit two M3 standoffs and screw the strip on top.</li>
         <li><b>Pads</b>: cut each one 80 mm square and snip 16 mm off every corner, which clears the screws.</li>
-        <li><b>Wiring</b>: the fan lead drops into the hollow chin through a notch in the body, then runs to the jack and switch in the chin's right side.</li>
+        <li><b>Wiring</b>: the fan lead drops into the hollow chin through a notch in the body, then runs to the jack and switch, which sit side by side in the chin's right wall.</li>
       </ul>
     </div>
-    <div class="card"><h2>Measure before printing</h2>
+    <div class="card"><h2>Bought parts</h2>
       <ul>
-        <li>M4 heat-set insert: outside diameter and length<span class="tag">Ø5.7 bore × 7 assumed</span></li>
-        <li>Carbon pad: thickness<span class="tag">10 assumed</span></li>
-        <li>Fan: is it 12 V or 24 V? The adaptor tops out at 12 V.</li>
-        <li>DC jack: panel hole size<span class="tag">Ø8 assumed</span></li>
-        <li>Switch: type and hole size<span class="tag">Ø6 toggle assumed</span></li>
-        <li>M3 heat-set insert length<span class="tag">≤ 6 assumed</span></li>
-
+        <li>80 × 80 × 25 fan, 12 V (same as the cabinet fans), on the 3–12 V adaptor: the knob is the speed control</li>
+        <li>6 × M3 × 50 countersunk, zinc-plated steel</li>
+        <li>8 × M3 heat-set inserts, 4 mm long: 6 for the stack, 2 for the handle</li>
+        <li>8 × Ø6 × 2 magnets</li>
+        <li>2 × M3 standoffs, a 5-hole Meccano strip and 2 × M3 screws</li>
+        <li>Panel DC jack (Ø12 hole), a switch (Ø6 hole)</li>
+        <li>2 carbon pads, 9 mm thick, cut 80 mm square with 16 mm snipped off each corner. Each pocket is 10 mm deep.</li>
       </ul>
     </div>
     <div class="card"><h2>Checks</h2><p id="chk" style="margin:0"></p></div>
@@ -95,7 +95,7 @@ document.getElementById("si").textContent = S.screws.inserts;
 document.getElementById("sm").textContent = S.screws.magnets;
 const failed = S.failed.length;
 document.getElementById("chk").innerHTML = failed ? `<span style="color:var(--warn)">${failed} failing</span>` :
-  `<span class="okc">All ${S.checks.length} pass</span>: the fan holes sit inside the fan pocket; walls around every insert, the pad and the fan corners; the handle inserts sit on the flat top; the switch clears the fan pocket; each M3 × 50 reaches its insert and stops short of the back.`;
+  `<span class="okc">All ${S.checks.length} pass</span>: the fan holes sit inside the fan pocket; walls around every insert, the pad and the fan corners; the handle inserts sit on the flat top; the jack and switch clear the fan pocket, the chin screw boss and each other; each M3 × 50 reaches its insert and stops short of the back.`;
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
@@ -141,7 +141,7 @@ function padMesh(t){ const s=40, c=16, sh=new THREE.Shape();
   return new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false}),carbon); }
 const fan = fanMesh(); fan.position.set(0, CY, 0);
 const padF = padMesh(10), padB = padMesh(10); padF.position.set(0, CY, 0); padB.position.set(0, CY, 0);
-// handle: two M4 x 25 standoffs and a 5-hole Meccano strip (12.7 pitch)
+// handle: two M3 x 25 standoffs and a 5-hole Meccano strip (12.7 pitch)
 const handle = new THREE.Group();
 const brass = new THREE.MeshStandardMaterial({color:0xb08d57, roughness:.4, metalness:.7});
 [-25.4, 25.4].forEach(x => { const so=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.2,25,6),brass); so.position.set(x,12.5,0); handle.add(so); });
@@ -149,7 +149,7 @@ const strip = new THREE.Shape(); strip.absarc(-25.4,0,6.35,Math.PI/2,Math.PI*1.5
 for (let k=-2;k<=2;k++){ const h=new THREE.Path(); h.absarc(k*12.7,0,2.05,0,Math.PI*2,true); strip.holes.push(h); }
 const bar = new THREE.Mesh(new THREE.ExtrudeGeometry(strip,{depth:1.2,bevelEnabled:false}), steel);
 bar.rotation.x = Math.PI/2; bar.position.set(0,26.2,0); handle.add(bar);
-const jack=new THREE.Mesh(new THREE.CylinderGeometry(4,4,10,24),dark); jack.rotation.z=Math.PI/2;
+const jack=new THREE.Mesh(new THREE.CylinderGeometry(6,6,10,24),dark); jack.rotation.z=Math.PI/2;
 const sw=new THREE.Mesh(new THREE.CylinderGeometry(3,3,8,24),dark); sw.rotation.z=Math.PI/2;
 bought.add(fan,padF,padB,handle,jack,sw);
 // screws: steel-coloured rods with countersunk heads; head at local z = 0, shank toward +z
@@ -173,8 +173,7 @@ function layout(e){
   fanScrews.forEach(s => s.position.z = zOf("P2_filter") + 2.1 - e*30);
   chinScrews.forEach(s => s.position.z = zOf("P2_filter") - e*30);
   mags.forEach(m => m.position.z = zOf("P2_filter") + 1.05 - e*45);
-  const z4 = zOf("P3_body") + 12;
-  jack.position.set(S.body.w/2 + 4 + e*20, 18, z4); sw.position.set(S.body.w/2 + 3 + e*20, 31, z4);
+  jack.position.set(S.body.w/2 + 4 + e*20, 22, zOf("P3_body") + 11); sw.position.set(S.body.w/2 + 3 + e*20, 22, zOf("P3_body") + 27);
   root.position.set(0, -S.body.h/2, -(S.body.depth + (DATA.parts.length - 1)*gap)/2);
 }
 const ex = document.getElementById("ex");
