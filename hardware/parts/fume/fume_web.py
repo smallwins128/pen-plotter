@@ -22,6 +22,8 @@ Q = 100.0
 def main():
     summary = json.loads((SRC / "summary.json").read_text())
     summary["body"].setdefault("cy", fume.CY)
+    for m in summary["layers"]:
+        m["z"], m["t"] = round(m["z"], 2), round(m["t"], 2)
     parts = []
     for m in summary["layers"]:
         mesh = trimesh.load(SRC / f"{m['name']}.stl")

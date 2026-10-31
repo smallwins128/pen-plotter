@@ -306,7 +306,7 @@ def main():
         export_stl(part, str(OUT / f"{name}.stl"))
         printed = Rot(180, 0, 0) * part if name in flip else part
         export_stl(printed, str(OUT / f"{name}_print.stl"))
-        meta.append(dict(name=name, z=z, t=t, cm3=round(vol, 1), g_petg=round(vol * 1.27, 0)))
+        meta.append(dict(name=name, z=round(z, 2), t=round(t, 2), cm3=round(vol, 1), g_petg=round(vol * 1.27, 0)))
         z += t
     res, front, back = checks()
     fl, fb = pick_screw(front)
