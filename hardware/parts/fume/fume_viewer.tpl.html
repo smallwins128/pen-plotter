@@ -65,7 +65,8 @@ li{margin:3px 0}
         <li><b>Base</b>: the rear pad sits between 4 solid corner tabs that stop at the top of the pad. The fan sits on the tab tops, which hold the inserts, and the screws through its holes locate it. Two short chin tabs hold the bottom inserts, and 2 printed spacer tubes (Ø7) span the fan zone up to the front filter.</li>
         <li><b>Grilles</b>: each one is a small separate print. A plate shaped like the pocket sits behind the panel, and a boss fills the Ø74 hole flush with the outside. The pad behind it pins it in place, so it needs no glue or clips. The octagon plate keeps slots from turning. Print variants and swap them any time.</li>
         <li><b>Pads</b>: cut each one 80 mm square and snip 16 mm off every corner, which clears the screws.</li>
-        <li><b>Wiring</b>: the fan lead drops into the hollow chin through a notch in the body, then runs to the jack and switch, which sit side by side in the chin's right wall.</li>
+        <li><b>Wiring</b>: the fan lead drops into the hollow chin and runs to the jack (Ø12) and the switch (Ø6, with a 15 mm body), side by side in the back panel's chin. The cable leaves from the back.</li>
+        <li><b>Mounting</b>: each side has 2 × M5 heat-set inserts in a solid block inside the chin wall, 18 mm apart in a row front to back, so a bracket can't pivot. M5 matches the T-nuts for 2020/2040 aluminium frame.</li>
       </ul>
     </div>
     <div class="card"><h2>Bought parts</h2>
@@ -75,7 +76,8 @@ li{margin:3px 0}
         <li>8 × M3 heat-set inserts, 4 mm long: 6 for the stack, 2 for the handle</li>
         <li>8 × Ø6 × 2 magnets</li>
         <li>2 × M3 standoffs, a 5-hole Meccano strip and 2 × M3 screws</li>
-        <li>Panel DC jack (Ø12 hole), a switch (Ø6 hole)</li>
+        <li>Panel DC jack (Ø12 hole) and a switch (Ø6 hole, 15 mm body), both in the back</li>
+        <li>4 × M5 heat-set inserts for side mounting (Ø6.4 × 8 assumed: send me yours)</li>
         <li>2 carbon pads, 9 mm thick, cut 80 mm square with 16 mm snipped off each corner. Each pocket is 10 mm deep.</li>
       </ul>
     </div>
@@ -89,7 +91,7 @@ const DATA = /*DATA*/null;
 const S = DATA.summary;
 const NAMES = {P1_face:["Face","Flat, screwless front with a Ø74 opening"],
   P2_filter:["Front filter","Pad pocket, rib grid and plenum, screw heads, 4 magnets"],
-  P3_body:["Base","Back panel (Ø74 opening), rear pad between 4 corner tabs, 2 chin tabs, then the outer wall round the fan; jack and switch; 6 inserts in the tab tops, 2 handle inserts"]};
+  P3_body:["Base","Back panel (Ø74 opening, jack and switch), rear pad between 4 corner tabs, 2 chin tabs, the outer wall round the fan; 6 inserts in the tab tops, 2 handle inserts, 4 M5 side inserts"]};
 const PAT = {hslots:"horizontal slots", rings:"concentric rings", hex:"honeycomb", holes:"round holes"};
 document.getElementById("sub").textContent =
   `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · ${DATA.parts.length} body prints, 2 spacers, 2 grille inserts · about ${S.total_g_petg} g of PETG for the body (solid estimate)`;
@@ -98,7 +100,7 @@ document.getElementById("si").textContent = S.screws.inserts;
 document.getElementById("sm").textContent = S.screws.magnets;
 const failed = S.failed.length;
 document.getElementById("chk").innerHTML = failed ? `<span style="color:var(--warn)">${failed} failing</span>` :
-  `<span class="okc">All ${S.checks.length} pass</span>: the fan holes sit inside the fan pocket; walls around every insert, the pad and the fan corners; the handle inserts sit on the flat top; the jack and switch clear the fan pocket, the chin screw boss and each other; each grille plate overlaps its panel and fits its pocket; each M3 × 50 reaches its insert and stops short of the back.`;
+  `<span class="okc">All ${S.checks.length} pass</span>: the fan holes sit inside the fan pocket; walls around every insert, the pad and the fan corners; the handle inserts sit on the flat top; the jack and switch sit inside the chin, clear of the tabs and each other, with room for the 15 mm switch body; the side M5 blocks clear the fan, the tabs and the switch; each grille plate overlaps its panel and fits its pocket; each M3 × 50 reaches its insert and stops short of the back.`;
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
@@ -163,8 +165,8 @@ const strip = new THREE.Shape(); strip.absarc(-25.4,0,6.35,Math.PI/2,Math.PI*1.5
 for (let k=-2;k<=2;k++){ const h=new THREE.Path(); h.absarc(k*12.7,0,2.05,0,Math.PI*2,true); strip.holes.push(h); }
 const bar = new THREE.Mesh(new THREE.ExtrudeGeometry(strip,{depth:1.2,bevelEnabled:false}), steel);
 bar.rotation.x = Math.PI/2; bar.position.set(0,26.2,0); handle.add(bar);
-const jack=new THREE.Mesh(new THREE.CylinderGeometry(6,6,10,24),dark); jack.rotation.z=Math.PI/2;
-const sw=new THREE.Mesh(new THREE.CylinderGeometry(3,3,8,24),dark); sw.rotation.z=Math.PI/2;
+const jack=new THREE.Mesh(new THREE.CylinderGeometry(6,6,14,24),dark); jack.rotation.x=Math.PI/2;
+const sw=new THREE.Mesh(new THREE.CylinderGeometry(3,3,15,24),dark); sw.rotation.x=Math.PI/2;
 bought.add(fan,padF,padB,handle,jack,sw);
 // screws: steel-coloured rods with countersunk heads; head at local z = 0, shank toward +z
 function screw(len){ const g=new THREE.Group();
@@ -191,7 +193,8 @@ function layout(e){
   spacers.forEach(m => m.position.z = zOf("P3_body") + 12.5 - gap*0.4);
   mags.forEach(m => m.position.z = zOf("P2_filter") + 1.05 - e*45);
   grilleObjs.forEach(({gd, grp}) => grp.position.set(0, CY, gd.side === "front" ? zOf("P1_face") - e*40 : zOf("P3_body") + L.P3_body.t + e*40));
-  jack.position.set(S.body.w/2 + 4 + e*20, 22, zOf("P3_body") + 11); sw.position.set(S.body.w/2 + 3 + e*20, 22, zOf("P3_body") + 27);
+  const zb = zOf("P3_body") + L.P3_body.t;            // back face: jack and switch run 14-15 mm into the chin
+  jack.position.set(-14, 22, zb - 7 + e*30); sw.position.set(14, 22, zb - 7.5 + e*30);
   root.position.set(0, -S.body.h/2, -(S.body.depth + (DATA.parts.length - 1)*gap)/2);
 }
 const ex = document.getElementById("ex");

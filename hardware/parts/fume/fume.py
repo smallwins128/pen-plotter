@@ -13,6 +13,8 @@ grille are one print. Only M3 x 50 countersunk are on hand, so the inserts sit w
     v6 (Allwin): the body is a base: back panel, the rear pad between solid corner tabs that stop at the top of the
                pad, then just the outer wall round the fan, which sits on the tab tops. The 2 chin screws get short
                tabs too, and 2 printed spacer tubes span the fan zone. Solid corners also end the stray voids.
+    v7 (Allwin): the jack and switch move to the back panel (the switch body runs 15 mm into the chin); the sides
+               carry 2 x M5 heat-set inserts each, for mounting (2020 / 2040 T-nuts are M5).
     P3 body    rear pad zone, fan zone and back panel in one; DC jack + switch in the chin; 2 x M3 inserts on top
                for a 5-hole Meccano strip handle; 6 M3 inserts: 4 on bosses under the fan corners, 2 at the chin face
 
@@ -76,7 +78,9 @@ FT = FAN_T + FAN_GAP           # P3: fan pocket depth
 GRILLE_T = 2.4                 # back grille: 1.2 skin + 1.2 ribs
 T3 = FT + PAD_T + GRILLE_T     # P3: fan pocket, rear pad pocket, grille
 SCREW_L = 50.0                 # the only M3 countersunk length on hand
-JACK_Z, SWITCH_Z = 11.0, 27.0  # side by side in the chin's right wall, depth into P3 (the chin is open to the front)
+SWITCH_BODY = 15.0             # the switch runs this far into the chin behind the back panel (Allwin)
+MOUNT_BORE, MOUNT_DEPTH = 6.4, 8.0             # M5 heat-set inserts in the sides (unmeasured: typical OD 7, length 8)
+MOUNT_Y, MOUNT_ZS = 26.0, (9.0, 27.0)          # 2 per side in the chin, a row front to back, 18 apart
 LAYERS = [("P1_face", T6), ("P2_filter", T5), ("P3_body", T3)]
 
 # --- fixings ---
@@ -84,7 +88,7 @@ FAN_SCREWS = [(sx * FAN_HOLE / 2, CY + sy * FAN_HOLE / 2) for sx in (-1, 1) for 
 CHIN_SCREWS = [(-36.0, 9.0), (36.0, 9.0)]
 SCREWS = FAN_SCREWS + CHIN_SCREWS
 MAGNET_XY = FAN_SCREWS                          # over the front screw heads
-JACK_Y = SWITCH_Y = 22.0       # above the chin screw boss
+JACK_XY, SWITCH_XY = (-14.0, 22.0), (14.0, 22.0)   # in the back panel's chin, seen from the front
 
 
 def rrect(w, h, r, cx=0.0, cy=0.0):
@@ -291,17 +295,36 @@ def p3_body():
     ring = OUTLINE.difference(OUTLINE.buffer(-WALL, join_style=2)).union(handle_cols.intersection(OUTLINE))
     p = slab(ring, 0, FT)
     p += slab(pad_zone(), FT - 0.01, FT + PAD_T)
-    p += Pos(0, 0, FT + PAD_T - 0.01) * ribbed_plate([opening()], GRILLE_T, 1.2, False)
+    pads = unary_union([Point(*JACK_XY).buffer(JACK_D / 2 + 3), Point(*SWITCH_XY).buffer(SWITCH_D / 2 + 3)])
+    p += Pos(0, 0, FT + PAD_T - 0.01) * ribbed_plate([opening()], GRILLE_T, 1.2, False, pads)
     blind = T3 - 1.2                                                 # screw holes stop short of the back face
     for x, y in SCREWS:                                              # inserts in the six tab tops
         p -= Pos(x, y, (FT + blind) / 2) * Cylinder(M3_CLEAR / 2, blind - FT + 0.02)
         p -= Pos(x, y, FT + INSERT_DEPTH / 2 - 0.01) * Cylinder(INSERT_BORE / 2, INSERT_DEPTH)
-    for y, z, d in ((JACK_Y, JACK_Z, JACK_D), (SWITCH_Y, SWITCH_Z, SWITCH_D)):   # right side, in the chin
-        p -= teardrop("x", W / 2 - WALL / 2, y, z, d + 0.2, WALL + 2, -1)
+    for (x, y), d in ((JACK_XY, JACK_D), (SWITCH_XY, SWITCH_D)):     # back panel, in the chin: round holes
+        p -= Pos(x, y, (FT + PAD_T + T3) / 2) * Cylinder(d / 2 + 0.1, T3 - FT - PAD_T + 2)
+    p += mount_blocks()
+    for sx in (-1, 1):                                               # M5 inserts in from the sides
+        for z in MOUNT_ZS:
+            p -= teardrop("x", sx * (W / 2 - MOUNT_DEPTH / 2 + 0.01), MOUNT_Y, z, MOUNT_BORE, MOUNT_DEPTH, -1)
     zc = FT / 2                                                      # handle: M3 inserts down into the top
     for sx in (-1, 1):
         p -= teardrop("y", sx * hx, H - TOP_INSERT_DEPTH / 2 + 0.01, zc, TOP_INSERT_BORE, TOP_INSERT_DEPTH, -1)
     return p
+
+
+def mount_block_poly(sx):
+    """Side-insert block in the chin, as an x-y section: from the outer wall inward, round the insert row."""
+    r = MOUNT_BORE / 2 + 2.5
+    x_out, x_in = sx * W / 2, sx * (W / 2 - MOUNT_DEPTH - 1.5)
+    return box(min(x_out, x_in), MOUNT_Y - r, max(x_out, x_in), MOUNT_Y + r).intersection(OUTLINE)
+
+
+def mount_blocks():
+    """Solid blocks round the side inserts, run back to the back panel so they print without support."""
+    r = MOUNT_BORE / 2 + 2.5
+    z0 = min(MOUNT_ZS) - r
+    return slab(mount_block_poly(-1), z0, FT + PAD_T) + slab(mount_block_poly(1), z0, FT + PAD_T)
 
 
 SPACER_D = 7.0
@@ -352,15 +375,21 @@ def checks():
     hx = HANDLE_PITCH / 2
     add("top inserts on the flat top", W / 2 - R - (hx + TOP_INSERT_BORE / 2), W / 2 - R - (hx + TOP_INSERT_BORE / 2) >= 2)
     add("floor under the top inserts", TOP_WALL - TOP_INSERT_DEPTH, TOP_WALL - TOP_INSERT_DEPTH >= 1.2)
-    top = CY - FAN / 2 - FAN_GAP - INNER
-    add("jack hole below the fan pocket wall", top - (JACK_Y + JACK_D / 2), top - (JACK_Y + JACK_D / 2) >= 1.5)
-    boss_top = CHIN_SCREWS[1][1] + BOSS_R
-    add("jack hole above the chin screw boss", JACK_Y - JACK_D / 2 - boss_top, JACK_Y - JACK_D / 2 - boss_top >= 1.0)
-    add("jack hole clear of the body's front face", JACK_Z - JACK_D / 2, JACK_Z - JACK_D / 2 >= 3)
-    gap = (SWITCH_Z - SWITCH_D / 2) - (JACK_Z + JACK_D / 2)
+    chin = chin_cavity()
+    for name, (x, y), d in (("jack", JACK_XY, JACK_D), ("switch", SWITCH_XY, SWITCH_D)):
+        c = Point(x, y).buffer(d / 2 + 1.5)
+        add(f"{name} hole inside the chin, clear of the tabs", chin.boundary.distance(Point(x, y)) - d / 2,
+            chin.contains(c))
+    gap = Point(*JACK_XY).distance(Point(*SWITCH_XY)) - JACK_D / 2 - SWITCH_D / 2
     add("web between jack and switch holes", gap, gap >= 4)
-    g = FT + PAD_T - (SWITCH_Z + SWITCH_D / 2)                      # the chin runs back to the grille
-    add("switch hole in front of the grille", g, g >= 1.5)
+    add("switch body fits in the chin depth", FT + PAD_T - SWITCH_BODY, FT + PAD_T - SWITCH_BODY >= 3)
+    r = MOUNT_BORE / 2 + 2.5
+    add("side inserts below the fan", (CY - FAN / 2 - FAN_GAP) - (MOUNT_Y + r), (CY - FAN / 2 - FAN_GAP) - (MOUNT_Y + r) >= 1)
+    add("side inserts above the chin tabs", MOUNT_Y - r - CHIN_BLOCK, MOUNT_Y - r - CHIN_BLOCK >= -0.01)
+    add("side inserts inside the base depth", min(MOUNT_ZS) - MOUNT_BORE / 2, min(MOUNT_ZS) - MOUNT_BORE / 2 >= 3)
+    inner_x = W / 2 - MOUNT_DEPTH - 1.5
+    add("side blocks clear the jack and switch", inner_x - (abs(SWITCH_XY[0]) + JACK_D / 2),
+        inner_x - (abs(SWITCH_XY[0]) + JACK_D / 2) >= 5)
     add("fan-screw seat leaves a boss under the head", T5 - MAG_SEAT, T5 - MAG_SEAT >= 6)
     blind = T3 - 1.2
     fan_in = SCREW_L - (T5 - MAG_SEAT)             # screw length past P2, into P3
