@@ -78,7 +78,7 @@ li{margin:3px 0}
         <li>2 × M3 × 5 standoffs, a 5-hole Meccano strip and 2 × M3 screws</li>
         <li>Panel DC jack (Ø12 hole) and a switch (Ø6 hole, 15 mm body), both in the back</li>
         <li>4 × M5 heat-set inserts for side mounting (Ø6.4 × 8 assumed: send me yours)</li>
-        <li>Prints: body in black PETG, grilles in orange</li>
+        <li>Prints: body in black PLA, grilles in orange PLA</li>
         <li>2 carbon pads, 9 mm thick, cut 80 mm square with 16 mm snipped off each corner. Each pocket is 10 mm deep.</li>
       </ul>
     </div>
@@ -118,7 +118,7 @@ function b64(s, T){const b=atob(s), u=new Uint8Array(b.length); for(let i=0;i<b.
 // model frame: x across, y up, z into the body; the camera looks at the face from -z
 const root = new THREE.Group(); scene.add(root);
 const layerObjs = [];
-const colors = [0x232326,0x2a2a2e,0x26262a];          // body prints: black PETG
+const colors = [0x232326,0x2a2a2e,0x26262a];          // body prints: black PLA
 DATA.parts.forEach((p, k) => {
   const v = b64(p.v, Int16Array), idx = b64(p.i, Uint32Array);
   const pos = new Float32Array(v.length); for (let i=0;i<v.length;i++) pos[i] = v[i] / DATA.q;
