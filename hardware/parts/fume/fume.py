@@ -187,7 +187,8 @@ def insert_plate(side):
 
 
 def grille_insert(pattern, side):
-    """Boss (z 0..boss, outside face first) + plate. Prints boss down; the slot spine in the plate layer bridges 1.8."""
+    """Boss (z 0..boss, outside face first) + plate. Prints plate down (boss down left the plate overhanging the
+    boss by 1.5-3 mm all round, and the slicer objected); the visible face is then the top surface."""
     boss_l, plate_t = (T6, INSERT_PLATE_F) if side == "front" else (GRILLE_T, INSERT_PLATE_B)
     holes = PATTERNS[pattern]()
     plate = insert_plate(side).difference(holes)
@@ -450,7 +451,8 @@ def main():
         for side in ("front", "back"):
             g, holes = grille_insert(pat, side)
             name = f"G_{pat}_{side}"
-            export_stl(g, str(OUT / f"{name}_print.stl"))           # boss down
+            gp = Rot(180, 0, 0) * g                                    # octagon plate on the bed: no overhang
+            export_stl(Pos(0, 0, -gp.bounding_box().min.Z) * gp, str(OUT / f"{name}_print.stl"))
             export_stl(g, str(OUT / f"{name}.stl"))
             grilles.append(dict(name=name, pattern=pat, side=side, open_pct=round(100 * holes.area / (math.pi * OPENING_D ** 2 / 4)),
                                 openings=len(holes.geoms) if hasattr(holes, "geoms") else 1, cm3=round(g.volume / 1000, 1)))
