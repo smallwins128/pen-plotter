@@ -62,6 +62,7 @@ li{margin:3px 0}
         <li><b>Face</b>: no screws. A 3 mm lip drops into the pad pocket, and magnets hold it on (<span id="sm"></span>). The 4 fan screws sit 2 mm deep, and a magnet clings to each steel head (use zinc-plated steel screws, not stainless). The face's magnets snap onto them.</li>
         <li><b>Filters</b>: front: pull the face off. Rear: also pick out the 4 magnets, undo the 6 screws, and lift out the filter part and the fan.</li>
         <li><b>Handle</b>: 2 × M3 heat-set inserts in the top, 50.8 mm apart, which matches the end holes of a 5-hole Meccano strip. Fit two M3 standoffs and screw the strip on top.</li>
+        <li><b>Grilles</b>: each one is a small separate print. A plate shaped like the pocket sits behind the panel, and a boss fills the Ø74 hole flush with the outside. The pad behind it pins it in place, so it needs no glue or clips. The octagon plate keeps slots from turning. Print variants and swap them any time.</li>
         <li><b>Pads</b>: cut each one 80 mm square and snip 16 mm off every corner, which clears the screws.</li>
         <li><b>Wiring</b>: the fan lead drops into the hollow chin through a notch in the body, then runs to the jack and switch, which sit side by side in the chin's right wall.</li>
       </ul>
@@ -85,17 +86,18 @@ li{margin:3px 0}
 <script>
 const DATA = /*DATA*/null;
 const S = DATA.summary;
-const NAMES = {P1_face:["Face","Grille; the flat, screwless front"],
+const NAMES = {P1_face:["Face","Flat, screwless front with a Ø74 opening"],
   P2_filter:["Front filter","Pad pocket, rib grid and plenum, screw heads, 4 magnets"],
-  P3_body:["Body","Fan, rear pad, grille, jack and switch, 6 inserts, handle inserts"]};
+  P3_body:["Body","Fan, rear pad, back panel with a Ø74 opening, jack and switch, 6 inserts, handle inserts"]};
+const PAT = {hslots:"horizontal slots", rings:"concentric rings", hex:"honeycomb", holes:"round holes"};
 document.getElementById("sub").textContent =
-  `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · ${DATA.parts.length} prints · about ${S.total_g_petg} g of PETG (solid estimate) · ${S.grille_holes} grille holes, ${S.open_area_pct}% open`;
+  `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · ${DATA.parts.length} body prints + 2 grille inserts · about ${S.total_g_petg} g of PETG for the body (solid estimate)`;
 document.getElementById("ss").textContent = S.screws.stack;
 document.getElementById("si").textContent = S.screws.inserts;
 document.getElementById("sm").textContent = S.screws.magnets;
 const failed = S.failed.length;
 document.getElementById("chk").innerHTML = failed ? `<span style="color:var(--warn)">${failed} failing</span>` :
-  `<span class="okc">All ${S.checks.length} pass</span>: the fan holes sit inside the fan pocket; walls around every insert, the pad and the fan corners; the handle inserts sit on the flat top; the jack and switch clear the fan pocket, the chin screw boss and each other; each M3 × 50 reaches its insert and stops short of the back.`;
+  `<span class="okc">All ${S.checks.length} pass</span>: the fan holes sit inside the fan pocket; walls around every insert, the pad and the fan corners; the handle inserts sit on the flat top; the jack and switch clear the fan pocket, the chin screw boss and each other; each grille plate overlaps its panel and fits its pocket; each M3 × 50 reaches its insert and stops short of the back.`;
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
@@ -123,6 +125,17 @@ DATA.parts.forEach((p, k) => {
   const grp = new THREE.Group(); grp.add(m); root.add(grp);
   layerObjs.push({p, grp});
 });
+// grille inserts: front boss flush with the face; back insert turned round, boss flush with the back
+const grilleObjs = (DATA.grilles || []).map(gd => {
+  const v = b64(gd.v, Int16Array), idx = b64(gd.i, Uint32Array);
+  const pos = new Float32Array(v.length); for (let i=0;i<v.length;i++) pos[i] = v[i] / DATA.q;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx, 1));
+  const flat = g.toNonIndexed(); flat.computeVertexNormals();
+  const m = new THREE.Mesh(flat, new THREE.MeshStandardMaterial({color: 0x3a3d44, roughness:.5, metalness:.1, side:THREE.DoubleSide}));
+  const grp = new THREE.Group(); grp.add(m); if (gd.side === "back") grp.rotation.y = Math.PI; root.add(grp);
+  return {gd, grp};
+});
 // bought parts (simple stand-ins)
 const bought = new THREE.Group(); root.add(bought);
 const dark = new THREE.MeshStandardMaterial({color:0x2b2b2e, roughness:.6});
@@ -140,7 +153,7 @@ function padMesh(t){ const s=40, c=16, sh=new THREE.Shape();
   [[-s+c,-s],[s-c,-s],[s,-s+c],[s,s-c],[s-c,s],[-s+c,s],[-s,s-c],[-s,-s+c]].forEach((q,i)=>i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]));
   return new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false}),carbon); }
 const fan = fanMesh(); fan.position.set(0, CY, 0);
-const padF = padMesh(10), padB = padMesh(10); padF.position.set(0, CY, 0); padB.position.set(0, CY, 0);
+const padF = padMesh(9), padB = padMesh(9); padF.position.set(0, CY, 0); padB.position.set(0, CY, 0);
 // handle: two M3 x 25 standoffs and a 5-hole Meccano strip (12.7 pitch)
 const handle = new THREE.Group();
 const brass = new THREE.MeshStandardMaterial({color:0xb08d57, roughness:.4, metalness:.7});
@@ -173,6 +186,7 @@ function layout(e){
   fanScrews.forEach(s => s.position.z = zOf("P2_filter") + 2.1 - e*30);
   chinScrews.forEach(s => s.position.z = zOf("P2_filter") - e*30);
   mags.forEach(m => m.position.z = zOf("P2_filter") + 1.05 - e*45);
+  grilleObjs.forEach(({gd, grp}) => grp.position.set(0, CY, gd.side === "front" ? zOf("P1_face") - e*40 : zOf("P3_body") + L.P3_body.t + e*40));
   jack.position.set(S.body.w/2 + 4 + e*20, 22, zOf("P3_body") + 11); sw.position.set(S.body.w/2 + 3 + e*20, 22, zOf("P3_body") + 27);
   root.position.set(0, -S.body.h/2, -(S.body.depth + (DATA.parts.length - 1)*gap)/2);
 }
@@ -185,6 +199,12 @@ layerObjs.forEach(({p, grp}) => {
   const [n, d] = NAMES[p.name];
   const row = document.createElement("label"); row.className = "layer";
   row.innerHTML = `<input type="checkbox" checked><span><b>${n}</b><small>${d}</small></span><span class="num">${p.t} mm<br>~${p.g_petg} g</span>`;
+  row.querySelector("input").onchange = e => { grp.visible = e.target.checked; };
+  list.appendChild(row);
+});
+grilleObjs.forEach(({gd, grp}) => {
+  const row = document.createElement("label"); row.className = "layer";
+  row.innerHTML = `<input type="checkbox" checked><span><b>Grille, ${gd.side}</b><small>${PAT[gd.pattern]}: ${gd.openings} openings, ${gd.open_pct}% open</small></span><span class="num">~${Math.round(gd.cm3*1.27)} g</span>`;
   row.querySelector("input").onchange = e => { grp.visible = e.target.checked; };
   list.appendChild(row);
 });

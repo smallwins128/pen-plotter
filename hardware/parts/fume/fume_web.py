@@ -31,7 +31,14 @@ def main():
         v = np.round(mesh.vertices * Q).astype(np.int16).tobytes()
         i = mesh.faces.astype(np.uint32).tobytes()
         parts.append(dict(m, v=base64.b64encode(v).decode(), i=base64.b64encode(i).decode()))
-    data = json.dumps(dict(q=Q, summary=summary, parts=parts))
+    grilles = []
+    for g in summary.get("grilles", []):
+        mesh = trimesh.load(SRC / f"{g['name']}.stl")
+        mesh.merge_vertices()
+        v = np.round(mesh.vertices * Q).astype(np.int16).tobytes()
+        i = mesh.faces.astype(np.uint32).tobytes()
+        grilles.append(dict(g, v=base64.b64encode(v).decode(), i=base64.b64encode(i).decode()))
+    data = json.dumps(dict(q=Q, summary=summary, parts=parts, grilles=grilles))
     DST.write_text(TPL.read_text().replace("/*DATA*/null", data))
     print(DST, f"{DST.stat().st_size / 1e6:.1f} MB")
 

@@ -8,7 +8,9 @@ grille are one print. Only M3 x 50 countersunk are on hand, so the inserts sit w
     P1 face    grille, flush and screwless; a lip in the pad pocket + 4 magnets that snap onto 4 magnets in P2
     P2 filter  front carbon pad on a rib grid, 3.5 mm plenum behind it; the 6 screw heads, hidden under P1
                (the 4 fan screws sit 2.1 deep with a magnet on each)
-    P3 body    fan pocket, rear pad pocket and exhaust grille in one; DC jack + switch in the chin; 2 x M3 inserts on top
+    grilles    v5: the face and the body's back have one plain Ø74 hole each; the grille is a swappable insert (a plate in the
+               pocket behind the hole, a boss that fills the hole flush). The stack pins it: no glue, no clips.
+    P3 body    fan pocket, rear pad pocket and back panel in one; DC jack + switch in the chin; 2 x M3 inserts on top
                for a 5-hole Meccano strip handle; 6 M3 inserts: 4 on bosses under the fan corners, 2 at the chin face
 
 Air: grille -> front pad -> plenum -> fan -> rear pad -> grille. Layers are walls with a hollow where there is room,
@@ -57,7 +59,9 @@ M3_CLEAR, INSERT_BORE, INSERT_DEPTH = 3.4, 4.2, 4.5   # M3 heat-set inserts are 
 CSK_D = 6.4
 BOSS_R = 4.0
 LIP_H, LIP_W, LIP_GAP = 3.0, 1.6, 0.15          # face-plate lip into the front pad pocket
-GRILLE_D, HOLE_D, HOLE_PITCH = 76.0, 3.0, 3.8   # round holes on a hex grid: about 56 % open
+OPENING_D = 74.0                                # the hole in the face and in the back panel
+INSERT_BOSS_D = OPENING_D - 0.2                 # grille insert boss: snug in the hole, flush with the outside
+INSERT_PLATE_F, INSERT_PLATE_B = 1.6, 1.0       # insert plate behind the face (in the lip) / behind the back (under the pad)
 MAGNETS = True
 
 # --- layer depths ---
@@ -113,16 +117,83 @@ def framed(opening, extra_solid=None):
     return OUTLINE.difference(opening).difference(hollow)
 
 
-def grille_holes():
-    out, rr = [], GRILLE_D / 2 - HOLE_D / 2
-    dy = HOLE_PITCH * math.sqrt(3) / 2
-    n = int(GRILLE_D / dy) + 2
+def opening():
+    return Point(0, CY).buffer(OPENING_D / 2, quad_segs=64)
+
+
+# --- grille patterns, in the insert's own frame (centre 0, 0) ---------------------------------------------------------
+
+def _region():
+    return Point(0, 0).buffer(INSERT_BOSS_D / 2 - 0.8, quad_segs=64)
+
+
+def pat_hslots(w=1.8, pitch=3.4):
+    reg, out = _region(), []
+    n = int(OPENING_D / pitch) + 2
+    for k in range(-n, n + 1):
+        seg = LineString([(-60, k * pitch), (60, k * pitch)]).intersection(reg.buffer(-w / 2))
+        if not seg.is_empty and seg.length > 2:
+            out.append(seg.buffer(w / 2, cap_style=1, quad_segs=8))
+    return unary_union(out)
+
+
+def pat_rings(w=2.0, pitch=4.0, spoke=2.0):
+    c, out, r = Point(0, 0), [], 2.0 + w / 2
+    while r + w / 2 <= INSERT_BOSS_D / 2 - 0.8:
+        out.append(c.buffer(r + w / 2, quad_segs=64).difference(c.buffer(r - w / 2, quad_segs=64)))
+        r += pitch
+    from shapely import affinity
+    sp = unary_union([affinity.rotate(box(-spoke / 2, 0, spoke / 2, 40), a, origin=(0, 0)) for a in (45, 135, 225, 315)])
+    return unary_union(out).difference(sp)
+
+
+def pat_hex(af=6.0, wall=1.2):
+    reg, out = _region(), []
+    p, r = af + wall, af / math.sqrt(3)
+    n = int(OPENING_D / p) + 2
     for j in range(-n, n + 1):
         for i in range(-n, n + 1):
-            x, y = (i + (j % 2) * 0.5) * HOLE_PITCH, j * dy
-            if x * x + y * y <= rr * rr:
-                out.append(Point(x, y + CY).buffer(HOLE_D / 2, quad_segs=4))   # 16-gon
-    return out
+            x, y = (i + (j % 2) * 0.5) * p, j * p * math.sqrt(3) / 2
+            h = Polygon([(x + r * math.cos(math.radians(30 + 60 * k)), y + r * math.sin(math.radians(30 + 60 * k)))
+                         for k in range(6)])
+            if reg.contains(h):
+                out.append(h)
+    return unary_union(out)
+
+
+def pat_holes(d=3.0, pitch=3.8):
+    reg, out = _region().buffer(-d / 2), []
+    dy = pitch * math.sqrt(3) / 2
+    n = int(OPENING_D / dy) + 2
+    for j in range(-n, n + 1):
+        for i in range(-n, n + 1):
+            x, y = (i + (j % 2) * 0.5) * pitch, j * dy
+            if reg.contains(Point(x, y)):
+                out.append(Point(x, y).buffer(d / 2, quad_segs=4))
+    return unary_union(out)
+
+
+PATTERNS = dict(hslots=pat_hslots, rings=pat_rings, hex=pat_hex, holes=pat_holes)
+
+
+def insert_plate(side):
+    """The plate follows the pocket it sits in (front: inside the face lip; back: the rear pad pocket), less 0.2: the
+    octagon keeps slots from turning."""
+    from shapely import affinity
+    shape = (PAD_POCKET.buffer(-LIP_GAP, join_style=2).buffer(-LIP_W, join_style=2) if side == "front"
+             else PAD_POCKET).buffer(-0.2, join_style=2)
+    return affinity.translate(shape, 0, -CY)
+
+
+def grille_insert(pattern, side):
+    """Boss (z 0..boss, outside face first) + plate. Prints boss down; the slot spine in the plate layer bridges 1.8."""
+    boss_l, plate_t = (T6, INSERT_PLATE_F) if side == "front" else (GRILLE_T, INSERT_PLATE_B)
+    holes = PATTERNS[pattern]()
+    plate = insert_plate(side).difference(holes)
+    if pattern == "hslots":                                    # hidden spine: stiffens the long bars
+        plate = plate.union(box(-0.6, -OPENING_D / 2, 0.6, OPENING_D / 2).intersection(insert_plate(side)))
+    boss = Point(0, 0).buffer(INSERT_BOSS_D / 2, quad_segs=64).difference(holes)
+    return slab(boss, 0, boss_l) + slab(plate, boss_l - 0.01, boss_l + plate_t), holes
 
 
 def csk(part, x, y, face_z, depth_dir):
@@ -158,7 +229,7 @@ def ribbed_plate(holes, total, skin, skin_front, extra=None):
         g.append(box(k * pitch - 0.6, 0, k * pitch + 0.6, H))
         g.append(box(-W / 2, CY + k * pitch - 0.6, W / 2, CY + k * pitch + 0.6))
     ribs = unary_union([OUTLINE.difference(OUTLINE.buffer(-WALL, join_style=2)),
-                        Point(0, CY).buffer(GRILLE_D / 2 + 1.6, quad_segs=32), bosses(BOSS_R + 1.0)] + g
+                        Point(0, CY).buffer(OPENING_D / 2 + 2.0, quad_segs=64), bosses(BOSS_R + 1.0)] + g
                        + ([extra] if extra is not None else []))
     ribs = ribs.intersection(OUTLINE).difference(cut)
     s0, s1 = (0, skin) if skin_front else (total - skin, total)
@@ -167,7 +238,7 @@ def ribbed_plate(holes, total, skin, skin_front, extra=None):
 
 
 def p1_face():
-    holes = grille_holes()
+    holes = [opening()]
     mags = unary_union([Point(x, y).buffer(5.0) for x, y in MAGNET_XY]) if MAGNETS else None
     p = ribbed_plate(holes, T6, 1.6, True, mags)
     lip_cut = unary_union([Point(x, y).buffer(BOSS_R + 0.3) for x, y in FAN_SCREWS])
@@ -176,7 +247,7 @@ def p1_face():
     if MAGNETS:
         for x, y in MAGNET_XY:
             p -= Pos(x, y, T6 - (MAGNET_T + 0.1) / 2 + 0.01) * Cylinder(MAGNET_D / 2 + 0.05, MAGNET_T + 0.1)
-    return p, len(holes)
+    return p
 
 
 def p2_filter():
@@ -208,7 +279,7 @@ def p3_body():
     wire = box(26, CY - FAN / 2 - FAN_GAP - INNER - 0.5, 34, CY - FAN / 2)       # fan lead into the chin
     p = slab(framed(FAN_POCKET, handle_cols.intersection(OUTLINE)).difference(wire), 0, FT)
     p += slab(framed(PAD_POCKET), FT - 0.01, FT + PAD_T)
-    p += Pos(0, 0, FT + PAD_T - 0.01) * ribbed_plate(grille_holes(), GRILLE_T, 1.2, False)
+    p += Pos(0, 0, FT + PAD_T - 0.01) * ribbed_plate([opening()], GRILLE_T, 1.2, False)
     blind = T3 - 1.2                                                 # screw holes stop short of the back face
     for x, y in FAN_SCREWS:                                          # inserts on the bosses under the fan corners
         p -= Pos(x, y, (FT + blind) / 2) * Cylinder(M3_CLEAR / 2, blind - FT + 0.02)
@@ -245,7 +316,16 @@ def checks():
     add("fan pocket keeps a 2.4 wall at its corners", inner.contains(FAN_POCKET) * 1.0, inner.contains(FAN_POCKET), "")
     add("pad pocket inside the wall", 1.0, inner.contains(PAD_POCKET), "")
     add("pad still covers the fan disc", PAD_POCKET.distance(Point(0, CY)) * 0 + 1.0,
-        PAD_POCKET.buffer(-0.5).contains(Point(0, CY).buffer(GRILLE_D / 2)), "")
+        PAD_POCKET.buffer(-0.5).contains(opening()), "")
+    from shapely import affinity
+    for side in ("front", "back"):
+        pl = affinity.translate(insert_plate(side), 0, CY)
+        ledge = pl.exterior.distance(Point(0, CY)) - OPENING_D / 2
+        add(f"{side} insert: plate overlaps the panel round the hole", ledge, ledge >= 1.2)
+    lip_in = PAD_POCKET.buffer(-LIP_GAP, join_style=2).buffer(-LIP_W, join_style=2)
+    add("front insert plate inside the face lip", 1.0, lip_in.contains(affinity.translate(insert_plate("front"), 0, CY)), "")
+    add("front insert plate within the lip height", LIP_H - INSERT_PLATE_F, LIP_H - INSERT_PLATE_F >= 0)
+    add("back insert plate + 9 mm pad fill the rear pocket", PAD_T - INSERT_PLATE_B - 9.0, PAD_T - INSERT_PLATE_B - 9.0 >= 0)
     hx = HANDLE_PITCH / 2
     add("top inserts on the flat top", W / 2 - R - (hx + TOP_INSERT_BORE / 2), W / 2 - R - (hx + TOP_INSERT_BORE / 2) >= 2)
     add("floor under the top inserts", TOP_WALL - TOP_INSERT_DEPTH, TOP_WALL - TOP_INSERT_DEPTH >= 1.2)
@@ -279,8 +359,7 @@ def main():
             raise SystemExit("checks failed")
         return
     OUT.mkdir(parents=True, exist_ok=True)
-    face, n_holes = p1_face()
-    parts = dict(P1_face=face, P2_filter=p2_filter(), P3_body=p3_body())
+    parts = dict(P1_face=p1_face(), P2_filter=p2_filter(), P3_body=p3_body())
     flip = {"P2_filter", "P3_body"}       # print with the back face on the bed
     z, meta = 0.0, []
     for name, t in LAYERS:
@@ -291,10 +370,19 @@ def main():
         export_stl(printed, str(OUT / f"{name}_print.stl"))
         meta.append(dict(name=name, z=round(z, 2), t=round(t, 2), cm3=round(vol, 1), g_petg=round(vol * 1.27, 0)))
         z += t
+    grilles = []
+    pats = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--grilles=")), ["hslots"])
+    for pat in pats:
+        for side in ("front", "back"):
+            g, holes = grille_insert(pat, side)
+            name = f"G_{pat}_{side}"
+            export_stl(g, str(OUT / f"{name}_print.stl"))           # boss down
+            export_stl(g, str(OUT / f"{name}.stl"))
+            grilles.append(dict(name=name, pattern=pat, side=side, open_pct=round(100 * holes.area / (math.pi * OPENING_D ** 2 / 4)),
+                                openings=len(holes.geoms) if hasattr(holes, "geoms") else 1, cm3=round(g.volume / 1000, 1)))
     res, fan_in, chin_in = checks()
     summary = dict(
-        body=dict(w=W, h=H, cy=CY, depth=round(z, 1), r=R), grille_holes=n_holes,
-        open_area_pct=round(100 * (math.pi / 4 * HOLE_D ** 2) / (HOLE_PITCH ** 2 * math.sqrt(3) / 2)),
+        body=dict(w=W, h=H, cy=CY, depth=round(z, 1), r=R, opening=OPENING_D), grilles=grilles,
         layers=meta, total_cm3=round(sum(m["cm3"] for m in meta), 1),
         total_g_petg=round(sum(m["g_petg"] for m in meta)),
         screws=dict(stack=f"6 x M3 x {SCREW_L:.0f} CSK",
