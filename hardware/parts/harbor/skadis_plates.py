@@ -120,8 +120,8 @@ def scissors_s():
 
 def clip():
     """One tape measure: a fin parallel to the plate, joined at the bottom, open at the top; the tape's belt clip
-    slides down into the gap behind it. Gap and fin are guesses until a clip is measured."""
-    w, gap, fin, top = 24.0, 3.0, 3.0, Z_ROOF + 4                 # just wider than the sleeve boss
+    slides down into the 5 mm gap behind it. Fin and gap are not measured against a clip yet."""
+    w, gap, fin, top = 24.0, 5.0, 3.0, Z_ROOF + 4                 # gap 3 -> 5 (Allwin, 2026-10-31: more room for the clip)
     part = plate([0.0], BOSS["w"], Z0, top, strip=4.0)
     part += box(-w / 2, w / 2, Y_F - 0.1, Y_F + gap + fin, Z0, Z0 + 4.0)                     # joins at the bottom
     part += box(-w / 2, w / 2, Y_F + gap, Y_F + gap + fin, Z0, top)                          # the fin ("belt")
@@ -188,6 +188,7 @@ BED, MARGIN, SPACE = 256.0, 8.0, 6.0
 JOB = [("holes_l", 1), ("holes_s", 1), ("legs_s", 2), ("scissors_l", 1), ("scissors_s", 2), ("clip", 1)]   # large rings
 CUPS = [("plier_cup_l", 2), ("plier_cup_s", 2)]          # -> plier cups, their own job (bed_plier_cups)
 SPARE_HOOKS = 2
+SPARE_HOOKS_ON_HAND = 3                                   # printed earlier; the final job prints that many fewer
 SLEEVES = {"holes_l": [-40.0, 0.0, 40.0], "holes_s": [-40.0, 0.0, 40.0], "legs_l": [-20.0, 20.0], "legs_s": [0.0],
            "scissors_l": [0.0], "scissors_s": [0.0], "clip": [0.0], "adapter": [0.0], "plier_cup_l": [-20.0, 20.0],
            "plier_cup_s": [-20.0, 20.0]}
@@ -260,6 +261,9 @@ def main():
     write_bed("bed_harbor_skadis", items)
     write_bed("bed_plier_cups", [(n, meshes[n].copy().apply_transform(turn)) for n, k in CUPS for _ in range(k)]
               + [("hook", h.copy()) for _ in range(sum(HOOKS[n] * k for n, k in CUPS))])
+    final = [(n, k) for n, k in CUPS] + [("clip", 1)]       # 2026-10-31 job; Allwin has 4 spare hooks
+    write_bed("bed_final_cups_clip", [(n, meshes[n].copy().apply_transform(turn)) for n, k in final for _ in range(k)]
+              + [("hook", h.copy()) for _ in range(sum(HOOKS[n] * k for n, k in final) - SPARE_HOOKS_ON_HAND)])
     write_bed("bed_fit_test", [("fit_strip", strip.copy().apply_transform(turn))] + [("hook", h.copy()) for _ in range(3)])
 
 
