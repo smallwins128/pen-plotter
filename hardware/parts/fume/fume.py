@@ -1,14 +1,15 @@
-"""Fume extractor: five printed layers that stack front to back around an 80 mm fan (Allwin, 2026-10-31).
+"""Fume extractor: three printed parts that stack front to back around an 80 mm fan (Allwin, 2026-10-31).
 
 v2: the stack screws run through the fan's own corner holes (71.5 square), so the body only wraps the fan (90 wide).
-v3 (Allwin): one set of screws. Six M3 run from the front of L5 all the way into heat-set inserts in the back part, which
-is the rear filter and the back grille in one print. The back and the face show no screws.
+v3: one set of screws from the front, into heat-set inserts at the back; magnets on the screw heads hold the face.
+v4 (Allwin): the spacer goes, the jack and switch move into the fan layer's chin, and the fan, rear filter and back
+grille are one print. Only M3 x 50 countersunk are on hand, so the inserts sit where 50 mm screws reach them.
 
-    L6 face    grille, flush and screwless; a lip in the pad pocket + 4 magnets that snap onto 4 magnets in L5
-    L5 filter  front carbon pad; the 6 screw heads, hidden under L6; the 4 fan screws sit 2.1 deep with a magnet on each
-    L4 spacer  plenum in front of the fan, grid that carries the front pad, DC jack + switch in its right side
-    L3 fan     80 x 80 x 25 fan in a pocket on a back ring; 2 x M4 inserts on top for a 5-hole Meccano strip handle
-    L1 back    rear carbon pad pocket + exhaust grille; 6 M3 heat-set inserts in its front face (blind)
+    P1 face    grille, flush and screwless; a lip in the pad pocket + 4 magnets that snap onto 4 magnets in P2
+    P2 filter  front carbon pad on a rib grid, 3.5 mm plenum behind it; the 6 screw heads, hidden under P1
+               (the 4 fan screws sit 2.1 deep with a magnet on each)
+    P3 body    fan pocket, rear pad pocket and exhaust grille in one; DC jack + switch in the chin; 2 x M4 inserts on top
+               for a 5-hole Meccano strip handle; 6 M3 inserts: 4 on bosses under the fan corners, 2 at the chin face
 
 Air: grille -> front pad -> plenum -> fan -> rear pad -> grille. Layers are walls with a hollow where there is room,
 closed by the two grille plates. The chin under the fan carries the wiring.
@@ -56,19 +57,19 @@ CSK_D = 6.4
 BOSS_R = 4.0
 LIP_H, LIP_W, LIP_GAP = 3.0, 1.6, 0.15          # face-plate lip into the front pad pocket
 GRILLE_D, HOLE_D, HOLE_PITCH = 76.0, 3.0, 3.8   # round holes on a hex grid: about 56 % open
-OPEN_D = 78.0                                   # plenum / fan ring opening
 MAGNETS = True
 
 # --- layer depths ---
 T6 = 3.0                       # face: magnet pockets 2.1 deep leave 0.9 of face
 MAG_SEAT = MAGNET_T + 0.1      # L5: a magnet sits on each fan-screw head, in a Ø6.1 counterbore this deep
-T5 = PAD_T + LIP_H             # the lip fills the front 3 mm of the pocket
-T4 = 14.0                      # jack + nut
-SKIN3 = 1.2                    # back ring the fan sits on
-T3 = FAN_T + FAN_GAP + SKIN3   # fan pocket + back ring that holds the fan
+PLENUM = 3.5                   # P2: rib grid that carries the pad, and the air gap in front of the fan
+T5 = LIP_H + PAD_T + PLENUM    # the face lip fills the front 3 mm of the pocket
+FT = FAN_T + FAN_GAP           # P3: fan pocket depth
 GRILLE_T = 2.4                 # back grille: 1.2 skin + 1.2 ribs
-T1 = PAD_T + GRILLE_T          # back part: rear pad pocket in front of the grille
-LAYERS = [("L6_face", T6), ("L5_filter_front", T5), ("L4_spacer", T4), ("L3_fan", T3), ("L1_back", T1)]
+T3 = FT + PAD_T + GRILLE_T     # P3: fan pocket, rear pad pocket, grille
+SCREW_L = 50.0                 # the only M3 countersunk length on hand
+JACK_Z = 12.0                  # jack and switch, depth into P3 (the chin is open from its front face to the grille)
+LAYERS = [("P1_face", T6), ("P2_filter", T5), ("P3_body", T3)]
 
 # --- fixings ---
 FAN_SCREWS = [(sx * FAN_HOLE / 2, CY + sy * FAN_HOLE / 2) for sx in (-1, 1) for sy in (-1, 1)]
@@ -95,7 +96,6 @@ def pad_poly(size, clip):
 
 PAD_POCKET = pad_poly(PAD + 1.0, PAD_CLIP).buffer(0)
 PAD_POCKET = Polygon([(x, y + CY) for x, y in PAD_POCKET.exterior.coords])
-OPEN = Point(0, CY).buffer(OPEN_D / 2, quad_segs=32)
 
 
 def bosses(r=BOSS_R, extra=()):
@@ -165,7 +165,7 @@ def ribbed_plate(holes, total, skin, skin_front, extra=None):
     return slab(OUTLINE.difference(cut), s0, s1) + slab(ribs, r0, r1)
 
 
-def l6_face():
+def p1_face():
     holes = grille_holes()
     mags = unary_union([Point(x, y).buffer(5.0) for x, y in MAGNET_XY]) if MAGNETS else None
     p = ribbed_plate(holes, T6, 1.6, True, mags)
@@ -178,10 +178,16 @@ def l6_face():
     return p, len(holes)
 
 
-def l5_filter_front():
-    """Screw heads: the 4 fan screws countersunk under a Ø6.1 x 2.1 seat for a magnet (it clings to the steel head);
-    the 2 chin screws flush with the face."""
+def p2_filter():
+    """Front pad pocket with a rib grid behind the pad (the plenum). Screw heads: the 4 fan screws countersunk under a
+    Ø6.1 x 2.1 seat for a magnet (it clings to the steel head); the 2 chin screws flush. Prints back down: the ribs
+    land on the bed, the seats face up."""
     p = slab(framed(PAD_POCKET), 0, T5)
+    g, pitch, rib = [], 13.0, 1.2
+    for k in range(-3, 4):
+        g.append(box(k * pitch - rib / 2, 0, k * pitch + rib / 2, H))
+        g.append(box(-W / 2, CY + k * pitch - rib / 2, W / 2, CY + k * pitch + rib / 2))
+    p += slab(unary_union(g).intersection(PAD_POCKET.buffer(0.5)), LIP_H + PAD_T, T5)
     for x, y in FAN_SCREWS:
         p = through(p, x, y, T5)
         p -= Pos(x, y, MAG_SEAT / 2 - 0.01) * Cylinder(MAGNET_D / 2 + 0.05, MAG_SEAT)
@@ -191,61 +197,29 @@ def l5_filter_front():
     return p
 
 
-def diag_ribs(r_from, w=2.4):
-    """Ribs from the opening ring out to the four fan-corner bosses (carry the fan and pad corners)."""
-    ribs = []
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            a = Point(sx * r_from / math.sqrt(2), CY + sy * r_from / math.sqrt(2))
-            b = Point(sx * FAN_HOLE / 2, CY + sy * FAN_HOLE / 2)
-            ribs.append(LineString([a, b]).buffer(w / 2, cap_style=2))
-    return unary_union(ribs)
-
-
-def l4_spacer():
-    p = slab(framed(OPEN, diag_ribs(OPEN_D / 2)), 0, T4)
-    # grid that carries the front pad across the opening, 2 mm deep at the front face (prints on the bed)
-    g, pitch, rib = [], 13.0, 1.2
-    for k in range(-3, 4):
-        g.append(box(k * pitch - rib / 2, CY - OPEN_D / 2, k * pitch + rib / 2, CY + OPEN_D / 2))
-        g.append(box(-OPEN_D / 2, CY + k * pitch - rib / 2, OPEN_D / 2, CY + k * pitch + rib / 2))
-    p += slab(unary_union(g).intersection(OPEN.buffer(0.5)), 0, 2.0)
-    for x, y in SCREWS:
-        p = through(p, x, y, T4)
-    # right side, in the chin: DC jack and switch (print: front face down, so the points face +z)
-    for y, d in ((JACK_Y, JACK_D), (SWITCH_Y, SWITCH_D)):
-        p -= teardrop("x", W / 2 - WALL / 2, y, T4 / 2, d + 0.2, WALL + 2, +1)
-    return p
-
-
-def l3_fan():
+def p3_body():
+    """Fan pocket (0..FT), rear pad pocket (FT..FT+PAD_T), grille. The fan sits on the four corner bosses and on the
+    pad. Prints back down (grille on the bed); "up" in the print is -z here."""
     hx = HANDLE_PITCH / 2
     handle_cols = unary_union([Point(sx * hx, H).buffer(M4_INSERT_BORE / 2 + 2.0).union(
         box(sx * hx - M4_INSERT_BORE / 2 - 2.0, CY + FAN / 2 + FAN_GAP, sx * hx + M4_INSERT_BORE / 2 + 2.0, H))
         for sx in (-1, 1)])
     wire = box(26, CY - FAN / 2 - FAN_GAP - INNER - 0.5, 34, CY - FAN / 2)       # fan lead into the chin
-    shape = framed(FAN_POCKET, handle_cols.intersection(OUTLINE)).difference(wire)
-    p = slab(shape, 0, FAN_T + FAN_GAP)
-    ring = shape.union(FAN_POCKET.difference(OPEN))                            # back ring: the fan sits on it
-    p += slab(ring, FAN_T + FAN_GAP - 0.01, T3)
-    for x, y in SCREWS:
-        p = through(p, x, y, T3)
-    # handle: 2 x M4 heat-set inserts down into the top, 50.8 apart, for standoffs and a 5-hole Meccano strip.
-    # Horizontal in the print, so the bore is a teardrop (L3 prints flipped: "up" in the print is -z here).
-    zc = (FAN_T + FAN_GAP) / 2
-    for sx in (-1, 1):
-        p -= teardrop("y", sx * hx, H - M4_INSERT_DEPTH / 2 + 0.01, zc, M4_INSERT_BORE, M4_INSERT_DEPTH, -1)
-    return p
-
-
-def l1_back():
-    """Rear pad pocket (z 0..PAD_T) on the back grille (PAD_T..T1). Inserts go into the front face; the screw holes
-    stop 1.2 short of the back face so the back stays clean."""
-    p = slab(framed(PAD_POCKET), 0, PAD_T) + Pos(0, 0, PAD_T - 0.01) * ribbed_plate(grille_holes(), GRILLE_T, 1.2, False)
-    blind = T1 - 1.2
-    for x, y in SCREWS:
+    p = slab(framed(FAN_POCKET, handle_cols.intersection(OUTLINE)).difference(wire), 0, FT)
+    p += slab(framed(PAD_POCKET), FT - 0.01, FT + PAD_T)
+    p += Pos(0, 0, FT + PAD_T - 0.01) * ribbed_plate(grille_holes(), GRILLE_T, 1.2, False)
+    blind = T3 - 1.2                                                 # screw holes stop short of the back face
+    for x, y in FAN_SCREWS:                                          # inserts on the bosses under the fan corners
+        p -= Pos(x, y, (FT + blind) / 2) * Cylinder(M3_CLEAR / 2, blind - FT + 0.02)
+        p -= Pos(x, y, FT + INSERT_DEPTH / 2 - 0.01) * Cylinder(INSERT_BORE / 2, INSERT_DEPTH)
+    for x, y in CHIN_SCREWS:                                         # inserts at the front face of the chin
         p -= Pos(x, y, blind / 2) * Cylinder(M3_CLEAR / 2, blind + 0.02)
         p -= Pos(x, y, INSERT_DEPTH / 2 - 0.01) * Cylinder(INSERT_BORE / 2, INSERT_DEPTH)
+    for y, d in ((JACK_Y, JACK_D), (SWITCH_Y, SWITCH_D)):            # right side, in the chin
+        p -= teardrop("x", W / 2 - WALL / 2, y, JACK_Z, d + 0.2, WALL + 2, -1)
+    zc = FT / 2                                                      # handle: M4 inserts down into the top
+    for sx in (-1, 1):
+        p -= teardrop("y", sx * hx, H - M4_INSERT_DEPTH / 2 + 0.01, zc, M4_INSERT_BORE, M4_INSERT_DEPTH, -1)
     return p
 
 
@@ -264,8 +238,6 @@ def checks():
         add(f"screw {i + 1}: insert bore to outside", d, d >= 1.5)
         d = PAD_POCKET.distance(c) - INSERT_BORE / 2
         add(f"screw {i + 1}: bore to pad pocket", d, d >= 1.5)
-        d = OPEN.distance(c) - INSERT_BORE / 2
-        add(f"screw {i + 1}: bore to plenum", d, d >= 1.5)
     for i, (x, y) in enumerate(FAN_SCREWS):
         add(f"fan hole {i + 1} inside the fan pocket", FAN_POCKET.exterior.distance(Point(x, y)),
             FAN_POCKET.contains(Point(x, y)))
@@ -276,28 +248,24 @@ def checks():
     hx = HANDLE_PITCH / 2
     add("top inserts on the flat top", W / 2 - R - (hx + M4_INSERT_BORE / 2), W / 2 - R - (hx + M4_INSERT_BORE / 2) >= 2)
     add("floor under the top inserts", TOP_WALL - M4_INSERT_DEPTH, TOP_WALL - M4_INSERT_DEPTH >= 1.2)
-    add("switch hole below the plenum", (CY - OPEN_D / 2 - INNER) - (SWITCH_Y + SWITCH_D / 2),
-        (CY - OPEN_D / 2 - INNER) - (SWITCH_Y + SWITCH_D / 2) >= 1.5)
-    fan_grip = T5 - MAG_SEAT + T4 + T3            # from the seated head to the back part
-    chin_grip = T5 + T4 + T3
+    sw_gap = (CY - FAN / 2 - FAN_GAP - INNER) - (SWITCH_Y + SWITCH_D / 2)
+    add("switch hole below the fan pocket wall", sw_gap, sw_gap >= 1.5)
+    add("jack nut room in the chin (depth)", JACK_Z - JACK_D / 2, JACK_Z - JACK_D / 2 >= 3)
     add("fan-screw seat leaves a boss under the head", T5 - MAG_SEAT, T5 - MAG_SEAT >= 6)
-    return out, fan_grip, chin_grip
-
-
-def pick_screw(grip, stock=(10, 12, 16, 20, 25, 30, 35, 40, 45, 50, 55, 60)):
-    """Shortest stock countersunk length that bites >= 4 mm into the back part without reaching the blind end."""
-    for L in stock:
-        if 4.0 <= L - grip <= T1 - 1.2 - 0.5:
-            return L, L - grip
-    return None, None
+    blind = T3 - 1.2
+    fan_in = SCREW_L - (T5 - MAG_SEAT)             # screw length past P2, into P3
+    chin_in = SCREW_L - T5
+    add("fan screws: bite in the insert under the fan", min(fan_in - FT, INSERT_DEPTH), fan_in - FT >= INSERT_DEPTH)
+    add("fan screws: tip short of the back face", blind - fan_in, blind - fan_in >= 0.5)
+    add("chin screws: tip short of the back face", blind - chin_in, blind - chin_in >= 0.5)
+    return out, fan_in, chin_in
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    face, n_holes = l6_face()
-    parts = dict(L6_face=face, L5_filter_front=l5_filter_front(), L4_spacer=l4_spacer(), L3_fan=l3_fan(),
-                 L1_back=l1_back())
-    flip = {"L3_fan", "L1_back"}          # print with the back face on the bed
+    face, n_holes = p1_face()
+    parts = dict(P1_face=face, P2_filter=p2_filter(), P3_body=p3_body())
+    flip = {"P2_filter", "P3_body"}       # print with the back face on the bed
     z, meta = 0.0, []
     for name, t in LAYERS:
         part = parts[name]
@@ -307,20 +275,17 @@ def main():
         export_stl(printed, str(OUT / f"{name}_print.stl"))
         meta.append(dict(name=name, z=round(z, 2), t=round(t, 2), cm3=round(vol, 1), g_petg=round(vol * 1.27, 0)))
         z += t
-    res, fan_grip, chin_grip = checks()
-    fl, fb = pick_screw(fan_grip)
-    cl, cb = pick_screw(chin_grip)
-    for name, L in (("fan screws", fl), ("chin screws", cl)):
-        res.append(dict(check=f"{name}: a stock length fits", value=L or 0, unit="mm", ok=L is not None))
+    res, fan_in, chin_in = checks()
     summary = dict(
         body=dict(w=W, h=H, cy=CY, depth=round(z, 1), r=R), grille_holes=n_holes,
         open_area_pct=round(100 * (math.pi / 4 * HOLE_D ** 2) / (HOLE_PITCH ** 2 * math.sqrt(3) / 2)),
         layers=meta, total_cm3=round(sum(m["cm3"] for m in meta), 1),
         total_g_petg=round(sum(m["g_petg"] for m in meta)),
-        screws=dict(stack=(f"6 x M3 x {fl} CSK" if fl == cl else f"4 x M3 x {fl} + 2 x M3 x {cl} CSK"),
-                    fan_fit=f"grip {fan_grip:.1f}, bite {fb:.1f}", chin_fit=f"grip {chin_grip:.1f}, bite {cb:.1f}",
-                    inserts="6 x M3 heat-set in the back part",
-                    magnets="8 x Ø6 x 2: 4 on the L5 fan-screw heads, 4 in the face",
+        screws=dict(stack=f"6 x M3 x {SCREW_L:.0f} CSK",
+                    fan_fit=f"{fan_in:.1f} into the body, tip {T3 - 1.2 - fan_in:.1f} short of the back",
+                    chin_fit=f"{chin_in:.1f} into the body, tip {T3 - 1.2 - chin_in:.1f} short of the back",
+                    inserts="6 x M3 heat-set in the body (4 under the fan corners, 2 at the chin)",
+                    magnets="8 x Ø6 x 2: 4 on the P2 fan-screw heads, 4 in the face",
                     handle=f"2 x M4 heat-set in the top, {HANDLE_PITCH:.1f} apart (5-hole Meccano strip on M4 standoffs)"),
         checks=res, failed=[c for c in res if not c["ok"]])
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
