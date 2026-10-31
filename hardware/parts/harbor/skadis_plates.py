@@ -144,12 +144,13 @@ def frustum(x0, y0, x1, y1, z0, z1):
 
 def plier_cup():
     """Pliers and crimpers, head down (Allwin's reference photo, 2026-10-31): a cup with an open bottom and sloped
-    walls. The head drops through the 54 x 26 opening and the handles wedge against the walls as they spread, so one
+    walls (3 mm). The head drops through the 54 x 22 opening and the handles wedge against walls that open to 66 x 32 over
+    20 mm as they spread, so one
     size takes the ferrule crimper (head ~50, handle ends ~80 apart), the teal crimper (~32 / ~60) and needle-nose
     (~18 / ~61); sizes measured off the photo, +-3 mm. Two hooks; the cup's back wall is the plate."""
-    w, h, t = 2 * 40 - GAP, 25.0, 2.0
-    bot, top = (27.0, 26.0), (36.0, 40.0)                 # inner half-width along the board, inner depth
-    part = plate([-20.0, 20.0], w, Z0, Z_ROOF, strip=4.0)
+    w, h, t = 2 * 40 - GAP, 20.0, 3.0                     # v2 (Allwin: v1 too large, too thin)
+    bot, top = (27.0, 22.0), (33.0, 32.0)                 # inner half-width along the board, inner depth
+    part = plate([-20.0, 20.0], 2 * (top[0] + t), Z0, Z_ROOF, strip=4.0)   # strip no wider than the cup
     part += frustum(bot[0] + t, (Y_BODY, Y_F + bot[1] + t), top[0] + t, (Y_BODY, Y_F + top[1] + t), Z0, Z0 + h)   # own back wall
     k = 1.0 / h                                           # extend the inner cut 1 mm past both ends, same slope
     ib = [bot[0] - (top[0] - bot[0]) * k, bot[1] - (top[1] - bot[1]) * k]
