@@ -60,7 +60,8 @@ HANDLE_PITCH = 4 * MECCANO                      # 5-hole strip: its end holes, t
 TOP_INSERT_BORE, TOP_INSERT_DEPTH = 4.2, 4.5    # handle: M3 inserts too (only M3 in this build), M3 standoffs
 TOP_WALL = TOP_INSERT_DEPTH + 1.5               # above the fan pocket: the insert plus a floor
 H = CY + FAN / 2 + FAN_GAP + TOP_WALL           # 126.2
-MAGNET_D, MAGNET_T = 6.0, 2.0                   # 4 discs in the face pull on the steel L5 screw heads
+MAGNET_D, MAGNET_T = 6.0, 1.5                   # Ø6 x 1.5 discs, as in the enclosure plans (in stock)
+MAG_POCKET_D, MAG_POCKET_T = 6.05, 1.6          # the enclosure's pocket size (fit_kit: magnet_pocket, MAG_DEPTH)
 
 # --- fit (from fit_kit.py where tested) ---
 M3_CLEAR, INSERT_BORE, INSERT_DEPTH = 3.4, 4.2, 4.5   # M3 heat-set inserts are 4 long (measured)
@@ -73,7 +74,7 @@ INSERT_PLATE_F, INSERT_PLATE_B = 1.6, 1.0       # insert plate behind the face (
 MAGNETS = True
 
 # --- layer depths ---
-T6 = 3.0                       # face: magnet pockets 2.1 deep leave 0.9 of face
+T6 = 3.0                       # face: magnet pockets 1.6 deep leave 1.4 of face
 PLENUM = 3.5                   # P2: rib grid that carries the pad, and the air gap in front of the fan
 T5 = LIP_H + PAD_T + PLENUM    # the face lip fills the front 3 mm of the pocket
 FT = FAN_T + FAN_GAP           # P3: fan pocket depth
@@ -246,7 +247,7 @@ def p1_face():
     p += slab(lip_out.difference(lip_out.buffer(-LIP_W, join_style=2)).difference(lip_cut), T6 - 0.01, T6 + LIP_H)
     if MAGNETS:
         for x, y in MAGNET_XY:
-            p -= Pos(x, y, T6 - (MAGNET_T + 0.1) / 2 + 0.01) * Cylinder(MAGNET_D / 2 + 0.05, MAGNET_T + 0.1)
+            p -= Pos(x, y, T6 - MAG_POCKET_T / 2 + 0.01) * Cylinder(MAG_POCKET_D / 2, MAG_POCKET_T)
     return p
 
 
@@ -291,7 +292,7 @@ def p2_filter():
     for x, y in SCREWS:
         p = csk(through(p, x, y, T5), x, y, 0, +1)
     for x, y in MAGNET_XY:
-        p -= Pos(x, y, (MAGNET_T + 0.1) / 2 - 0.01) * Cylinder(MAGNET_D / 2 + 0.05, MAGNET_T + 0.1)
+        p -= Pos(x, y, MAG_POCKET_T / 2 - 0.01) * Cylinder(MAG_POCKET_D / 2, MAG_POCKET_T)
     return p
 
 
@@ -461,7 +462,7 @@ def main():
                     fan_fit=f"{fan_in:.1f} into the body, tip {T3 - 1.2 - fan_in:.1f} short of the back",
                     chin_fit=f"{chin_in:.1f} into the body, tip {T3 - 1.2 - chin_in:.1f} short of the back",
                     inserts="6 x M3 heat-set in the body (4 under the fan corners, 2 at the chin)",
-                    magnets="6 x Ø6 x 2: 3 in the filter part's chin (bottom centre, each side low), 3 in the face",
+                    magnets="6 x Ø6 x 1.5: 3 in the filter part's chin (bottom centre, each side low), 3 in the face",
                     handle=f"2 x M3 heat-set in the top, {HANDLE_PITCH:.1f} apart (decorative 5-hole Meccano strip on M3 x 5 standoffs)"),
         checks=res, failed=[c for c in res if not c["ok"]])
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))

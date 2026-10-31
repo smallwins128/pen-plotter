@@ -74,7 +74,7 @@ li{margin:3px 0}
         <li>80 × 80 × 25 fan, 12 V (same as the cabinet fans), on the 3–12 V adaptor: the knob is the speed control</li>
         <li>6 × M3 × 50 countersunk</li>
         <li>8 × M3 heat-set inserts, 4 mm long: 6 for the stack, 2 for the handle</li>
-        <li>6 × Ø6 × 2 magnets</li>
+        <li>6 × Ø6 × 1.5 magnets (the enclosure stock)</li>
         <li>2 × M3 × 5 standoffs, a 5-hole Meccano strip and 2 × M3 screws</li>
         <li>Panel DC jack (Ø12 hole) and a switch (Ø6 hole, 15 mm body), both in the back</li>
         <li>4 × M5 heat-set inserts for side mounting (Ø6.4 × 8 assumed: send me yours)</li>
@@ -178,7 +178,7 @@ const FH = 71.5/2, fanXY = [[-FH,CY-FH],[FH,CY-FH],[-FH,CY+FH],[FH,CY+FH]], chin
 const fanScrews = fanXY.map(([x,y]) => { const s=screw(50); s.position.set(x,y,0); bought.add(s); return s; });
 const chinScrews = chinXY.map(([x,y]) => { const s=screw(50); s.position.set(x,y,0); bought.add(s); return s; });
 const magXY = [[0,5],[-40,28],[40,28]];
-const mags = magXY.map(([x,y]) => { const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,2,20),steel); m.rotation.x=Math.PI/2; m.position.set(x,y,0); bought.add(m); return m; });
+const mags = magXY.map(([x,y]) => { const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,1.5,20),steel); m.rotation.x=Math.PI/2; m.position.set(x,y,0); bought.add(m); return m; });
 
 function layout(e){
   const gap = e * 40;
