@@ -142,14 +142,10 @@ def frustum(x0, y0, x1, y1, z0, z1):
     return p.part
 
 
-def plier_cup():
+def plier_cup(bot=(27.0, 22.0), top=(33.0, 32.0), h=20.0, t=3.0):
     """Pliers and crimpers, head down (Allwin's reference photo, 2026-10-31): a cup with an open bottom and sloped
-    walls (3 mm). The head drops through the 54 x 22 opening and the handles wedge against walls that open to 66 x 32 over
-    20 mm as they spread, so one
-    size takes the ferrule crimper (head ~50, handle ends ~80 apart), the teal crimper (~32 / ~60) and needle-nose
-    (~18 / ~61); sizes measured off the photo, +-3 mm. Two hooks; the cup's back wall is the plate."""
-    w, h, t = 2 * 40 - GAP, 20.0, 3.0                     # v2 (Allwin: v1 too large, too thin)
-    bot, top = (27.0, 22.0), (33.0, 32.0)                 # inner half-width along the board, inner depth
+    3 mm walls. The head drops through the bottom opening and the handles wedge against the walls as they spread.
+    bot / top = (inner half-width along the board, inner depth). Two hooks; the cup has its own back wall."""
     part = plate([-20.0, 20.0], 2 * (top[0] + t), Z0, Z_ROOF, strip=4.0)   # strip no wider than the cup
     part += frustum(bot[0] + t, (Y_BODY, Y_F + bot[1] + t), top[0] + t, (Y_BODY, Y_F + top[1] + t), Z0, Z0 + h)   # own back wall
     k = 1.0 / h                                           # extend the inner cut 1 mm past both ends, same slope
@@ -157,6 +153,18 @@ def plier_cup():
     it = [top[0] + (top[0] - bot[0]) * k, top[1] + (top[1] - bot[1]) * k]
     part -= frustum(ib[0], (Y_F, Y_F + ib[1]), it[0], (Y_F, Y_F + it[1]), Z0 - 1, Z0 + h + 1)
     return part
+
+
+def plier_cup_l():
+    """Crimpers: 54 x 22 opening for the ferrule crimper's head (~50 wide, off a photo +-3), walls to 66 x 32 over 20.
+    v2 after Allwin found v1 (72 x 40 x 25, 2 mm walls) too large and too thin."""
+    return plier_cup((27.0, 22.0), (33.0, 32.0), 20.0)
+
+
+def plier_cup_s():
+    """Needle-nose, cutters, the teal crimper (head ~32, handle ends ~60 apart): 36 x 18 opening, walls to 52 x 26
+    over 18. Outer 58 wide, so the sleeve columns (+-29) stay inside it."""
+    return plier_cup((18.0, 18.0), (26.0, 26.0), 18.0)
 
 
 def adapter():
@@ -170,17 +178,19 @@ def adapter():
 
 
 PLATES = {"holes_l": holes_l, "holes_s": holes_s, "legs_l": legs_l, "legs_s": legs_s, "scissors_l": scissors_l,
-          "scissors_s": scissors_s, "clip": clip, "adapter": adapter, "plier_cup": plier_cup}
+          "scissors_s": scissors_s, "clip": clip, "adapter": adapter, "plier_cup_l": plier_cup_l,
+          "plier_cup_s": plier_cup_s}
 
 
 # One print job (Bambu A1, 256 x 256). Everything upright as modelled. The A1 slings its bed along Y, so each plate is
 # turned to put its thin wall along Y (it then can't whip back and forth); hooks are small and squat, left as they are.
 BED, MARGIN, SPACE = 256.0, 8.0, 6.0
 JOB = [("holes_l", 1), ("holes_s", 1), ("legs_s", 2), ("scissors_l", 1), ("scissors_s", 2), ("clip", 1)]   # large rings
-CUPS = 4                                                  # -> plier cups, their own job (bed_plier_cups)
+CUPS = [("plier_cup_l", 2), ("plier_cup_s", 2)]          # -> plier cups, their own job (bed_plier_cups)
 SPARE_HOOKS = 2
 SLEEVES = {"holes_l": [-40.0, 0.0, 40.0], "holes_s": [-40.0, 0.0, 40.0], "legs_l": [-20.0, 20.0], "legs_s": [0.0],
-           "scissors_l": [0.0], "scissors_s": [0.0], "clip": [0.0], "adapter": [0.0], "plier_cup": [-20.0, 20.0]}
+           "scissors_l": [0.0], "scissors_s": [0.0], "clip": [0.0], "adapter": [0.0], "plier_cup_l": [-20.0, 20.0],
+           "plier_cup_s": [-20.0, 20.0]}
 HOOKS = {k: len(v) for k, v in SLEEVES.items()}
 
 
@@ -248,8 +258,8 @@ def main():
     n_hooks = sum(HOOKS[name] * n for name, n in JOB) + SPARE_HOOKS
     items += [("hook", h.copy()) for _ in range(n_hooks)]
     write_bed("bed_harbor_skadis", items)
-    write_bed("bed_plier_cups", [("plier_cup", meshes["plier_cup"].copy().apply_transform(turn)) for _ in range(CUPS)]
-              + [("hook", h.copy()) for _ in range(HOOKS["plier_cup"] * CUPS)])
+    write_bed("bed_plier_cups", [(n, meshes[n].copy().apply_transform(turn)) for n, k in CUPS for _ in range(k)]
+              + [("hook", h.copy()) for _ in range(sum(HOOKS[n] * k for n, k in CUPS))])
     write_bed("bed_fit_test", [("fit_strip", strip.copy().apply_transform(turn))] + [("hook", h.copy()) for _ in range(3)])
 
 
