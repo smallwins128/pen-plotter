@@ -10,7 +10,10 @@ grille are one print. Only M3 x 50 countersunk are on hand, so the inserts sit w
                (the 4 fan screws sit 2.1 deep with a magnet on each)
     grilles    v5: the face and the body's back have one plain Ø74 hole each; the grille is a swappable insert (a plate in the
                pocket behind the hole, a boss that fills the hole flush). The stack pins it: no glue, no clips.
-    P3 body    fan pocket, rear pad pocket and back panel in one; DC jack + switch in the chin; 2 x M3 inserts on top
+    v6 (Allwin): the body is a base: back panel, the rear pad between solid corner tabs that stop at the top of the
+               pad, then just the outer wall round the fan, which sits on the tab tops. The 2 chin screws get short
+               tabs too, and 2 printed spacer tubes span the fan zone. Solid corners also end the stray voids.
+    P3 body    rear pad zone, fan zone and back panel in one; DC jack + switch in the chin; 2 x M3 inserts on top
                for a 5-hole Meccano strip handle; 6 M3 inserts: 4 on bosses under the fan corners, 2 at the chin face
 
 Air: grille -> front pad -> plenum -> fan -> rear pad -> grille. Layers are walls with a hollow where there is room,
@@ -105,16 +108,6 @@ PAD_POCKET = Polygon([(x, y + CY) for x, y in PAD_POCKET.exterior.coords])
 
 def bosses(r=BOSS_R, extra=()):
     return unary_union([Point(x, y).buffer(r, quad_segs=16) for x, y in list(SCREWS) + list(extra)])
-
-
-def framed(opening, extra_solid=None):
-    """Outline minus the air opening minus the hollow between the outer and inner walls (bosses stay solid)."""
-    hollow = OUTLINE.buffer(-WALL, join_style=2).difference(opening.buffer(INNER, join_style=2))
-    keep = bosses()
-    if extra_solid is not None:
-        keep = keep.union(extra_solid)
-    hollow = hollow.difference(keep).buffer(-1.5).buffer(1.5)      # no slivers thinner than 3 mm
-    return OUTLINE.difference(opening).difference(hollow)
 
 
 def opening():
@@ -250,11 +243,30 @@ def p1_face():
     return p
 
 
+CHIN_BLOCK = 15.0                                   # chin tabs: corner blocks round the 2 chin screws
+
+
+def chin_blocks():
+    return unary_union([box(sx * (abs(x) - 5.5), 0, sx * W / 2, CHIN_BLOCK) if sx > 0 else
+                        box(-W / 2, 0, -(abs(x) - 5.5), CHIN_BLOCK) for (x, _), sx in zip(CHIN_SCREWS, (-1, 1))])
+
+
+def chin_cavity():
+    """The hollow chin under the pad: inside the outer wall, under a 1.6 rib that carries the pad's bottom edge."""
+    top = PAD_POCKET.bounds[1] - INNER
+    return OUTLINE.buffer(-WALL, join_style=2).intersection(box(-W, -1, W, top)).difference(chin_blocks())
+
+
+def pad_zone():
+    """Section of a pad layer: solid round the pad (the corner tabs are the solid corners), the chin hollow."""
+    return OUTLINE.difference(PAD_POCKET).difference(chin_cavity())
+
+
 def p2_filter():
     """Front pad pocket with a rib grid behind the pad (the plenum). Screw heads: the 4 fan screws countersunk under a
     Ø6.1 x 2.1 seat for a magnet (it clings to the steel head); the 2 chin screws flush. Prints back down: the ribs
     land on the bed, the seats face up."""
-    p = slab(framed(PAD_POCKET), 0, T5)
+    p = slab(pad_zone(), 0, T5)
     g, pitch, rib = [], 13.0, 1.2
     for k in range(-3, 4):
         g.append(box(k * pitch - rib / 2, 0, k * pitch + rib / 2, H))
@@ -270,29 +282,34 @@ def p2_filter():
 
 
 def p3_body():
-    """Fan pocket (0..FT), rear pad pocket (FT..FT+PAD_T), grille. The fan sits on the four corner bosses and on the
-    pad. Prints back down (grille on the bed); "up" in the print is -z here."""
+    """The base. Fan zone (0..FT): the outer wall only, the fan held by its screws and sitting on the tab tops. Rear
+    pad zone (FT..FT+PAD_T): solid corner tabs, the chin tabs, inserts in all six tab tops. Then the back panel.
+    Prints back down (panel on the bed); "up" in the print is -z here."""
     hx = HANDLE_PITCH / 2
-    handle_cols = unary_union([Point(sx * hx, H).buffer(TOP_INSERT_BORE / 2 + 2.0).union(
-        box(sx * hx - TOP_INSERT_BORE / 2 - 2.0, CY + FAN / 2 + FAN_GAP, sx * hx + TOP_INSERT_BORE / 2 + 2.0, H))
-        for sx in (-1, 1)])
-    wire = box(26, CY - FAN / 2 - FAN_GAP - INNER - 0.5, 34, CY - FAN / 2)       # fan lead into the chin
-    p = slab(framed(FAN_POCKET, handle_cols.intersection(OUTLINE)).difference(wire), 0, FT)
-    p += slab(framed(PAD_POCKET), FT - 0.01, FT + PAD_T)
+    handle_cols = unary_union([box(sx * hx - TOP_INSERT_BORE / 2 - 2.0, CY + FAN / 2 + FAN_GAP,
+                                   sx * hx + TOP_INSERT_BORE / 2 + 2.0, H) for sx in (-1, 1)])
+    ring = OUTLINE.difference(OUTLINE.buffer(-WALL, join_style=2)).union(handle_cols.intersection(OUTLINE))
+    p = slab(ring, 0, FT)
+    p += slab(pad_zone(), FT - 0.01, FT + PAD_T)
     p += Pos(0, 0, FT + PAD_T - 0.01) * ribbed_plate([opening()], GRILLE_T, 1.2, False)
     blind = T3 - 1.2                                                 # screw holes stop short of the back face
-    for x, y in FAN_SCREWS:                                          # inserts on the bosses under the fan corners
+    for x, y in SCREWS:                                              # inserts in the six tab tops
         p -= Pos(x, y, (FT + blind) / 2) * Cylinder(M3_CLEAR / 2, blind - FT + 0.02)
         p -= Pos(x, y, FT + INSERT_DEPTH / 2 - 0.01) * Cylinder(INSERT_BORE / 2, INSERT_DEPTH)
-    for x, y in CHIN_SCREWS:                                         # inserts at the front face of the chin
-        p -= Pos(x, y, blind / 2) * Cylinder(M3_CLEAR / 2, blind + 0.02)
-        p -= Pos(x, y, INSERT_DEPTH / 2 - 0.01) * Cylinder(INSERT_BORE / 2, INSERT_DEPTH)
     for y, z, d in ((JACK_Y, JACK_Z, JACK_D), (SWITCH_Y, SWITCH_Z, SWITCH_D)):   # right side, in the chin
         p -= teardrop("x", W / 2 - WALL / 2, y, z, d + 0.2, WALL + 2, -1)
     zc = FT / 2                                                      # handle: M3 inserts down into the top
     for sx in (-1, 1):
         p -= teardrop("y", sx * hx, H - TOP_INSERT_DEPTH / 2 + 0.01, zc, TOP_INSERT_BORE, TOP_INSERT_DEPTH, -1)
     return p
+
+
+SPACER_D = 7.0
+
+
+def spacer():
+    """Chin spacer: spans the fan zone from the front filter to a chin tab (print 2)."""
+    return Pos(0, 0, (FT - 0.2) / 2) * (Cylinder(SPACER_D / 2, FT - 0.2) - Cylinder(M3_CLEAR / 2, FT + 1))
 
 
 # --- checks -----------------------------------------------------------------------------------------------------------
@@ -311,9 +328,15 @@ def checks():
         d = PAD_POCKET.distance(c) - INSERT_BORE / 2
         add(f"screw {i + 1}: bore to pad pocket", d, d >= 1.5)
     for i, (x, y) in enumerate(FAN_SCREWS):
-        add(f"fan hole {i + 1} inside the fan pocket", FAN_POCKET.exterior.distance(Point(x, y)),
-            FAN_POCKET.contains(Point(x, y)))
-    add("fan pocket keeps a 2.4 wall at its corners", inner.contains(FAN_POCKET) * 1.0, inner.contains(FAN_POCKET), "")
+        d = pad_zone().boundary.distance(Point(x, y)) - INSERT_BORE / 2
+        add(f"fan screw {i + 1}: insert bore inside its corner tab", d, pad_zone().contains(Point(x, y)) and d >= 1.2)
+    for i, (x, y) in enumerate(CHIN_SCREWS):
+        d = chin_blocks().boundary.distance(Point(x, y)) - SPACER_D / 2
+        add(f"chin screw {i + 1}: spacer sits on its tab", d, chin_blocks().contains(Point(x, y)) and d >= 0.5)
+    add("fan fits inside the outer wall", 1.0, inner.contains(FAN_POCKET), "")
+    stray = [g for g in (pad_zone().geoms if hasattr(pad_zone(), "geoms") else [pad_zone()])]
+    holes = sum(len(g.interiors) for g in stray)
+    add("pad layers: no stray voids (pad pocket + chin only)", holes, holes <= 2, "")
     add("pad pocket inside the wall", 1.0, inner.contains(PAD_POCKET), "")
     add("pad still covers the fan disc", PAD_POCKET.distance(Point(0, CY)) * 0 + 1.0,
         PAD_POCKET.buffer(-0.5).contains(opening()), "")
@@ -360,6 +383,7 @@ def main():
         return
     OUT.mkdir(parents=True, exist_ok=True)
     parts = dict(P1_face=p1_face(), P2_filter=p2_filter(), P3_body=p3_body())
+    export_stl(spacer(), str(OUT / "S_spacer_print.stl"))       # print 2
     flip = {"P2_filter", "P3_body"}       # print with the back face on the bed
     z, meta = 0.0, []
     for name, t in LAYERS:

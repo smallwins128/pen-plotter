@@ -62,6 +62,7 @@ li{margin:3px 0}
         <li><b>Face</b>: no screws. A 3 mm lip drops into the pad pocket, and magnets hold it on (<span id="sm"></span>). The 4 fan screws sit 2 mm deep, and a magnet clings to each steel head (use zinc-plated steel screws, not stainless). The face's magnets snap onto them.</li>
         <li><b>Filters</b>: front: pull the face off. Rear: also pick out the 4 magnets, undo the 6 screws, and lift out the filter part and the fan.</li>
         <li><b>Handle</b>: 2 × M3 heat-set inserts in the top, 50.8 mm apart, which matches the end holes of a 5-hole Meccano strip. Fit two M3 standoffs and screw the strip on top.</li>
+        <li><b>Base</b>: the rear pad sits between 4 solid corner tabs that stop at the top of the pad. The fan sits on the tab tops, which hold the inserts, and the screws through its holes locate it. Two short chin tabs hold the bottom inserts, and 2 printed spacer tubes (Ø7) span the fan zone up to the front filter.</li>
         <li><b>Grilles</b>: each one is a small separate print. A plate shaped like the pocket sits behind the panel, and a boss fills the Ø74 hole flush with the outside. The pad behind it pins it in place, so it needs no glue or clips. The octagon plate keeps slots from turning. Print variants and swap them any time.</li>
         <li><b>Pads</b>: cut each one 80 mm square and snip 16 mm off every corner, which clears the screws.</li>
         <li><b>Wiring</b>: the fan lead drops into the hollow chin through a notch in the body, then runs to the jack and switch, which sit side by side in the chin's right wall.</li>
@@ -88,10 +89,10 @@ const DATA = /*DATA*/null;
 const S = DATA.summary;
 const NAMES = {P1_face:["Face","Flat, screwless front with a Ø74 opening"],
   P2_filter:["Front filter","Pad pocket, rib grid and plenum, screw heads, 4 magnets"],
-  P3_body:["Body","Fan, rear pad, back panel with a Ø74 opening, jack and switch, 6 inserts, handle inserts"]};
+  P3_body:["Base","Back panel (Ø74 opening), rear pad between 4 corner tabs, 2 chin tabs, then the outer wall round the fan; jack and switch; 6 inserts in the tab tops, 2 handle inserts"]};
 const PAT = {hslots:"horizontal slots", rings:"concentric rings", hex:"honeycomb", holes:"round holes"};
 document.getElementById("sub").textContent =
-  `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · ${DATA.parts.length} body prints + 2 grille inserts · about ${S.total_g_petg} g of PETG for the body (solid estimate)`;
+  `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · ${DATA.parts.length} body prints, 2 spacers, 2 grille inserts · about ${S.total_g_petg} g of PETG for the body (solid estimate)`;
 document.getElementById("ss").textContent = S.screws.stack;
 document.getElementById("si").textContent = S.screws.inserts;
 document.getElementById("sm").textContent = S.screws.magnets;
@@ -173,6 +174,8 @@ function screw(len){ const g=new THREE.Group();
 const FH = 71.5/2, fanXY = [[-FH,CY-FH],[FH,CY-FH],[-FH,CY+FH],[FH,CY+FH]], chinXY = [[-36,9],[36,9]];
 const fanScrews = fanXY.map(([x,y]) => { const s=screw(50); s.position.set(x,y,0); bought.add(s); return s; });
 const chinScrews = chinXY.map(([x,y]) => { const s=screw(50); s.position.set(x,y,0); bought.add(s); return s; });
+const spacerMat = new THREE.MeshStandardMaterial({color:0xe3a33b, roughness:.5});
+const spacers = chinXY.map(([x,y]) => { const m=new THREE.Mesh(new THREE.CylinderGeometry(3.5,3.5,25,20),spacerMat); m.rotation.x=Math.PI/2; m.position.set(x,y,0); bought.add(m); return m; });
 const mags = fanXY.map(([x,y]) => { const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,2,20),steel); m.rotation.x=Math.PI/2; m.position.set(x,y,0); bought.add(m); return m; });
 
 function layout(e){
@@ -185,6 +188,7 @@ function layout(e){
   handle.position.set(0, S.body.h + e*30, zOf("P3_body") + 12.6);   // over the inserts, mid fan pocket
   fanScrews.forEach(s => s.position.z = zOf("P2_filter") + 2.1 - e*30);
   chinScrews.forEach(s => s.position.z = zOf("P2_filter") - e*30);
+  spacers.forEach(m => m.position.z = zOf("P3_body") + 12.5 - gap*0.4);
   mags.forEach(m => m.position.z = zOf("P2_filter") + 1.05 - e*45);
   grilleObjs.forEach(({gd, grp}) => grp.position.set(0, CY, gd.side === "front" ? zOf("P1_face") - e*40 : zOf("P3_body") + L.P3_body.t + e*40));
   jack.position.set(S.body.w/2 + 4 + e*20, 22, zOf("P3_body") + 11); sw.position.set(S.body.w/2 + 3 + e*20, 22, zOf("P3_body") + 27);
