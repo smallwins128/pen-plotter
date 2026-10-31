@@ -17,7 +17,8 @@ closed by the two grille plates. The chin under the fan carries the wiring.
 Frame: x across the face, y up (0 = bench), z into the body (0 = front face). Each layer is modelled at its own z = 0
 (its front face) and exported in its print orientation.
 
-    python3 hardware/parts/fume/fume.py        # writes hardware/out/fume/*.stl and prints the checks
+    python3 hardware/parts/fume/fume.py        # checks only, in seconds
+    python3 hardware/parts/fume/fume.py --stl  # full build: hardware/out/fume/*.stl (about 10 min: the two grilles)
 """
 import json
 import math
@@ -268,6 +269,15 @@ def checks():
 
 
 def main():
+    if "--stl" not in sys.argv:            # checks only (seconds); the grilles make a full build ~10 min
+        res, fan_in, chin_in = checks()
+        for c in res:
+            print(("ok  " if c["ok"] else "FAIL"), c["check"], c["value"], c["unit"])
+        print(f"body {W:.0f} x {H:.1f} x {T6 + T5 + T3:.1f}; {sum(c['ok'] for c in res)}/{len(res)} checks pass")
+        print("not exported: run with --stl once the design is final")
+        if not all(c["ok"] for c in res):
+            raise SystemExit("checks failed")
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     face, n_holes = p1_face()
     parts = dict(P1_face=face, P2_filter=p2_filter(), P3_body=p3_body())
