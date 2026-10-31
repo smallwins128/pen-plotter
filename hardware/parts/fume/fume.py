@@ -285,7 +285,7 @@ def main():
                     fan_fit=f"{fan_in:.1f} into the body, tip {T3 - 1.2 - fan_in:.1f} short of the back",
                     chin_fit=f"{chin_in:.1f} into the body, tip {T3 - 1.2 - chin_in:.1f} short of the back",
                     inserts="6 x M3 heat-set in the body (4 under the fan corners, 2 at the chin)",
-                    magnets="8 x Ø6 x 2: 4 on the P2 fan-screw heads, 4 in the face",
+                    magnets="8 x Ø6 x 2: 4 on the fan-screw heads in the filter part, 4 in the face",
                     handle=f"2 x M4 heat-set in the top, {HANDLE_PITCH:.1f} apart (5-hole Meccano strip on M4 standoffs)"),
         checks=res, failed=[c for c in res if not c["ok"]])
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
