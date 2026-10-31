@@ -58,10 +58,9 @@ li{margin:3px 0}
     <div class="card"><h2>Layers, front to back</h2><div id="layers"></div></div>
     <div class="card"><h2>How it holds together</h2>
       <ul>
-        <li><b>All inserts are in L4</b> (the spacer): <span id="si"></span>.</li>
-        <li><b>Back stack</b>: <span id="sb"></span> from the back. Four pass through L1, L2, L3 and the fan's own corner holes; two hold the chin.</li>
-        <li><b>Front stack</b>: <span id="sf"></span> from the front of L5 into L4. The face hides them.</li>
-        <li><b>Face</b>: no screws. A 3 mm lip drops into the pad pocket, and 4 Ø6 × 2 magnets in its back pull on the four steel L5 screw heads (use zinc-plated steel screws, not stainless). Pull the face off to swap the pad.</li>
+        <li><b>One set of screws</b>: <span id="ss"></span>, all from the front of L5, through L4 and L3 into <span id="si"></span>. Four pass through the fan's own corner holes; two hold the chin. The back shows no screws.</li>
+        <li><b>Face</b>: no screws. A 3 mm lip drops into the pad pocket, and <span id="sm"></span>. The 4 fan screws sit 2 mm deep in L5, and a magnet clings to each steel head (use zinc-plated steel screws, not stainless). The face's magnets snap onto them.</li>
+        <li><b>Filters</b>: front: pull the face off. Rear: pull the face off, pick out the 4 magnets, undo the 6 screws, and the stack lifts off the back part.</li>
         <li><b>Handle</b>: 2 × M4 heat-set inserts in the top, 50.8 mm apart, which matches the end holes of a 5-hole Meccano strip. Fit two M4 standoffs and screw the strip on top.</li>
         <li><b>Pads</b>: cut each one 80 mm square and snip 16 mm off every corner, which clears the screws.</li>
         <li><b>Wiring</b>: the fan lead drops into the hollow chin through a notch in L3, then runs to the jack and switch on L4's right side.</li>
@@ -74,8 +73,8 @@ li{margin:3px 0}
         <li>Fan: is it 12 V or 24 V? The adaptor tops out at 12 V.</li>
         <li>DC jack: panel hole size<span class="tag">Ø8 assumed</span></li>
         <li>Switch: type and hole size<span class="tag">Ø6 toggle assumed</span></li>
-        <li>Heat-set insert length<span class="tag">≤ 6 assumed; two meet back to back in L4</span></li>
-        <li>Can you buy M3 × 45 countersunk? If not, use socket head and I'll counterbore L1.</li>
+        <li>M3 heat-set insert length<span class="tag">≤ 6 assumed</span></li>
+        <li>Can you buy M3 × 60 countersunk? If not, M3 × 60 socket head fits the same seats.</li>
       </ul>
     </div>
     <div class="card"><h2>Checks</h2><p id="chk" style="margin:0"></p></div>
@@ -86,14 +85,14 @@ li{margin:3px 0}
 <script>
 const DATA = /*DATA*/null;
 const S = DATA.summary;
-const NAMES = {L6_face:["L6 Face","Grille; the flat, screwless front"],L5_filter_front:["L5 Front filter","Carbon pad pocket; its screw heads hold the face"],
-  L4_spacer:["L4 Spacer","Plenum, pad grid, jack and switch, all 10 inserts"],L3_fan:["L3 Fan","Fan pocket, back ring, M4 inserts on top"],
-  L2_filter_back:["L2 Rear filter","Carbon pad pocket"],L1_back:["L1 Back","Exhaust grille"]};
+const NAMES = {L6_face:["L6 Face","Grille; the flat, screwless front"],L5_filter_front:["L5 Front filter","Carbon pad pocket, screw heads, 4 magnets"],
+  L4_spacer:["L4 Spacer","Plenum, pad grid, jack and switch"],L3_fan:["L3 Fan","Fan pocket, back ring, M4 inserts on top"],
+  L1_back:["L1 Back","Rear pad pocket, exhaust grille, 6 inserts"]};
 document.getElementById("sub").textContent =
-  `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · 6 prints · about ${S.total_g_petg} g of PETG (solid estimate) · ${S.grille_holes} grille holes, ${S.open_area_pct}% open`;
-document.getElementById("sf").textContent = S.screws.front;
-document.getElementById("sb").textContent = S.screws.back;
+  `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · ${DATA.parts.length} prints · about ${S.total_g_petg} g of PETG (solid estimate) · ${S.grille_holes} grille holes, ${S.open_area_pct}% open`;
+document.getElementById("ss").textContent = S.screws.stack;
 document.getElementById("si").textContent = S.screws.inserts;
+document.getElementById("sm").textContent = S.screws.magnets;
 const failed = S.failed.length;
 document.getElementById("chk").innerHTML = failed ? `<span style="color:var(--warn)">${failed} failing</span>` :
   `<span class="okc">All ${S.checks.length} pass</span>: the fan holes sit inside the fan pocket; walls around every insert, the pad and the fan corners; the handle feet sit on the flat top; the inserts in L4 don't meet; screw grip and bite.`;
@@ -159,8 +158,9 @@ function screw(len){ const g=new THREE.Group();
   const hd=new THREE.Mesh(new THREE.CylinderGeometry(3,1.5,1.7,16),steel); hd.rotation.x=-Math.PI/2; hd.position.z=0.85;
   g.add(sh,hd); return g; }
 const FH = 71.5/2, fanXY = [[-FH,CY-FH],[FH,CY-FH],[-FH,CY+FH],[FH,CY+FH]], chinXY = [[-36,9],[36,9]];
-const frontScrews = fanXY.map(([x,y]) => { const s=screw(16); s.position.set(x,y,0); bought.add(s); return s; });
-const backScrews = fanXY.concat(chinXY).map(([x,y]) => { const s=screw(45); s.rotation.y=Math.PI; s.position.set(x,y,0); bought.add(s); return s; });
+const fanScrews = fanXY.map(([x,y]) => { const s=screw(60); s.position.set(x,y,0); bought.add(s); return s; });
+const chinScrews = chinXY.map(([x,y]) => { const s=screw(60); s.position.set(x,y,0); bought.add(s); return s; });
+const mags = fanXY.map(([x,y]) => { const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,2,20),steel); m.rotation.x=Math.PI/2; m.position.set(x,y,0); bought.add(m); return m; });
 
 function layout(e){
   const gap = e * 40;
@@ -168,10 +168,11 @@ function layout(e){
   const zOf = n => { const k = DATA.parts.findIndex(p => p.name === n); return L[n].z + k * gap; };
   padF.position.z = zOf("L5_filter_front") + 3 + 0.0 + (e>0? -gap*0.5:0);
   fan.position.z = zOf("L3_fan") + (e>0? -gap*0.5:0);
-  padB.position.z = zOf("L2_filter_back") + (e>0? -gap*0.5:0);
+  padB.position.z = zOf("L1_back") + (e>0? -gap*0.5:0);
   handle.position.set(0, S.body.h + e*30, zOf("L3_fan") + 12.6);   // over the inserts, mid fan pocket
-  frontScrews.forEach(s => s.position.z = zOf("L5_filter_front") - e*25);
-  backScrews.forEach(s => s.position.z = zOf("L1_back") + L.L1_back.t + e*35);
+  fanScrews.forEach(s => s.position.z = zOf("L5_filter_front") + 2.1 - e*30);
+  chinScrews.forEach(s => s.position.z = zOf("L5_filter_front") - e*30);
+  mags.forEach(m => m.position.z = zOf("L5_filter_front") + 1.05 - e*45);
   const z4 = zOf("L4_spacer") + 7;
   jack.position.set(S.body.w/2 + 4 + e*20, 18, z4); sw.position.set(S.body.w/2 + 3 + e*20, 31, z4);
   root.position.set(0, -S.body.h/2, -(S.body.depth + 5*gap)/2);
