@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fume Extractor Layers</title>
+<style>
+:root{--bg:#f5f5f7;--panel:#ffffff;--ink:#1d1d1f;--mute:#6e6e73;--line:#d2d2d7;--accent:#0071e3;--ok:#1a7f37;--warn:#b25000;--scene:#eceef1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0b0c;--panel:#1c1c1e;--ink:#f5f5f7;--mute:#a1a1a6;--line:#38383a;--accent:#2997ff;--ok:#3fb950;--warn:#f0883e;--scene:#161618}}
+:root[data-theme="dark"]{--bg:#0b0b0c;--panel:#1c1c1e;--ink:#f5f5f7;--mute:#a1a1a6;--line:#38383a;--accent:#2997ff;--ok:#3fb950;--warn:#f0883e;--scene:#161618}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+header{padding:20px 16px 8px;max-width:1200px;margin:0 auto}
+h1{font-size:26px;letter-spacing:-.02em;margin:0 0 4px;font-weight:650}
+.sub{color:var(--mute);margin:0}
+main{max-width:1200px;margin:0 auto;padding:8px 16px 32px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}
+@media (max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--scene);border-radius:18px;position:relative;min-height:440px;height:62vh;overflow:hidden}
+#c{width:100%;height:100%;display:block;touch-action:none}
+.controls{position:absolute;left:12px;right:12px;bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(12px);border-radius:12px;padding:8px 12px}
+.controls label{font-size:13px;color:var(--mute)}
+input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+aside{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border-radius:16px;padding:14px 16px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:0 0 8px;font-weight:600}
+.layer{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line);cursor:pointer}
+.layer:first-of-type{border-top:0}
+.layer input{margin-top:3px;accent-color:var(--accent)}
+.layer b{font-weight:600}
+.layer small{display:block;color:var(--mute);font-size:12.5px}
+.num{font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px;text-align:right;white-space:nowrap}
+ul{margin:0;padding-left:18px}
+li{margin:3px 0}
+.tag{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.okc{color:var(--ok)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Fume extractor</h1>
+  <p class="sub" id="sub"></p>
+</header>
+<main>
+  <section class="stage">
+    <canvas id="c"></canvas>
+    <div class="controls">
+      <label for="ex">Explode</label><input id="ex" type="range" min="0" max="1" step="0.01" value="0.55">
+      <div class="seg">
+        <button id="vFront">Front</button><button id="vIso" class="on">3/4</button><button id="vBack">Back</button>
+        <button id="tBought" class="on">Bought parts</button>
+      </div>
+    </div>
+  </section>
+  <aside>
+    <div class="card"><h2>Layers, front to back</h2><div id="layers"></div></div>
+    <div class="card"><h2>How it holds together</h2>
+      <ul>
+        <li><b>Face</b>: no screws. A 3 mm lip drops into the front pad pocket, and 4 Ø6 × 2 magnets hold it on. Pull it off to swap the pad.</li>
+        <li><b>Front stack</b>: <span id="sf"></span>, from the front of L5 into heat-set inserts in L3. The face hides them.</li>
+        <li><b>Back stack</b>: <span id="sb"></span>, from the back into L3.</li>
+        <li><b>Fan</b>: clamped between the L3 back ring and L4's ribs. It needs no screws.</li>
+        <li><b>Handle</b>: 2 × M4 screws, fitted from inside the fan pocket before the fan goes in.</li>
+        <li><b>Wiring</b>: the fan lead drops into the hollow chin through a notch in L3, then runs to the jack and switch on L4's right side.</li>
+      </ul>
+    </div>
+    <div class="card"><h2>Measure before printing</h2>
+      <ul>
+        <li>Handle: hole spacing, thread size, foot size<span class="tag">64 mm and M4 assumed</span></li>
+        <li>Carbon pad: thickness and sheet size<span class="tag">88 mm sq × 10 assumed</span></li>
+        <li>Fan: is it 12 V or 24 V? The adaptor tops out at 12 V.</li>
+        <li>DC jack: panel hole size<span class="tag">Ø8 assumed</span></li>
+        <li>Switch: type and hole size<span class="tag">Ø6 toggle assumed</span></li>
+        <li>Heat-set insert length<span class="tag">≤ 6 assumed</span></li>
+      </ul>
+    </div>
+    <div class="card"><h2>Checks</h2><p id="chk" style="margin:0"></p></div>
+  </aside>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const DATA = /*DATA*/null;
+const S = DATA.summary;
+const NAMES = {L6_face:["L6 Face","Grille; the flat, screwless front"],L5_filter_front:["L5 Front filter","Carbon pad pocket and magnets"],
+  L4_spacer:["L4 Spacer","Plenum, pad grid, jack and switch"],L3_fan:["L3 Fan","80 mm fan, inserts, handle"],
+  L2_filter_back:["L2 Rear filter","Carbon pad pocket"],L1_back:["L1 Back","Exhaust grille"]};
+document.getElementById("sub").textContent =
+  `${S.body.w} × ${S.body.h} × ${S.body.depth} mm · 6 prints · about ${S.total_g_petg} g of PETG (solid estimate) · ${S.grille_holes} grille holes, ${S.open_area_pct}% open`;
+document.getElementById("sf").textContent = S.screws.front;
+document.getElementById("sb").textContent = S.screws.back;
+const failed = S.failed.length;
+document.getElementById("chk").innerHTML = failed ? `<span style="color:var(--warn)">${failed} failing</span>` :
+  `<span class="okc">All ${S.checks.length} pass</span>: walls around every insert, pad and fan pocket, and magnet; the handle feet sit on the flat top; screw grip and bite.`;
+
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(30, 1, 1, 5000);
+const ctl = new THREE.OrbitControls(cam, canvas);
+ctl.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f99, 0.85));
+const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(-200, 300, -250); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 0.35); rim.position.set(250, 100, 300); scene.add(rim);
+
+function b64(s, T){const b=atob(s), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i); return new T(u.buffer);}
+// model frame: x across, y up, z into the body; the camera looks at the face from -z
+const root = new THREE.Group(); scene.add(root);
+const layerObjs = [];
+const colors = [0xf2f2f4,0xd9dbe0,0xe6e7ea,0xcfd2d8,0xd9dbe0,0xf2f2f4];
+DATA.parts.forEach((p, k) => {
+  const v = b64(p.v, Int16Array), idx = b64(p.i, Uint32Array);
+  const pos = new Float32Array(v.length); for (let i=0;i<v.length;i++) pos[i] = v[i] / DATA.q;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx, 1));
+  const flat = g.toNonIndexed(); flat.computeVertexNormals();   // flat shading: printed parts are planar
+  const m = new THREE.Mesh(flat, new THREE.MeshStandardMaterial({color: colors[k], roughness:.55, metalness:.05, side:THREE.DoubleSide}));
+  const grp = new THREE.Group(); grp.add(m); root.add(grp);
+  layerObjs.push({p, grp});
+});
+// bought parts (simple stand-ins)
+const bought = new THREE.Group(); root.add(bought);
+const dark = new THREE.MeshStandardMaterial({color:0x2b2b2e, roughness:.6});
+const carbon = new THREE.MeshStandardMaterial({color:0x111214, roughness:.95});
+const CY = S.body.h - S.body.w/2, L = Object.fromEntries(DATA.parts.map(p=>[p.name,p]));
+function fanMesh(){ const sh=new THREE.Shape(); sh.moveTo(-40,-40);sh.lineTo(40,-40);sh.lineTo(40,40);sh.lineTo(-40,40);sh.lineTo(-40,-40);
+  const h=new THREE.Path(); h.absarc(0,0,38,0,Math.PI*2,true); sh.holes.push(h);
+  const g=new THREE.ExtrudeGeometry(sh,{depth:25,bevelEnabled:false}); const m=new THREE.Mesh(g,dark);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(14,14,22,32),dark); hub.rotation.x=Math.PI/2; hub.position.z=12.5;
+  const gr=new THREE.Group(); gr.add(m,hub);
+  for(let i=0;i<7;i++){const bl=new THREE.Mesh(new THREE.BoxGeometry(24,10,1.2),dark); const a=i/7*Math.PI*2; bl.position.set(Math.cos(a)*26,Math.sin(a)*26,12.5); bl.rotation.set(0.5,0,a); gr.add(bl);}
+  return gr; }
+function padMesh(t){ const s=44, c=9.5, sh=new THREE.Shape();
+  [[-s+c,-s],[s-c,-s],[s,-s+c],[s,s-c],[s-c,s],[-s+c,s],[-s,s-c],[-s,-s+c]].forEach((q,i)=>i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]));
+  return new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false}),carbon); }
+const fan = fanMesh(); fan.position.set(0, CY, 0);
+const padF = padMesh(10), padB = padMesh(10); padF.position.set(0, CY, 0); padB.position.set(0, CY, 0);
+const handle = new THREE.Group();
+[[-32],[32]].forEach(([x])=>{const leg=new THREE.Mesh(new THREE.BoxGeometry(10,28,14),dark); leg.position.set(x,14,0); handle.add(leg);});
+const bar=new THREE.Mesh(new THREE.BoxGeometry(84,7,14),dark); bar.position.set(0,28,0); handle.add(bar);
+const jack=new THREE.Mesh(new THREE.CylinderGeometry(4,4,10,24),dark); jack.rotation.z=Math.PI/2;
+const sw=new THREE.Mesh(new THREE.CylinderGeometry(3,3,8,24),dark); sw.rotation.z=Math.PI/2;
+const lever=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.2,10,12),dark); lever.rotation.z=Math.PI/2;
+bought.add(fan,padF,padB,handle,jack,sw);
+
+function layout(e){
+  const gap = e * 40;
+  layerObjs.forEach(({p, grp}, k) => { grp.position.z = p.z + k * gap; });
+  const zOf = n => { const k = DATA.parts.findIndex(p => p.name === n); return L[n].z + k * gap; };
+  padF.position.z = zOf("L5_filter_front") + 3 + 0.0 + (e>0? -gap*0.5:0);
+  fan.position.z = zOf("L3_fan") + (e>0? -gap*0.5:0);
+  padB.position.z = zOf("L2_filter_back") + (e>0? -gap*0.5:0);
+  handle.position.set(0, S.body.h + e*30, zOf("L3_fan") + 12.6);
+  const z4 = zOf("L4_spacer") + 7;
+  jack.position.set(S.body.w/2 + 4 + e*20, 20, z4); sw.position.set(S.body.w/2 + 3 + e*20, 36, z4);
+  root.position.set(0, -S.body.h/2, -(S.body.depth + 5*gap)/2);
+}
+const ex = document.getElementById("ex");
+ex.oninput = () => layout(+ex.value); layout(+ex.value);
+
+// layer list
+const list = document.getElementById("layers");
+layerObjs.forEach(({p, grp}) => {
+  const [n, d] = NAMES[p.name];
+  const row = document.createElement("label"); row.className = "layer";
+  row.innerHTML = `<input type="checkbox" checked><span><b>${n}</b><small>${d}</small></span><span class="num">${p.t} mm<br>~${p.g_petg} g</span>`;
+  row.querySelector("input").onchange = e => { grp.visible = e.target.checked; };
+  list.appendChild(row);
+});
+const tb = document.getElementById("tBought");
+tb.onclick = () => { bought.visible = !bought.visible; tb.classList.toggle("on", bought.visible); };
+
+function view(kind){
+  ["vFront","vIso","vBack"].forEach(id => document.getElementById(id).classList.toggle("on", id === kind));
+  const d = 520;
+  if (kind === "vFront") cam.position.set(0, 0, -d);
+  else if (kind === "vBack") cam.position.set(0, 20, d);
+  else cam.position.set(-d*0.62, d*0.32, -d*0.72);
+  ctl.target.set(0, 0, 0); ctl.update();
+}
+["vFront","vIso","vBack"].forEach(id => document.getElementById(id).onclick = () => view(id));
+view("vIso");
+
+function resize(){ const r = canvas.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); cam.aspect = r.width / r.height; cam.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(canvas); resize();
+(function loop(){ ctl.update(); renderer.render(scene, cam); requestAnimationFrame(loop); })();
+</script>
+</body>
+</html>
