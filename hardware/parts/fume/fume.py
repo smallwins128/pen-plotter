@@ -318,7 +318,7 @@ def main():
         layers=meta, total_cm3=round(sum(m["cm3"] for m in meta), 1),
         total_g_petg=round(sum(m["g_petg"] for m in meta)),
         screws=dict(stack=(f"6 x M3 x {fl} CSK" if fl == cl else f"4 x M3 x {fl} + 2 x M3 x {cl} CSK"),
-                    fan_fit=f"grip {fan_grip:.1f}, bite {fb}", chin_fit=f"grip {chin_grip:.1f}, bite {cb}",
+                    fan_fit=f"grip {fan_grip:.1f}, bite {fb:.1f}", chin_fit=f"grip {chin_grip:.1f}, bite {cb:.1f}",
                     inserts="6 x M3 heat-set in the back part",
                     magnets="8 x Ø6 x 2: 4 on the L5 fan-screw heads, 4 in the face",
                     handle=f"2 x M4 heat-set in the top, {HANDLE_PITCH:.1f} apart (5-hole Meccano strip on M4 standoffs)"),
