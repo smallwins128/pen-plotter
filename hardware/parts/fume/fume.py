@@ -440,6 +440,7 @@ def main():
         vol = part.volume / 1000.0
         export_stl(part, str(OUT / f"{name}.stl"))
         printed = Rot(180, 0, 0) * part if name in flip else part
+        printed = Pos(0, 0, -printed.bounding_box().min.Z) * printed       # sit on the bed (z = 0)
         export_stl(printed, str(OUT / f"{name}_print.stl"))
         meta.append(dict(name=name, z=round(z, 2), t=round(t, 2), cm3=round(vol, 1), g_petg=round(vol * 1.27, 0)))
         z += t
