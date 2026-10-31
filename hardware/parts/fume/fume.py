@@ -254,8 +254,13 @@ CHIN_BLOCK = 15.0                                   # chin tabs: corner blocks r
 
 
 def chin_blocks():
-    return unary_union([box(sx * (abs(x) - 5.5), 0, sx * W / 2, CHIN_BLOCK) if sx > 0 else
-                        box(-W / 2, 0, -(abs(x) - 5.5), CHIN_BLOCK) for (x, _), sx in zip(CHIN_SCREWS, (-1, 1))])
+    """Chin tabs: solid corner blocks reaching 4.1 past each chin screw (a 2 mm wall round its insert), clipped to the
+    rounded outline (v8 drew rectangles that poked out of the corners). Solid to the walls, so no sealed voids."""
+    out = []
+    for x, y in CHIN_SCREWS:
+        r = INSERT_BORE / 2 + 2.0
+        out.append(box(x - r, -1, W, y + r) if x > 0 else box(-W, -1, x + r, y + r))
+    return unary_union(out).intersection(OUTLINE)
 
 
 def chin_cavity():
@@ -270,8 +275,8 @@ def pad_zone():
 
 
 def mag_blocks():
-    return unary_union([box(x - MAG_BLOCK, y - MAG_BLOCK, x + MAG_BLOCK, y + MAG_BLOCK) for x, y in MAGNET_XY]) \
-        .intersection(OUTLINE)
+    """A round boss round each magnet; each sits against a wall, so it needs no web."""
+    return unary_union([Point(x, y).buffer(MAGNET_D / 2 + 1.6, quad_segs=16) for x, y in MAGNET_XY]).intersection(OUTLINE)
 
 
 def p2_filter():
@@ -368,6 +373,11 @@ def checks():
         add(f"magnet ({x:.0f}, {y:.0f}): below the pad shelf", PAD_POCKET.bounds[1] - INNER - (y + MAG_BLOCK),
             PAD_POCKET.bounds[1] - INNER - (y + MAG_BLOCK) >= 0)
     add("fan fits inside the outer wall", 1.0, inner.contains(FAN_POCKET), "")
+    for name, g in (("chin tabs", chin_blocks()), ("magnet bosses", mag_blocks()),
+                    ("side mount blocks", unary_union([mount_block_poly(-1), mount_block_poly(1)])),
+                    ("pad layer section", pad_zone())):
+        out_a = g.difference(OUTLINE.buffer(0.01)).area
+        add(f"{name}: nothing outside the outline", out_a, out_a < 0.01, "mm2")
     stray = [g for g in (pad_zone().geoms if hasattr(pad_zone(), "geoms") else [pad_zone()])]
     holes = sum(len(g.interiors) for g in stray)
     add("pad layers: no stray voids (pad pocket + chin only)", holes, holes <= 2, "")
@@ -452,7 +462,7 @@ def main():
                     chin_fit=f"{chin_in:.1f} into the body, tip {T3 - 1.2 - chin_in:.1f} short of the back",
                     inserts="6 x M3 heat-set in the body (4 under the fan corners, 2 at the chin)",
                     magnets="6 x Ø6 x 2: 3 in the filter part's chin (bottom centre, each side low), 3 in the face",
-                    handle=f"2 x M3 heat-set in the top, {HANDLE_PITCH:.1f} apart (5-hole Meccano strip on M3 standoffs)"),
+                    handle=f"2 x M3 heat-set in the top, {HANDLE_PITCH:.1f} apart (decorative 5-hole Meccano strip on M3 x 5 standoffs)"),
         checks=res, failed=[c for c in res if not c["ok"]])
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
     for m in meta:
