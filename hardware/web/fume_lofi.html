@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fume Body Options</title><style>
+:root{--bg:#f5f5f7;--panel:#fff;--ink:#1d1d1f;--mute:#6e6e73;--print:#d6d8de;--edge:#55585f;--fan:#2b2b2e;--pad:#3b3f45;--steel:#8a9099;--spacer:#e3a33b;--sleeve:#9cc3f0;--accent:#0071e3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0b0c;--panel:#1c1c1e;--ink:#f5f5f7;--mute:#a1a1a6;--print:#c9ccd3;--edge:#e5e5ea;--fan:#55555c;--pad:#6b7078;--steel:#b0b6bf;--accent:#2997ff}}
+:root[data-theme="dark"]{--bg:#0b0b0c;--panel:#1c1c1e;--ink:#f5f5f7;--mute:#a1a1a6;--print:#c9ccd3;--edge:#e5e5ea;--fan:#55555c;--pad:#6b7078;--steel:#b0b6bf;--accent:#2997ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:20px 16px 32px}h1{font-size:26px;letter-spacing:-.02em;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}.card{background:var(--panel);border-radius:16px;padding:14px}
+h2{font-size:17px;margin:0 0 6px}p{margin:6px 0;font-size:14px}.mute{color:var(--mute)}svg{width:100%;height:auto;display:block}
+.p{fill:var(--print);stroke:var(--edge);stroke-width:.5}.fan{fill:var(--fan)}.pad{fill:var(--pad)}.st{stroke:var(--steel);stroke-width:1.4}
+.sp{fill:var(--spacer)}.sl{fill:var(--sleeve);opacity:.55;stroke:var(--accent);stroke-width:.5}.t{font-size:5.5px;fill:var(--ink)}.tm{font-size:5px;fill:var(--mute)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin:0 0 14px}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+</style></head><body><main>
+<h1>Body options, side view</h1>
+<p class="sub">Each drawing is cut through the middle, seen from the right. The front is on the left and the back on the right, at true scale (126 mm tall, about 57 mm deep). The question is what wraps the fan.</p>
+<div class="legend"><span><i style="background:var(--print);border:1px solid var(--edge)"></i>printed part</span><span><i style="background:var(--fan)"></i>fan</span><span><i style="background:var(--pad)"></i>carbon pad</span><span><i style="background:var(--spacer)"></i>printed spacer</span><span><i style="background:var(--sleeve)"></i>sleeve</span><span><i style="background:var(--steel)"></i>screw</span></div>
+<div class="grid" id="g"></div>
+
+<div class="card" style="margin-top:14px"><h2>Base plate, seen from the front (the same in all three)</h2>
+<svg viewBox="-55 -5 110 140" style="max-width:340px;margin:auto"><g id="base"></g></svg>
+<p>The rear pad sits in the middle. The 4 triangle tabs fill the corners outside the pad. Each tab holds an insert, and the fan's corners rest on them. The 2 bottom tabs hold the chin inserts, with a spacer standing on each. The grille insert sits behind the pad.</p></div>
+</main>
+<script>
+// side view: x = depth z (front 0 .. back 57), y = height (bench at 126 -> svg down)
+const H=126.2, Y=y=>H-y, D={face:3, filt:16.5, fan:25.2, base:12.4};
+const z1=D.face, z2=z1+D.filt, z3=z2+D.fan, z4=z3+D.base, fy0=39.8, fy1=120.2;
+const rect=(x,y0,w,y1,c)=>`<rect class="${c}" x="${x}" y="${Y(y1)}" width="${w}" height="${y1-y0}"/>`;
+function common(){ let s="";
+  s+=rect(0,0,z1,H,"p");                         // face
+  s+=rect(z1,0,D.filt,H,"p"); s+=rect(z1+3,fy0+0.5,9,fy1-0.5,"pad");   // front filter + pad
+  s+=rect(z3,0,D.base,H,"p"); s+=rect(z3,fy0+0.5,9,fy1-0.5,"pad");      // base + rear pad
+  s+=rect(z2,fy0,D.fan,fy1,"fan");                                       // fan
+  s+=rect(z2,fy1-4,D.fan,fy1+0.6,"p").replace('class="p"','class="p" opacity=".0"');
+  // tabs under the fan corners (drawn as the base reaching up to the fan back): the fan sits on them
+  s+=`<line class="st" x1="${z1+2}" y1="${Y(fy1-4)}" x2="${z1+2+50}" y2="${Y(fy1-4)}"/>`;
+  s+=`<line class="st" x1="${z1+2}" y1="${Y(fy0+4)}" x2="${z1+2+50}" y2="${Y(fy0+4)}"/>`;
+  s+=`<line class="st" x1="${z1}" y1="${Y(9)}" x2="${z1+50}" y2="${Y(9)}"/>`;
+  return s; }
+const label=(x,y,t,c="t")=>`<text class="${c}" x="${x}" y="${Y(y)}">${t}</text>`;
+const opts=[
+ {n:"A · Open sandwich", s:()=>common()+rect(z2,5,D.fan,13,"sp")+label(z2+1,16,"spacer","tm")+label(z2+2,(fy0+fy1)/2+2,"fan","t").replace('class="t"','class="t" style="fill:#fff"')+label(z2+1,30,"open","tm"),
+  p:"There's nothing around the fan: you see its black frame from the sides, and the chin is open apart from the 2 spacers. Least filament and fastest to print. Industrial look. The jack and switch move onto the base plate's chin.", },
+ {n:"B · Sleeve", s:()=>common()+rect(z2,5,D.fan,13,"sp")+rect(z2,0,D.fan,1.6,"sl")+rect(z2,H-1.6,D.fan,H,"sl")+label(z2+1,16,"spacer","tm")+label(z2+1,H-5,"sleeve","tm")+label(z2+1,4,"sleeve","tm"),
+  p:"Same insides as A, plus a thin printed tube (about 1.6 mm wall) that slides over the fan and chin between the two plates. The sides stay flush and closed, as today. The jack and switch go in the sleeve. One more print, but the sleeve is quick to print.", },
+ {n:"C · Walls stay", s:()=>common()+rect(z2,0,D.fan,2.4,"p")+rect(z2,H-2.4,D.fan,H,"p")+rect(z2,fy0-1.6,D.fan,fy0,"p")+rect(z2,5,D.fan,13,"p")+label(z2+1,16,"boss","tm"),
+  p:"Today's body: the walls around the fan and chin are part of the base print, which makes it a deep, slow part. Your tabs and spacers simply replace the deep bosses inside. Smallest change, smallest gain.", },
+];
+document.getElementById("g").innerHTML = opts.map(o=>`<div class="card"><h2>${o.n}</h2>
+<svg viewBox="-4 -6 66 ${H+12}" style="max-height:340px"><g>${o.s()}</g>
+${label(-3,H+4,"front","tm")}${label(z4-10,H+4,"back","tm")}</svg><p>${o.p}</p></div>`).join("");
+// base plate front view
+const W=90, CY=80, FH=35.75, s=40.5, c=16, R=8;
+let b=`<rect class="p" x="${-W/2}" y="${Y(H)}" width="${W}" height="${H}" rx="${R}"/>`;
+const oct=[[-s+c,-s],[s-c,-s],[s,-s+c],[s,s-c],[s-c,s],[-s+c,s],[-s,s-c],[-s,-s+c]].map(([x,y])=>`${x},${Y(CY+y)}`).join(" ");
+b+=`<polygon points="${oct}" fill="var(--pad)"/>`;
+[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sy])=>{
+  const cx=sx*(s), cy=CY+sy*(s);
+  b+=`<polygon class="sp" points="${sx*(s-c+2)},${Y(CY+sy*(s+2))} ${sx*(s+2)},${Y(CY+sy*(s+2))} ${sx*(s+2)},${Y(CY+sy*(s-c+2))}"/>`;
+  b+=`<circle cx="${sx*FH}" cy="${Y(CY+sy*FH)}" r="2.1" fill="var(--bg)" stroke="var(--edge)" stroke-width=".4"/>`; });
+[-36,36].forEach(x=>{ b+=`<circle class="sp" cx="${x}" cy="${Y(9)}" r="5"/><circle cx="${x}" cy="${Y(9)}" r="2.1" fill="var(--bg)" stroke="var(--edge)" stroke-width=".4"/>`; });
+b+=`<text class="tm" x="-12" y="${Y(CY)}">rear pad</text><text class="tm" x="-44" y="${Y(H-3)}">tab</text><text class="tm" x="-30" y="${Y(17)}">bottom tab</text>`;
+document.getElementById("base").innerHTML=b;
+</script></body></html>
