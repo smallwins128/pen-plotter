@@ -1,0 +1,191 @@
+<!doctype html>
+<!-- R04 Etch side build. 15 s vertical reel: the fume extractor assembling, captioned, then a hold on the finished
+     product (Allwin jump-cuts to the real one) and a slow constant-rate orbit (he cuts to it turning on a turntable).
+     Meshes: fume_reel_data.js (from hardware/parts/fume/fume_reel_data.py). Render with the gtm-reel skill's
+     render_reel.js. Open in a browser to preview; ?t=7.5 holds one moment. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fume Reel</title>
+<style>
+@font-face{font-family:"Barlow Condensed";font-weight:800;src:url(../../labels/fonts/BarlowCondensed-ExtraBold.ttf)}
+@font-face{font-family:"Plex Mono";font-weight:600;src:url(../../labels/fonts/IBMPlexMono-SemiBold.ttf)}
+:root{--bg:#e9e5df;--ink:#141416;--hot:#ff5a1f}
+html,body{margin:0;background:var(--bg);overflow:hidden}
+#stage{position:relative;width:1080px;height:1920px;transform-origin:0 0}
+#stage canvas{display:block}
+.cap{position:absolute;left:84px;right:84px;top:250px;font-family:"Barlow Condensed";font-weight:800;color:var(--ink);
+  font-size:168px;line-height:.9;text-transform:uppercase;letter-spacing:-.01em;opacity:0}
+.cap em{font-style:normal;color:var(--hot)}
+.cap small{display:block;margin-top:24px;font-family:"Plex Mono";font-weight:600;font-size:38px;letter-spacing:.03em;
+  color:var(--ink);opacity:.8;line-height:1.3;text-transform:none}
+#bar{position:absolute;left:88px;right:88px;top:200px;height:4px;background:rgba(0,0,0,.1)}
+#bar i{display:block;height:100%;width:0;background:var(--hot)}
+</style>
+<div id="stage">
+<div id="bar"><i></i></div>
+<div class="cap" data-in="0.1" data-out="1.5">Solder<br><em>smoke?</em><small>so I printed a fume extractor</small></div>
+<div class="cap" data-in="1.9" data-out="3.35">The <em>base</em><small>back, rear filter, fan bay: one print</small></div>
+<div class="cap" data-in="3.45" data-out="4.8">80 mm<br><em>fan</em><small>rests on 4 corner tabs</small></div>
+<div class="cap" data-in="4.9" data-out="6.2">Front<br><em>filter</em><small>9 mm carbon pad, front and back</small></div>
+<div class="cap" data-in="6.3" data-out="7.85">6 <em>screws</em><small>M3 × 50, through the fan's own holes</small></div>
+<div class="cap" data-in="7.95" data-out="9.9"><em>Snap</em><small>lip + 3 magnets. no screws in front</small></div>
+<div class="cap" data-in="10.0" data-out="11.0">Done<small>3 black prints · 2 orange grilles</small></div>
+</div>
+<script src="fume_reel_data.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+const DUR=15,FPS=30,D=window.FUME;
+const C={bg:0xe9e5df,body:0x1d1d20,hot:0xff5a1f,pad:0x34373c,fan:0x3c3f45,steel:0xa2a8b0,red:0xc9262b};
+
+const cl=x=>Math.min(1,Math.max(0,x));
+const ioC=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const ioQ=x=>x<.5?16*x**5:1-Math.pow(-2*x+2,5)/2;
+const oB=x=>{const c=1.7;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
+const oC=x=>1-Math.pow(1-x,3);
+const lerp=(a,b,u)=>a+(b-a)*u;
+
+const stage=document.getElementById('stage');
+const scene=new THREE.Scene();
+{const c=document.createElement('canvas');c.width=4;c.height=512;const x=c.getContext('2d');const g=x.createLinearGradient(0,0,0,512);
+ g.addColorStop(0,'#e6dcd8');g.addColorStop(.55,'#cfc3c0');g.addColorStop(1,'#3b3a3c');x.fillStyle=g;x.fillRect(0,0,4,512);
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;scene.background=t;}
+scene.fog=new THREE.Fog(0xcfc3c0,900,2600);
+const camera=new THREE.PerspectiveCamera(30,1080/1920,5,5000);
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(1);renderer.setSize(1080,1920);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
+stage.prepend(renderer.domElement);
+const fit=()=>{const s=Math.min(innerWidth/1080,innerHeight/1920);stage.style.transform=`scale(${s})`;};addEventListener('resize',fit);fit();
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x8d8a85,1.6));
+const keyL=new THREE.DirectionalLight(0xfff3e4,2.6);keyL.position.set(-260,520,-380);keyL.castShadow=true;
+keyL.shadow.mapSize.set(2048,2048);Object.assign(keyL.shadow.camera,{left:-260,right:260,top:260,bottom:-260,near:50,far:1600});
+keyL.shadow.bias=-0.0004;scene.add(keyL);
+const rimL=new THREE.DirectionalLight(0xffffff,1.3);rimL.position.set(420,260,520);scene.add(rimL);
+
+// floor: the product stands on it; model y = 0 is the bench
+const root=new THREE.Group();scene.add(root);
+root.position.set(0,-D.h/2,-D.depth/2);
+function matTex(){const c=document.createElement('canvas');c.width=c.height=1000;const x=c.getContext('2d');
+  x.fillStyle='#3e9787';x.fillRect(0,0,1000,1000);                       // 100 mm tile, 1 px = 0.1 mm
+  for(let k=0;k<=100;k++){const w=k%10===0?3.2:1.1;x.fillStyle=k%10===0?'rgba(225,245,238,.75)':'rgba(225,245,238,.33)';
+    x.fillRect(k*10-w/2,0,w,1000);x.fillRect(0,k*10-w/2,1000,w);}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(40,40);t.anisotropy=8;t.colorSpace=THREE.SRGBColorSpace;return t;}
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshStandardMaterial({map:matTex(),roughness:.9}));
+floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;root.add(floor);
+
+const mat=(c,r=.72,m=.02)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+function b64(s,T){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new T(u.buffer);}
+function meshOf(p,material){const v=b64(p.v,Int16Array),idx=b64(p.i,Uint32Array),pos=new Float32Array(v.length);
+  for(let i=0;i<v.length;i++)pos[i]=v[i]/D.q;const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(new THREE.BufferAttribute(idx,1));
+  const f=g.toNonIndexed();f.computeVertexNormals();boxUV(f,2.2);const m=new THREE.Mesh(f,material);m.castShadow=m.receiveShadow=true;return m;}
+function boxUV(g,mm){const p=g.attributes.position.array,n=g.attributes.normal.array,uv=new Float32Array(p.length/3*2);
+  for(let i=0;i<p.length/3;i++){const ax=Math.abs(n[3*i]),ay=Math.abs(n[3*i+1]),az=Math.abs(n[3*i+2]);
+    let a,b;if(az>=ax&&az>=ay){a=p[3*i];b=p[3*i+1];}else if(ax>=ay){a=p[3*i+2];b=p[3*i+1];}else{a=p[3*i];b=p[3*i+2];}
+    uv[2*i]=a/mm/10;uv[2*i+1]=b/mm/10;}
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));}
+// fine stipple, like a textured-plate PLA finish: drives bump + roughness
+function grain(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');const d=x.createImageData(256,256);
+  let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  for(let i=0;i<256*256;i++){const v=110+r()*120;d.data[4*i]=d.data[4*i+1]=d.data[4*i+2]=v;d.data[4*i+3]=255;}
+  x.putImageData(d,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+const GRAIN=grain();
+
+// pieces: home = assembled offset; hook = exploded offset (0-1.4 s); from/at/d = how it arrives
+const P=[];
+function piece(obj,home,o){const g=new THREE.Group();g.add(obj);root.add(g);P.push(Object.assign({g,home},o));return g;}
+const body=new THREE.MeshStandardMaterial({color:C.body,roughness:.82,metalness:0,bumpMap:GRAIN,bumpScale:.35,roughnessMap:GRAIN});
+const orange=new THREE.MeshStandardMaterial({color:C.hot,roughness:.55,bumpMap:GRAIN,bumpScale:.15}),steel=mat(C.steel,.35,.8);
+
+piece(meshOf(D.parts.base,body),[0,0,D.parts.base.z],{hook:[0,0,0],keep:true});
+{const gb=meshOf(D.parts.grille_back,orange);gb.rotation.y=Math.PI;   // boss outward at the back face
+ piece(gb,[0,D.cy,D.parts.grille_back.z],{hook:[0,0,95],from:[0,0,-150],at:2.05,d:.45,fx:oB});}
+// rear pad: 9 mm octagon in the base's pad zone, on the back grille plate
+function padMesh(){const s=40,c=16,sh=new THREE.Shape();
+  [[-s+c,-s],[s-c,-s],[s,-s+c],[s,s-c],[s-c,s],[-s+c,s],[-s,s-c],[-s,-s+c]].forEach((q,i)=>i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]));
+  const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:9,bevelEnabled:false}),mat(C.pad,.95));m.castShadow=true;return m;}
+piece(padMesh(),[0,D.cy,D.parts.base.z+D.ft],{hook:[0,0,30],from:[0,170,0],at:2.55,d:.5,fx:oB});
+// fan: 80 x 80 x 25 frame, Ø76 bore, hub and blades
+{const sh=new THREE.Shape();sh.moveTo(-40,-40);sh.lineTo(40,-40);sh.lineTo(40,40);sh.lineTo(-40,40);sh.lineTo(-40,-40);
+ const h=new THREE.Path();h.absarc(0,0,38,0,Math.PI*2,true);sh.holes.push(h);
+ for(const [x,y] of [[-35.75,-35.75],[35.75,-35.75],[-35.75,35.75],[35.75,35.75]]){const k=new THREE.Path();k.absarc(x,y,2.15,0,Math.PI*2,true);sh.holes.push(k);}
+ const fm=mat(C.fan,.6);const g=new THREE.Group();
+ const fr=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:25,bevelEnabled:false}),fm);fr.castShadow=true;g.add(fr);
+ const hub=new THREE.Mesh(new THREE.CylinderGeometry(15,15,20,32),fm);hub.rotation.x=Math.PI/2;hub.position.z=12.5;g.add(hub);
+ for(let i=0;i<7;i++){const bl=new THREE.Mesh(new THREE.BoxGeometry(23,9,1.2),fm);const a=i/7*Math.PI*2;
+   bl.position.set(Math.cos(a)*26,Math.sin(a)*26,12.5);bl.rotation.set(.5,0,a);g.add(bl);}
+ piece(g,[0,D.cy,D.parts.base.z+D.ft-25],{hook:[0,0,-20],from:[0,230,0],at:3.5,d:.6,fx:oB});}
+piece(meshOf(D.parts.filter,body),[0,0,D.parts.filter.z],{hook:[0,0,-62],from:[0,0,-190],at:4.95,d:.55,fx:oB});
+piece(padMesh(),[0,D.cy,D.parts.filter.z+3],{hook:[0,0,-88],from:[0,170,0],at:5.55,d:.45,fx:oB});
+// 6 x M3 x 50 CSK from the front of the filter part
+const screws=D.screws.map(([x,y],i)=>{const g=new THREE.Group();
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,50,12),steel);sh.rotation.x=Math.PI/2;sh.position.z=25;
+  const hd=new THREE.Mesh(new THREE.CylinderGeometry(3,1.5,1.7,20),steel);hd.rotation.x=-Math.PI/2;hd.position.z=.85;
+  const slot=new THREE.Mesh(new THREE.BoxGeometry(3.4,.7,.4),mat(0x50555c,.5,.6));slot.position.z=-.05;g.add(sh,hd,slot);
+  return piece(g,[x,y,D.parts.filter.z],{hook:null,from:[0,0,-80],at:6.35+i*.2,d:.38,fx:oC,spin:true});});
+// magnets: 3 pairs (filter front, face back)
+D.magnets.forEach(([x,y],i)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,1.5,24),steel);m.rotation.x=Math.PI/2;
+  piece(m,[x,y,D.parts.filter.z+.75],{hook:null,pop:7.95+i*.12});});
+piece(meshOf(D.parts.face,body),[0,0,0],{hook:[0,0,-118],from:[0,0,-170],at:8.55,d:.5,fx:oB});
+piece((()=>{const m=meshOf(D.parts.grille_front,orange);m.rotation.z=Math.PI/2;const g=new THREE.Group();g.add(m);return g;})(),[0,D.cy,0],{hook:[0,0,-150],from:[0,0,-90],at:9.2,d:.4,fx:oB});
+// jack and switch in the back panel's chin (they come with the base)
+{const g=new THREE.Group();const nut=new THREE.Mesh(new THREE.CylinderGeometry(7.5,7.5,2.5,6),mat(0x2b2c30,.45,.5));
+ nut.rotation.x=Math.PI/2;nut.position.set(D.jack[0],D.jack[1],D.depth+1.25);g.add(nut);
+ const sock=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.2,2.7,20),mat(0x0c0c0d,.4));sock.rotation.x=Math.PI/2;sock.position.set(D.jack[0],D.jack[1],D.depth+1.3);g.add(sock);
+ const bush=new THREE.Mesh(new THREE.CylinderGeometry(3,3,6,20),steel);bush.rotation.x=Math.PI/2;bush.position.set(D.switch[0],D.switch[1],D.depth+3);g.add(bush);
+ const lev=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.9,9,16),mat(C.red,.4));lev.position.set(D.switch[0],D.switch[1]+2,D.depth+9);lev.rotation.x=-1.0;g.add(lev);
+ piece(g,[0,0,0],{hook:[0,0,0],keep:true});}
+// decorative handle, as built: a 9-hole red Meccano strip (12.7 pitch) on two black M3 x 5 standoffs, screwed at holes 3 and 7
+{const g=new THREE.Group();const hx=D.handle/2,ex=4*12.7;
+ for(const x of [-hx,hx]){const s=new THREE.Mesh(new THREE.CylinderGeometry(3.6,3.6,5,24),mat(0x111113,.5));s.position.set(x,2.5,0);g.add(s);
+   const sc=new THREE.Mesh(new THREE.CylinderGeometry(2.7,2.7,1.2,20),steel);sc.position.set(x,7.4,0);g.add(sc);}
+ const st=new THREE.Shape();st.absarc(-ex,0,6.35,Math.PI/2,Math.PI*1.5,false);st.absarc(ex,0,6.35,-Math.PI/2,Math.PI/2,false);
+ for(let k=-4;k<=4;k++){if(Math.abs(k)===2)continue;const h=new THREE.Path();h.absarc(k*12.7,0,2.05,0,Math.PI*2,true);st.holes.push(h);}
+ const bar=new THREE.Mesh(new THREE.ExtrudeGeometry(st,{depth:1.2,bevelEnabled:false}),mat(C.red,.45,.3));
+ bar.rotation.x=Math.PI/2;bar.position.y=6.2;bar.castShadow=true;g.add(bar);
+ piece(g,[0,D.h,D.parts.base.z+D.ft/2],{hook:[0,55,0],from:[0,170,0],at:10.1,d:.45,fx:oB});}
+
+// camera: azimuth th (0 = straight at the face; positive swings to the viewer's left of the face), elevation ph, distance r
+const K=[ // t, th, ph, r
+ [0.0,-38,14,700],[1.4,-30,16,680],[1.9,-24,34,620],[10.4,-14,26,600],[11.0,32,19,560],[12.0,32,19,560]];
+const ORBIT_START=12.0, ORBIT_RATE=15;   // deg per second, constant: one turn in 24 s, for the turntable cut
+function cam(t){
+  let th,ph,r;
+  if(t>=ORBIT_START){th=32+ORBIT_RATE*(t-ORBIT_START);ph=19;r=560;}
+  else{let i=0;while(i<K.length-2&&t>K[i+1][0])i++;const a=K[i],b=K[i+1];const u=cl((t-a[0])/(b[0]-a[0]));
+    const e=(i===1)?ioQ(u):(i===2?(x=>x)(u):ioC(u));th=lerp(a[1],b[1],e);ph=lerp(a[2],b[2],e);r=lerp(a[3],b[3],e);}
+  const T=THREE.MathUtils.degToRad(th),F=THREE.MathUtils.degToRad(ph);
+  camera.position.set(-r*Math.sin(T)*Math.cos(F),r*Math.sin(F)+38,-r*Math.cos(T)*Math.cos(F));
+  camera.lookAt(0,38,0);                                     // aim above the product: it sits low, under the captions
+}
+
+const caps=[...document.querySelectorAll('.cap')].map(el=>({el,a:+el.dataset.in,b:+el.dataset.out}));
+const bar=document.querySelector('#bar i');
+window.seek=function(t){
+  for(const p of P){
+    let off=[0,0,0],rz=0,s=1;
+    if(p.pop!==undefined){s=t<p.pop?0:oB(cl((t-p.pop)/.25));}
+    else if(p.keep){off=[0,0,0];}
+    else if(t<1.4){if(p.hook===null){s=0;}else{const k=.75+.25*oC(t/1.4);off=p.hook.map(v=>v*k);}}
+    else if(t<p.at){const u=ioQ(cl((t-1.4)/.45));
+      if(p.hook===null)s=0;else{off=p.hook.map((v,i)=>lerp(v,v*2.2,u));s=1-u;}}
+    else{const u=cl((t-p.at)/p.d);const e=p.fx(u);off=p.from.map(v=>v*(1-e));if(p.spin)rz=(1-oC(u))*Math.PI*6;}
+    p.g.position.set(p.home[0]+off[0],p.home[1]+off[1],p.home[2]+off[2]);
+    p.g.rotation.z=rz;p.g.scale.setScalar(Math.max(s,1e-4));p.g.visible=s>0.001;
+  }
+  cam(t);
+  for(const c of caps){const u=cl((t-c.a)/.28),v=cl((c.b-t)/.22);const o=Math.min(u,v);
+    c.el.style.opacity=o;c.el.style.transform=`translateY(${(1-oC(u))*60}px)`;}
+  bar.style.width=(100*cl(t/11)).toFixed(2)+'%';bar.parentElement.style.opacity=t<11?1:cl((11.4-t)/.4);
+  renderer.render(scene,camera);
+};
+window.REEL={DUR,FPS};
+document.fonts.ready.then(()=>{window.READY=true;
+  const q=new URLSearchParams(location.search);
+  if(q.has('render'))return;
+  if(q.has('t'))return window.seek(+q.get('t'));
+  const t0=performance.now();(function loop(){window.seek(((performance.now()-t0)/1000)%DUR);requestAnimationFrame(loop);})();});
+</script>
