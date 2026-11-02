@@ -278,6 +278,8 @@ def main():
         for n, m in meshes.items():
             m.export(str(OUT / f"ipad_{n}.stl"))
             export_stl(ps[n], str(OUT / f"ipad_{n}_assembly.stl"))
+        export_stl(board_piece(-170, 190, ZB - 30, ZB + 200), str(OUT / "ipad_board.stl"))     # for the inspector
+        export_stl(box(X0 - IPAD["w"] / 2, X0 + IPAD["w"] / 2, 0.0, IPAD["t"], ZB, ZB + IPAD["h"]), str(OUT / "ipad_ipad.stl"))
         preview(ps, OUT / "ipad_sleeve_front.png")
         print("wrote", OUT)
     print("ALL CHECKS PASS" if ok else "CHECKS FAILED")
