@@ -33,9 +33,9 @@ td:first-child{font-family:var(--f-mono)}
 </style>
 <main>
 <header style="display:grid;gap:10px">
-<span class="stamp">v5 2026-11-02 · bottom clips printed · top clip not printed</span>
+<span class="stamp">v6 2026-11-02 · bottom clips and right side clip printed · left side clip v2 not printed</span>
 <h1>iPad sleeve</h1>
-<p class="sub">Two bottom clips and a top clip hold the iPad (7th gen, 10.2"; same body as the 8th gen) in landscape with its back flat on the SKÅDIS. Each clip has its own lugs (the hook's neck and lip), so there's no rail between the iPad and the board. Two bottom L corners carry it; one cap, centred on the top edge, stops it tipping out (replaces the two side clips: the left one had no purchase). The port is on the right.</p>
+<p class="sub">Two bottom clips and two side clips hold the iPad (7th gen, 10.2"; same body as the 8th gen) in landscape with its back flat on the SKÅDIS. Each clip has its own lugs (the hook's neck and lip), so there's no rail between the iPad and the board. Two bottom L corners carry it; one cap, centred on the top edge, stops it tipping out (replaces the two side clips: the left one had no purchase). The port is on the right.</p>
 </header>
 
 <section class="viewer">
@@ -45,10 +45,10 @@ td:first-child{font-family:var(--f-mono)}
 <button data-v="front" aria-pressed="true">On the board</button>
 <button data-v="back" aria-pressed="false">From behind</button>
 <button data-v="bottom" aria-pressed="false">Bottom clip</button>
-<button data-v="top" aria-pressed="false">Top clip</button>
-<button data-v="bed" aria-pressed="false">Print bed</button>
+<button data-v="top" aria-pressed="false">Left side clip</button>
+<button data-v="bed" aria-pressed="false">Print (left side v2)</button>
 </div>
-<label>slide top clip off <input id="lift" type="range" min="0" max="50" value="0"></label>
+<label>lift iPad <input id="lift" type="range" min="0" max="220" value="0"></label>
 <label><input id="ghost" type="checkbox"> see-through iPad</label>
 <span class="hint">drag · scroll / pinch</span>
 </div>
@@ -61,15 +61,15 @@ td:first-child{font-family:var(--f-mono)}
 <li>Clips: push the lugs through the slots, then let the clip drop about 6 mm. The lip hangs behind the board, below the slot.</li>
 <li>Bottom clips first: they carry the iPad (two lugs each, both in the bar).</li>
 <li>iPad: drop it into the bottom clips, back flat on the board.</li>
-<li>Top clip: hang a rail hook (the one you already printed) in the slot 10 mm right of the iPad's centre whose bottom is about 17 mm above the iPad's top edge. Put the iPad in, then slide the clip down the hook's rail: its cap lands 0.5 mm over the iPad's edge and its lip covers 3 mm of the bezel. Off: slide the clip up, lift the iPad.</li>
-<li>Checked in CAD: every lug on a real slot; no clash hanging the clips, dropping the iPad in, or sliding the top clip down the hook; the iPad can't move forward or up.</li>
+<li>Side clips: hang them like the bottom ones (push in 6 mm high, drop). The iPad slides down between them from the top, behind their lips, onto the bottom bars. Off: lift it straight up.</li>
+<li>Checked in CAD: every lug on a real slot; no clash hanging the clips or dropping the iPad in; the side lips stop it moving forward.</li>
 </ul>
 </div>
 <div>
 <h2>Where it sits</h2>
 <ul>
 <li>The slots set the iPad's place: its short edges land 13 slot columns apart (260 mm), on columns that alternate 20 mm in height. So left and right clips share an outline but hide their lugs in different spots.</li>
-<li>Top clip: the thin caps (v2-v4) hooked the slot that crosses the iPad's top edge, where the iPad covers the board in front of the slot, so nothing could clamp the board. Now a rail hook sits in a slot fully above the iPad, and its own flange and full lip hold the board.</li>
+<li>Left side clip v2: v1 had its lug at its top end, flush with its outer face, so nothing in front of the board clamped it and it had no purchase. v2 has a flange round the slot like the rail hook's: 3 mm past the slot's outer side and top, 6 mm below its floor, 1.7 mm on the inner side (the iPad covers the rest). It sits 16 mm higher than the right clip (the slot grid).</li>
 <li>Top centre is clear of the buttons (the volume keys sit near the top-left).</li>
 </ul>
 </div>
@@ -84,7 +84,7 @@ td:first-child{font-family:var(--f-mono)}
 <tr><td>Lip</td><td>3 mm over the bezel, 1.6 thick</td><td>CAD</td></tr>
 <tr><td>Clearance</td><td>0.5 mm round the edges and over the face</td><td>CAD</td></tr>
 <tr><td>Bottom clip</td><td>66 × 40, bar 15 under the iPad, 12 cm³</td><td>CAD; prints upright</td></tr>
-<tr><td>Top clip</td><td>18 wide, 36 tall from the front, 10 mm right of centre, 4.1 cm³; on a rail hook (0.25 mm clearance from the fit test)</td><td>CAD; prints upside down</td></tr>
+<tr><td>Left side clip v2</td><td>12.7 wide, 24 tall from the front, 2.7 cm³; top 25 mm below the iPad's top corner</td><td>CAD; prints upright</td></tr><tr><td>Right side clip (v1)</td><td>9.4 wide, 31 tall</td><td>printed, holds</td></tr>
 <tr><td>Corner radius, button spots</td><td>not published</td><td>unverified; pocket corner is square</td></tr>
 <tr><td>SKÅDIS slots</td><td>5 × 15, 5 mm board, 40 pitch</td><td>community figures; the hook fit test worked</td></tr>
 </table></div>
@@ -94,8 +94,8 @@ td:first-child{font-family:var(--f-mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const B64={board:"@@STL:ipad_board@@",ipad:"@@STL:ipad_ipad@@",
-bl:"@@STL:ipad_bottom_l_assembly@@",br:"@@STL:ipad_bottom_r_assembly@@",tp:"@@STL:ipad_top_rail_assembly@@",hk:"@@STL:ipad_top_hook_assembly@@",
-pbl:"@@STL:ipad_bottom_l@@",pbr:"@@STL:ipad_bottom_r@@",ptp:"@@STL:ipad_top_rail@@"};
+bl:"@@STL:ipad_bottom_l_assembly@@",br:"@@STL:ipad_bottom_r_assembly@@",sl:"@@STL:ipad_side_l_v2_assembly@@",sr:"@@STL:ipad_side_r_v1_assembly@@",
+pbl:"@@STL:ipad_bottom_l@@",pbr:"@@STL:ipad_bottom_r@@",psl:"@@STL:ipad_side_l_v2@@"};
 (function(){
   const cv=document.getElementById('v');
   if(!window.THREE){cv.replaceWith(Object.assign(document.createElement('p'),{textContent:'3D view could not load.',style:'padding:16px'}));return;}
@@ -117,17 +117,17 @@ pbl:"@@STL:ipad_bottom_l@@",pbr:"@@STL:ipad_bottom_r@@",ptp:"@@STL:ipad_top_rail
   const dyn=new THREE.Group();scene.add(dyn);let ipad=null,cap=null;
   const add=(geo,mat,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);dyn.add(m);return m;};
   // bed layout of the print-orientation meshes (model x, y on the bed -> three x, -z)
-  const BED=[['pbl',20,20],['pbr',20,60],['ptp',110,25]];
+  const BED=[['psl',100,30]];
   const VIEWS={front:{t:[10,115,0],d:620,th:-1.57,ph:0.12},back:{t:[10,115,0],d:620,th:1.25,ph:0.2},
-    bottom:{t:[-95,30,-4],d:200,th:-2.2,ph:0.35},top:{t:[20,222,-4],d:170,th:-2.0,ph:0.35},bed:{t:[90,5,-45],d:300,th:1.2,ph:0.8}};
+    bottom:{t:[-95,30,-4],d:200,th:-2.2,ph:0.35},top:{t:[-120,172,-4],d:150,th:-2.3,ph:0.3},bed:{t:[106,10,-36],d:120,th:-1.0,ph:0.6}};
   let th=-1.57,ph=0.12,dist=620,target=new THREE.Vector3(10,115,0);
   function setView(v){document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
     dyn.clear();ipad=null;cap=null;
     if(v==='bed'){const b=new THREE.Mesh(new THREE.BoxGeometry(256,1,256),bm);b.position.set(128,-0.5,-128);dyn.add(b);
       BED.forEach(([k,x,y])=>add(G[k],cm,x,0,-y));}
-    else{add(G.board,bm);['bl','br'].forEach(k=>add(G[k],cm));add(G.hk,hm);cap=add(G.tp,cm);ipad=add(G.ipad,im);}
+    else{add(G.board,bm);['bl','br'].forEach(k=>add(G[k],cm));add(G.sl,cm);add(G.sr,cm);ipad=add(G.ipad,im);}
     const c=VIEWS[v];target.set(...c.t);dist=c.d;th=c.th;ph=c.ph;applyLift();}
-  function applyLift(){const l=+document.getElementById('lift').value;if(cap){cap.position.y=l;}draw();}
+  function applyLift(){const l=+document.getElementById('lift').value;if(ipad){ipad.position.y=l;}draw();}
   document.querySelectorAll('#seg button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.v)));
   document.getElementById('lift').addEventListener('input',applyLift);
   document.getElementById('ghost').addEventListener('change',e=>{im.opacity=e.target.checked?.3:1;im.depthWrite=!e.target.checked;draw();});
