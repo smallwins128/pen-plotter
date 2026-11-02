@@ -33,9 +33,9 @@ td:first-child{font-family:var(--f-mono)}
 </style>
 <main>
 <header style="display:grid;gap:10px">
-<span class="stamp">v2 2026-11-02 · bottom clips printed · top cap not printed</span>
+<span class="stamp">v3 2026-11-02 · bottom clips printed · top cap not printed</span>
 <h1>iPad sleeve</h1>
-<p class="sub">Three clips hold the iPad (7th gen, 10.2"; same body as the 8th gen) in landscape with its back flat on the SKÅDIS. Each clip has its own lugs (the hook's neck and lip), so there's no rail between the iPad and the board. Two bottom L corners carry it; one thin cap, centred on the top edge, stops it tipping out (v2: replaces the two side clips, the left one had no purchase). The port is on the right.</p>
+<p class="sub">Three clips hold the iPad (7th gen, 10.2"; same body as the 8th gen) in landscape with its back flat on the SKÅDIS. Each clip has its own lugs (the hook's neck and lip), so there's no rail between the iPad and the board. Two bottom L corners carry it; one cap, centred on the top edge, stops it tipping out (replaces the two side clips: the left one had no purchase). The port is on the right.</p>
 </header>
 
 <section class="viewer">
@@ -70,6 +70,7 @@ td:first-child{font-family:var(--f-mono)}
 <ul>
 <li>The slots set the iPad's place: its short edges land 13 slot columns apart (260 mm), on columns that alternate 20 mm in height. So left and right clips share an outline but hide their lugs in different spots.</li>
 <li>The cap's lug is in the column 10 mm left of the iPad's centre; the cap itself is centred. Its slot runs across the iPad's top edge, so the neck sits behind the iPad, inside the board.</li>
+<li>Front contact: the lip grips the board's back below the slot, so the cap's back face presses the board's front beside the slot, up to the slot's top (15 mm; the hook's flange: 14). The v1 left side clip had none and tipped off.</li>
 <li>Top centre is clear of the buttons (the volume keys sit near the top-left).</li>
 </ul>
 </div>
@@ -84,7 +85,7 @@ td:first-child{font-family:var(--f-mono)}
 <tr><td>Lip</td><td>3 mm over the bezel, 1.6 thick</td><td>CAD</td></tr>
 <tr><td>Clearance</td><td>0.5 mm round the edges and over the face</td><td>CAD</td></tr>
 <tr><td>Bottom clip</td><td>66 × 40, bar 15 under the iPad, 12 cm³</td><td>CAD; prints upright</td></tr>
-<tr><td>Top cap</td><td>30 wide, 6.5 tall from the front (3.5 over the edge + 3 lip), 1.4 cm³; lip hangs 3 mm behind the board</td><td>CAD; prints upside down</td></tr>
+<tr><td>Top cap</td><td>24.4 wide, 14.4 tall from the front (11.4 over the edge + 3 lip), 3.1 cm³; lip hangs 3 mm behind the board</td><td>CAD; prints standing on its left end</td></tr>
 <tr><td>Corner radius, button spots</td><td>not published</td><td>unverified; pocket corner is square</td></tr>
 <tr><td>SKÅDIS slots</td><td>5 × 15, 5 mm board, 40 pitch</td><td>community figures; the hook fit test worked</td></tr>
 </table></div>
@@ -116,7 +117,7 @@ pbl:"@@STL:ipad_bottom_l@@",pbr:"@@STL:ipad_bottom_r@@",ptp:"@@STL:ipad_top@@"};
   const dyn=new THREE.Group();scene.add(dyn);let ipad=null,cap=null;
   const add=(geo,mat,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);dyn.add(m);return m;};
   // bed layout of the print-orientation meshes (model x, y on the bed -> three x, -z)
-  const BED=[['pbl',20,20],['pbr',20,60],['ptp',110,30]];
+  const BED=[['pbl',20,20],['pbr',20,60],['ptp',110,25]];
   const VIEWS={front:{t:[10,115,0],d:620,th:-1.57,ph:0.12},back:{t:[10,115,0],d:620,th:1.25,ph:0.2},
     bottom:{t:[-95,30,-4],d:200,th:-2.2,ph:0.35},top:{t:[10,210,-4],d:150,th:-2.0,ph:0.45},bed:{t:[90,5,-45],d:300,th:1.2,ph:0.8}};
   let th=-1.57,ph=0.12,dist=620,target=new THREE.Vector3(10,115,0);

@@ -7,14 +7,17 @@ carries its own SKÅDIS lugs (the hook's neck and lip from skadis_rail.py, which
 iPad's back lies on the board face. Clip front = 7.5 iPad + 0.5 clearance + 1.6 lip = 9.6 mm off the board; the
 lip covers 3 mm of the bezel.
 
-    TOP                  v2 (2026-11-02, after the print): one thin cap centred on the iPad's top edge, 30 wide,
-                         6.5 tall seen from the front (3.5 over the edge + 3 lip). Replaces the two side clips: the
-                         printed left one had no purchase on the board (Allwin). One lug in the slot that straddles
-                         the iPad's top edge: the neck sits on that slot's floor 3.1 mm below the edge, inside the
-                         board, behind the iPad; only its top 3.5 mm meets the cap. Lip hangs 3 below the neck (not 6):
-                         pushed in 7 mm high, the lip must pass over the iPad's edge yet fit the 15 mm slot. Lip, neck
-                         and cap end on one face, so it prints upside down with nothing in the air.
-                         Goes on last: iPad in, then push the cap in 7 mm high and let it drop over the edge.
+    TOP                  v3 (2026-11-02): one cap centred on the iPad's top edge, 24.4 wide, 14.4 tall seen from the
+                         front (11.4 over the edge + 3 lip). Replaces the two side clips. One lug in the slot that
+                         straddles the iPad's top edge: the neck sits on that slot's floor 3.1 mm below the edge,
+                         inside the board, behind the iPad. Lip hangs 3 below the neck (not 6): pushed in 7 mm high,
+                         the lip must pass over the iPad's edge yet fit the 15 mm slot.
+
+    FRONT CONTACT RULE (Allwin, after the print): the lip behind the board needs the clip's back face pressing on the
+    board's FRONT above it, like the hook's flange, or the clip tips forward. The printed left side clip had its lug at
+    its top end and the slot ate its 6.4 mm wall, so nothing held the front: no purchase. v2's thin cap touched the
+    board only 3.5 mm above the slot floor. v3's back face covers the board beside the slot up to the slot's top
+    (15 mm above its floor; the hook's flange reaches 14). check: front_contact().
     BOTTOM L / BOTTOM R  L-shaped: bar 18 tall under the iPad (15 + 3 lip), 69 long; arm 9.4 wide, 43 tall.
                          Two lugs, both in the bar, 40 apart; they carry the iPad's weight (483 g).
 
@@ -26,8 +29,9 @@ iPad side, port on the right (Allwin): the cable leaves the right edge mid-heigh
 (it starts 22 mm above the port). The top button and volume keys end up at the top-left; the left side clip stops
 34 mm below the top corner. The headphone jack (bottom of the left edge) sits behind the bottom-left arm.
 
-Print: BOTTOM clips stand upright as modelled (bar on the bed; each neck bridges 5.4 mm, as on the hook). TOP prints
-upside down (its top face on the bed). No supports. (v1 SIDE clips: see git history.)
+Print: BOTTOM clips stand upright as modelled (bar on the bed; each neck bridges 5.4 mm, as on the hook). TOP stands
+on its left end: the lug is flush with that end, so neck and lip print on the bed. No supports. (v1 SIDE clips and v2
+thin cap: see git history.)
 
     python3 ipad_sleeve.py            # checks only (fit, slide, overhangs)
     python3 ipad_sleeve.py --stl      # + out/harbor/ipad_*.stl (print orientation) and a preview PNG
@@ -57,7 +61,7 @@ WALL = LUG_OUT + NECK["w"] / 2                 # 6.4: wall outside the edge; the
 BAR = NECK["h"] + 6.0 + 2.0                    # 15: under the iPad; lug lip hangs 6 below the neck, 2 mm above it
 ARM = 25.0                                     # corner arm above the iPad's bottom edge (short: speakers, jack)
 REACH = 60.0                                   # corner bar inward from the iPad's edge (second lug at 55.8)
-TOP_W, TOP_H = 30.0, 3.5                       # top cap: width, height over the iPad's top edge (to the neck's top)
+TOP_TOP = 221.0                                # top cap's top: the top of its slot (206 + 15), for front contact
 TOP_HANG, TOP_LIFT = 3.0, 7.0                  # top lug: lip below the neck; lift to hang it. Lifted, the lip must clear
                                                # the iPad's top edge and still fit the slot: hang + 3.6 <= lift <= 7.4
 LEAD = 1.5                                     # lead-in chamfer at the top of every channel
@@ -141,17 +145,19 @@ def top():
     part below the ceiling stays inside the board, behind the iPad), lip hanging TOP_HANG below the neck, all three
     ending on the top face."""
     (x, zn), = LUGS["top"]
-    z1, w = ZT + TOP_H, NECK["w"] / 2
-    x0, x1 = X0 - TOP_W / 2, X0 + TOP_W / 2
-    part = outline([(x0, ZT - LIP_OVER), (x1, ZT - LIP_OVER), (x1, z1), (x0, z1)], {0: 1.5, 1: 1.5, 2: 1.5, 3: 1.5},
+    z1, w = TOP_TOP, NECK["w"] / 2
+    x0 = x - w                                                            # lug flush with the left end (print face)
+    x1 = 2 * X0 - x0                                                      # centred on the iPad
+    part = outline([(x0, ZT - LIP_OVER), (x1, ZT - LIP_OVER), (x1, z1), (x0, z1)], {1: 1.5, 2: 1.5},
                    0.0, Y_FRONT)
     part -= box(XL, XR, -1.0, Y_POCKET, ZB, ZT)
     zl = ZT - LIP_OVER                                                    # lead-in on the lip's back, bottom edge
     part -= prism_yz([(Y_POCKET - 0.01, zl - 0.01), (Y_POCKET + 1.0, zl - 0.01), (Y_POCKET - 0.01, zl + 1.0)], x0 - 1, x1 + 1)
     yb = -NECK["len"]
-    part += box(x - w, x + w, yb - 0.1, 0.1, ZT, z1)                      # neck, meeting the cap
+    zt = zn + NECK["h"]
+    part += box(x - w, x + w, yb - 0.1, 0.1, ZT, zt)                      # neck, meeting the cap
     part += box(x - w, x + w, yb - 0.1, -0.05, zn, ZT + 0.1)              # neck, inside the slot behind the iPad
-    part += box(x - w, x + w, yb - LIP["t"], yb, zn - TOP_HANG, z1)       # lip
+    part += box(x - w, x + w, yb - LIP["t"], yb, zn - TOP_HANG, zt)       # lip
     return part
 
 
@@ -193,7 +199,7 @@ def checks(ps):
     ipad = box(X0 - IPAD["w"] / 2, X0 + IPAD["w"] / 2, 0.0, IPAD["t"], ZB, ZB + IPAD["h"])
     print("top lug: lip fits the slot when lifted, holds when dropped:")
     (x, zn), = LUGS["top"]
-    lip0, lip1 = zn - TOP_HANG, ZT + TOP_H
+    lip0, lip1 = zn - TOP_HANG, zn + NECK["h"]
     fits = lip0 + TOP_LIFT >= zn and lip1 + TOP_LIFT <= zn + BOARD_SLOT_H
     print(f"  lip {lip1 - lip0:.1f} tall; lifted {TOP_LIFT}: {lip0 + TOP_LIFT:.1f}-{lip1 + TOP_LIFT:.1f} in slot {zn:.0f}-{zn + BOARD_SLOT_H:.0f}"
           f" {'ok' if fits else 'NO'}; seated, {TOP_HANG} mm of lip behind the board below the slot")
@@ -231,6 +237,7 @@ def checks(ps):
     rest = vol(Pos(0, 0, -0.3) * ipad, allp)
     print(f"  0.3 mm lower it would hit the bars: {rest:.1f} mm3 (> 0 means it rests on them)")
     ok &= rest > 1
+    ok &= front_contact(ps)
     print("iPad held: 1 mm forward or up hits a clip:")
     allp += ps["top"]
     for label, mv in (("forward, top half", Pos(0, 1, 0) * box(X0 - 20, X0 + 20, 0.0, IPAD["t"], ZT - 10, ZT - CLR)),
@@ -238,6 +245,29 @@ def checks(ps):
         v = vol(mv, allp)
         print(f"  {label:18s} {v:.1f} mm3")
         ok &= v > 1
+    return ok
+
+
+def front_contact(ps):
+    """Allwin's rule: the clip's back face must press on the board's front ABOVE the lip's grip behind it, beside or
+    over the slot. Measures, per lug, how high above the slot floor the clip touches the board face (within 12 mm of
+    the slot, slot openings excluded) and the touching area above the floor. The hook's flange: 14 mm. Bottom clips
+    also carry the iPad, which pulls their necks down onto the slot floors."""
+    print("front contact on the board above each slot floor (hook flange: 14 mm):")
+    ok = True
+    for n, lugs in LUGS.items():
+        for x, zn in lugs:
+            face = box(x - 12, x + 12, -0.01, 0.3, zn, zn + 60) - box(x - 2.5, x + 2.5, -1, 1, zn, zn + 15)
+            try:
+                touch = ps[n] & face
+                top = touch.bounding_box().max.Z - zn if touch.volume > 1e-6 else 0.0
+                area = touch.volume / 0.31
+            except Exception:
+                top, area = 0.0, 0.0
+            need = 13.0 if n == "top" else 9.0
+            good = top >= need and area >= 40
+            print(f"  {n:9s} column {x:6.0f}: up to {top:4.1f} mm above the floor, {area:5.0f} mm2  {'ok' if good else 'TOO LITTLE'}")
+            ok &= good
     return ok
 
 
@@ -251,8 +281,8 @@ def print_meshes(ps):
         export_stl(p, str(path))
         m = trimesh.load(str(path))
         path.unlink()
-        if n == "top":                                 # upside down: its top face on the bed
-            m.apply_transform(rotation_matrix(np.radians(180), [1, 0, 0]))
+        if n == "top":                                 # on its left end (lug flush with it): -x becomes -z
+            m.apply_transform(rotation_matrix(np.radians(-90), [0, 1, 0]))
         m.apply_translation(-m.bounds[0])
         out[n] = m
     return out
