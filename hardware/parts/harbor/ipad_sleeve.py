@@ -1,4 +1,4 @@
-"""R05 Harbor: iPad sleeve on the SKÅDIS (2026-11-02). Four clips hold an iPad 8th gen (10.2", 2020) in landscape,
+"""R05 Harbor: iPad sleeve on the SKÅDIS (2026-11-02). Four clips hold an iPad 7th gen (10.2", 2019; same body as the 8th gen) in landscape,
 its back flat on the board.
 
 Allwin's sketch: two SIDE clips near the top of the short edges, two BOTTOM corner clips (an L). Asked for: clips
@@ -9,7 +9,7 @@ lip covers 3 mm of the bezel.
 
     SIDE L / SIDE R      31 tall, 9.4 wide seen from the front; one lug. Channel open top and bottom.
     BOTTOM L / BOTTOM R  L-shaped: bar 18 tall under the iPad (15 + 3 lip), 69 long; arm 9.4 wide, 43 tall.
-                         Two lugs, both in the bar, 40 apart; they carry the iPad's weight (490 g).
+                         Two lugs, both in the bar, 40 apart; they carry the iPad's weight (483 g).
 
 Fit: the clips hang on a fixed slot grid, so the iPad's place is set by the slots, not by the clips. Slot columns are
 20 apart and alternate 20 mm in height; the two short edges land 13 columns apart (260 mm), on opposite column types.
