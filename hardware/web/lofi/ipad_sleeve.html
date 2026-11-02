@@ -33,22 +33,23 @@ td:first-child{font-family:var(--f-mono)}
 </style>
 <main>
 <header style="display:grid;gap:10px">
-<span class="stamp">v6 2026-11-02 · bottom clips and right side clip printed · left side clip v2 not printed</span>
+<span class="stamp">v7 2026-11-02 · corner plates on rail hooks · not printed</span>
 <h1>iPad sleeve</h1>
-<p class="sub">Two bottom clips and two side clips hold the iPad (7th gen, 10.2"; same body as the 8th gen) in landscape with its back flat on the SKÅDIS. Each clip has its own lugs (the hook's neck and lip), so there's no rail between the iPad and the board. Two bottom L corners carry it; one cap, centred on the top edge, stops it tipping out (replaces the two side clips: the left one had no purchase). The port is on the right.</p>
+<p class="sub">Four standard rail hooks hang behind the iPad's corners. Each takes a plate that slides down the hook's rail, like the tool plates. The plates sit behind the iPad, which rests 9 mm off the board; from the front you only see four alike corner wraps: a 2 mm wall round the edge and a 3 mm lip over the bezel. iPad 7th gen, landscape, port on the right.</p>
 </header>
 
 <section class="viewer">
-<canvas id="v" aria-label="3D view of the iPad sleeve clips on a SKÅDIS board; drag to rotate, scroll or pinch to zoom"></canvas>
+<canvas id="v" aria-label="3D view of the iPad on four corner plates hung on SKÅDIS rail hooks; drag to rotate, scroll or pinch to zoom"></canvas>
 <div class="bar">
 <div class="seg" id="seg">
 <button data-v="front" aria-pressed="true">On the board</button>
+<button data-v="side" aria-pressed="false">From the side</button>
 <button data-v="back" aria-pressed="false">From behind</button>
-<button data-v="bottom" aria-pressed="false">Bottom clip</button>
-<button data-v="top" aria-pressed="false">Left side clip</button>
-<button data-v="bed" aria-pressed="false">Print (left side v2)</button>
+<button data-v="bottom" aria-pressed="false">Bottom corner</button>
+<button data-v="top" aria-pressed="false">Top corner</button>
+<button data-v="bed" aria-pressed="false">Print bed</button>
 </div>
-<label>lift iPad <input id="lift" type="range" min="0" max="220" value="0"></label>
+<label>slide top plates up <input id="lift" type="range" min="0" max="60" value="0"></label>
 <label><input id="ghost" type="checkbox"> see-through iPad</label>
 <span class="hint">drag · scroll / pinch</span>
 </div>
@@ -58,19 +59,19 @@ td:first-child{font-family:var(--f-mono)}
 <div>
 <h2>How it goes on</h2>
 <ul>
-<li>Clips: push the lugs through the slots, then let the clip drop about 6 mm. The lip hangs behind the board, below the slot.</li>
-<li>Bottom clips first: they carry the iPad (two lugs each, both in the bar).</li>
-<li>iPad: drop it into the bottom clips, back flat on the board.</li>
-<li>Side clips: hang them like the bottom ones (push in 6 mm high, drop). The iPad slides down between them from the top, behind their lips, onto the bottom bars. Off: lift it straight up.</li>
-<li>Checked in CAD: every lug on a real slot; no clash hanging the clips or dropping the iPad in; the side lips stop it moving forward.</li>
+<li>Four rail hooks (your standard ones): push into the slots and drop, as always.</li>
+<li>Bottom plates: slide down their hooks until they sit on the rail roofs.</li>
+<li>iPad: lower it onto the two ledges, back against the plates.</li>
+<li>Top plates last: hold the iPad upright, slide each top plate down its hook behind the iPad until its cap lands over the top corner. Off: slide the top plates up, lift the iPad.</li>
+<li>Checked in CAD: hooks on real slots; nothing clashes while the plates slide on (top plates with the iPad in) or while the iPad drops in; the iPad can't move forward, up, sideways or back.</li>
 </ul>
 </div>
 <div>
 <h2>Where it sits</h2>
 <ul>
-<li>The slots set the iPad's place: its short edges land 13 slot columns apart (260 mm), on columns that alternate 20 mm in height. So left and right clips share an outline but hide their lugs in different spots.</li>
-<li>Left side clip v2: v1 had its lug at its top end, flush with its outer face, so nothing in front of the board clamped it and it had no purchase. v2 has a flange round the slot like the rail hook's: 3 mm past the slot's outer side and top, 6 mm below its floor, 1.7 mm on the inner side (the iPad covers the rest). It sits 16 mm higher than the right clip (the slot grid).</li>
-<li>Top centre is clear of the buttons (the volume keys sit near the top-left).</li>
+<li>Hooks 200 apart across (same slot heights, so left and right plates are mirror images) and 120 apart up the column. Every hook and plate body is behind the iPad.</li>
+<li>All four corners look the same from the front: legs 37 mm long; side legs 4.5 mm wide past the iPad's edge (wall + lip over the bezel); bottom bars 6 mm (3 mm ledge + lip), top bars 5 mm (2 mm cap + lip).</li>
+<li>The iPad sits 9.15 mm off the board; the corners stand 18.75 mm off it.</li>
 </ul>
 </div>
 </section>
@@ -80,12 +81,12 @@ td:first-child{font-family:var(--f-mono)}
 <div class="tw"><table>
 <tr><th>Item</th><th>Value</th><th>Source</th></tr>
 <tr><td>iPad</td><td>250.6 × 174.1 × 7.5 mm, 483 g (Wi-Fi)</td><td>Apple's published size</td></tr>
-<tr><td>Clip front</td><td>9.6 mm off the board (2.1 above the screen)</td><td>CAD</td></tr>
-<tr><td>Lip</td><td>3 mm over the bezel, 1.6 thick</td><td>CAD</td></tr>
-<tr><td>Clearance</td><td>0.5 mm round the edges and over the face</td><td>CAD</td></tr>
-<tr><td>Bottom clip</td><td>66 × 40, bar 15 under the iPad, 12 cm³</td><td>CAD; prints upright</td></tr>
-<tr><td>Left side clip v2</td><td>12.7 wide, 24 tall from the front, 2.7 cm³; top 25 mm below the iPad's top corner</td><td>CAD; prints upright</td></tr><tr><td>Right side clip (v1)</td><td>9.4 wide, 31 tall</td><td>printed, holds</td></tr>
-<tr><td>Corner radius, button spots</td><td>not published</td><td>unverified; pocket corner is square</td></tr>
+<tr><td>Rail clearance</td><td>0.25 mm per side</td><td>your fit test</td></tr>
+<tr><td>Bottom plate</td><td>36.8 × 49.8, 9.7 cm³</td><td>CAD; prints upright</td></tr>
+<tr><td>Top plate</td><td>36.8 × 36.8, 12.1 cm³</td><td>CAD; prints upside down</td></tr>
+<tr><td>Print bed</td><td>4 plates + 3 hooks, 171 × 63 mm, 47 cm³</td><td>CAD</td></tr>
+<tr><td>Seen from the front</td><td>about 810 mm² for all four corners</td><td>CAD</td></tr>
+<tr><td>Corner radius, button spots</td><td>not published</td><td>unverified; corners are square inside</td></tr>
 <tr><td>SKÅDIS slots</td><td>5 × 15, 5 mm board, 40 pitch</td><td>community figures; the hook fit test worked</td></tr>
 </table></div>
 </section>
@@ -93,9 +94,10 @@ td:first-child{font-family:var(--f-mono)}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const B64={board:"@@STL:ipad_board@@",ipad:"@@STL:ipad_ipad@@",
-bl:"@@STL:ipad_bottom_l_assembly@@",br:"@@STL:ipad_bottom_r_assembly@@",sl:"@@STL:ipad_side_l_v2_assembly@@",sr:"@@STL:ipad_side_r_v1_assembly@@",
-pbl:"@@STL:ipad_bottom_l@@",pbr:"@@STL:ipad_bottom_r@@",psl:"@@STL:ipad_side_l_v2@@"};
+const B64={board:"@@STL:ipad_corners_board@@",ipad:"@@STL:ipad_corners_ipad@@",
+bl:"@@STL:ipad_corner_bottom_l_assembly@@",br:"@@STL:ipad_corner_bottom_r_assembly@@",tl:"@@STL:ipad_corner_top_l_assembly@@",tr:"@@STL:ipad_corner_top_r_assembly@@",
+h0:"@@STL:ipad_corner_hook0_assembly@@",h1:"@@STL:ipad_corner_hook1_assembly@@",h2:"@@STL:ipad_corner_hook2_assembly@@",h3:"@@STL:ipad_corner_hook3_assembly@@",
+bed:"@@STL:ipad_corners_bed@@"};
 (function(){
   const cv=document.getElementById('v');
   if(!window.THREE){cv.replaceWith(Object.assign(document.createElement('p'),{textContent:'3D view could not load.',style:'padding:16px'}));return;}
@@ -114,20 +116,19 @@ pbl:"@@STL:ipad_bottom_l@@",pbr:"@@STL:ipad_bottom_r@@",psl:"@@STL:ipad_side_l_v
   const im=new THREE.MeshStandardMaterial({roughness:.35,metalness:.1,transparent:true,opacity:1});
   const bm=new THREE.MeshStandardMaterial({roughness:.9,flatShading:true,transparent:true,opacity:.6,side:THREE.DoubleSide});
   const G={};for(const k in B64)G[k]=parse(B64[k]);
-  const dyn=new THREE.Group();scene.add(dyn);let ipad=null,cap=null;
+  const dyn=new THREE.Group();scene.add(dyn);let ipad=null,tops=[];
   const add=(geo,mat,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);dyn.add(m);return m;};
   // bed layout of the print-orientation meshes (model x, y on the bed -> three x, -z)
-  const BED=[['psl',100,30]];
-  const VIEWS={front:{t:[10,115,0],d:620,th:-1.57,ph:0.12},back:{t:[10,115,0],d:620,th:1.25,ph:0.2},
-    bottom:{t:[-95,30,-4],d:200,th:-2.2,ph:0.35},top:{t:[-120,172,-4],d:150,th:-2.3,ph:0.3},bed:{t:[106,10,-36],d:120,th:-1.0,ph:0.6}};
-  let th=-1.57,ph=0.12,dist=620,target=new THREE.Vector3(10,115,0);
+  const VIEWS={front:{t:[0,123,0],d:620,th:-1.57,ph:0.12},side:{t:[-110,123,-8],d:420,th:-3.0,ph:0.15},back:{t:[0,123,0],d:620,th:1.25,ph:0.2},
+    bottom:{t:[-110,50,-10],d:190,th:-2.1,ph:0.4},top:{t:[-110,195,-10],d:190,th:-2.1,ph:0.45},bed:{t:[90,10,-40],d:260,th:-1.2,ph:0.8}};
+  let th=-1.57,ph=0.12,dist=620,target=new THREE.Vector3(0,123,0);
   function setView(v){document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
-    dyn.clear();ipad=null;cap=null;
+    dyn.clear();ipad=null;tops=[];
     if(v==='bed'){const b=new THREE.Mesh(new THREE.BoxGeometry(256,1,256),bm);b.position.set(128,-0.5,-128);dyn.add(b);
-      BED.forEach(([k,x,y])=>add(G[k],cm,x,0,-y));}
-    else{add(G.board,bm);['bl','br'].forEach(k=>add(G[k],cm));add(G.sl,cm);add(G.sr,cm);ipad=add(G.ipad,im);}
+      add(G.bed,cm);}
+    else{add(G.board,bm);['h0','h1','h2','h3'].forEach(k=>add(G[k],hm));['bl','br'].forEach(k=>add(G[k],cm));tops=[add(G.tl,cm),add(G.tr,cm)];ipad=add(G.ipad,im);}
     const c=VIEWS[v];target.set(...c.t);dist=c.d;th=c.th;ph=c.ph;applyLift();}
-  function applyLift(){const l=+document.getElementById('lift').value;if(ipad){ipad.position.y=l;}draw();}
+  function applyLift(){const l=+document.getElementById('lift').value;tops.forEach(m=>m.position.y=l);draw();}
   document.querySelectorAll('#seg button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.v)));
   document.getElementById('lift').addEventListener('input',applyLift);
   document.getElementById('ghost').addEventListener('change',e=>{im.opacity=e.target.checked?.3:1;im.depthWrite=!e.target.checked;draw();});
