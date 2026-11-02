@@ -86,6 +86,8 @@ def main():
     print(f"print: {m.extents.round(1)} mm, {m.volume / 1000:.1f} cm3, down-facing area above the bed {over:.1f} mm2")
     ok &= over < 0.5
     m.export(str(OUT / "ipad_top_rail.stl"))
+    export_stl(clip, str(OUT / "ipad_top_rail_assembly.stl"))          # seated, for the inspector
+    export_stl(w_hook, str(OUT / "ipad_top_hook_assembly.stl"))
     print("ALL CHECKS PASS" if ok else "CHECKS FAILED")
     return 0 if ok else 1
 
