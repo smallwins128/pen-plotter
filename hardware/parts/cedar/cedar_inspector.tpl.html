@@ -48,7 +48,7 @@ ul{margin:0;padding-left:18px}li{margin:4px 0}
 </head>
 <body>
 <header>
-  <h1>Cedar · CAD run 2</h1>
+  <h1>Cedar · CAD run 3</h1>
   <p class="sub" id="sub"></p>
 </header>
 <main>
@@ -68,13 +68,12 @@ ul{margin:0;padding-left:18px}li{margin:4px 0}
     <div class="card"><h2>Checks</h2><div id="checks"></div></div>
     <div class="card"><h2>How it goes together</h2>
       <ul>
-        <li><b>Base:</b> 4 wood strips (35 × 6, 227 long) pass through slots in both plates, 6 mm proud each side. The PSU sits on the two at the back.</li>
-        <li><b>Rail seat, every rail end:</b> the plate carries a 12 mm surface shaped to the rail. A clamp with a boss presses the web, held by 2 × M3 countersunk into heat-set inserts outside the rail, so slot positions don't matter.</li>
-        <li><b>Rails:</b> top (9 KV121 + a DIN switch for the board's 2-pin socket), 2 at the back facing out, 2 on the slope for prototypes (2 KV121 feeds each).</li>
-        <li><b>Sleeve:</b> a 1.6 mm shell follows the side profile over the 63 mm bay, with a honeycomb on its back and slope faces. Each rail screws into a rib on it (M3 nut slid into the rib's channel from the PSU end, M3 × 6 pan head through any rail slot).</li>
-        <li><b>End wall:</b> a separate flat print that drops into the shell against a 1.5 mm ledge, held there by the PSU. Its window is the PSU face less a 3 mm lip, crossed by 2 bars for the ATX board.</li>
-        <li><b>ATX board:</b> on 4 standoffs 15 mm long, facing the bay. The PSU's cables pass through the open window (the 74 mm band below the board, or behind it) and plug into the 24-pin socket from the bay.</li>
-        <li><b>PSU:</b> its back face (fan, mains socket, switch) sits in the right plate's window, held by its own 4 screws in the corner pads.</li>
+        <li><b>Wood:</b> 6 slats (35 × 6, cut to 227), 4 under and 2 at the back, each in its own slot in both plates. Each one screws to the sleeve with an M3 × 10 into a drop-in nut. The PSU sits on bottom slats 1 and 2.</li>
+        <li><b>DIN rails:</b> 3 (top, slope 1, slope 2). Each end sits in the standard seat; the clamp's 2 × M3 × 12 countersunk screws go into drop-in nuts slid in from the seat's free end. Each rail also screws into a rib on the sleeve.</li>
+        <li><b>Top rail:</b> 9 KV121 and the DIN switch for the board's 2-pin socket, starting 30 mm in so your fingers fit behind the handle.</li>
+        <li><b>Handles:</b> a 64 × 14 slot in each plate, 1 mm above the top rail's clamp, with 8 mm of plate above it.</li>
+        <li><b>Interlocks:</b> the PSU's back end sits in a 2 mm pocket in the right plate, and its cable end in a 3 mm collar on the end wall. 3 keys on the end wall fit notches in the shell, and the shell sits in a 1.2 mm groove in the left plate.</li>
+        <li><b>End wall:</b> a flat print, stopped by the shell's ledge and held there by the PSU. The ATX board sits on 2 bars across the PSU window, on 15 mm standoffs.</li>
       </ul>
     </div>
     <div class="card"><h2>Placeholders</h2>
@@ -88,10 +87,10 @@ ul{margin:0;padding-left:18px}li{margin:4px 0}
     <div class="card"><h2>Bought parts</h2>
       <ul>
         <li>ZEB-450W PSU · HY-Z09 ATX board · a DIN switch for its 2-pin socket</li>
-        <li>5 DIN rail pieces, 203 mm · 4 wood strips 35 × 6, cut to 227</li>
+        <li>3 DIN rail pieces, 203 mm · 6 wood slats 35 × 6, cut to 227</li>
         <li>13 × KV121: 9 on top, 2 on each slope rail</li>
-        <li>20 × M3 × 10 countersunk + 20 heat-set inserts (clamps)</li>
-        <li>5 × M3 nuts + 5 × M3 × 6 pan head + washers (sleeve ribs)</li>
+        <li>12 × M3 × 12 countersunk + 12 M3 nuts (rail clamps)</li>
+        <li>3 × M3 nuts + 3 × M3 × 6 pan head (rails to sleeve ribs) · 6 × M3 × 10 + 6 nuts (slats to sleeve)</li>
         <li>4 × M3 inserts + 4 × M3 × 6 pan head (board) · the PSU's own 4 screws</li>
       </ul>
     </div>
@@ -104,7 +103,7 @@ const DATA = /*DATA*/null;
 const S = DATA.summary;
 const [W, H, D] = S.size;
 document.getElementById("sub").textContent =
-  `${W} L × ${H} H × ${D} D mm (strips ${S.strip_len}) · 14 prints, about ${S.total_g_pla} g PLA (solid estimate) · ${S.checks.length - S.failed.length}/${S.checks.length} checks pass`;
+  `${W} L × ${H} H × ${D} D mm (strips ${S.strip_len}) · 10 prints, about ${S.total_g_pla} g PLA (solid estimate) · ${S.checks.length - S.failed.length}/${S.checks.length} checks pass`;
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
@@ -137,11 +136,11 @@ const M = {
 };
 const VCOL = {"12V":0xe2b300, "5V":0xd0352a, "3V3":0xe07a1f, "GND":0x1b1d1f, "pos":0xf08a24, "neg":0xf08a24};
 const groups = {
-  printed: {label:"End plates and clamps", note:"2 plates (honeycomb, rail seats, strip slots), 10 clamps, PLA", objs:[]},
+  printed: {label:"End plates and clamps", note:"2 plates (honeycomb, handle, rail seats, slat slots), 6 clamps, PLA", objs:[]},
   sleeve: {label:"Sleeve", note:"shell + flat end wall, PLA", objs:[]},
   psu: {label:"PSU", note:"ZEB-450W on its side, 140 × 150 × 87", objs:[]},
-  rails: {label:"DIN rails", note:"5 × 203 mm", objs:[]},
-  wood: {label:"Wood strips", note:"4 × 35 × 6 × 227", objs:[]},
+  rails: {label:"DIN rails", note:"3 × 203 mm", objs:[]},
+  wood: {label:"Wood slats", note:"6 × 35 × 6 × 227 (4 under, 2 at the back)", objs:[]},
   kv: {label:"Terminals and switch", note:"13 × KV121, DIN switch (placeholder sizes)", objs:[]},
   board: {label:"ATX board", note:"HY-Z09 70 × 68 on the end wall", objs:[]},
   ghost: {label:"Prototypes", note:"example boards on the slope rails", objs:[]},
@@ -164,7 +163,7 @@ S.parts.forEach(p => {
   if (n.startsWith("kv_")) {                       // lever cap, coloured by what the terminal carries
     const bits = n.split("_"), lab = bits[bits.length-1], i = +bits[bits.length-2];
     const rail = n.startsWith("kv_top") ? "top" : bits[1];
-    const r = R[rail], x0 = (rail === "top" ? 14 : 14) + i * S.kv.t, b = S.kv.h - 7.5 + 2;
+    const r = R[rail], x0 = (rail === "top" ? 30 : 14) + i * S.kv.t, b = S.kv.h - 7.5 + 2;
     const cz = r.c[0] + r.n[0]*b, cy = r.c[1] + r.n[1]*b;
     const cap = new THREE.Mesh(new THREE.BoxGeometry(S.kv.t - 1.2, 4, 16), mat(VCOL[lab]));
     cap.position.set(x0 + S.kv.t/2, cy, cz);
