@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cedar Inspector</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: the model stage on the left, an inspection column on the right (stacks on phones). */
+:root{--bg:#eef1ef;--panel:#ffffff;--ink:#1c2321;--mute:#5f6b67;--line:#d5dcd8;--accent:#1f6f9a;--ok:#1a7f37;--warn:#b25000;--scene:#e3e8e5;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1211;--panel:#181e1c;--ink:#e6ece9;--mute:#9aa7a2;--line:#2c3532;--accent:#5fb0dc;--ok:#3fb950;--warn:#f0883e;--scene:#141a18;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1211;--panel:#181e1c;--ink:#e6ece9;--mute:#9aa7a2;--line:#2c3532;--accent:#5fb0dc;--ok:#3fb950;--warn:#f0883e;--scene:#141a18;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+header{max-width:1240px;margin:0 auto 10px}
+h1{font-size:26px;letter-spacing:-.02em;margin:0 0 4px;font-weight:650;text-wrap:balance}
+.sub{color:var(--mute);margin:0;font-variant-numeric:tabular-nums}
+main{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px}
+@media (max-width:900px){main{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--scene);border-radius:16px;position:relative;min-height:440px;height:68vh;overflow:hidden}
+#c{width:100%;height:100%;display:block;touch-action:none}
+.controls{position:absolute;left:10px;right:10px;bottom:10px;display:grid;gap:6px;background:color-mix(in srgb,var(--panel) 90%,transparent);backdrop-filter:blur(10px);border-radius:12px;padding:8px 12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row label{font-size:13px;color:var(--mute);min-width:56px}
+input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+aside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border-radius:14px;padding:14px 16px}
+.card h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute);margin:0 0 8px;font-weight:600}
+.part{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line);cursor:pointer}
+.part:first-of-type{border-top:0}
+.part input{margin-top:3px;accent-color:var(--accent)}
+.part small{display:block;color:var(--mute);font-size:12.5px}
+.num{font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px;text-align:right;white-space:nowrap}
+.chk{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:13.5px;padding:5px 0;border-top:1px solid var(--line)}
+.chk:first-of-type{border-top:0}
+.chk .d{grid-column:2;color:var(--mute);font-size:12.5px;font-family:var(--mono)}
+.pass{color:var(--ok);font-weight:600}.fail{color:var(--warn);font-weight:600}
+ul{margin:0;padding-left:18px}li{margin:4px 0}
+.tag{font-size:11px;border-radius:6px;padding:1px 6px;background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);white-space:nowrap}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cedar · CAD run 3</h1>
+  <p class="sub" id="sub"></p>
+</header>
+<main>
+  <section class="stage">
+    <canvas id="c" aria-label="3D model of the Cedar bench supply"></canvas>
+    <div class="controls">
+      <div class="row"><label for="ex">Explode</label><input id="ex" type="range" min="0" max="1" step="0.01" value="0"></div>
+      <div class="row"><label for="cut">Section</label><input id="cut" type="range" min="0" max="1" step="0.005" value="1"></div>
+      <div class="row seg" id="views">
+        <button data-v="iso" class="on">3/4</button><button data-v="front">Front</button><button data-v="end">Left end</button>
+        <button data-v="top">Top</button><button data-v="back">Back</button><button data-v="right">Right end</button>
+      </div>
+    </div>
+  </section>
+  <aside>
+    <div class="card"><h2>Parts</h2><div id="groups"></div></div>
+    <div class="card"><h2>Checks</h2><div id="checks"></div></div>
+    <div class="card"><h2>How it goes together</h2>
+      <ul>
+        <li><b>Wood:</b> 6 slats (35 × 6, cut to 227), 4 under and 2 at the back, each in its own slot in both plates. Each one screws to the sleeve with an M3 × 10 into a drop-in nut. The PSU sits on bottom slats 1 and 2.</li>
+        <li><b>DIN rails:</b> 3 (top, slope 1, slope 2). Each end sits in the standard seat; the clamp's 2 × M3 × 12 countersunk screws go into drop-in nuts slid in from the seat's free end. Each rail also screws into a rib on the sleeve.</li>
+        <li><b>Top rail:</b> 9 KV121 and the DIN switch for the board's 2-pin socket, starting 30 mm in so your fingers fit behind the handle.</li>
+        <li><b>Handles:</b> a 64 × 14 slot in each plate, 1 mm above the top rail's clamp, with 8 mm of plate above it.</li>
+        <li><b>Interlocks:</b> the PSU's back end sits in a 2 mm pocket in the right plate, and its cable end in a 3 mm collar on the end wall. 3 keys on the end wall fit notches in the shell, and the shell sits in a 1.2 mm groove in the left plate.</li>
+        <li><b>End wall:</b> a flat print, stopped by the shell's ledge and held there by the PSU. The ATX board sits on 2 bars across the PSU window, on 15 mm standoffs.</li>
+      </ul>
+    </div>
+    <div class="card"><h2>Placeholders</h2>
+      <ul>
+        <li><span class="tag">placeholder</span> KV121: 9 thick × 43 × 52 (Allwin: 8–9 mm)</li>
+        <li><span class="tag">placeholder</span> ATX board holes 3.5 in from the corners (board 70 × 68, Allwin)</li>
+        <li><span class="tag">placeholder</span> PSU screw holes 6 in from the face corners</li>
+        <li><span class="tag">placeholder</span> DIN switch: 18 × 45 × 45</li>
+      </ul>
+    </div>
+    <div class="card"><h2>Bought parts</h2>
+      <ul>
+        <li>ZEB-450W PSU · HY-Z09 ATX board · a DIN switch for its 2-pin socket</li>
+        <li>3 DIN rail pieces, 203 mm · 6 wood slats 35 × 6, cut to 227</li>
+        <li>13 × KV121: 9 on top, 2 on each slope rail</li>
+        <li>12 × M3 × 12 countersunk + 12 M3 nuts (rail clamps)</li>
+        <li>3 × M3 nuts + 3 × M3 × 6 pan head (rails to sleeve ribs) · 6 × M3 × 10 + 6 nuts (slats to sleeve)</li>
+        <li>4 × M3 inserts + 4 × M3 × 6 pan head (board) · the PSU's own 4 screws</li>
+      </ul>
+    </div>
+  </aside>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const DATA = /*DATA*/null;
+const S = DATA.summary;
+const [W, H, D] = S.size;
+document.getElementById("sub").textContent =
+  `${W} L × ${H} H × ${D} D mm (strips ${S.strip_len}) · 10 prints, about ${S.total_g_pla} g PLA (solid estimate) · ${S.checks.length - S.failed.length}/${S.checks.length} checks pass`;
+
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.localClippingEnabled = true;
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(28, 1, 1, 6000);
+const ctl = new THREE.OrbitControls(cam, canvas); ctl.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x7d8580, 0.8));
+const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(-300, 420, 380); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 0.35); rim.position.set(380, 150, -300); scene.add(rim);
+const clip = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 1e4);
+
+const root = new THREE.Group(); scene.add(root);
+root.position.set(-S.span / 2, -H / 2, -D / 2);
+function b64(s, T){const b=atob(s), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i); return new T(u.buffer);}
+function mat(color, o={}){ return new THREE.MeshStandardMaterial(Object.assign({color, roughness:.6, metalness:.05, side:THREE.DoubleSide, clippingPlanes:[clip]}, o)); }
+function meshOf(name, material){
+  const m = DATA.meshes[name], v = b64(m.v, Int16Array), idx = b64(m.i, Uint32Array);
+  const pos = new Float32Array(v.length); for (let i=0;i<v.length;i++) pos[i] = v[i] / DATA.q;
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx, 1));
+  const flat = g.toNonIndexed(); flat.computeVertexNormals();
+  return new THREE.Mesh(flat, material);
+}
+const M = {
+  print: mat(0xe9e5dc, {roughness:.55}), sleeve: mat(0x8fa3ad, {roughness:.55}), psu: mat(0x26282c, {roughness:.45, metalness:.3}),
+  steel: mat(0xb8c0c4, {roughness:.4, metalness:.25}), kv: mat(0xc8cbc9, {roughness:.5}), wood: mat(0xc8955a, {roughness:.8}),
+  board: mat(0x2f7a52, {roughness:.5}), ghost: mat(0x6fb3e0, {transparent:true, opacity:.22, depthWrite:false}),
+  sw: mat(0x3a3d42, {roughness:.5}),
+};
+const VCOL = {"12V":0xe2b300, "5V":0xd0352a, "3V3":0xe07a1f, "GND":0x1b1d1f, "pos":0xf08a24, "neg":0xf08a24};
+const groups = {
+  printed: {label:"End plates and clamps", note:"2 plates (honeycomb, handle, rail seats, slat slots), 6 clamps, PLA", objs:[]},
+  sleeve: {label:"Sleeve", note:"shell + flat end wall, PLA", objs:[]},
+  psu: {label:"PSU", note:"ZEB-450W on its side, 140 × 150 × 87", objs:[]},
+  rails: {label:"DIN rails", note:"3 × 203 mm", objs:[]},
+  wood: {label:"Wood slats", note:"6 × 35 × 6 × 227 (4 under, 2 at the back)", objs:[]},
+  kv: {label:"Terminals and switch", note:"13 × KV121, DIN switch (placeholder sizes)", objs:[]},
+  board: {label:"ATX board", note:"HY-Z09 70 × 68 on the end wall", objs:[]},
+  ghost: {label:"Prototypes", note:"example boards on the slope rails", objs:[]},
+};
+const parts = {};
+const R = S.rails;
+S.parts.forEach(p => {
+  const n = p.name; let m, g;
+  if (n.startsWith("sleeve")) { m = meshOf(n, M.sleeve); g = "sleeve"; }
+  else if (p.kind === "printed") { m = meshOf(n, M.print); g = "printed"; }
+  else if (n === "psu") { m = meshOf(n, M.psu); g = "psu"; }
+  else if (n.startsWith("rail_")) { m = meshOf(n, M.steel); g = "rails"; }
+  else if (n.startsWith("strip_")) { m = meshOf(n, M.wood); g = "wood"; }
+  else if (n.startsWith("kv_")) { m = meshOf(n, M.kv); g = "kv"; }
+  else if (n === "din_switch") { m = meshOf(n, M.sw); g = "kv"; }
+  else if (n.startsWith("ghost_")) { m = meshOf(n, M.ghost); g = "ghost"; }
+  else { m = meshOf(n, M.board); g = "board"; }
+  const grp = new THREE.Group(); grp.add(m); root.add(grp);
+  parts[n] = grp; groups[g].objs.push(grp);
+  if (n.startsWith("kv_")) {                       // lever cap, coloured by what the terminal carries
+    const bits = n.split("_"), lab = bits[bits.length-1], i = +bits[bits.length-2];
+    const rail = n.startsWith("kv_top") ? "top" : bits[1];
+    const r = R[rail], x0 = (rail === "top" ? 30 : 14) + i * S.kv.t, b = S.kv.h - 7.5 + 2;
+    const cz = r.c[0] + r.n[0]*b, cy = r.c[1] + r.n[1]*b;
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(S.kv.t - 1.2, 4, 16), mat(VCOL[lab]));
+    cap.position.set(x0 + S.kv.t/2, cy, cz);
+    cap.rotation.x = -Math.atan2(r.n[0], r.n[1]);
+    grp.add(cap);
+  }
+});
+// PSU detail: the fan ring, seen through the right plate's window
+(() => { const ring = new THREE.Mesh(new THREE.TorusGeometry(38, 1.6, 8, 48), mat(0x111214));
+  ring.rotation.y = Math.PI/2; ring.position.set(S.span + 0.5, 86, 61.5); parts.psu.add(ring); })();
+
+// explode: plates and their clamps out along x, the clamps also off their rails, the sleeve shell toward the left
+function layout(e){
+  Object.entries(parts).forEach(([n, g]) => {
+    g.position.set(0,0,0);
+    if (n === "plate_left") g.position.x = -e*110;
+    if (n === "plate_right") g.position.x = e*110;
+    if (n.startsWith("clamp_")) {
+      const k = n.split("_")[1], r = R[k], side = n.endsWith("left") ? -1 : 1;
+      g.position.set(side*e*60, r.n[1]*e*30, r.n[0]*e*30);
+    }
+    if (n === "sleeve_shell") g.position.x = -e*55;
+    if (n.startsWith("kv_") || n === "din_switch") {
+      const k = n === "din_switch" || n.startsWith("kv_top") ? "top" : n.split("_")[1], r = R[k];
+      g.position.set(0, r.n[1]*e*45, r.n[0]*e*45);
+    }
+    if (n === "board") g.position.x = -e*40;
+  });
+  groups.ghost.objs.forEach(o => o.visible = ghostOn && e < 0.05);
+}
+let ghostOn = true;
+const ex = document.getElementById("ex"); ex.oninput = () => layout(+ex.value);
+const cut = document.getElementById("cut");
+cut.oninput = () => { const t = +cut.value; clip.constant = t >= 0.999 ? 1e4 : (-S.span/2 - S.pt - 8) + t*(S.span + 2*S.pt + 16); };
+
+// parts list
+const gl = document.getElementById("groups");
+const printedParts = S.parts.filter(p => p.kind === "printed");
+const gsum = pref => printedParts.filter(p => pref(p.name)).reduce((a, p) => a + p.g_pla, 0);
+Object.entries(groups).forEach(([k, g]) => {
+  const row = document.createElement("label"); row.className = "part";
+  let num = "";
+  if (k === "printed") num = `~${gsum(n => !n.startsWith("sleeve"))} g`;
+  if (k === "sleeve") num = `~${gsum(n => n.startsWith("sleeve"))} g`;
+  row.innerHTML = `<input type="checkbox" checked><span><b>${g.label}</b><small>${g.note}</small></span><span class="num">${num}</span>`;
+  row.querySelector("input").onchange = e => {
+    if (k === "ghost") { ghostOn = e.target.checked; layout(+ex.value); }
+    else g.objs.forEach(o => o.visible = e.target.checked);
+  };
+  gl.appendChild(row);
+});
+const ck = document.getElementById("checks");
+S.checks.forEach(c => {
+  const d = document.createElement("div"); d.className = "chk";
+  d.innerHTML = `<span class="${c.ok?"pass":"fail"}">${c.ok?"Pass":"Fail"}</span><span>${c.name}</span><span class="d"></span>`;
+  d.querySelector(".d").textContent = c.detail; ck.appendChild(d);
+});
+
+// views: model centred at the origin; +z is the user side
+function view(v){
+  document.querySelectorAll("#views button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+  const d = 820;
+  const at = {iso:[-d*.55,d*.38,d*.75], front:[0,0,d], end:[-d,0,0], right:[d,0,0], top:[0,d,0.01], back:[0,30,-d]}[v];
+  cam.position.set(at[0], at[1] - 22, at[2]); ctl.target.set(0,-22,0); ctl.update();   // drop the target so the model clears the controls
+}
+document.querySelectorAll("#views button").forEach(b => b.onclick = () => view(b.dataset.v));
+layout(0); view("iso");
+function resize(){ const r = canvas.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); cam.aspect = r.width / r.height; cam.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(canvas); resize();
+(function loop(){ ctl.update(); renderer.render(scene, cam); requestAnimationFrame(loop); })();
+</script>
+</body>
+</html>
