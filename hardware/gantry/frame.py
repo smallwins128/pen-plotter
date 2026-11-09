@@ -89,6 +89,22 @@ def foot():
     s -= box(-KEY_CL, COL + KEY_CL, -BT - KEY_CL, KEY_CL, F - KEY - 0.3, F + 1)   # closed pocket for the end plate's column
     return s
 
+def fit_coupon():
+    """Key + pocket fit checker: a pocket block with three clearances side by side, and a key on a stop flange
+    (the key stands KEY proud of the flange, like the end plate's column). Returns (block, key), both bed-ready."""
+    cls = (0.1, 0.2, 0.3)
+    w, gap, depth = COL, 6.0, KEY + 0.3
+    bw = 2 * 5 + len(cls) * (BT + 0.6) + (len(cls) - 1) * gap
+    block = box(0, w + 10, 0, bw, 0, depth + 3)
+    y = 5.0
+    for c in cls:
+        block -= box(5 - c, 5 + w + c, y - c, y + BT + c, 3, depth + 4)
+        for i in range(int(round(c * 10))):                                      # 1/2/3 nicks on the rim = 0.1/0.2/0.3
+            block -= box(w + 6.5, w + 8.5, y + 0.8 + i * 1.8, y + 1.8 + i * 1.8, depth + 2.4, depth + 4)
+        y += BT + 0.6 + gap
+    key = box(0, w + 8, 0, BT + 8, 0, 3) + box(4, 4 + w, 4, 4 + BT, 3, 3 + KEY)
+    return block, Pos(0, bw + 10, 0) * key
+
 def flat(s, how):
     """A copy laid on the bed the way it prints, min corner at the origin."""
     if how == "x_face": s = Rot(90, 0, 0) * s                                 # plate lying on its face
@@ -211,6 +227,8 @@ def main():
         for n, src, how in (("etch_end_plate_x4", "bracket_fl", "x_face"), ("etch_corner_grab_A_x2", "foot_fl", "flip"),
                             ("etch_corner_grab_B_x2", "foot_fr", "flip"), ("etch_x_plate_x2", "xplate_front", "x_face")):
             export_stl(flat(pr[src], how), str(d / f"{n}.stl"), tolerance=0.02, angular_tolerance=0.1)
+        blk, key = fit_coupon()
+        export_stl(blk + key, str(d / "etch_fit_test_key_pocket_x1.stl"), tolerance=0.02, angular_tolerance=0.1)
         print("wrote", d)
     if "--stl" not in sys.argv: return
     OUT.mkdir(parents=True, exist_ok=True)
