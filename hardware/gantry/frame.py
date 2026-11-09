@@ -1,4 +1,4 @@
-"""Etch frame CAD run 4: ACRO-style frame on the LINNMON; one flat end plate per corner on the rails' outer faces.
+"""Etch frame CAD run 5: ACRO-style frame on the LINNMON; one flat end plate per corner on the rails' outer faces.
 
 World: x along the 1000 rails from the left end (0 = the table's left end), y from the frame's front face toward
 the back, z up from the tabletop. The 1000 rails are exactly the LINNMON's length, so nothing may stand past the
@@ -37,10 +37,12 @@ COLLAR_L, COLLAR_W = 20.0, 4.0
 BT = 6.0
 COL, BRK_W, CH = 28.0, 64.0, 24.0   # column width, overall width along the rail, chamfer
 RAIL_HOLES_X = (10.0, 34.0)         # two per rail slot row
+KEY = 5.0                           # end plate's column drops this far into a closed pocket in the foot
+KEY_CL = 0.2                        # pocket clearance per side
 # corner grab: PLACEHOLDER block (Allwin will redesign): pad under the corner, lips halfway down the end and edge
 LIP_T = 4.0
 LIP = TABLE_T / 2
-FOOT_X0, FOOT_X1 = -LIP_T, 30.0
+FOOT_X0, FOOT_X1 = -LIP_T, COL + 6.0
 FOOT_YF, FOOT_YB = -MARGIN - LIP_T, 40.0
 CAR, DUMB = 65.5, (80.0, 100.0, 6.0)
 BED = 256.0                         # Bambu A1
@@ -71,7 +73,7 @@ def hole_x(s, y, z, x0, x1, d=5.5): return s - Pos((x0 + x1) / 2, y, z) * (Rot(0
 
 # ------------------------------------------------------------------ printed parts (front-left; others mirrored)
 def bracket():
-    prof = SPoly([(0, F), (COL, F), (COL, RZ0 - CH), (COL + CH, RZ0), (BRK_W, RZ0), (BRK_W, RZ0 + PH), (0, RZ0 + PH)])
+    prof = SPoly([(0, F - KEY), (COL, F - KEY), (COL, RZ0 - CH), (COL + CH, RZ0), (BRK_W, RZ0), (BRK_W, RZ0 + PH), (0, RZ0 + PH)])
     prof = prof.buffer(-4, join_style=1).buffer(4, join_style=1).buffer(5, join_style=1).buffer(-5, join_style=1)
     s = prism_xz(prof, -BT, BT)
     for z in (F + 10, F + 30): s = hole_y(s, PW / 2, z, -BT, 0)                       # 560's tapped end
@@ -83,6 +85,7 @@ def foot():
     s = box(FOOT_X0, FOOT_X1, FOOT_YF, FOOT_YB, 0, F)
     s += box(FOOT_X0, 0, FOOT_YF, FOOT_YB, -LIP, 0)                            # lip halfway down the table's end
     s += box(FOOT_X0, FOOT_X1, FOOT_YF, -MARGIN, -LIP, 0)                      # lip halfway down the table's front edge
+    s -= box(-KEY_CL, COL + KEY_CL, -BT - KEY_CL, KEY_CL, F - KEY - 0.3, F + 1)   # closed pocket for the end plate's column
     return s
 
 def flat(s, how):
@@ -173,6 +176,8 @@ def checks(pr, bo, ghost, lay):
         if not dims[0] <= BED or dims[1] > BED or dims[2] > BED:
             add(f"{n} fits the A1 bed", False, f"{dims}")
     add("Every print fits the A1 bed (256³)", all(sorted([boxes[n][3+k]-boxes[n][k] for k in range(3)])[-1] <= BED for n in pr), "largest " + max(pr, key=lambda n: max(boxes[n][3+k]-boxes[n][k] for k in range(3))))
+    kd = boxes["bracket_fl"][2] - boxes["foot_fl"][2]
+    add("End plate sits in the foot's pocket", abs(boxes["bracket_fl"][2] - (F - KEY)) < 0.01, f"{KEY:.0f} mm deep, {KEY_CL} clearance per side, 0.3 below")
     add("1000 rails rest on the 560s", abs(RZ0 - (END_Z0 + PH)) < 1e-6, "an inner L-bracket can still be added later")
     low = min(boxes[n][2] for n in ("xplate_front", "motor_front"))
     add("X plate and motor clear the tabletop (≥ 8)", low >= 8, f"lowest {low:.1f} above the table; feet {F:.0f} tall")
@@ -226,7 +231,7 @@ def main():
     for n, s in ghost.items():
         export_stl(s, str(OUT / f"{n}.stl"), tolerance=0.5)
         parts.append(dict(name=n, group="ghost", explode=[0, 0, -40 if n == "linnmon" else 0]))
-    summary = dict(title="Etch frame · CAD run 4", up="z", q=25,
+    summary = dict(title="Etch frame · CAD run 5", up="z", q=25,
         sub=f"1000 × 560 frame on the LINNMON · 1000s rest on the 560s · 11 PETG prints, ≈ {grams:.0f} g at ~55% fill",
         size=[RAIL_L, END_L, BAR_ZC + 20],
         groups={"printed": {"label": "PETG prints", "note": "4 end plates, 4 corner grabs (placeholder), 2 X plates, 1 dumb plate", "color": "#3f4544", "grams": round(grams)},
@@ -238,7 +243,7 @@ def main():
         cards=[{"title": "How it goes together", "html": "<ul>"
                 f"<li><b>End plate</b>: one flat 6 mm plate per corner on the outer face. A {COL:.0f} mm column covers the 560's end (2 M5 into its tapped end), and an arm runs {BRK_W:.0f} mm along the rail (4 M5 into drop-in nuts, two per slot), with a 45° chamfer between them. It prints flat.</li>"
                 "<li>The 1000 rests on the 560. The end plate ties them together.</li>"
-                "<li><b>Corner grab</b>: a plain placeholder block, a pad with lips halfway down the edge and end, for your redesign.</li>"
+                f"<li><b>Corner grab</b>: a pad with lips halfway down the edge and end. The end plate's column drops {KEY:.0f} mm into a closed pocket in its top ({COL + 2*KEY_CL:.1f} × {BT + 2*KEY_CL:.1f}), which locates it both ways with no hardware. Lift the frame and the feet come away. If you ever want it to hold down, add one M5 up through the pad into a T-nut in the 560.</li>"
                 "<li>The X plates ride outside the rails and stop 1 mm short of the end plate.</li>"
                 "<li>Orange row in front: one of each print, as it sits on the bed.</li></ul>"},
                {"title": "Placeholders", "html": f"<ul><li>LINNMON thickness {TABLE_T:.0f} (measure at print time)</li><li>Wheel Ø{WHEEL_OD} × {WHEEL_W}, spacer {SPACER:.0f} (catalogue)</li><li>Dumb plate {DUMB[0]:.0f} × {DUMB[1]:.0f}, Y carriage 65.5 square stand-in</li><li>Grams: volume × 1.27 × 0.55, rough</li></ul>"}])
