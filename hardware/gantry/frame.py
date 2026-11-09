@@ -11,6 +11,7 @@ for the 700 bar and a collar round it), 1 dumb carriage plate. Bought: 2040 x 10
 
     python3 hardware/gantry/frame.py          # checks only
     python3 hardware/gantry/frame.py --stl    # + hardware/out/frame/*.stl + summary.json
+    python3 hardware/gantry/frame.py --print  # + hardware/out/frame/print/*.stl, laid flat for the A1
 """
 import json, math, pathlib, sys
 from build123d import Box, Cylinder, Polygon, Pos, Rot, extrude, export_stl, Axis, Align
@@ -205,6 +206,12 @@ def main():
     pr, bo, ghost, lay = assembly()
     res = checks(pr, bo, ghost, lay)
     for r in res: print("PASS" if r["ok"] else "FAIL", r["name"], "·", r["detail"])
+    if "--print" in sys.argv:                                                  # print files, laid flat, quantity in the name
+        d = OUT / "print"; d.mkdir(parents=True, exist_ok=True)
+        for n, src, how in (("etch_end_plate_x4", "bracket_fl", "x_face"), ("etch_corner_grab_A_x2", "foot_fl", "flip"),
+                            ("etch_corner_grab_B_x2", "foot_fr", "flip"), ("etch_x_plate_x2", "xplate_front", "x_face")):
+            export_stl(flat(pr[src], how), str(d / f"{n}.stl"), tolerance=0.02, angular_tolerance=0.1)
+        print("wrote", d)
     if "--stl" not in sys.argv: return
     OUT.mkdir(parents=True, exist_ok=True)
     parts = []
