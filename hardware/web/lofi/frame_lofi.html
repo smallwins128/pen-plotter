@@ -1,0 +1,479 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Etch Gantry Lofi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>/* Lo-fi drafting sheet: tokens (light + dark), title block, views, SVG classes. From R09 Cedar lo-fi v10. */
+/* Layout: a drafting sheet. Title block, then three orthographic views to one scale (1 unit = 1 mm), then build notes. */
+:root {
+  --paper: #eef1ee;
+  --sheet: #f8faf8;
+  --grid: #dfe5e1;
+  --ink: #1d2422;
+  --ink-soft: #5b6763;
+  --steel: #b9c2bf;
+  --steel-edge: #7e8a86;
+  --pcb: #2f7a52;
+  --board-fill: #d7eadf;
+  --cardboard: #e8dcc6;
+  --accent: #1f5f8b;
+  --v12: #d9a400;
+  --v5: #c8372a;
+  --v33: #dd7419;
+  --gnd: #1d2422;
+  --lever: #f08a24;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121716; --sheet: #182020; --grid: #233030; --ink: #dfe7e4; --ink-soft: #93a19c;
+    --steel: #4a5654; --steel-edge: #8d9b97; --pcb: #5cc08a; --board-fill: #1d3a2c; --cardboard: #4a3f2c;
+    --accent: #6fb3e0; --v12: #f2c230; --v5: #ff6a5a; --v33: #ff9d4d; --gnd: #dfe7e4; --lever: #ff9d4d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121716; --sheet: #182020; --grid: #233030; --ink: #dfe7e4; --ink-soft: #93a19c;
+  --steel: #4a5654; --steel-edge: #8d9b97; --pcb: #5cc08a; --board-fill: #1d3a2c; --cardboard: #4a3f2c;
+  --accent: #6fb3e0; --v12: #f2c230; --v5: #ff6a5a; --v33: #ff9d4d; --gnd: #dfe7e4; --lever: #ff9d4d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font: 15px/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 20px; }
+header.title {
+  display: grid; grid-template-columns: 1fr auto; gap: 8px 24px; align-items: end;
+  border: 1.5px solid var(--ink); background: var(--sheet); padding: 16px 18px;
+}
+header h1 { font: 700 clamp(30px, 6vw, 46px)/1 var(--display); letter-spacing: .01em; margin: 0; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--ink-soft); max-width: 62ch; }
+.tblock { font: 12px/1.6 var(--mono); border-left: 1.5px solid var(--ink); padding-left: 14px; white-space: nowrap; }
+.tblock b { font-weight: 500; color: var(--ink); }
+.tblock span { color: var(--ink-soft); }
+@media (max-width: 640px) { header.title { grid-template-columns: 1fr; } .tblock { border-left: 0; border-top: 1.5px solid var(--ink); padding: 10px 0 0; white-space: normal; } }
+
+.view { background: var(--sheet); border: 1px solid var(--steel-edge); padding: 12px 14px 14px; min-width: 0; }
+.view h2, .notes h2 { font: 700 20px/1.1 var(--display); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 2px; }
+.view .sub { font: 12px/1.4 var(--mono); color: var(--ink-soft); margin: 0 0 8px; }
+.view .svgbox { overflow-x: auto; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 20px 20px; }
+.view svg { display: block; width: 100%; height: auto; min-width: 520px; }
+.views2 { display: grid; grid-template-columns: 1fr 1.35fr; gap: 20px; }
+@media (max-width: 820px) { .views2 { grid-template-columns: 1fr; } }
+
+svg text { font-family: var(--mono); fill: var(--ink); }
+svg .lbl { font-size: 5px; letter-spacing: .06em; }
+svg .lblb { font-family: var(--display); font-weight: 700; font-size: 6.4px; letter-spacing: .08em; }
+svg .dim { font-size: 4.6px; fill: var(--ink-soft); }
+svg .tiny { font-size: 3.4px; }
+svg .ink { stroke: var(--ink); fill: none; stroke-width: .7; }
+svg .soft { stroke: var(--ink-soft); fill: none; stroke-width: .45; }
+svg .dash { stroke: var(--ink-soft); fill: none; stroke-width: .55; stroke-dasharray: 3 2; }
+svg .plate { fill: var(--cardboard); stroke: var(--ink); stroke-width: .8; }
+svg .rail { fill: var(--steel); stroke: var(--steel-edge); stroke-width: .6; }
+svg .railslot { fill: var(--sheet); stroke: var(--steel-edge); stroke-width: .3; }
+svg .term { fill: var(--sheet); stroke: var(--ink); stroke-width: .5; }
+svg .deck { fill: var(--cardboard); stroke: var(--ink); stroke-width: .6; opacity: .85; }
+svg .board { fill: var(--board-fill); stroke: var(--pcb); stroke-width: .7; }
+svg .hat { fill: none; stroke: var(--steel-edge); stroke-width: 1.4; stroke-linejoin: miter; }
+svg .bench { stroke: var(--ink); stroke-width: 1; }
+svg .acc { stroke: var(--accent); fill: none; stroke-width: .6; }
+svg .acctext { fill: var(--accent); }
+svg .jump { fill: none; stroke-width: 1.3; stroke-linecap: round; }
+
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 760px) { .notes { grid-template-columns: 1fr; } }
+.notes section { background: var(--sheet); border: 1px solid var(--steel-edge); padding: 14px 16px; min-width: 0; }
+.notes p, .notes li { max-width: 62ch; }
+.notes ul, .notes ol { padding-left: 20px; margin: 6px 0 0; display: grid; gap: 6px; }
+.tag { font: 500 11px/1 var(--mono); padding: 3px 6px; border: 1px solid var(--ink-soft); color: var(--ink-soft); letter-spacing: .04em; white-space: nowrap; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+.sw { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--ink-soft); }
+.tblwrap { overflow-x: auto; }
+.mono { font-family: var(--mono); font-size: 13px; }
+.unv { color: var(--ink-soft); font-style: italic; }
+
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .wood { fill: var(--wood); }
+svg .hatch { fill: url(#hatch); stroke: var(--accent); stroke-width: .7; }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --wood: #c8955a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wood: #a8763f; } }
+:root[data-theme="dark"] { --wood: #a8763f; }
+svg .seat { fill: var(--cardboard); stroke: var(--ink); stroke-width: .5; }
+svg .clamp { fill: var(--sheet); stroke: var(--accent); stroke-width: .7; }
+svg .sleeve { fill: none; stroke: var(--accent); stroke-width: .8; stroke-dasharray: 4 2; }
+svg .hex { fill: var(--sheet); stroke: var(--ink); stroke-width: .4; }
+svg .railk { fill: none; stroke: var(--steel-edge); stroke-width: 1.6; stroke-linejoin: miter; }
+svg .woodf { fill: var(--wood); stroke: var(--ink); stroke-width: .45; }
+svg .nut { fill: var(--ink-soft); }
+svg .slot { fill: none; stroke: var(--ink); stroke-width: .5; stroke-dasharray: 2 1.5; }
+svg .callout { font-size: 4.2px; fill: var(--accent); font-family: var(--mono); }
+.q li { margin-bottom: 4px; }
+
+:root { --petg: #3b3f3e; --petg2: #5a605e; --acrylic: rgba(120,170,210,.45); --bar: #c9b28a; --deck: #e0c79c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --petg: #8b9592; --petg2: #6b7572; --acrylic: rgba(111,179,224,.35); --bar: #8a7752; --deck: #5a4a2e; } }
+:root[data-theme="dark"] { --petg: #8b9592; --petg2: #6b7572; --acrylic: rgba(111,179,224,.35); --bar: #8a7752; --deck: #5a4a2e; }
+.views2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); }
+.views2 svg.v { min-width: 0; }
+svg.v * { vector-effect: non-scaling-stroke; }
+svg.v text { font-size: var(--fs); }
+svg.v .dim { font-size: calc(var(--fs) * .92); }
+svg.v .lblb { font-size: calc(var(--fs) * 1.2); }
+svg.v .plate { stroke-width: 1; } svg.v .rail { stroke-width: 1; } svg.v .soft { stroke-width: .8; } svg.v .dash { stroke-width: 1; }
+</style></head><body>
+<div class="wrap">
+<header class="title">
+  <div>
+    <h1>Etch frame · lo-fi v3</h1>
+    <p>The ACRO layout on your frame. The two 1000 rails rest on the two 560s. Each rail end gets a PETG end plate, bolted to the rail end and to the 560 below it, and each end plate stands in a broader foot that snaps on. Your acrylic ACRO gantry plates ride outside the 1000 rails with the steppers at the bottom and carry the 2020 bar. A plain PETG plate rides the bar for now.</p>
+  </div>
+  <div class="tblock">
+    <div><span>Room</span> <b>R04 Etch</b></div>
+    <div><span>Date</span> <b>2026-11-09</b></div>
+    <div><span>Frame</span> <b>1000 × 560 · 2040</b></div>
+    <div><span>Prints</span> <b>4 end plates · 4 feet · 1 plate</b></div>
+    <div><span>Status</span> <b>sketch · inspector after go</b></div>
+  </div>
+</header>
+
+<div class="view">
+  <h2>Front view</h2>
+  <p class="sub">To scale, from where you sit. Grey = 2040, dark = PETG prints, blue = your acrylic ACRO plate, tan = the 2020 bar end-on. * = rests on catalogue sizes (wheels, spacers) or a placeholder.</p>
+  <div class="svgbox"><svg class="v" style="--fs:12px" viewBox="0 0 1150 284" role="img" aria-label="Front view of the frame"><line class="bench" x1="0" y1="250.0" x2="1150.0" y2="250.0"/><rect class="soft" x="570.00" y="249.90" width="500.00" height="0.10" /><rect class="dash" x="690.00" y="50.00" width="340.00" height="200.00" rx="4"/><text class="lbl" x="860.00" y="70.00" text-anchor="middle" >ENCLOSURES (behind the rail)</text><rect class="" x="570.00" y="20.00" width="100.00" height="230.00" fill="var(--accent)" opacity=".08"/><text class="dim acctext" x="620.00" y="28.00" text-anchor="middle" >bar stops here (moves)</text><rect class="rail" x="70.00" y="195.00" width="20.00" height="40.00" /><rect class="rail" x="1050.00" y="195.00" width="20.00" height="40.00" /><rect class="rail" x="70.00" y="155.00" width="1000.00" height="40.00" /><line class="soft" x1="70.0" y1="185.0" x2="1070.0" y2="185.0"/><line class="soft" x1="70.0" y1="165.0" x2="1070.0" y2="165.0"/><rect class="plate" x="64.00" y="147.00" width="6.00" height="96.00" style="fill:var(--petg)"/><rect class="plate" x="61.00" y="235.00" width="60.00" height="15.00" style="fill:var(--petg2)"/><rect class="plate" x="1070.00" y="147.00" width="6.00" height="96.00" style="fill:var(--petg)"/><rect class="plate" x="1019.00" y="235.00" width="60.00" height="15.00" style="fill:var(--petg2)"/><rect class="dash" x="348.85" y="200.22" width="42.30" height="42.30" rx="3"/><path class="plate" fill-rule="evenodd" d="M 416.95,234.49 L 416.95,122.67 L 416.54,119.57 L 415.35,116.69 L 413.45,114.23 L 410.98,112.32 L 408.10,111.13 L 405.00,110.73 L 335.00,110.73 L 331.91,111.13 L 329.03,112.32 L 326.56,114.23 L 324.66,116.69 L 323.47,119.57 L 323.06,122.67 L 323.06,234.49 L 323.47,237.57 L 324.66,240.45 L 326.56,242.93 L 329.03,244.82 L 331.91,246.01 L 335.00,246.43 L 405.00,246.43 L 408.10,246.01 L 410.98,244.82 L 413.45,242.93 L 415.35,240.45 L 416.54,237.57 Z M 362.00,207.51 L 362.93,207.02 L 363.88,206.59 L 364.86,206.22 L 365.86,205.93 L 366.88,205.69 L 367.92,205.51 L 368.96,205.40 L 370.00,205.38 L 371.05,205.40 L 372.09,205.51 L 373.13,205.69 L 374.15,205.93 L 375.15,206.22 L 376.13,206.59 L 377.08,207.02 L 378.00,207.51 L 378.89,208.07 L 379.75,208.69 L 380.55,209.34 L 381.32,210.06 L 382.03,210.82 L 382.70,211.63 L 383.31,212.49 L 383.86,213.38 L 384.35,214.30 L 384.79,215.25 L 385.16,216.24 L 385.46,217.24 L 385.70,218.25 L 385.87,219.28 L 385.97,220.32 L 386.00,221.38 L 385.97,222.43 L 385.87,223.46 L 385.70,224.50 L 385.46,225.51 L 385.16,226.51 L 384.79,227.50 L 384.35,228.45 L 383.86,229.38 L 383.31,230.26 L 382.70,231.12 L 382.03,231.93 L 381.32,232.69 L 380.55,233.41 L 379.75,234.06 L 378.89,234.68 L 378.00,235.24 L 377.08,235.72 L 376.13,236.16 L 375.15,236.52 L 374.15,236.83 L 373.13,237.06 L 372.09,237.24 L 371.05,237.34 L 370.00,237.38 L 368.96,237.34 L 367.92,237.24 L 366.88,237.06 L 365.86,236.83 L 364.86,236.52 L 363.88,236.16 L 362.93,235.72 L 362.00,235.24 L 361.12,234.68 L 360.26,234.06 L 359.46,233.41 L 358.69,232.69 L 357.98,231.93 L 357.31,231.12 L 356.70,230.26 L 356.15,229.38 L 355.65,228.45 L 355.22,227.50 L 354.85,226.51 L 354.55,225.51 L 354.31,224.50 L 354.14,223.46 L 354.04,222.43 L 354.00,221.38 L 354.04,220.32 L 354.14,219.28 L 354.31,218.25 L 354.55,217.24 L 354.85,216.24 L 355.22,215.25 L 355.65,214.30 L 356.15,213.38 L 356.70,212.49 L 357.31,211.63 L 357.98,210.82 L 358.69,210.06 L 359.46,209.34 L 360.26,208.69 L 361.12,208.07 Z M 360.86,188.20 L 357.52,184.87 L 360.13,181.05 L 359.26,178.94 L 354.71,178.08 L 354.71,173.37 L 359.26,172.50 L 360.13,170.41 L 357.52,166.58 L 360.86,163.25 L 364.69,165.86 L 366.78,164.99 L 367.64,160.44 L 372.37,160.44 L 373.23,164.99 L 375.32,165.86 L 379.15,163.25 L 382.49,166.58 L 379.88,170.41 L 380.75,172.50 L 385.30,173.37 L 385.30,178.08 L 380.75,178.94 L 379.88,181.05 L 382.49,184.87 L 379.15,188.20 L 375.32,185.61 L 373.49,186.36 L 371.59,179.25 L 372.69,178.41 L 373.29,177.62 L 373.67,176.70 L 373.80,175.73 L 373.67,174.75 L 373.29,173.82 L 372.69,173.05 L 371.90,172.44 L 370.99,172.06 L 370.00,171.93 L 369.02,172.06 L 368.11,172.44 L 367.32,173.05 L 366.72,173.82 L 366.34,174.75 L 366.21,175.73 L 366.34,176.70 L 366.72,177.62 L 367.32,178.41 L 368.42,179.25 L 366.52,186.36 L 364.69,185.61 Z M 408.85,185.73 L 408.77,186.39 L 408.51,187.02 L 408.09,187.56 L 407.55,187.98 L 406.93,188.24 L 406.25,188.32 L 403.75,188.32 L 403.08,188.24 L 402.45,187.98 L 401.92,187.56 L 401.50,187.02 L 401.24,186.39 L 401.15,185.73 L 401.15,165.73 L 401.24,165.06 L 401.50,164.43 L 401.92,163.88 L 402.45,163.48 L 403.08,163.22 L 403.75,163.12 L 406.25,163.12 L 406.93,163.22 L 407.55,163.48 L 408.09,163.88 L 408.51,164.43 L 408.77,165.06 L 408.85,165.73 Z M 338.77,186.39 L 338.51,187.02 L 338.09,187.56 L 337.55,187.98 L 336.93,188.24 L 336.25,188.32 L 333.75,188.32 L 333.08,188.24 L 332.45,187.98 L 331.92,187.56 L 331.50,187.02 L 331.24,186.39 L 331.15,185.73 L 331.15,165.73 L 331.24,165.06 L 331.50,164.43 L 331.92,163.88 L 332.45,163.48 L 333.08,163.22 L 333.75,163.12 L 336.25,163.12 L 336.93,163.22 L 337.55,163.48 L 338.09,163.88 L 338.51,164.43 L 338.77,165.06 L 338.85,165.73 L 338.85,185.73 Z M 375.50,133.38 L 364.50,133.38 L 364.50,127.98 L 375.50,127.98 Z M 366.88,151.23 L 366.88,148.93 L 364.50,148.93 L 364.50,147.25 L 367.17,144.58 L 372.84,144.58 L 375.50,147.25 L 375.50,148.93 L 373.13,148.93 L 373.13,151.23 Z M 384.94,141.61 L 384.64,141.99 L 384.26,142.27 L 383.82,142.45 L 383.35,142.52 L 375.40,142.52 L 375.40,138.85 L 383.35,138.85 L 383.82,138.92 L 384.26,139.10 L 384.64,139.38 L 384.94,139.76 L 385.12,140.20 L 385.18,140.69 L 385.12,141.17 Z M 355.37,141.99 L 355.07,141.61 L 354.89,141.17 L 354.83,140.69 L 354.89,140.20 L 355.07,139.76 L 355.37,139.38 L 355.75,139.10 L 356.19,138.92 L 356.66,138.85 L 364.60,138.85 L 364.60,142.52 L 356.66,142.52 L 356.19,142.45 L 355.75,142.27 Z M 403.17,207.71 L 402.75,207.18 L 402.49,206.55 L 402.40,205.88 L 402.40,203.38 L 402.49,202.70 L 402.75,202.07 L 403.17,201.53 L 403.70,201.12 L 404.33,200.87 L 405.00,200.77 L 405.68,200.87 L 406.30,201.12 L 406.84,201.53 L 407.26,202.07 L 407.52,202.70 L 407.60,203.38 L 407.60,205.88 L 407.52,206.55 L 407.26,207.18 L 406.84,207.71 L 406.30,208.12 L 405.68,208.38 L 405.00,208.47 L 404.33,208.38 L 403.70,208.12 Z M 337.26,207.18 L 336.84,207.71 L 336.30,208.12 L 335.68,208.38 L 335.00,208.47 L 334.33,208.38 L 333.70,208.12 L 333.17,207.71 L 332.75,207.18 L 332.49,206.55 L 332.40,205.88 L 332.40,203.38 L 332.49,202.70 L 332.75,202.07 L 333.17,201.53 L 333.70,201.12 L 334.33,200.87 L 335.00,200.77 L 335.68,200.87 L 336.30,201.12 L 336.84,201.53 L 337.26,202.07 L 337.52,202.70 L 337.60,203.38 L 337.60,205.88 L 337.52,206.55 Z M 334.07,223.99 L 334.46,224.28 L 334.76,224.69 L 334.95,225.13 L 335.02,225.62 L 334.95,226.12 L 334.76,226.57 L 334.46,226.96 L 334.07,227.26 L 333.61,227.45 L 333.14,227.51 L 329.93,227.51 L 329.46,227.45 L 329.00,227.26 L 328.61,226.96 L 328.31,226.57 L 328.12,226.12 L 328.06,225.62 L 328.12,225.13 L 328.31,224.69 L 328.61,224.28 L 329.00,223.99 L 329.46,223.80 L 329.93,223.74 L 333.14,223.74 L 333.61,223.80 Z M 406.87,223.74 L 410.08,223.74 L 410.55,223.80 L 411.00,223.99 L 411.40,224.28 L 411.70,224.69 L 411.89,225.13 L 411.95,225.62 L 411.89,226.12 L 411.70,226.57 L 411.40,226.96 L 411.00,227.26 L 410.55,227.45 L 410.08,227.51 L 406.87,227.51 L 406.40,227.45 L 405.94,227.26 L 405.55,226.96 L 405.25,226.57 L 405.06,226.12 L 404.99,225.62 L 405.06,225.13 L 405.25,224.69 L 405.55,224.28 L 405.94,223.99 L 406.40,223.80 Z M 328.31,216.25 L 328.61,215.87 L 329.00,215.56 L 329.46,215.38 L 329.93,215.31 L 333.14,215.31 L 333.61,215.38 L 334.07,215.56 L 334.46,215.87 L 334.76,216.25 L 334.95,216.71 L 335.02,217.20 L 334.95,217.69 L 334.76,218.14 L 334.46,218.53 L 334.07,218.83 L 333.61,219.02 L 333.14,219.08 L 329.93,219.08 L 329.46,219.02 L 329.00,218.83 L 328.61,218.53 L 328.31,218.14 L 328.12,217.69 L 328.06,217.20 L 328.12,216.71 Z M 410.08,219.08 L 406.87,219.08 L 406.40,219.02 L 405.94,218.83 L 405.55,218.53 L 405.25,218.14 L 405.06,217.69 L 404.99,217.20 L 405.06,216.71 L 405.25,216.25 L 405.55,215.87 L 405.94,215.56 L 406.40,215.38 L 406.87,215.31 L 410.08,215.31 L 410.55,215.38 L 411.00,215.56 L 411.40,215.87 L 411.70,216.25 L 411.89,216.71 L 411.95,217.20 L 411.89,217.69 L 411.70,218.14 L 411.40,218.53 L 411.00,218.83 L 410.55,219.02 Z M 402.49,146.05 L 402.40,145.38 L 402.49,144.70 L 402.75,144.07 L 403.17,143.54 L 403.70,143.12 L 404.33,142.87 L 405.00,142.77 L 405.68,142.87 L 406.30,143.12 L 406.84,143.54 L 407.26,144.07 L 407.52,144.70 L 407.60,145.38 L 407.52,146.05 L 407.26,146.68 L 406.84,147.22 L 406.30,147.62 L 405.68,147.88 L 405.00,147.98 L 404.33,147.88 L 403.70,147.62 L 403.17,147.22 L 402.75,146.68 Z M 347.75,121.99 L 347.49,121.36 L 347.40,120.69 L 347.49,120.01 L 347.75,119.38 L 348.17,118.85 L 348.70,118.44 L 349.33,118.18 L 350.00,118.08 L 350.68,118.18 L 351.30,118.44 L 351.84,118.85 L 352.26,119.38 L 352.52,120.01 L 352.60,120.69 L 352.52,121.36 L 352.26,121.99 L 351.84,122.52 L 351.30,122.93 L 350.68,123.19 L 350.00,123.29 L 349.33,123.19 L 348.70,122.93 L 348.17,122.52 Z M 370.00,123.29 L 369.33,123.19 L 368.70,122.93 L 368.17,122.52 L 367.75,121.99 L 367.49,121.36 L 367.40,120.69 L 367.49,120.01 L 367.75,119.38 L 368.17,118.85 L 368.70,118.44 L 369.33,118.18 L 370.00,118.08 L 370.68,118.18 L 371.30,118.44 L 371.84,118.85 L 372.26,119.38 L 372.52,120.01 L 372.60,120.69 L 372.52,121.36 L 372.26,121.99 L 371.84,122.52 L 371.30,122.93 L 370.68,123.19 Z M 332.49,146.05 L 332.40,145.38 L 332.49,144.70 L 332.75,144.07 L 333.17,143.54 L 333.70,143.12 L 334.33,142.87 L 335.00,142.77 L 335.68,142.87 L 336.30,143.12 L 336.84,143.54 L 337.26,144.07 L 337.52,144.70 L 337.60,145.38 L 337.52,146.05 L 337.26,146.68 L 336.84,147.22 L 336.30,147.62 L 335.68,147.88 L 335.00,147.98 L 334.33,147.88 L 333.70,147.62 L 333.17,147.22 L 332.75,146.68 Z M 372.52,141.36 L 372.26,141.99 L 371.84,142.52 L 371.30,142.94 L 370.68,143.19 L 370.00,143.29 L 369.33,143.19 L 368.70,142.94 L 368.17,142.52 L 367.75,141.99 L 367.49,141.36 L 367.40,140.69 L 367.49,140.01 L 367.75,139.38 L 368.17,138.85 L 368.70,138.44 L 369.33,138.18 L 370.00,138.08 L 370.68,138.18 L 371.30,138.44 L 371.84,138.85 L 372.26,139.38 L 372.52,140.01 L 372.60,140.69 Z M 391.84,122.52 L 391.30,122.93 L 390.68,123.19 L 390.00,123.29 L 389.33,123.19 L 388.70,122.93 L 388.17,122.52 L 387.75,121.99 L 387.49,121.36 L 387.40,120.69 L 387.49,120.01 L 387.75,119.38 L 388.17,118.85 L 388.70,118.44 L 389.33,118.18 L 390.00,118.08 L 390.68,118.18 L 391.30,118.44 L 391.84,118.85 L 392.26,119.38 L 392.52,120.01 L 392.60,120.69 L 392.52,121.36 L 392.26,121.99 Z M 386.80,205.12 L 386.85,205.21 L 386.89,205.31 L 386.93,205.39 L 386.95,205.49 L 386.98,205.58 L 386.99,205.68 L 387.00,205.77 L 387.00,205.88 L 387.00,205.97 L 386.99,206.07 L 386.98,206.17 L 386.95,206.26 L 386.93,206.36 L 386.89,206.44 L 386.85,206.53 L 386.80,206.62 L 386.75,206.70 L 386.69,206.78 L 386.63,206.87 L 386.57,206.94 L 386.49,207.00 L 386.42,207.06 L 386.34,207.12 L 386.25,207.18 L 386.17,207.22 L 386.08,207.26 L 385.99,207.30 L 385.89,207.32 L 385.80,207.34 L 385.70,207.37 L 385.60,207.38 L 385.50,207.38 L 385.41,207.38 L 385.31,207.37 L 385.21,207.34 L 385.12,207.32 L 385.02,207.30 L 384.93,207.26 L 384.84,207.22 L 384.75,207.18 L 384.67,207.12 L 384.59,207.06 L 384.52,207.00 L 384.44,206.94 L 384.38,206.87 L 384.31,206.78 L 384.26,206.70 L 384.21,206.62 L 384.16,206.53 L 384.12,206.44 L 384.08,206.36 L 384.06,206.26 L 384.03,206.17 L 384.02,206.07 L 384.01,205.97 L 384.00,205.88 L 384.01,205.77 L 384.02,205.68 L 384.03,205.58 L 384.06,205.49 L 384.08,205.39 L 384.12,205.31 L 384.16,205.21 L 384.21,205.12 L 384.26,205.05 L 384.31,204.96 L 384.38,204.88 L 384.44,204.81 L 384.52,204.75 L 384.59,204.69 L 384.67,204.62 L 384.75,204.57 L 384.84,204.53 L 384.93,204.49 L 385.02,204.45 L 385.12,204.43 L 385.21,204.40 L 385.31,204.38 L 385.41,204.38 L 385.50,204.38 L 385.60,204.38 L 385.70,204.38 L 385.80,204.40 L 385.89,204.43 L 385.99,204.45 L 386.08,204.49 L 386.17,204.53 L 386.25,204.57 L 386.34,204.62 L 386.42,204.69 L 386.49,204.75 L 386.57,204.81 L 386.63,204.88 L 386.69,204.96 L 386.75,205.05 Z M 354.60,238.38 L 354.50,238.38 L 354.41,238.38 L 354.31,238.37 L 354.21,238.34 L 354.12,238.32 L 354.02,238.30 L 353.93,238.26 L 353.84,238.22 L 353.75,238.18 L 353.67,238.12 L 353.59,238.06 L 353.52,238.00 L 353.44,237.94 L 353.38,237.87 L 353.31,237.78 L 353.26,237.70 L 353.21,237.62 L 353.16,237.53 L 353.12,237.44 L 353.08,237.36 L 353.06,237.26 L 353.03,237.16 L 353.02,237.07 L 353.01,236.97 L 353.00,236.88 L 353.01,236.77 L 353.02,236.68 L 353.03,236.58 L 353.06,236.49 L 353.08,236.39 L 353.12,236.31 L 353.16,236.21 L 353.21,236.12 L 353.26,236.05 L 353.31,235.96 L 353.38,235.88 L 353.44,235.81 L 353.52,235.75 L 353.59,235.69 L 353.67,235.62 L 353.75,235.57 L 353.84,235.53 L 353.93,235.49 L 354.02,235.45 L 354.12,235.43 L 354.21,235.41 L 354.31,235.38 L 354.41,235.38 L 354.50,235.38 L 354.60,235.38 L 354.70,235.38 L 354.80,235.41 L 354.89,235.43 L 354.99,235.45 L 355.08,235.49 L 355.17,235.53 L 355.25,235.57 L 355.34,235.62 L 355.42,235.69 L 355.49,235.75 L 355.57,235.81 L 355.63,235.88 L 355.69,235.96 L 355.75,236.05 L 355.80,236.12 L 355.85,236.21 L 355.89,236.31 L 355.93,236.39 L 355.95,236.49 L 355.98,236.58 L 355.99,236.68 L 356.00,236.77 L 356.00,236.88 L 356.00,236.97 L 355.99,237.07 L 355.98,237.16 L 355.95,237.26 L 355.93,237.36 L 355.89,237.44 L 355.85,237.53 L 355.80,237.62 L 355.75,237.70 L 355.69,237.78 L 355.63,237.87 L 355.57,237.94 L 355.49,238.00 L 355.42,238.06 L 355.34,238.12 L 355.25,238.18 L 355.17,238.22 L 355.08,238.26 L 354.99,238.30 L 354.89,238.32 L 354.80,238.34 L 354.70,238.37 Z M 386.80,236.12 L 386.85,236.21 L 386.89,236.31 L 386.93,236.39 L 386.95,236.49 L 386.98,236.58 L 386.99,236.68 L 387.00,236.77 L 387.00,236.88 L 387.00,236.97 L 386.99,237.07 L 386.98,237.16 L 386.95,237.26 L 386.93,237.36 L 386.89,237.44 L 386.85,237.53 L 386.80,237.62 L 386.75,237.70 L 386.69,237.78 L 386.63,237.87 L 386.57,237.94 L 386.49,238.00 L 386.42,238.06 L 386.34,238.12 L 386.25,238.18 L 386.17,238.22 L 386.08,238.26 L 385.99,238.30 L 385.89,238.32 L 385.80,238.34 L 385.70,238.37 L 385.60,238.38 L 385.50,238.38 L 385.41,238.38 L 385.31,238.37 L 385.21,238.34 L 385.12,238.32 L 385.02,238.30 L 384.93,238.26 L 384.84,238.22 L 384.75,238.18 L 384.67,238.12 L 384.59,238.06 L 384.52,238.00 L 384.44,237.94 L 384.38,237.87 L 384.31,237.78 L 384.26,237.70 L 384.21,237.62 L 384.16,237.53 L 384.12,237.44 L 384.08,237.36 L 384.06,237.26 L 384.03,237.16 L 384.02,237.07 L 384.01,236.97 L 384.00,236.88 L 384.01,236.77 L 384.02,236.68 L 384.03,236.58 L 384.06,236.49 L 384.08,236.39 L 384.12,236.31 L 384.16,236.21 L 384.21,236.12 L 384.26,236.05 L 384.31,235.96 L 384.38,235.88 L 384.44,235.81 L 384.52,235.75 L 384.59,235.69 L 384.67,235.62 L 384.75,235.57 L 384.84,235.53 L 384.93,235.49 L 385.02,235.45 L 385.12,235.43 L 385.21,235.41 L 385.31,235.38 L 385.41,235.38 L 385.50,235.38 L 385.60,235.38 L 385.70,235.38 L 385.80,235.41 L 385.89,235.43 L 385.99,235.45 L 386.08,235.49 L 386.17,235.53 L 386.25,235.57 L 386.34,235.62 L 386.42,235.69 L 386.49,235.75 L 386.57,235.81 L 386.63,235.88 L 386.69,235.96 L 386.75,236.05 Z M 354.99,204.45 L 355.08,204.49 L 355.17,204.53 L 355.25,204.57 L 355.34,204.62 L 355.42,204.69 L 355.49,204.75 L 355.57,204.81 L 355.63,204.88 L 355.69,204.96 L 355.75,205.05 L 355.80,205.12 L 355.85,205.21 L 355.89,205.31 L 355.93,205.39 L 355.95,205.49 L 355.98,205.58 L 355.99,205.68 L 356.00,205.77 L 356.00,205.88 L 356.00,205.97 L 355.99,206.07 L 355.98,206.17 L 355.95,206.26 L 355.93,206.36 L 355.89,206.44 L 355.85,206.53 L 355.80,206.62 L 355.75,206.70 L 355.69,206.78 L 355.63,206.87 L 355.57,206.94 L 355.49,207.00 L 355.42,207.06 L 355.34,207.12 L 355.25,207.18 L 355.17,207.22 L 355.08,207.26 L 354.99,207.30 L 354.89,207.32 L 354.80,207.34 L 354.70,207.37 L 354.60,207.38 L 354.50,207.38 L 354.41,207.38 L 354.31,207.37 L 354.21,207.34 L 354.12,207.32 L 354.02,207.30 L 353.93,207.26 L 353.84,207.22 L 353.75,207.18 L 353.67,207.12 L 353.59,207.06 L 353.52,207.00 L 353.44,206.94 L 353.38,206.87 L 353.31,206.78 L 353.26,206.70 L 353.21,206.62 L 353.16,206.53 L 353.12,206.44 L 353.08,206.36 L 353.06,206.26 L 353.03,206.17 L 353.02,206.07 L 353.01,205.97 L 353.00,205.88 L 353.01,205.77 L 353.02,205.68 L 353.03,205.58 L 353.06,205.49 L 353.08,205.39 L 353.12,205.31 L 353.16,205.21 L 353.21,205.12 L 353.26,205.05 L 353.31,204.96 L 353.38,204.88 L 353.44,204.81 L 353.52,204.75 L 353.59,204.69 L 353.67,204.62 L 353.75,204.57 L 353.84,204.53 L 353.93,204.49 L 354.02,204.45 L 354.12,204.43 L 354.21,204.40 L 354.31,204.38 L 354.41,204.38 L 354.50,204.38 L 354.60,204.38 L 354.70,204.38 L 354.80,204.40 L 354.89,204.43 Z" style="fill:var(--acrylic)"/><circle class="soft" cx="335.00" cy="145.38" r="12.20" /><circle class="soft" cx="335.00" cy="204.62" r="12.20" /><circle class="soft" cx="405.00" cy="145.38" r="12.20" /><circle class="soft" cx="405.00" cy="204.62" r="12.20" /><rect class="rail" x="360.00" y="120.69" width="20.00" height="20.00" style="fill:var(--bar)"/><text class="lbl" x="430.00" y="126.42" text-anchor="start" >ACRO gantry plate (your acrylic)</text><text class="dim" x="430.00" y="141.43" text-anchor="start" >2020 bar end-on, M5 through the slot</text><text class="dim" x="430.00" y="226.43" text-anchor="start" >NEMA17 on the outside, at the bottom</text><text class="lblb" x="570.00" y="179.00" text-anchor="middle" >1000 RAIL · 2040 standing</text><text class="lblb" x="80.00" y="119.00" text-anchor="start" >END PLATE</text><text class="dim" x="80.00" y="131.00" text-anchor="start" >+ snap-on foot</text><text class="dim" x="80.00" y="215.00" text-anchor="middle" transform="rotate(-90 80.0 215.0)">560</text><line class="soft" x1="70.00" y1="268.00" x2="1070.00" y2="268.00"/><line class="soft" x1="70.00" y1="265.00" x2="70.00" y2="271.00"/><line class="soft" x1="1070.00" y1="265.00" x2="1070.00" y2="271.00"/><text class="dim" x="570.00" y="282.00" text-anchor="middle">1000 rails · end plates and feet outside them</text><line class="soft" x1="1100.00" y1="250.00" x2="1100.00" y2="235.00"/><line class="soft" x1="1097.00" y1="250.00" x2="1103.00" y2="250.00"/><line class="soft" x1="1097.00" y1="235.00" x2="1103.00" y2="235.00"/><text class="dim" x="1105.00" y="245.50" text-anchor="start">15 foot*</text><line class="soft" x1="1100.00" y1="235.00" x2="1100.00" y2="195.00"/><line class="soft" x1="1097.00" y1="235.00" x2="1103.00" y2="235.00"/><line class="soft" x1="1097.00" y1="195.00" x2="1103.00" y2="195.00"/><text class="dim" x="1105.00" y="218.00" text-anchor="start">40</text><line class="soft" x1="1100.00" y1="195.00" x2="1100.00" y2="155.00"/><line class="soft" x1="1097.00" y1="195.00" x2="1103.00" y2="195.00"/><line class="soft" x1="1097.00" y1="155.00" x2="1103.00" y2="155.00"/><text class="dim" x="1105.00" y="178.00" text-anchor="start">40</text><line class="soft" x1="70.00" y1="96.43" x2="137.20" y2="96.43"/><line class="soft" x1="70.00" y1="93.43" x2="70.00" y2="99.43"/><line class="soft" x1="137.20" y1="93.43" x2="137.20" y2="99.43"/><text class="dim" x="103.60" y="91.43" text-anchor="middle">67*</text><text class="dim" x="141.20" y="92.43" text-anchor="start" >bar can't go further left: its bottom wheel meets the 560</text></svg></div>
+</div>
+
+<div class="views2">
+  <div class="view">
+    <h2>End plate + foot</h2>
+    <p class="sub">From outside the left end, front corner. Two M5 go into the tapped rail end and two M5 with T-nuts into the 560. The plate's tongue drops into the foot, and two barbs (blue) click under the foot's ledge.</p>
+    <div class="svgbox"><svg class="v" style="--fs:12px" viewBox="0 0 473 306" role="img" aria-label="End plate and foot"><line class="bench" x1="0" y1="257.40000000000003" x2="473.0" y2="257.40000000000003"/><rect class="dash" x="88.00" y="136.40" width="198.00" height="88.00" /><line class="soft" x1="118.8" y1="114.4" x2="299.2" y2="114.4"/><line class="soft" x1="118.8" y1="70.4" x2="299.2" y2="70.4"/><line class="soft" x1="184.8" y1="202.4" x2="299.2" y2="202.4"/><line class="soft" x1="184.8" y1="158.4" x2="299.2" y2="158.4"/><rect class="dash" x="88.00" y="48.40" width="44.00" height="88.00" /><path class="plate" fill-rule="evenodd" style="fill:var(--petg)" d="M 82.74,224.36 L 81.88,224.23 L 81.05,224.02 L 80.23,223.73 L 79.45,223.36 L 78.71,222.92 L 78.02,222.40 L 77.38,221.82 L 76.80,221.18 L 76.28,220.49 L 75.84,219.75 L 75.47,218.97 L 75.18,218.15 L 74.97,217.32 L 74.84,216.46 L 74.80,215.60 L 74.80,39.60 L 74.84,38.74 L 74.97,37.88 L 75.18,37.05 L 75.47,36.23 L 75.84,35.45 L 76.28,34.71 L 76.80,34.02 L 77.38,33.38 L 78.02,32.80 L 78.71,32.28 L 79.45,31.84 L 80.23,31.47 L 81.05,31.18 L 81.88,30.97 L 82.74,30.84 L 83.60,30.80 L 136.40,30.80 L 137.26,30.84 L 138.12,30.97 L 138.95,31.18 L 139.77,31.47 L 140.55,31.84 L 141.29,32.28 L 141.98,32.80 L 142.62,33.38 L 143.20,34.02 L 143.72,34.71 L 144.16,35.45 L 144.53,36.23 L 144.82,37.05 L 145.03,37.88 L 145.16,38.74 L 145.20,39.60 L 145.20,61.38 L 145.21,61.60 L 145.35,61.75 L 217.42,133.82 L 218.00,134.46 L 218.52,135.16 L 218.96,135.90 L 219.33,136.68 L 219.62,137.49 L 219.83,138.33 L 219.96,139.18 L 220.00,140.05 L 220.00,215.60 L 219.96,216.46 L 219.83,217.32 L 219.62,218.15 L 219.33,218.97 L 218.96,219.75 L 218.52,220.49 L 218.00,221.18 L 217.42,221.82 L 216.78,222.40 L 216.09,222.92 L 215.35,223.36 L 214.57,223.73 L 213.75,224.02 L 212.92,224.23 L 212.06,224.36 L 211.20,224.40 L 189.20,224.40 L 189.20,242.00 L 101.20,242.00 L 101.20,224.40 L 83.60,224.40 L 82.74,224.36 Z"/><circle class="" cx="110.00" cy="114.40" r="6.05" fill="var(--sheet)" stroke="var(--ink)" stroke-width=".8"/><circle class="" cx="110.00" cy="70.40" r="6.05" fill="var(--sheet)" stroke="var(--ink)" stroke-width=".8"/><circle class="" cx="176.00" cy="202.40" r="6.05" fill="var(--sheet)" stroke="var(--ink)" stroke-width=".8"/><circle class="" cx="176.00" cy="158.40" r="6.05" fill="var(--sheet)" stroke="var(--ink)" stroke-width=".8"/><rect class="plate" x="48.40" y="224.40" width="198.00" height="33.00" style="fill:var(--petg2)" opacity=".85"/><rect class="" x="100.76" y="224.40" width="88.88" height="18.26" fill="var(--sheet)" stroke="var(--ink)" stroke-width=".6"/><rect class="" x="101.20" y="224.40" width="88.00" height="17.60" fill="var(--petg)" stroke="var(--ink)" stroke-width=".6"/><polygon points="101.20,239.80 98.12,234.30 101.20,231.00" fill="var(--accent)"/><polygon points="189.20,239.80 192.28,234.30 189.20,231.00" fill="var(--accent)"/><text class="dim" x="303.60" y="88.00" text-anchor="start" >M5 × 2, rail end</text><text class="dim" x="303.60" y="101.20" text-anchor="start" >(tapped)</text><text class="dim" x="303.60" y="176.00" text-anchor="start" >M5 + T-nut × 2</text><text class="dim" x="303.60" y="189.20" text-anchor="start" >into the 560</text><text class="dim" x="303.60" y="123.20" text-anchor="start" >dashed = rail</text><text class="dim" x="303.60" y="136.40" text-anchor="start" >+ 560 behind</text><text class="lblb" x="303.60" y="237.60" text-anchor="start" >FOOT</text><text class="dim" x="303.60" y="253.00" text-anchor="start" >snaps on</text><line class="soft" x1="74.80" y1="17.60" x2="220.00" y2="17.60"/><line class="soft" x1="74.80" y1="14.60" x2="74.80" y2="20.60"/><line class="soft" x1="220.00" y1="14.60" x2="220.00" y2="20.60"/><text class="dim" x="147.40" y="13.60" text-anchor="middle">66</text><line class="soft" x1="48.40" y1="275.00" x2="246.40" y2="275.00"/><line class="soft" x1="48.40" y1="272.00" x2="48.40" y2="278.00"/><line class="soft" x1="246.40" y1="272.00" x2="246.40" y2="278.00"/><text class="dim" x="147.40" y="287.00" text-anchor="middle">foot 90 × 60*</text><line class="soft" x1="22.00" y1="224.40" x2="22.00" y2="30.80"/><line class="soft" x1="19.00" y1="224.40" x2="25.00" y2="224.40"/><line class="soft" x1="19.00" y1="30.80" x2="25.00" y2="30.80"/><text class="dim" x="17.00" y="130.60" text-anchor="end">88</text></svg></div>
+  </div>
+  <div class="view">
+    <h2>Section at the bar</h2>
+    <p class="sub">Looking from the left. The plates' bottom wheels run under the rails, so the rails have to sit up on the 560s. That's why your layout works.</p>
+    <div class="svgbox"><svg class="v" style="--fs:11px" viewBox="0 0 870 260" role="img" aria-label="Section across the frame at the bar"><line class="bench" x1="0" y1="220.0" x2="790.0" y2="220.0"/><text class="dim" x="5.00" y="234.00" text-anchor="start" >◀ FRONT (you)</text><text class="dim" x="810.00" y="234.00" text-anchor="end" >BACK ▶</text><rect class="dash" x="110.00" y="165.00" width="560.00" height="40.00" /><text class="dim" x="270.00" y="191.00" text-anchor="middle" >left 560 beyond (dashed)</text><rect class="rail" x="110.00" y="125.00" width="20.00" height="40.00" /><rect class="rail" x="650.00" y="125.00" width="20.00" height="40.00" /><rect class="plate" x="102.90" y="80.73" width="6.00" height="135.70" style="fill:var(--acrylic)"/><rect class="plate" x="68.90" y="170.22" width="34.00" height="42.30" style="fill:var(--steel)"/><rect class="" x="114.90" y="103.17" width="10.20" height="24.40" rx="3" fill="var(--ink)" opacity=".7"/><rect class="" x="114.90" y="162.43" width="10.20" height="24.40" rx="3" fill="var(--ink)" opacity=".7"/><rect class="plate" x="671.10" y="80.73" width="6.00" height="135.70" style="fill:var(--acrylic)"/><rect class="plate" x="677.10" y="170.22" width="34.00" height="42.30" style="fill:var(--steel)"/><rect class="" x="654.90" y="103.17" width="10.20" height="24.40" rx="3" fill="var(--ink)" opacity=".7"/><rect class="" x="654.90" y="162.43" width="10.20" height="24.40" rx="3" fill="var(--ink)" opacity=".7"/><rect class="rail" x="108.90" y="90.69" width="562.20" height="20.00" style="fill:var(--bar)"/><rect class="plate" x="357.25" y="63.94" width="65.50" height="65.50" style="fill:var(--steel)" opacity=".85"/><rect class="plate" x="350.00" y="90.69" width="80.00" height="100.00" style="fill:var(--petg)" opacity=".9"/><text class="lblb" x="436.00" y="150.69" text-anchor="start" >DUMB PLATE (PETG)</text><text class="dim" x="436.00" y="162.69" text-anchor="start" >on the OpenBuilds Y carriage</text><text class="lbl" x="440.00" y="86.69" text-anchor="start" >2020 bar ≈ 562* (your 700, cut)</text><text class="dim" x="6.00" y="164.22" text-anchor="start" >NEMA17</text><text class="dim" x="6.00" y="74.73" text-anchor="start" >ACRO plate outside the rail</text><line class="soft" x1="750.00" y1="220.00" x2="750.00" y2="110.68"/><line class="soft" x1="747.00" y1="220.00" x2="753.00" y2="220.00"/><line class="soft" x1="747.00" y1="110.68" x2="753.00" y2="110.68"/><text class="dim" x="755.00" y="168.34" text-anchor="start">109* table to bar</text><text class="dim" x="6.00" y="250.00" text-anchor="start" >plate bottom 3.6* above the table · motor 7.5* · feet 15*</text><line class="soft" x1="68.90" y1="24.00" x2="711.10" y2="24.00"/><line class="soft" x1="68.90" y1="21.00" x2="68.90" y2="27.00"/><line class="soft" x1="711.10" y1="21.00" x2="711.10" y2="27.00"/><text class="dim" x="390.00" y="19.00" text-anchor="middle">642* over the motors (560 frame)</text></svg></div>
+  </div>
+</div>
+
+<div class="view">
+  <h2>Plan on the table</h2>
+  <p class="sub">Bar drawn at x 300. The steppers stick out front and back, outside the 560 frame.</p>
+  <div class="svgbox"><svg class="v" style="--fs:9px" viewBox="0 0 713 465" role="img" aria-label="Plan of the frame on the table"><rect class="" x="43.40" y="37.20" width="620.00" height="372.00" style="fill:var(--deck)" opacity=".35"/><rect class="" x="353.40" y="37.20" width="62.00" height="372.00" fill="var(--accent)" opacity=".10"/><rect class="dash" x="427.80" y="86.80" width="210.80" height="272.80" rx="4"/><text class="lblb" x="533.20" y="223.20" text-anchor="middle" >ENCLOSURES</text><rect class="rail" x="43.40" y="384.40" width="620.00" height="12.40" /><rect class="rail" x="43.40" y="49.60" width="620.00" height="12.40" /><rect class="rail" x="43.40" y="49.60" width="12.40" height="347.20" /><rect class="rail" x="651.00" y="49.60" width="12.40" height="347.20" /><rect class="plate" x="37.82" y="352.16" width="37.20" height="55.80" style="fill:var(--petg2)" opacity=".8"/><rect class="plate" x="39.68" y="359.60" width="3.72" height="40.92" style="fill:var(--petg)"/><rect class="plate" x="631.78" y="352.16" width="37.20" height="55.80" style="fill:var(--petg2)" opacity=".8"/><rect class="plate" x="663.40" y="359.60" width="3.72" height="40.92" style="fill:var(--petg)"/><rect class="plate" x="37.82" y="38.44" width="37.20" height="55.80" style="fill:var(--petg2)" opacity=".8"/><rect class="plate" x="39.68" y="45.88" width="3.72" height="40.92" style="fill:var(--petg)"/><rect class="plate" x="631.78" y="38.44" width="37.20" height="55.80" style="fill:var(--petg2)" opacity=".8"/><rect class="plate" x="663.40" y="45.88" width="3.72" height="40.92" style="fill:var(--petg)"/><rect class="plate" x="200.30" y="397.48" width="58.21" height="3.72" style="fill:var(--acrylic)"/><rect class="plate" x="216.29" y="401.20" width="26.23" height="21.08" style="fill:var(--steel)"/><rect class="plate" x="200.30" y="45.20" width="58.21" height="3.72" style="fill:var(--acrylic)"/><rect class="plate" x="216.29" y="24.12" width="26.23" height="21.08" style="fill:var(--steel)"/><rect class="rail" x="223.20" y="48.92" width="12.40" height="348.56" style="fill:var(--bar)"/><rect class="plate" x="236.84" y="198.40" width="4.96" height="49.60" style="fill:var(--petg)"/><text class="dim acctext" x="384.40" y="24.80" text-anchor="middle" >stop range</text><text class="lblb" x="229.40" y="440.20" text-anchor="middle" >FRONT (you)</text><text class="dim" x="6.20" y="18.60" text-anchor="start" >LINNMON 1000 × 600</text></svg></div>
+</div>
+
+<div class="notes">
+  <section>
+    <h2>What the sketch says</h2>
+    <ul>
+      <li><b>End plates go on the 1000 side:</b> each one caps a rail end and bolts to the 560 below it. That's 4 plates, 4 × M5 each (stock M5).</li>
+      <li><b>The feet set the ride height.</b> The ACRO plate hangs 11* below the frame's underside and the motor 8*. With 15 mm feet the plate clears the table by 3.6*. The feet aren't just broader, they have to be at least about 14 mm tall.</li>
+      <li><b>The 700 bar is too long:</b> between the two plates' inner faces it's ≈ 562*. Cut your 700 or buy a new one. Neither needs anything else to change.</li>
+      <li><b>Left limit:</b> the bar can't get closer than ≈ 67* to the left end, because the plate's bottom wheel meets the 560. The right side is the stop, wherever you set it.</li>
+      <li><b>Front to back over the motors:</b> ≈ 642* on a 600 table, so they hang ≈ 21* past the edges if the frame is centred.</li>
+      <li><b>Pen drop:</b> the bar's underside is ≈ 109* above the table. The Y carriage redesign has to reach down that far.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>Need your call</h2>
+    <ol class="q">
+      <li><b>Motors past the table edge:</b> the motors hang ≈ 21* past the front and back edges. OK? They can't go inside the plate: there they'd hit the bottom wheels. The wall behind needs the same room.</li>
+      <li><b>Ends:</b> the end plates make the frame 1012 long, so they stand 6 past each end of the 1000 top. The feet reach inward under the 560s, not outward. Is that OK?</li>
+      <li><b>Feet:</b> 15 mm tall, 90 × 60 footprint, plain PETG. Do you want rubber pads or screws into the table?</li>
+      <li><b>Rail ends:</b> are your 1000s tapped at the ends (M5)? If not, the plate takes T-nuts in the rail's side slots instead.</li>
+      <li><b>Bar:</b> cut the 700 to ≈ 562, or buy a new one?</li>
+      <li><b>Y carriage:</b> is the dumb plate going on your OpenBuilds 65.5 plate (3 wheels on the 2020)?</li>
+    </ol>
+    <p>Say go, and the inspector comes next.</p>
+    <p class="unv">Placeholders: foot 15, wheel Ø24.4 × 10.2, spacer 6, dumb plate 80 × 100. The ACRO plate holes are traced from your STL.</p>
+  </section>
+</div>
+</div></body></html>
