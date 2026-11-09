@@ -1,4 +1,4 @@
-"""Etch frame CAD run 2: ACRO-style frame on the LINNMON; flat end brackets on the rails' outer faces.
+"""Etch frame CAD run 3: ACRO-style frame on the LINNMON; wrap-round end brackets and separate corner grabs.
 
 World: x along the 1000 rails from the left end (0 = the table's left end), y from the frame's front face toward
 the back, z up from the tabletop. The 1000 rails are exactly the LINNMON's length, so nothing may stand past the
@@ -32,15 +32,18 @@ NEMA, NEMA_L = 42.3, 34.0
 XP_T = 6.0                          # X plate, PETG (Allwin: 6 is fine)
 WIN = 20.4                          # bar window
 COLLAR_L, COLLAR_W = 20.0, 4.0
-# bracket: flat plate on the rails' outer face (y -BT..0), x 0..BRK_W (as wide as the 560, so it costs no travel:
-# the X plate's bottom wheel meets the 560 there anyway). M5 into the 560's tapped end; M5 + drop-in nut in the rail's slots.
+# bracket (one print per corner): an outer plate on the 560's tapped end and the rail's outer face (x 0..BRK_W, as wide
+# as the 560, so it costs no travel), a bridge over the rail's end (no wheel ever reaches x < 21), and an arm along
+# the rail's inner face with a 45° gusset down to a pad on the 560's inner face. Prints upright, no supports.
 BT, BRK_W = 6.0, 20.0
-BRK_TOP = RZ0 + PH
-TONGUE = (3.0, 17.0, 8.0)           # x0, x1, depth into the foot
-# foot: a small corner grab under the bracket and the 560, lips halfway down the LINNMON's edge and end
+ARM_L = 66.0                        # arm along the inner face; the gusset meets it at 45°
+PAD_W = 34.0                        # pad on the 560's inner face, across y
+FIL = 6.0                           # inside fillets
+# corner grab (separate print): a pad under the 560's end and the bracket, lips halfway down the LINNMON's edge and end
 LIP_T = 4.0
 LIP = TABLE_T / 2
-FOOT_X, FOOT_Y = (-LIP_T, BRK_W), (-MARGIN - LIP_T, 60.0)
+FOOT_X0 = -LIP_T
+FOOT_YF = -MARGIN - LIP_T
 CAR, DUMB = 65.5, (80.0, 100.0, 6.0)
 BED = 256.0                         # Bambu A1
 # from the traced ACRO plate
@@ -70,18 +73,34 @@ def hole_x(s, y, z, x0, x1, d=5.5): return s - Pos((x0 + x1) / 2, y, z) * (Rot(0
 
 # ------------------------------------------------------------------ printed parts (front-left; others mirrored)
 def bracket():
-    p = sbox(0, F, BRK_W, BRK_TOP).buffer(-2, join_style=1).buffer(2, join_style=1)
-    p = p.union(sbox(TONGUE[0], F - TONGUE[2], TONGUE[1], F + 1))
-    s = prism_xz(p, -BT, BT)
-    for z in (F + 10, F + 30, RZ0 + 10, RZ0 + 30): s = hole_y(s, BRK_W / 2, z, -BT, 0)
+    yi = PW                                                                   # rail's inner face
+    outer = prism_xz(sbox(0, F, BRK_W, RZ0 + PH).buffer(-2, join_style=1).buffer(2, join_style=1), -BT, BT)
+    bridge = box(0, BRK_W, -BT, yi + BT, RZ0 + PH, RZ0 + PH + BT)
+    prof = sbox(0, RZ0, ARM_L, RZ0 + PH).union(SPoly([(PW, F), (PW + BT, F), (ARM_L, RZ0), (PW, RZ0)]))
+    prof = prof.difference(sbox(-1, F - 1, PW + 0.01, RZ0))                  # the 560 sits under the rail here
+    prof = prof.buffer(-FIL / 2, join_style=1).buffer(FIL / 2, join_style=1).union(sbox(0, RZ0, PW + 1, RZ0 + PH))
+    arm = prism_xz(prof, yi, BT)
+    pad = box(PW, PW + BT, yi, yi + BT + PAD_W, F, RZ0)
+    s = outer + bridge + arm + pad
+    for z in (F + 10, F + 30, RZ0 + 10, RZ0 + 30): s = hole_y(s, BRK_W / 2, z, -BT, 0)       # 560 end (tapped) + rail outer slots
+    for x, z in ((12, RZ0 + 30), (36, RZ0 + 10), (56, RZ0 + 30)): s = hole_y(s, x, z, yi, yi + BT)   # rail inner slots
+    for z in (F + 10, F + 30): s = hole_x(s, yi + BT + PAD_W / 2 + 2, z, PW, PW + BT)              # 560 inner slots
     return s
 
 def foot():
-    s = box(FOOT_X[0], FOOT_X[1], FOOT_Y[0], FOOT_Y[1], 0, F)
-    s += box(FOOT_X[0], 0, FOOT_Y[0], FOOT_Y[1], -LIP, 0)                    # lip halfway down the table's end
-    s += box(FOOT_X[0], FOOT_X[1], FOOT_Y[0], -MARGIN, -LIP, 0)              # lip halfway down the table's front edge
-    s -= box(TONGUE[0] - 0.2, TONGUE[1] + 0.2, -BT - 0.2, 0.2, F - TONGUE[2] - 0.3, F + 1)
+    s = box(FOOT_X0, BRK_W, FOOT_YF, 0, 0, F)                                  # outboard of the rail: only to x 20, the X plate passes beyond
+    s += box(FOOT_X0, PW + BT + 4, 0, PW + BT + PAD_W + 4, 0, F)                 # under the 560 and the bracket's pad
+    s += box(FOOT_X0, 0, FOOT_YF, PW + BT + PAD_W + 4, -LIP, 0)                # lip down the table's end
+    s += box(FOOT_X0, BRK_W, FOOT_YF, -MARGIN, -LIP, 0)                        # lip down the table's front edge
+    s += box(FOOT_X0, 0, FOOT_YF, PW + BT + PAD_W + 4, F, F + 6)               # low stop on the outer end: the 560 and bracket butt against it
     return s
+
+def flat(s, how):
+    """A copy laid on the bed the way it prints, min corner at the origin."""
+    if how == "x_face": s = Rot(90, 0, 0) * s                                 # plate lying on its face
+    if how == "flip": s = Rot(180, 0, 0) * s                                  # upside down (lips up)
+    b = s.bounding_box()
+    return Pos(-b.min.X, -b.min.Y, -b.min.Z) * s
 
 def x_plate():
     g = ACRO["gantry"]
@@ -130,14 +149,21 @@ def assembly():
             bo[f"wheel_{side}{i}"] = w if sg > 0 else mirror_y(w)
     x0 = BAR_AT + BAR / 2 + 7
     bo["y_carriage"] = box(x0, x0 + 6, END_L / 2 - CAR / 2, END_L / 2 + CAR / 2, BAR_ZC - CAR / 2, BAR_ZC + CAR / 2)
+    lay, x = {}, 0.0
+    for n, src, how in (("bracket", pr["bracket_fl"], "upright"), ("corner_grab", pr["foot_fl"], "flip"),
+                        ("x_plate", pr["xplate_front"], "x_face"), ("dumb_plate", pr["dumb_plate"], "x_face_y")):
+        f = flat(src if how != "x_face_y" else Rot(0, 90, 0) * src, "x_face" if how == "x_face" else ("flip" if how == "flip" else ""))
+        b = f.bounding_box()
+        lay[f"print_{n}"] = Pos(x, -MARGIN - 330, -TABLE_T) * f
+        x += b.max.X - b.min.X + 40
     ghost = {"linnmon": box(0, RAIL_L, -MARGIN, END_L + MARGIN, -TABLE_T, 0),
              "enclosures": box(620, 960, 60, 500, F, 200)}
-    return pr, bo, ghost
+    return pr, bo, ghost, lay
 
 # ------------------------------------------------------------------ checks
 def bb(s): b = s.bounding_box(); return (b.min.X, b.min.Y, b.min.Z, b.max.X, b.max.Y, b.max.Z)
 
-def checks(pr, bo, ghost):
+def checks(pr, bo, ghost, lay):
     res = []
     def add(n, ok, d): res.append(dict(name=n, ok=bool(ok), detail=d))
     allp = {**pr, **bo}
@@ -172,14 +198,15 @@ def checks(pr, bo, ghost):
     yfr = min(boxes[n][1] for n in allp)
     add("Overhang past the front edge (motors, bar)", True, f"{-MARGIN - yfr:.0f} mm past the table's front edge")
     sizes = {n: boxes[n] for n in pr}
-    for n in ("bracket_fl", "foot_fl", "xplate_front"):
-        x0, y0, z0, x1, y1, z1 = sizes[n]
-        add(f"{n.split('_')[0]} size", True, f"{x1-x0:.0f} × {y1-y0:.0f} × {z1-z0:.0f}")
+    for n, s in lay.items():
+        x0, y0, z0, x1, y1, z1 = bb(s)
+        g = s.volume * 1.27e-3 * 0.55
+        add(f"{n[6:].replace('_', ' ')}: as printed", max(x1-x0, y1-y0, z1-z0) <= BED, f"{x1-x0:.0f} × {y1-y0:.0f} × {z1-z0:.0f} on the bed, ≈ {g:.0f} g each")
     return res
 
 def main():
-    pr, bo, ghost = assembly()
-    res = checks(pr, bo, ghost)
+    pr, bo, ghost, lay = assembly()
+    res = checks(pr, bo, ghost, lay)
     for r in res: print("PASS" if r["ok"] else "FAIL", r["name"], "·", r["detail"])
     if "--stl" not in sys.argv: return
     OUT.mkdir(parents=True, exist_ok=True)
@@ -201,22 +228,27 @@ def main():
         if n.startswith(("motor", "wheel")): e = [0, -110 if "front" in n else 110, 0]
         if n in ("y_carriage",): e = [0, 0, 120]
         parts.append(dict(name=n, group=grp, explode=e))
+    for n, s in lay.items():
+        export_stl(s, str(OUT / f"{n}.stl"), tolerance=0.05)
+        parts.append(dict(name=n, group="prints", explode=[0, 0, 0]))
     for n, s in ghost.items():
         export_stl(s, str(OUT / f"{n}.stl"), tolerance=0.5)
         parts.append(dict(name=n, group="ghost", explode=[0, 0, -40 if n == "linnmon" else 0]))
-    summary = dict(title="Etch frame · CAD run 2", up="z", q=25,
+    summary = dict(title="Etch frame · CAD run 3", up="z", q=25,
         sub=f"1000 × 560 frame on the LINNMON · 1000s rest on the 560s · 11 PETG prints, ≈ {grams:.0f} g at ~55% fill",
         size=[RAIL_L, END_L, BAR_ZC + 20],
-        groups={"printed": {"label": "PETG prints", "note": "4 end brackets, 4 corner grabs, 2 X plates, 1 dumb plate", "color": "#3f4544", "grams": round(grams)},
+        groups={"printed": {"label": "PETG prints", "note": "4 end brackets, 4 corner grabs, 2 X plates, 1 dumb plate (mirrored pairs)", "color": "#3f4544", "grams": round(grams)},
                 "frame": {"label": "2040 frame + 2020 bar", "color": "#b9c2bf"},
                 "motion": {"label": "Motors, wheels, Y carriage", "color": "#6fb3e0"},
+                "prints": {"label": "Print layout (one of each, as it sits on the bed)", "color": "#e07b39"},
                 "ghost": {"label": "LINNMON + enclosures", "color": "#c8955a", "ghost": True}},
         parts=parts, checks=res,
         cards=[{"title": "How it goes together", "html": "<ul>"
-                "<li>Each <b>corner grab</b> sits on a LINNMON corner with lips halfway down the end and the front (or back) edge. Its pad lifts the frame 20 so the X plates clear the table.</li>"
-                "<li>The <b>560</b> sits on the corner grabs and the <b>1000</b> rests on the 560, so an inner L-bracket can still go in later.</li>"
-                "<li>The <b>end bracket</b> is a flat 20 × 6 plate on the outside face, the 560's width. Two M5 go into the 560's tapped end and two M5 into drop-in nuts in the rail's slots. Its tongue snaps into the corner grab.</li>"
-                "<li>The <b>X plates</b> (ACRO outline, 6 mm PETG) ride outside the rails, with the motors at the bottom. The 700 bar passes through a window and a 20 mm collar.</li></ul>"},
+                "<li><b>Corner grab</b> (its own print): a 20 mm pad under the 560's end and the bracket, lips halfway down the LINNMON's end and edge, and a low stop at the outer end. How it locks to the bracket is still open.</li>"
+                "<li><b>End bracket</b> wraps the rail's end: an outer plate (2 M5 into the 560's tapped end, 2 into the rail's outer slots), a bridge over the rail, an arm along the inner face (3 M5 + drop-in nuts) with a 45° gusset down to a pad on the 560's inner face (2 M5 + T-nuts). That's 9 M5, so use what you need.</li>"
+                "<li>The outer plate is only as wide as the 560. Everything else sits inboard, so it costs no travel: the X plate's wheel meets the 560 at x ≈ 68 either way.</li>"
+                "<li>The bracket prints upright with no supports: walls vertical, the gusset at 45°, a 20 mm bridge over the rail.</li>"
+                "<li>Orange row in front: one of each print, as it sits on the bed.</li></ul>"},
                {"title": "Placeholders", "html": f"<ul><li>LINNMON thickness {TABLE_T:.0f} (measure at print time)</li><li>Wheel Ø{WHEEL_OD} × {WHEEL_W}, spacer {SPACER:.0f} (catalogue)</li><li>Dumb plate {DUMB[0]:.0f} × {DUMB[1]:.0f}, Y carriage 65.5 square stand-in</li><li>Grams: volume × 1.27 × 0.55, rough</li></ul>"}])
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
     print("wrote", OUT)
