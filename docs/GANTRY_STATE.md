@@ -4,6 +4,25 @@ Start here for anything on the plotter's frame, gantry, carriage or pen lift. Th
 R04 Etch, not a separate room: the Drive Handoff ([R04 Etch] Handoff) stays the room's memory, and this file is
 the gantry's technical state. `docs/ENCLOSURE_STATE.md` is the same thing for the electronics boxes.
 
+## Current (2026-11-09): ACRO-style frame, CAD run 5
+
+Supersedes the 10-23 bench plan and lofi v2 below. Model: `hardware/gantry/frame.py` (checks; `--stl` for the
+inspector, https://claude.ai/artifact/RYZArV4f7bo7fA559fdyH7; `--print` for flat print STLs). Lo-fi v4 (older
+raised-rail layout): https://claude.ai/artifact/LQRCHp84mVaVaTB294fUjW (`frame_lofi.py`).
+
+- Two 1000 2040 rails (standing) rest on two 560 2040 ends on the LINNMON; rails flush with its ends, frame 20 in
+  from the front and back edges. No divider: the bar stops at 50-60 cm, enclosures beyond.
+- End plate (x4, PLA): one flat 6 mm plate per corner on the rails' outer face: 28 column (2 M5 into the 560's
+  tapped end), 64 arm along the rail (4 M5 into drop-in nuts), 45° chamfer. Left limit x ~112 (the arm).
+- X plates (x2, PETG): ACRO gantry outline (traced from the STL), 6 mm, motor at the bottom; the 700 2020 bar
+  passes through a 20.4 window and a 20 collar (one M5 + T-nut).
+- Corner grab (x4, PLA, placeholder; Allwin may redesign): pad 20 lifts the frame so the X plates clear the
+  table by 8.6; lips halfway down the LINNMON edge and end; the end plate keys 5 mm into a 28.4 x 6.4 x 5.3 pocket.
+- Y carriage: plain plate for now; redesign is in scope; the pen must drop ~125 to the table.
+- Unverified: wheel Ø24.4 x 10.2 and spacer 6 (catalogue), LINNMON 34 thick (placeholder), printed hole fits.
+- Next: PLA test print (1 X plate, grabs A + B, key/pocket fit tester), then the full set.
+- Rejected: rails raised 28 above the 560s; inner L-brackets; a wrap-round bracket with a gusset.
+
 ## Goal
 
 One complete A3 artwork (Allwin's north star). Pens are changed by hand; no tool changer, no auto pen swap, no new
