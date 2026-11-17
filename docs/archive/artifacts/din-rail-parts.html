@@ -1,0 +1,291 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>DIN Rail Parts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --paper:#e9edf1; --surface:#fff; --surface-2:#f1f5f8; --rail:#dde4ea;
+  --duct:#e4ebf1; --duct-lid:rgba(255,255,255,.22);
+  --g-steel:#dfe4e8; --g-pcb:#cdd9c4; --g-abs:#f0f2f4; --g-heat:#d7dde2;
+  --ink:#131b22; --ink-2:#4a5a67; --ink-3:#7d8d9a; --line:#ccd6de; --line-2:#dde4ea;
+  --accent:#c2622c;
+  --w-L:#7d4426; --w-N:#2d5c8c; --w-E:#5d7f2e;
+  --w-v24:#c33a2a; --w-v0:#2b343b; --w-v6:#c2821a; --w-v5:#9c8418;
+  --w-motA:#3f7a46; --w-motB:#2f6a9c; --w-sig:#7a4fa3; --w-es:#2a7f86; --w-pwm:#a8457f;
+  --w-ctrl:#7a4fa3; --w-sp:#aab6c0;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#0c1218; --surface:#141d25; --surface-2:#18212a; --rail:#232f38;
+  --duct:#1e2831; --duct-lid:rgba(20,29,37,.28);
+  --g-steel:#2b3740; --g-pcb:#36442f; --g-abs:#283139; --g-heat:#303c45;
+  --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a; --line:#26333d; --line-2:#1e2a33;
+  --accent:#e08a52;
+  --w-L:#c08055; --w-N:#5f94c4; --w-E:#90b85c;
+  --w-v24:#e2614c; --w-v0:#97a6b2; --w-v6:#d9a63f; --w-v5:#cbb43c;
+  --w-motA:#6fb878; --w-motB:#5fa0d4; --w-sig:#a67fd0; --w-es:#4fb5bd; --w-pwm:#d87ab0;
+  --w-ctrl:#a67fd0; --w-sp:#55646f;
+}}
+:root[data-theme="dark"]{
+  --paper:#0c1218; --surface:#141d25; --surface-2:#18212a; --rail:#232f38;
+  --duct:#1e2831; --duct-lid:rgba(20,29,37,.28);
+  --g-steel:#2b3740; --g-pcb:#36442f; --g-abs:#283139; --g-heat:#303c45;
+  --ink:#e4ecf2; --ink-2:#9aabb8; --ink-3:#6c7d8a; --line:#26333d; --line-2:#1e2a33;
+  --accent:#e08a52;
+  --w-L:#c08055; --w-N:#5f94c4; --w-E:#90b85c;
+  --w-v24:#e2614c; --w-v0:#97a6b2; --w-v6:#d9a63f; --w-v5:#cbb43c;
+  --w-motA:#6fb878; --w-motB:#5fa0d4; --w-sig:#a67fd0; --w-es:#4fb5bd; --w-pwm:#d87ab0;
+  --w-ctrl:#a67fd0; --w-sp:#55646f;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px; margin:0 auto; padding:30px 20px 60px}
+h1{margin:0; font-size:27px; font-weight:600; letter-spacing:-.02em}
+.sub{margin:5px 0 0; color:var(--ink-2); font-size:14px; max-width:68ch}
+h2{margin:0 0 10px; font-size:10.5px; font-weight:600; text-transform:uppercase;
+   letter-spacing:.1em; color:var(--ink-3)}
+figure{margin:24px 0 0; padding:14px; background:var(--surface);
+       border:1px solid var(--line); border-radius:4px; overflow-x:auto}
+figure svg{display:block; max-width:100%; height:auto; color:var(--ink)}
+figcaption{margin-top:12px; font-size:12.5px; color:var(--ink-2); max-width:74ch}
+table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:4px}
+th{text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+   color:var(--ink-3); font-weight:600; padding:0 8px 6px 0; border-bottom:1px solid var(--line)}
+td{padding:5px 8px 5px 0; border-bottom:1px solid var(--line-2); vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.grp{padding-top:14px; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+       color:var(--ink-3); font-weight:600; border-bottom:1px solid var(--line)}
+.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+.id{font-family:"IBM Plex Mono",monospace; color:var(--ink-3)}
+.sw{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:7px;
+    vertical-align:-1px}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:4px;
+       padding:16px; margin-top:16px}
+.cols{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.cols3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px}
+@media (max-width:860px){.cols,.cols3{grid-template-columns:1fr}}
+.note{margin-top:14px; padding:12px 14px; font-size:13.5px; color:var(--ink-2);
+      background:var(--surface); border-left:2px solid var(--accent); border-radius:0 3px 3px 0}
+.note b{color:var(--ink)}
+code{font-family:"IBM Plex Mono",monospace; font-size:.92em}
+footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
+       font-size:12px; color:var(--ink-3)}
+</style>
+
+<style>
+.lede{margin:18px 0 0; font-size:17px; line-height:1.5; color:var(--ink); max-width:62ch}
+.qty{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+     white-space:nowrap; font-weight:600}
+td.spec{color:var(--ink-2)}
+td.why{color:var(--ink-2); font-size:12px}
+h3{margin:26px 0 6px; font-size:17px; font-weight:600; letter-spacing:-.01em}
+h3:first-of-type{margin-top:18px}
+p{margin:8px 0 0; max-width:64ch}
+ol{margin:10px 0 0; padding-left:20px; max-width:64ch}
+li{margin:6px 0}
+</style>
+
+<div class="wrap">
+  <h1>DIN rail parts</h1>
+  <p class="sub">Everything that goes on the two rails, what the specification has to
+  say, and how many. The quantities come from the same tables as the two layout
+  drawings, so they cannot disagree with them.</p>
+
+  <p class="lede">The thing worth understanding before you order: <b>you never wire one
+  terminal block to the next.</b> Blocks that should be the same node are bridged by a
+  comb that drops into a slot they all share. That is what a common bar is, and it is
+  why the two boxes need only 79 wires between them instead of ninety-three.</p>
+
+  <h3>What one block is</h3>
+  <figure>
+    
+<svg viewBox="0 0 560 320" role="img" xmlns="http://www.w3.org/2000/svg"
+ aria-label="Section through one feed-through terminal block: a foot clipped over the
+ DIN rail, a conductor clamped on each side, a single metal link joining the two clamps
+ so the block is one electrical node, and a jumper slot in the top face with a comb
+ prong dropping into it.">
+  <defs><marker id="dp" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6"
+    markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="currentColor"/>
+  </marker></defs>
+
+  <!-- DIN rail in section, top-hat profile -->
+  <path d="M150 266 L150 252 L168 252 L168 262 L352 262 L352 252 L370 252 L370 266 Z"
+        fill="var(--rail)" stroke="currentColor" stroke-width="1.6"/>
+  <!-- the block's foot, clipped over it -->
+  <path d="M176 262 L176 248 L344 248 L344 262 L336 262 L336 256 L184 256 L184 262 Z"
+        fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
+
+  <!-- body -->
+  <rect x="166" y="104" width="188" height="146" rx="5"
+        fill="var(--surface-2)" stroke="currentColor" stroke-width="1.8"/>
+  <!-- jumper slot -->
+  <rect x="238" y="104" width="44" height="34" fill="var(--paper)"
+        stroke="currentColor" stroke-width="1.4"/>
+  <!-- comb prong dropping in -->
+  <rect x="250" y="40" width="20" height="92" rx="2" fill="var(--w-v24)" opacity=".9"/>
+
+  <!-- the two clamps and the link between them -->
+  <rect x="186" y="176" width="26" height="26" rx="2" fill="var(--ink-3)"/>
+  <rect x="308" y="176" width="26" height="26" rx="2" fill="var(--ink-3)"/>
+  <rect x="196" y="138" width="128" height="10" rx="3" fill="var(--w-v24)" opacity=".75"/>
+  <line x1="199" y1="176" x2="199" y2="148" stroke="var(--w-v24)" stroke-width="7"
+        opacity=".75"/>
+  <line x1="321" y1="176" x2="321" y2="148" stroke="var(--w-v24)" stroke-width="7"
+        opacity=".75"/>
+
+  <!-- conductors -->
+  <line x1="40" y1="189" x2="186" y2="189" stroke="var(--w-v0)" stroke-width="7"
+        stroke-linecap="round"/>
+  <line x1="334" y1="189" x2="480" y2="189" stroke="var(--w-v0)" stroke-width="7"
+        stroke-linecap="round"/>
+
+  <!-- labels -->
+  <text x="44" y="174" font-size="12.5" fill="currentColor">wire in</text>
+  <text x="476" y="174" font-size="12.5" fill="currentColor" text-anchor="end">wire out</text>
+  <text x="134" y="266" font-size="12.5" fill="currentColor" text-anchor="end">DIN rail, TS35</text>
+  <line x1="140" y1="262" x2="158" y2="262" stroke="currentColor" stroke-width="1.2"
+        marker-end="url(#dp)"/>
+  <text x="408" y="266" font-size="12.5" fill="currentColor">the foot clips over it</text>
+  <line x1="402" y1="262" x2="350" y2="262" stroke="currentColor" stroke-width="1.2"
+        marker-end="url(#dp)"/>
+  <text x="396" y="118" font-size="12.5" fill="currentColor">the two clamps are</text>
+  <text x="396" y="134" font-size="12.5" fill="currentColor">one piece of metal</text>
+  <line x1="390" y1="140" x2="332" y2="143" stroke="currentColor" stroke-width="1.2"
+        marker-end="url(#dp)"/>
+  <text x="260" y="30" font-size="12.5" fill="currentColor" text-anchor="middle"
+        font-weight="600">comb prong</text>
+  <text x="130" y="112" font-size="12.5" fill="currentColor" text-anchor="end">jumper slot</text>
+  <line x1="136" y1="108" x2="234" y2="118" stroke="currentColor" stroke-width="1.2"
+        marker-end="url(#dp)"/>
+  <text x="396" y="206" font-size="12.5" fill="currentColor">5.2 mm wide,</text>
+  <text x="396" y="222" font-size="12.5" fill="currentColor">58 mm tall</text>
+</svg>
+
+    <figcaption><b>A feed-through block, in section.</b> A foot clips over the rail, and
+    a conductor clamps on each side. The two clamps are <i>one piece of metal</i> — the
+    block is a single electrical node with two places to land a wire, not a connector
+    that joins two things. That is why the layouts allow exactly two wires per block and
+    the script refuses a third.</figcaption>
+  </figure>
+
+  <h3>How you make a common bar</h3>
+  <figure>
+    
+<svg viewBox="0 0 600 316" role="img" xmlns="http://www.w3.org/2000/svg"
+ aria-label="Five terminal blocks in a row seen from the front. A three-way comb is
+ pushed into the jumper slots of the first three, making them one electrical node with
+ no wire between them. The fourth and fifth blocks are a different net, and the last one
+ in the row carries an end cover.">
+  <!-- the comb -->
+  <rect x="64" y="40" width="172" height="16" rx="3" fill="var(--w-v24)" opacity=".9"/>
+  <rect x="80" y="56" width="16" height="36" fill="var(--w-v24)" opacity=".9"/>
+  <rect x="140" y="56" width="16" height="36" fill="var(--w-v24)" opacity=".9"/>
+  <rect x="200" y="56" width="16" height="36" fill="var(--w-v24)" opacity=".9"/>
+  <text x="150" y="30" font-size="12.5" font-weight="600" text-anchor="middle"
+        fill="currentColor">one 3-way comb</text>
+
+  <!-- five blocks -->
+  <g stroke="currentColor" stroke-width="1.6">
+    <rect x="60" y="92" width="56" height="128" rx="3" fill="var(--surface-2)"/>
+    <rect x="120" y="92" width="56" height="128" rx="3" fill="var(--surface-2)"/>
+    <rect x="180" y="92" width="56" height="128" rx="3" fill="var(--surface-2)"/>
+    <rect x="240" y="92" width="56" height="128" rx="3" fill="var(--surface-2)"/>
+    <rect x="300" y="92" width="56" height="128" rx="3" fill="var(--surface-2)"/>
+    <rect x="360" y="92" width="10" height="128" rx="2" fill="var(--ink-3)"/>
+  </g>
+  <!-- jumper slots -->
+  <g fill="var(--paper)" stroke="currentColor" stroke-width="1.2">
+    <rect x="78" y="92" width="20" height="12"/><rect x="138" y="92" width="20" height="12"/>
+    <rect x="198" y="92" width="20" height="12"/><rect x="258" y="92" width="20" height="12"/>
+    <rect x="318" y="92" width="20" height="12"/>
+  </g>
+  <!-- rail -->
+  <path d="M40 240 L40 226 L58 226 L58 236 L382 236 L382 226 L400 226 L400 240 Z"
+        fill="var(--rail)" stroke="currentColor" stroke-width="1.6"/>
+
+  <line x1="64" y1="258" x2="232" y2="258" stroke="var(--w-v24)" stroke-width="2.5"/>
+  <text x="148" y="278" font-size="12.5" text-anchor="middle" fill="currentColor"
+        font-weight="600">one node — and not one wire</text>
+  <line x1="244" y1="258" x2="356" y2="258" stroke="currentColor" stroke-width="1.6"
+        opacity=".5"/>
+  <text x="300" y="298" font-size="12.5" text-anchor="middle" fill="currentColor"
+        opacity=".8">a different net</text>
+  <text x="390" y="88" font-size="12.5" fill="currentColor">end cover — the last block</text>
+  <text x="390" y="104" font-size="12.5" fill="currentColor">in a row is open on one side</text>
+  <line x1="384" y1="110" x2="372" y2="130" stroke="currentColor" stroke-width="1.2"/>
+  <text x="420" y="160" font-size="12.5" fill="currentColor">5.2 mm pitch —</text>
+  <text x="420" y="176" font-size="12.5" fill="currentColor">the comb must</text>
+  <text x="420" y="192" font-size="12.5" fill="currentColor">match it</text>
+</svg>
+
+    <figcaption><b>The comb does the commoning.</b> Push it into the jumper slots of
+    adjacent blocks and they become one node. A 10-way comb cuts down to any width with
+    side cutters, so three of them cover every group in both boxes. The pitch must match
+    the blocks — a 5.2 mm comb on 6.2 mm blocks fits nothing.</figcaption>
+  </figure>
+
+  <p>Worked example, the ground group in the control box. Five blocks sit side by side:
+  <code>0V 0Va 0Vb 0Vc 0Vd</code>. One 5-way comb bridges all five. Nine wires land on
+  them — one in from the power box and eight out to the drivers, the board, the servo,
+  the two endstop commons and the fan — and <b>none of those nine wires joins one block
+  to another</b>. Every one of them goes somewhere real. Without the comb the same job
+  needs four extra link wires and the ground star stops being a star.</p>
+
+  <h3>The order</h3>
+  <div class="panel">
+    <table><thead><tr><th>Item</th><th>Specification</th><th class="qty">Qty</th>
+      <th>Notes</th></tr></thead><tbody><tr><td class="grp" colspan="4">The rail itself</td></tr><tr><td><b>DIN rail, TS35</b></td><td class="spec">35 mm top-hat to EN 60715, <b>7.5 mm deep</b>, slotted, zinc-plated steel</td><td class="qty">1 x 1 m</td><td class="why">312 mm used — 187 for the power box, 125 for the control box. Cut both from one length with a hacksaw and file the burr off, or the blocks will not slide on.</td></tr><tr><td><b>End clamp (end stop)</b></td><td class="spec">for TS35, screw or spring type — brand does not matter</td><td class="qty">4</td><td class="why">Two per rail. Without them the whole row slides along the rail when you push a wire in.</td></tr><tr><td class="grp" colspan="4">On the rail</td></tr><tr><td><b>Feed-through terminal, 2.5 mm²</b></td><td class="spec"><b>5.2 mm pitch</b>, grey, 24 A / 800 V, accepts 0.14–4 mm², with a <b>jumper slot</b>. Push-in or screw. Generic <code>UK-2.5B</code>; or Phoenix <code>PT 2,5</code> / <code>UT 2,5</code>, Wago <code>2002-1201</code>, Weidmüller <code>A2C 2.5</code></td><td class="qty">35</td><td class="why">7 of them are deliberate spares. One size does the whole job — a 2.5 mm² block takes a 0.25 mm² wire happily once it has a ferrule on it.</td></tr><tr><td><b>Earth terminal, 2.5 mm²</b></td><td class="spec">same family and pitch, green/yellow, with a <b>metal foot that clamps the rail</b> (this is what makes it an earth block)</td><td class="qty">4</td><td class="why">Power box only. These are commoned <i>by the rail</i>, so they take no comb — and most have no jumper slot to put one in.</td></tr><tr><td><b>Fuse terminal, 5 × 20 mm</b></td><td class="spec">same family and pitch, swing-out or pull-out carrier, for a 5 × 20 mm cartridge</td><td class="qty">1</td><td class="why">F1, in the power box. A fuse rather than a small breaker because an ordinary MCB is tested on AC, where the arc dies twice a cycle; on DC it does not.</td></tr><tr><td><b>Jumper comb, 10-way</b></td><td class="spec"><b>same brand and family as the blocks</b>, 5.2 mm pitch, insulated</td><td class="qty">3</td><td class="why">You need 6 x 2-way, 2 x 3-way, 1 x 5-way = 23 ways in total. Buy 10-ways and <b>cut them to length with side cutters</b> — that is what they are for, and it is far cheaper than buying each width.</td></tr><tr><td><b>End cover / partition plate</b></td><td class="spec">same family, 1–2 mm, matches the block profile</td><td class="qty">10</td><td class="why">One for the open side of the last block in each row. There are four rows across the two boxes; the rest of the pack is for when you add a block later.</td></tr><tr><td><b>Marker strip, blank</b></td><td class="spec">same family, snaps into the block's label slot</td><td class="qty">2 packs</td><td class="why">Label every block with the names in the two rail schedules. This is the difference between a box you can service and a box you have to trace.</td></tr><tr><td class="grp" colspan="4">Gear and duct</td></tr><tr><td><b>MCB, 6 A, C-curve, 1P+N</b></td><td class="spec">230 V AC, 6 kA breaking capacity, 2 modules (35 mm), DIN clip</td><td class="qty">1</td><td class="why">Mains in, power box. C-curve because two switch-mode supplies have a cold-start inrush that a B-curve may trip on. If it nuisance-trips at switch-on, go to a <b>10 A C</b> — the wiring is 1.0 mm² and still protected.</td></tr><tr><td><b>Relay, 24 V DC coil, + DIN socket</b></td><td class="spec">1 or 2 changeover, contact rated <b>at 24 V DC</b> (not just the AC figure), socket ~16 mm wide. Finder <code>40.52</code> + <code>95.05</code> socket + <code>99.02</code> LED/diode module, or equivalent</td><td class="qty">1</td><td class="why">K1, the E-stop relay. It switches 0.63 A, so contact rating is not the constraint — but <b>get the module with the free-wheeling diode</b>, or the coil's collapse puts a spike on the 24 V rail every time you hit the button.</td></tr><tr><td><b>Slotted wiring duct + lid, 40 mm</b></td><td class="spec">PVC, 40 mm wide, finger-slotted, with a clip-on lid</td><td class="qty">1.26 m</td><td class="why">H1 in both boxes, and H2 in the control box.</td></tr><tr><td><b>Slotted wiring duct + lid, 25 mm</b></td><td class="spec">PVC, 25 mm wide, finger-slotted, with a clip-on lid</td><td class="qty">0.71 m</td><td class="why">The vertical ducts. Both boxes run at 3–14% fill, so the size is set by what will fit a finger, not by the copper.</td></tr><tr><td class="grp" colspan="4">Consumables</td></tr><tr><td><b>Bootlace ferrule, 2.5 mm²</b></td><td class="spec">insulated, DIN 46228-4 colour code</td><td class="qty">4</td><td class="why">Pairs with 0.55 m of 2.5 mm² wire. One for every stranded end in both boxes — <b>never tin one with solder instead</b>, it creeps and the clamp goes loose months later.</td></tr><tr><td><b>Bootlace ferrule, 1.5 mm²</b></td><td class="spec">insulated, DIN 46228-4 colour code</td><td class="qty">12</td><td class="why">Pairs with 1.02 m of 1.5 mm² wire.</td></tr><tr><td><b>Bootlace ferrule, 1 mm²</b></td><td class="spec">insulated, DIN 46228-4 colour code</td><td class="qty">16</td><td class="why">Pairs with 1.62 m of 1 mm² wire.</td></tr><tr><td><b>Bootlace ferrule, 0.75 mm²</b></td><td class="spec">insulated, DIN 46228-4 colour code</td><td class="qty">46</td><td class="why">Pairs with 7.52 m of 0.75 mm² wire.</td></tr><tr><td><b>Bootlace ferrule, 0.5 mm²</b></td><td class="spec">insulated, DIN 46228-4 colour code</td><td class="qty">38</td><td class="why">Pairs with 3.43 m of 0.5 mm² wire.</td></tr><tr><td><b>Bootlace ferrule, 0.25 mm²</b></td><td class="spec">insulated, DIN 46228-4 colour code</td><td class="qty">42</td><td class="why">Pairs with 8.33 m of 0.25 mm² wire.</td></tr><tr><td><b>Fuse, 5 A 5 × 20 mm, time-lag (T)</b></td><td class="spec">ceramic or glass</td><td class="qty">5</td><td class="why">F1, plus spares.</td></tr><tr><td><b>Fuse, 2 A 5 × 20 mm, time-lag (T)</b></td><td class="spec">ceramic or glass</td><td class="qty">5</td><td class="why">The IEC inlet's own fuse. The whole box draws about 0.2 A at 230 V, so 2 A is already generous; time-lag rides out the inrush.</td></tr></tbody></table>
+  </div>
+
+  <h3>Specifications that actually matter</h3>
+  <ol>
+    <li><b>Pitch, and only one of them.</b> Every block, every comb, every end cover is
+    5.2 mm pitch, which is what a 2.5 mm² block is. Mixing pitches means the combs fit
+    nothing.</li>
+    <li><b>One family, one brand.</b> Combs, end covers and marker strips are
+    <i>not</i> interchangeable between manufacturers, and often not between series from
+    the same manufacturer. Pick a family and buy the accessories with the blocks. This is
+    the mistake that costs a second order.</li>
+    <li><b>7.5 mm rail, not 15 mm.</b> Both are called TS35. Terminal blocks want the
+    7.5 mm one; the deep rail is for heavy gear.</li>
+    <li><b>Current rating is not the constraint.</b> A 2.5 mm² block is good for 24 A and
+    the heaviest thing here is 1.7 A. Size blocks by the wire you can get into them, not
+    by the current.</li>
+    <li><b>Push-in beats screw for a first build.</b> Screw clamps need the right torque
+    and want re-checking after the box has warmed and cooled a few times. Push-in takes a
+    ferruled wire with a shove and holds it. Either works; push-in is less to get
+    wrong.</li>
+  </ol>
+
+  <h3>Things that catch people out</h3>
+  <ol>
+    <li><b>The last block in a row is open on one side.</b> Its clamp is exposed metal.
+    That is what the end cover is for, and it is the part everyone forgets.</li>
+    <li><b>Earth blocks are commoned by the rail.</b> They have a metal foot that grips
+    it, so every earth block on that rail is already one node — no comb, and the
+    incoming earth must land on one of them for the rail to be live with earth at all.
+    Keep the rail one unbroken piece.</li>
+    <li><b>A comb is a bus bar, so treat it like one.</b> Nothing stops you combing two
+    groups together by accident. Count the ways twice before you push it home; cut it
+    short rather than long.</li>
+    <li><b>Ferrule everything stranded.</b> A bare stranded end in a clamp splays, and
+    the strand that escapes is the one that finds its neighbour.</li>
+    <li><b>Label as you go.</b> The marker strips are cheap and the rail schedules on the
+    two layout pages are the names to write. Six months from now the colours will not be
+    enough.</li>
+  </ol>
+
+  <div class="note"><b>Order of assembly.</b> Rail cut, deburred and screwed down first.
+  Then end clamp, blocks pushed on in schedule order, second end clamp. Then the combs,
+  then the end covers, then the markers — and only then start landing wires. Fitting a
+  comb after the wires are in means taking wires out.</div>
+
+  <footer>Generated by <code>python3 hardware/din_parts.py</code>. Quantities are counted
+  from <code>psu_layout.py</code> and <code>ctrl_layout.py</code>; the specifications are
+  written. Brand names are examples of families that carry the right accessories, not a
+  claim about what is in stock near you.</footer>
+</div>
+
+</body></html>

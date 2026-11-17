@@ -1,0 +1,163 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Etch Split Window</title>
+<style>
+/* layout: picture of the face, sliders, then the working drawing */
+:root{--bg:#eef0f2;--fg:#1b1f24;--muted:#5d6670;--line:#c9cfd6;--paper:#ffffff;--steel:#c3c9cf;--edge:#5b6570;--accent:#c2410c;--glass:#3b82f6;--stage:#dfe3e7;--warn:#b91c1c;
+--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181c;--fg:#e6e9ec;--muted:#9aa3ad;--line:#2c323a;--paper:#1d2126;--steel:#59626b;--edge:#a3adb7;--accent:#fb923c;--glass:#60a5fa;--stage:#2a2f35;--warn:#f87171;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15181c;--fg:#e6e9ec;--muted:#9aa3ad;--line:#2c323a;--paper:#1d2126;--steel:#59626b;--edge:#a3adb7;--accent:#fb923c;--glass:#60a5fa;--stage:#2a2f35;--warn:#f87171;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:24px 48px}
+main{max-width:1000px;margin-inline:auto;display:grid;gap:18px}
+h1{font-size:1.5rem;margin:0;text-wrap:balance}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+p{margin:0;max-width:72ch}
+.stage{background:var(--stage);border-radius:6px;padding:20px}
+.stage svg{filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:12px}
+svg{display:block;width:100%;height:auto} svg text{font-family:var(--f-mono);fill:var(--fg)}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 22px}
+.controls label{display:grid;gap:2px;font:12px var(--f-mono);color:var(--muted)}
+.controls output{color:var(--fg);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.read{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 22px;font:13px var(--f-mono);font-variant-numeric:tabular-nums}
+.read div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-block:3px}
+.read span:first-child{color:var(--muted)}
+.bad{color:var(--warn)}
+.key{font:12px var(--f-mono);color:var(--muted)}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<main>
+<div class="eyebrow">R04 Etch · power box front · experiment, not in the model</div>
+<h1>Split window: two panes, one slanted gap</h1>
+<p>Two windows with a slanted steel bar between them and rounded corners. The bezel is 9 mm, half the width of the last version. Only 3 mm of acrylic hides under it, and the screws sit just outside the acrylic. Drag the sliders.</p>
+<div class="stage"><svg id="art" viewBox="-234 -8 468 187" role="img" aria-label="Rendered power box front with two slanted windows"></svg></div>
+<div class="controls">
+  <label for="gap">steel between the bezels <output id="o-gap"></output><input id="gap" type="range" min="4" max="60" step="1" value="14"></label>
+  <label for="ang">slant from vertical <output id="o-ang"></output><input id="ang" type="range" min="0" max="40" step="1" value="24"></label>
+  <label for="rad">corner radius <output id="o-rad"></output><input id="rad" type="range" min="2" max="18" step="1" value="8"></label>
+  <label for="hgt">window height <output id="o-hgt"></output><input id="hgt" type="range" min="34" max="60" step="1" value="50"></label>
+  <label for="spn">overall span <output id="o-spn"></output><input id="spn" type="range" min="240" max="380" step="5" value="300"></label>
+</div>
+<div class="read" id="read"></div>
+<div class="sheet"><svg id="tech" viewBox="-234 -8 468 187" role="img" aria-label="Working drawing of the same front"></svg></div>
+<p class="key">black: bezel outline · blue dashed: acrylic (window + 3 mm) · white: steel cutout · orange: M3 holes, 4 per window (one per side)</p>
+</main>
+<script>
+const WO = 452, HB = 171, XV = 185, BAND = 9, MAR = 3, SCR = 5.5, CY = 89;
+const VENTS = [145, 136, 42], ACC = [[-185, 30], [0, 30], [185, 30]];
+const RIV = [[-218.5, 51.3], [-218.5, 119.7], [218.5, 51.3], [218.5, 119.7]];
+const Y = y => HB - y;
+const $ = id => document.getElementById(id);
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1]], add = (a, b) => [a[0] + b[0], a[1] + b[1]], mul = (a, k) => [a[0] * k, a[1] * k];
+const len = a => Math.hypot(a[0], a[1]), nrm = a => mul(a, 1 / len(a));
+
+// convex polygon, counter-clockwise with y up
+function offset(P, d) {
+  const n = P.length, L = [];
+  for (let i = 0; i < n; i++) {
+    const a = P[i], b = P[(i + 1) % n], e = nrm(sub(b, a)), o = [e[1], -e[0]];
+    L.push([add(a, mul(o, d)), e]);
+  }
+  return P.map((_, i) => {
+    const [p1, d1] = L[(i - 1 + n) % n], [p2, d2] = L[i];
+    const den = d1[0] * d2[1] - d1[1] * d2[0];
+    const t = ((p2[0] - p1[0]) * d2[1] - (p2[1] - p1[1]) * d2[0]) / den;
+    return add(p1, mul(d1, t));
+  });
+}
+function rounded(P, r) {   // SVG path with each corner filleted at radius r
+  const n = P.length, seg = [];
+  for (let i = 0; i < n; i++) {
+    const v = P[i], a = P[(i - 1 + n) % n], b = P[(i + 1) % n];
+    const u1 = nrm(sub(a, v)), u2 = nrm(sub(b, v));
+    const th = Math.acos(Math.max(-1, Math.min(1, u1[0] * u2[0] + u1[1] * u2[1])));
+    let d = r / Math.tan(th / 2);
+    d = Math.min(d, len(sub(a, v)) / 2.05, len(sub(b, v)) / 2.05);
+    const rr = d * Math.tan(th / 2);
+    seg.push([add(v, mul(u1, d)), add(v, mul(u2, d)), rr]);
+  }
+  let s = `M${seg[0][1][0].toFixed(2)},${Y(seg[0][1][1]).toFixed(2)}`;
+  for (let i = 1; i <= n; i++) {
+    const [p1, p2, rr] = seg[i % n];
+    s += `L${p1[0].toFixed(2)},${Y(p1[1]).toFixed(2)}A${rr.toFixed(2)},${rr.toFixed(2)} 0 0 0 ${p2[0].toFixed(2)},${Y(p2[1]).toFixed(2)}`;
+  }
+  return s + "Z";
+}
+function geometry(p) {
+  const y0 = CY - p.h / 2, y1 = CY + p.h / 2, t = Math.tan(p.ang * Math.PI / 180);
+  const wg = (p.gap + 2 * BAND) / Math.cos(p.ang * Math.PI / 180);   // horizontal gap between panes
+  const xl = y => -wg / 2 + (y - CY) * t, xr = y => wg / 2 + (y - CY) * t, s = p.spn / 2;
+  const L = [[-s, y0], [xl(y0), y0], [xl(y1), y1], [-s, y1]];
+  const R = [[xr(y0), y0], [s, y0], [s, y1], [xr(y1), y1]];
+  return { y0, y1, panes: [L, R] };
+}
+function screws(P) {
+  const out = [];
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], b = P[(i + 1) % P.length], e = nrm(sub(b, a)), o = [e[1], -e[0]];
+    out.push(add(mul(add(a, b), 0.5), mul(o, SCR)));
+  }
+  return out;
+}
+const DEFS = `<defs>
+<linearGradient id="brushed" x1="0" x2="1" y1="0" y2="0.15"><stop offset="0" stop-color="#b9c0c7"/><stop offset=".35" stop-color="#d9dee3"/><stop offset=".55" stop-color="#c5cbd1"/><stop offset=".8" stop-color="#dfe3e7"/><stop offset="1" stop-color="#b3bac1"/></linearGradient>
+<pattern id="grain" width="40" height="1.6" patternUnits="userSpaceOnUse"><rect width="40" height="0.5" y="0.3" fill="#ffffff" opacity=".18"/><rect width="27" height="0.35" y="1.1" x="6" fill="#6f7780" opacity=".12"/></pattern>
+<radialGradient id="dome" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#f2f4f6"/><stop offset="1" stop-color="#8c949c"/></radialGradient>
+<linearGradient id="inside" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2b3138"/><stop offset=".6" stop-color="#14181c"/><stop offset="1" stop-color="#0c0e10"/></linearGradient>
+<linearGradient id="shine" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".24"/><stop offset=".3" stop-color="#ffffff" stop-opacity=".05"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/><stop offset=".75" stop-color="#ffffff" stop-opacity=".09"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+</defs>`;
+function vents(fill) {
+  let s = "";
+  for (const y of VENTS) for (let i = 0; i < 12; i++) {
+    const x = XV - i * 2 * XV / 11;
+    s += `<rect x="${x - 14}" y="${Y(y) - 1.75}" width="28" height="3.5" rx="1.75" fill="${fill}"/>`;
+  }
+  return s;
+}
+function draw() {
+  const p = { gap: +$("gap").value, ang: +$("ang").value, r: +$("rad").value, h: +$("hgt").value, spn: +$("spn").value };
+  $("o-gap").textContent = p.gap + " mm"; $("o-ang").textContent = p.ang + "°"; $("o-rad").textContent = "R" + p.r;
+  $("o-hgt").textContent = p.h + " mm"; $("o-spn").textContent = p.spn + " mm";
+  const g = geometry(p);
+  // picture
+  let a = DEFS + `<rect x="${-WO / 2}" y="0" width="${WO}" height="${HB}" fill="url(#brushed)"/><rect x="${-WO / 2}" y="0" width="${WO}" height="${HB}" fill="url(#grain)"/>`
+    + `<rect x="${-WO / 2}" y="0" width="${WO}" height="${HB}" fill="none" stroke="#7d868f" stroke-width="0.8"/>` + vents("#15181b");
+  for (const [x, y] of ACC) a += `<circle cx="${x}" cy="${Y(y)}" r="4" fill="#111316"/><circle cx="${x - 1}" cy="${Y(y) - 1}" r="1.2" fill="#3a3f45"/>`;
+  for (const [x, y] of RIV) a += `<circle cx="${x}" cy="${Y(y)}" r="2.6" fill="url(#dome)"/>`;
+  for (const P of g.panes) {
+    a += `<path d="${rounded(offset(P, BAND), p.r + BAND)}" fill="#141619"/>`;
+    const w = rounded(P, p.r);
+    a += `<path d="${w}" fill="url(#inside)"/><path d="${w}" fill="url(#shine)"/>`;
+  }
+  $("art").innerHTML = a;
+  // drawing
+  let t = `<rect x="${-WO / 2}" y="0" width="${WO}" height="${HB}" fill="var(--steel)" stroke="var(--edge)" stroke-width="1"/>` + vents("var(--paper)");
+  for (const [x, y] of ACC) t += `<circle cx="${x}" cy="${Y(y)}" r="2.5" fill="var(--paper)"/>`;
+  for (const [x, y] of RIV) t += `<circle cx="${x}" cy="${Y(y)}" r="1.6" fill="var(--paper)"/>`;
+  for (const P of g.panes) {
+    t += `<path d="${rounded(offset(P, BAND), p.r + BAND)}" fill="none" stroke="var(--fg)" stroke-width="0.8"/>`;
+    t += `<path d="${rounded(offset(P, MAR), p.r + MAR)}" fill="none" stroke="var(--glass)" stroke-width="0.9" stroke-dasharray="3 2"/>`;
+    t += `<path d="${rounded(P, p.r)}" fill="var(--paper)" stroke="var(--edge)" stroke-width="1"/>`;
+    for (const [x, y] of screws(P)) t += `<circle cx="${x.toFixed(2)}" cy="${Y(y).toFixed(2)}" r="1.7" fill="var(--accent)"/>`;
+  }
+  $("tech").innerHTML = t;
+  // numbers
+  const [L, R] = g.panes, top = g.y1 + BAND, bot = g.y0 - BAND;
+  const above = (136 - 1.75) - top, below = bot - (42 + 1.75);
+  const wTop = (L[2][0] - L[3][0]).toFixed(0), wBot = (L[1][0] - L[0][0]).toFixed(0);
+  const rows = [
+    ["each window, top / bottom edge", `${wTop} / ${wBot} mm`],
+    ["window height", `${p.h} mm`],
+    ["each acrylic, max", `${(Math.max(+wTop, +wBot) + 2 * MAR).toFixed(0)} × ${p.h + 2 * MAR} mm`],
+    ["each bezel, max", `${(Math.max(+wTop, +wBot) + 2 * BAND).toFixed(0)} × ${p.h + 2 * BAND} mm`],
+    ["steel above bezel (to vents)", `${above.toFixed(1)} mm`, above < 6],
+    ["steel below bezel (to vents)", `${below.toFixed(1)} mm`, below < 6],
+    ["screws", "8 (4 per window)"],
+  ];
+  $("read").innerHTML = rows.map(([k, v, bad]) => `<div><span>${k}</span><span class="${bad ? "bad" : ""}">${v}${bad ? " (under 6)" : ""}</span></div>`).join("");
+}
+for (const id of ["gap", "ang", "rad", "hgt", "spn"]) $(id).addEventListener("input", draw);
+draw();
+</script>
+
+</body></html>

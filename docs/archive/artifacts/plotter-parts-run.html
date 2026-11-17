@@ -1,0 +1,426 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Plotter Parts Run</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+:root{
+  --paper:#FBFAF7; --surface:#FFFFFF; --surface-2:#F4F3EF;
+  --ink:#15171B; --ink-2:#4B5058; --ink-3:#787E88;
+  --rule:#E2E1DB; --rule-2:#D2D1C9;
+  --blue:#1B4FD8; --red:#C4202C; --amber:#9A6B08;
+  --blue-wash:#EAEFFC; --red-wash:#FBEBEC;
+  --shadow:0 1px 2px rgba(20,22,26,.05),0 1px 1px rgba(20,22,26,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1114; --surface:#171A1F; --surface-2:#1D2127;
+    --ink:#E9EAEC; --ink-2:#A6ABB4; --ink-3:#7B818B;
+    --rule:#282D34; --rule-2:#343A43;
+    --blue:#7C9CF5; --red:#E97A82; --amber:#D6A63F;
+    --blue-wash:#16203A; --red-wash:#2C1719;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1114; --surface:#171A1F; --surface-2:#1D2127;
+  --ink:#E9EAEC; --ink-2:#A6ABB4; --ink-3:#7B818B;
+  --rule:#282D34; --rule-2:#343A43;
+  --blue:#7C9CF5; --red:#E97A82; --amber:#D6A63F;
+  --blue-wash:#16203A; --red-wash:#2C1719;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:860px; margin:0 auto; padding:40px 20px 80px}
+
+h1,h2,h3,.eyebrow,.tier-n{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif}
+h1{font-size:clamp(2rem,6vw,2.9rem); line-height:1.05; margin:0 0 12px; font-weight:700; letter-spacing:-.02em; text-wrap:balance}
+h2{font-size:1.45rem; font-weight:700; margin:0; letter-spacing:-.01em; text-wrap:balance}
+.eyebrow{font-size:.72rem; text-transform:uppercase; letter-spacing:.14em; font-weight:600; color:var(--ink-3)}
+p{margin:0 0 14px; max-width:66ch}
+a{color:var(--blue)}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em}
+code{background:var(--surface-2); padding:.1em .35em; border-radius:3px}
+strong{font-weight:600}
+
+/* ---- masthead ---- */
+header{border-bottom:2px solid var(--ink); padding-bottom:22px; margin-bottom:28px}
+.sub{color:var(--ink-2); font-size:1.05rem; max-width:60ch; margin:0}
+.meta{display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:18px; font-size:.8rem; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+
+/* ---- callout ---- */
+.first{
+  background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--amber);
+  border-radius:4px; padding:20px 22px; margin-bottom:34px; box-shadow:var(--shadow);
+}
+.first h2{font-size:1.1rem; margin-bottom:10px}
+.first ol{margin:0; padding-left:20px}
+.first li{margin-bottom:8px; color:var(--ink-2)}
+.first li:last-child{margin-bottom:0}
+.first li strong{color:var(--ink)}
+
+/* ---- tiers ---- */
+.tier{margin-bottom:38px}
+.tier-head{display:flex; align-items:baseline; gap:12px; padding-bottom:10px; border-bottom:1px solid var(--rule-2); margin-bottom:4px}
+.tier-n{
+  font-size:.72rem; font-weight:600; letter-spacing:.06em; color:var(--ink-3);
+  border:1px solid var(--rule-2); border-radius:3px; padding:2px 7px; flex:none;
+  font-variant-numeric:tabular-nums;
+}
+.tier > p.why{color:var(--ink-2); font-size:.94rem; margin:12px 0 16px}
+
+.rows{display:flex; flex-direction:column; gap:10px}
+.row{
+  display:grid; grid-template-columns:auto 1fr; gap:0 14px;
+  background:var(--surface); border:1px solid var(--rule); border-radius:4px;
+  padding:14px 16px; box-shadow:var(--shadow); position:relative;
+  border-left:3px solid var(--rule-2);
+}
+.row.p1{border-left-color:var(--blue)}
+.row.p2{border-left-color:var(--amber)}
+.row.p3{border-left-color:var(--rule-2)}
+
+.chk{
+  appearance:none; -webkit-appearance:none; margin:3px 0 0; flex:none;
+  width:19px; height:19px; border:1.5px solid var(--rule-2); border-radius:3px;
+  background:var(--surface); cursor:pointer; grid-row:1/span 3; align-self:start;
+}
+.chk:checked{background:var(--blue); border-color:var(--blue)}
+.chk:checked::after{content:"✓"; display:block; color:#fff; font-size:13px; line-height:16px; text-align:center; font-weight:700}
+:root[data-theme="dark"] .chk:checked::after, :root:not([data-theme="light"]) .chk:checked::after{color:#0F1114}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .chk:checked::after{color:#fff}}
+.chk:focus-visible{outline:2px solid var(--blue); outline-offset:2px}
+.row.done .name,.row.done .spec,.row.done .note{opacity:.42; text-decoration:line-through; text-decoration-thickness:1px}
+.row.done .note{text-decoration:none}
+
+.name{font-weight:600; font-size:1rem; letter-spacing:-.005em}
+.spec{font-family:"IBM Plex Mono",monospace; font-size:.8rem; color:var(--ink-2); margin-top:3px}
+.note{font-size:.88rem; color:var(--ink-2); margin-top:7px; max-width:62ch}
+.note em{font-style:italic; color:var(--ink-3)}
+
+/* ---- don't buy ---- */
+.avoid{background:var(--red-wash); border:1px solid var(--rule); border-left:3px solid var(--red); border-radius:4px; padding:20px 22px; margin-bottom:32px}
+.avoid h2{font-size:1.1rem; margin-bottom:12px}
+.avoid dl{margin:0; display:flex; flex-direction:column; gap:12px}
+.avoid dt{font-weight:600; font-size:.95rem}
+.avoid dd{margin:2px 0 0; color:var(--ink-2); font-size:.9rem; max-width:62ch}
+
+/* ---- closing ---- */
+.three{background:var(--blue-wash); border:1px solid var(--rule); border-left:3px solid var(--blue); border-radius:4px; padding:20px 22px}
+.three h2{font-size:1.1rem; margin-bottom:10px}
+.three p{margin:0; color:var(--ink-2)}
+.three p strong{color:var(--ink)}
+
+footer{margin-top:36px; padding-top:18px; border-top:1px solid var(--rule); font-size:.8rem; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+
+@media (max-width:560px){
+  .wrap{padding:28px 16px 60px}
+  .row{padding:12px 14px; gap:0 11px}
+  .note{font-size:.86rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Pen plotter · parts run</div>
+  <h1>Plotter Parts Run</h1>
+  <p class="sub">Every item here is tied to a failure this machine actually produced. Nothing is on the list because it is generally good practice.</p>
+  <div class="meta">
+    <span>26 Aug 2026</span>
+    <span>after 3 unexplained resets, servo disconnected</span>
+    <span>docs/SHOPPING.md</span>
+  </div>
+</header>
+
+<div class="first">
+  <h2>Two free tests may delete half this list</h2>
+  <ol>
+    <li><strong>Stream a full art file with the 24 V PSU off.</strong> Nothing moves; GRBL runs the whole motion profile in software. A reset there means the motors are not involved at all — and every capacitor below is irrelevant.</li>
+    <li><strong>Swap the USB cable for any other one you own</strong>, straight into the Mac, no hub.</li>
+  </ol>
+</div>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 1</span><h2>Measurement</h2></div>
+  <p class="why">You are currently flying blind. These two are worth buying however the free tests come out.</p>
+  <div class="rows">
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Digital multimeter</div>
+        <div class="spec">DC volts to 0.01 V · continuity beeper</div>
+        <div class="note"><strong>Vref has never been measured on any of the three drivers.</strong> That is the largest single unknown on the machine — wrong Vref means overheating, missed steps, or both. Also proves the buck output, the 24 V rail, and that the servo ground wire is continuous.</div>
+      </div>
+    </label>
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Inline USB power meter</div>
+        <div class="spec">USB-A pass-through · reads V and A</div>
+        <div class="note">Tests the live hypothesis directly: does the 5 V USB rail sag when the steppers run? The Arduino is USB-powered, so this is the rail that matters.</div>
+      </div>
+    </label>
+
+  </div>
+  <p class="why"><strong>Set Vref first thing.</strong> Ender 42-34 motors are ~0.84 A/phase. Read <code>R100</code> or <code>R050</code> off each driver board, then <code>Vref = I × 8 × R_sense</code> — <strong>0.67 V</strong> for <code>R100</code>, <strong>1.34 V</strong> for <code>R050</code>. Meter on the pot, PSU on, USB out.</p>
+</section>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 2</span><h2>The untested suspect</h2></div>
+  <p class="why">The Arduino runs on USB power and the shield never feeds <code>VIN</code>, so a sag on the 24 V motor rail <strong>cannot brown out the board directly</strong>. Either noise couples in through ground, or the USB connection itself drops and the Mac re-enumerates — which resets the board exactly as opening the serial port does. This path has never been tested.</p>
+  <div class="rows">
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Shielded USB cable</div>
+        <div class="spec">USB-A → USB-B · 1 m · moulded ferrites</div>
+        <div class="note">The Uno takes USB-B. Short and shielded. The cheapest possible fix if the cable is marginal.</div>
+      </div>
+    </label>
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">USB isolator</div>
+        <div class="spec">ADuM3160 / ADuM4160 · full-speed 12 Mbps</div>
+        <div class="note">Breaks the ground loop between Mac and machine outright. If noise is arriving via USB ground, this is the cure. <em>Must be full-speed — low-speed-only boards will not carry the serial adapter.</em></div>
+      </div>
+    </label>
+
+    <label class="row p2"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Clamp-on ferrite cores</div>
+        <div class="spec">5 / 7 / 9 mm bore · 10-pack · mix 31 or 43</div>
+        <div class="note">One at each end of the USB cable, one on each motor lead. Free to try, no wiring.</div>
+      </div>
+    </label>
+
+  </div>
+</section>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 3</span><h2>Power integrity</h2></div>
+  <p class="why">The fixes FINDINGS §7 already queued, sized for an MG996R pulling ~2.5 A stall down 1.5 m of thin lead.</p>
+  <div class="rows">
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Electrolytic — at the servo</div>
+        <div class="spec">2200 µF · 16 V · low-ESR · 105 °C · ×2</div>
+        <div class="note">Fitted <strong>at the servo end</strong>, striped leg to ground, legs trimmed short, anchored so it cannot flap.</div>
+      </div>
+    </label>
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Electrolytic — across the shield</div>
+        <div class="spec">470 µF · 50 V · low-ESR · 105 °C · ×2</div>
+        <div class="note">Across the shield's 24 V input terminals. A4988s need local bulk capacitance and the clone shield ships with almost none. 50 V on a 24 V rail is the right margin.</div>
+      </div>
+    </label>
+
+    <label class="row p2"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Ceramic capacitors</div>
+        <div class="spec">100 nF · 50 V · ×20</div>
+        <div class="note">In parallel with each electrolytic. Electrolytics are slow; the ceramic catches what they miss.</div>
+      </div>
+    </label>
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Separate servo supply</div>
+        <div class="spec">6 V 3 A regulated — or 5 V 3 A charger + breakout</div>
+        <div class="note">The decisive test of whether the LM2596 buck is the weak link. <strong>6.0 V, not 5.2 V</strong> — the MG996R is rated 4.8–7.2 V and was being starved. Ground it to the shield.</div>
+      </div>
+    </label>
+
+  </div>
+</section>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 4</span><h2>Wiring</h2></div>
+  <p class="why">Attacks the noise at source rather than filtering it later.</p>
+  <div class="rows">
+
+    <label class="row p2"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Shielded twisted stepper cable</div>
+        <div class="spec">4-core · 22 AWG · shielded · ~10 m</div>
+        <div class="note">Twisting A+/A− and B+/B− cancels the field each pair radiates. 1.5 m of untwisted lead per motor is an antenna. <em>Ground the shield at the controller end only.</em></div>
+      </div>
+    </label>
+
+    <label class="row p2"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Silicone wire</div>
+        <div class="spec">20 AWG · red and black · 3 m each</div>
+        <div class="note">The servo's power pair must be 20 AWG or thicker. Signal can stay thin.</div>
+      </div>
+    </label>
+
+    <label class="row p3"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">JST-XH kit + crimp tool</div>
+        <div class="spec">2.54 mm · 4-pin · SN-28B crimper</div>
+        <div class="note">Skip if you buy ready-made shielded stepper extensions instead.</div>
+      </div>
+    </label>
+
+    <label class="row p3"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Heat shrink, sleeving, ties</div>
+        <div class="spec">Assorted · 6 mm braided sleeve</div>
+        <div class="note">Keeps the twisted pairs twisted and the motor runs off the signal wires.</div>
+      </div>
+    </label>
+
+  </div>
+</section>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 5</span><h2>Thermal</h2></div>
+  <p class="why">SETUP phase 4 asks for this and it is not confirmed fitted. A driver in thermal shutdown drops steps silently.</p>
+  <div class="rows">
+
+    <label class="row p2"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Driver heatsinks</div>
+        <div class="spec">9 × 9 × 5 mm · adhesive · ×10</div>
+        <div class="note">"A4988s at 24 V run hot" — straight from SETUP.</div>
+      </div>
+    </label>
+
+    <label class="row p3"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Fan</div>
+        <div class="spec">40 mm · 24 V · + mount</div>
+        <div class="note">Blowing across the three drivers.</div>
+      </div>
+    </label>
+
+  </div>
+</section>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 6</span><h2>Spares</h2></div>
+  <p class="why">So a fault can be isolated in five minutes instead of argued about for an evening.</p>
+  <div class="rows">
+
+    <label class="row p2"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Spare Arduino Uno</div>
+        <div class="spec">R3 clone</div>
+        <div class="note">EEPROM has been corrupted twice and the board resets for reasons unknown. A second board turns "is it the board?" into a swap. Flash it from <code>firmware/grbl-servo-plotter.zip</code>.</div>
+      </div>
+    </label>
+
+    <label class="row p3"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Spare A4988 drivers</div>
+        <div class="spec">×5</div>
+        <div class="note">Cheap, and one dying driver looks exactly like a motion fault.</div>
+      </div>
+    </label>
+
+  </div>
+</section>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 7</span><h2>Optional — each is a project, not a part</h2></div>
+  <div class="rows">
+
+    <label class="row p3"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">TMC2209 drivers</div>
+        <div class="spec">×4 · standalone step/dir</div>
+        <div class="note">Quieter, cooler, better current regulation, far less switching noise than A4988s. <strong>Not a drop-in:</strong> different Vref formula, different microstep jumper mapping, and on some boards the pinout is reversed — check orientation before power-up or you will destroy them.</div>
+      </div>
+    </label>
+
+    <label class="row p3"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">ESP32 FluidNC controller</div>
+        <div class="spec">MKS DLC32, or a FluidNC 6-pack</div>
+        <div class="note">Native <code>rc_servo</code> motor type: the pen becomes an ordinary Z move, and the hand-patched GRBL timer hack goes away — along with the risk of losing it to a re-flash.</div>
+      </div>
+    </label>
+
+  </div>
+</section>
+
+<section class="tier">
+  <div class="tier-head"><span class="tier-n">TIER 8</span><h2>Actually making the art</h2></div>
+  <div class="rows">
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Gel or rollerball pens</div>
+        <div class="spec">0.5 mm · blue and red · 3+ of each</div>
+        <div class="note">Each layer of the field pieces is <strong>~36 m of continuous line</strong>. That drains most fineliners well before the end, and there is no resuming a relative file. Choose pens with a visible ink reservoir so you can see it coming.</div>
+      </div>
+    </label>
+
+    <label class="row p1"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Paper</div>
+        <div class="spec">Smooth · 200–250 gsm · A4 / A3</div>
+        <div class="note">Effective line pitch is 0.6 mm. Textured paper blurs that and chews nibs. Hot-pressed, bristol, or marker paper.</div>
+      </div>
+    </label>
+
+    <label class="row p2"><input type="checkbox" class="chk">
+      <div>
+        <div class="name">Low-tack tape</div>
+        <div class="spec">Washi or artist's masking</div>
+        <div class="note">70+ minutes of a pen dragging across the sheet. It <strong>will</strong> move if you skimp here.</div>
+      </div>
+    </label>
+
+  </div>
+</section>
+
+<div class="avoid">
+  <h2>Do not buy</h2>
+  <dl>
+    <dt>A bigger 24 V PSU</dt>
+    <dd>It is a Mean Well LRS-350-24 — 14.6 A against three motors drawing 0.84 A/phase. An order of magnitude of headroom. Not the weak link.</dd>
+    <dt>A stronger servo</dt>
+    <dd>The MG996R is already oversized. The problem is getting current <em>to</em> it — and a 2.5 mm eccentric cam would need <strong>twelve times less torque</strong> than the current 30 mm crank. Geometry beats amperes here.</dd>
+    <dt>Anything to make 180 mm work</dt>
+    <dd>Size was never what failed. The reset at line 3014 was mid-row, well inside the drawn area.</dd>
+  </dl>
+</div>
+
+<div class="three">
+  <h2>If you only buy three things</h2>
+  <p><strong>The multimeter, the USB cable and isolator, and the capacitor set.</strong> Roughly a third of the total, and between them they cover measurement, the untested suspect, and both queued electrical fixes.</p>
+</div>
+
+<footer>Checkboxes are remembered in this browser only. Full list committed at docs/SHOPPING.md</footer>
+
+</div>
+
+<script>
+(function(){
+  var KEY="plotter-parts-v1", rows=document.querySelectorAll(".row"), saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){ saved={}; }
+  rows.forEach(function(row,i){
+    var box=row.querySelector(".chk");
+    if(saved[i]){ box.checked=true; row.classList.add("done"); }
+    box.addEventListener("change",function(){
+      row.classList.toggle("done",box.checked);
+      saved[i]=box.checked;
+      try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){}
+    });
+  });
+})();
+</script>
+
+</body></html>

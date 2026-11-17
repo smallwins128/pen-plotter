@@ -1,0 +1,265 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Etch Inlay Studies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a proof sheet. Each card shows the whole panel for placement, then the corner close up. */
+:root {
+  --bg: #eceef0; --paper: #f7f8f9; --ink: #1d2226; --muted: #5b646c; --line: #c9ced3; --accent: #9a4a22; --focus: #2b5fb8;
+  --f-display: "Big Shoulders Stencil Display", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #e08a5c; --focus: #7aa7ff; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #15181b; --paper: #1d2125; --ink: #e4e8eb; --muted: #98a2ab; --line: #343b42; --accent: #e08a5c; --focus: #7aa7ff; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 20px; }
+h1 { font: 800 clamp(34px, 6vw, 54px)/0.95 var(--f-display); letter-spacing: 0.02em; margin: 0; }
+.lede { margin: 0; max-width: 70ch; color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 12px; border-block: 1px solid var(--line); }
+.label { font: 500 11px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+.seg { font: 500 13px/1 var(--f-body); padding: 8px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; border-radius: 4px; }
+.seg[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 18px; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.card h2 { font: 800 26px/1 var(--f-display); letter-spacing: 0.02em; margin: 0; }
+.where { font: 500 11px/1.3 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.card p { margin: 0; color: var(--muted); font-size: 14px; }
+.ref { font: 400 12px/1.3 var(--f-mono); color: var(--muted); }
+canvas { width: 100%; display: block; }
+canvas.over { width: 62%; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.facts li { font: 400 11.5px/1.3 var(--f-mono); border: 1px solid var(--line); padding: 3px 7px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+footer { color: var(--muted); font-size: 13.5px; max-width: 80ch; display: grid; gap: 8px; }
+footer b { color: var(--ink); }
+</style>
+
+<div class="wrap">
+  <h1>ETCH · CORNER MARKS</h1>
+  <p class="lede">One small mark per box, black print only. The steel is cut, and a black print behind it fills the cuts or pushes pins through them.</p>
+
+  <div class="controls" role="group" aria-label="View">
+    <span class="label">View</span>
+    <button class="seg" id="v-asm" data-v="asm" aria-pressed="true">Assembled</button>
+    <button class="seg" id="v-steel" data-v="steel" aria-pressed="false">Laser-cut steel</button>
+    <button class="seg" id="v-print" data-v="print" aria-pressed="false">Black print only</button>
+  </div>
+
+  <div class="grid">
+    <article class="card">
+      <span class="where">Control lid · front-right corner</span><h2>A · Cell monogram</h2>
+      <span class="ref">like your brass "DF" plate</span>
+      <canvas class="over" data-study="mono" data-mode="over"></canvas>
+      <canvas data-study="mono" data-mode="zoom"></canvas>
+      <p>A 64 mm square of cells with a bold E in steel. Every cell is filled flush by one black print, so it reads as steel on black and the laptop still sits flat.</p>
+      <ul class="facts"><li>64 × 64</li><li>webs 2 · E bars 4.5</li><li>flush</li></ul>
+    </article>
+    <article class="card">
+      <span class="where">Power front · bottom-right corner</span><h2>B · Hex pins</h2>
+      <span class="ref">like your hex speaker panel</span>
+      <canvas class="over" data-study="pins" data-mode="over"></canvas>
+      <canvas data-study="pins" data-mode="zoom"></canvas>
+      <p>Hex holes with black hex pins standing up to 7 mm proud, highest in the middle and fading out. The outer ring of holes stays empty and works as a small vent.</p>
+      <ul class="facts"><li>80 × 76</li><li>hex 6 AF · pitch 8.5</li><li>pins 0 – 7 proud</li></ul>
+    </article>
+    <article class="card">
+      <span class="where">Control lid · front-left corner</span><h2>C · Sunken E</h2>
+      <span class="ref">B, made safe for the laptop</span>
+      <canvas class="over" data-study="sunk" data-mode="over"></canvas>
+      <canvas data-study="sunk" data-mode="zoom"></canvas>
+      <p>The same hex holes, but the pins stay below the surface. Pins inside the E sit flush; the rest sink 3 mm into shadow, so the letter shows only when the light catches it.</p>
+      <ul class="facts"><li>64 × 64</li><li>hex 4 AF · pitch 5.8</li><li>pins 0 or −3</li></ul>
+    </article>
+  </div>
+
+  <footer>
+    <p><b>The print.</b> One black part per mark: a 1.2 mm backer plate a few mm bigger than the pattern, with the fills or pins rising from it. Plugs and pins are 0.15 mm smaller than their hole on each side. Stick it on from inside with VHB tape.</p>
+    <p><b>Rules kept.</b> Each mark sits 14 mm or more from the folded edges and clear of the lid screws and corner rivets. All steel between cuts is at least 2 mm wide and joined to the panel.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const state = { view: "asm" };
+  const BLACK = [27, 28, 30], HOLE = [9, 10, 11];
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  const texCache = new Map();
+  function brushed(w, h) {
+    const k = w + "x" + h; if (texCache.has(k)) return texCache.get(k);
+    const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d");
+    const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, "#d4d8dc"); gr.addColorStop(0.5, "#bfc4c9"); gr.addColorStop(1, "#cfd3d7");
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < h * 1.4; i++) { const y = r() * h, a = 0.02 + r() * 0.05;
+      g.strokeStyle = r() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(40,45,50,${a})`; g.lineWidth = 0.5 + r();
+      g.beginPath(); const x0 = r() * w * 0.3; g.moveTo(x0, y); g.lineTo(x0 + w * (0.4 + r() * 0.7), y + (r() - 0.5)); g.stroke(); }
+    texCache.set(k, c); return c;
+  }
+
+  // view = [x0, y0, w, h] of the panel (mm) shown in the canvas
+  function setup(cv, W, H, view) {
+    const [x0, y0, vw, vh] = view, cw = cv.clientWidth || 360, dpr = Math.min(window.devicePixelRatio || 1, 2), s = cw / vw;
+    cv.width = Math.round(cw * dpr); cv.height = Math.round(vh * s * dpr); cv.style.height = (vh * s) + "px";
+    const g = cv.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
+    g.setTransform(dpr * s, 0, 0, dpr * s, -dpr * s * x0, -dpr * s * y0);
+    const k = dpr * s;
+    if (state.view !== "print") {
+      g.fillStyle = "#c4c8cc"; g.fillRect(0, 0, W, H);
+      g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip(); g.drawImage(brushed(cv.width, cv.height), x0, y0, vw, vh); g.restore();
+      const e = 1.8, band = (x, y, w, h, v) => { const gr = v ? g.createLinearGradient(x, 0, x + w, 0) : g.createLinearGradient(0, y, 0, y + h);
+        gr.addColorStop(0, "rgba(60,66,72,0.45)"); gr.addColorStop(1, "rgba(60,66,72,0)"); g.fillStyle = gr; g.fillRect(x, y, w, h); };
+      band(0, 0, W, e, 0); band(0, 0, e, H, 1); g.save(); g.translate(W, H); g.rotate(Math.PI); band(0, 0, W, e, 0); band(0, 0, e, H, 1); g.restore();
+    }
+    return { g, k, x0, y0, cv, W, H, s, dpr };
+  }
+  function lidFixing(g, x, y) {
+    if (state.view === "print") return;
+    g.fillStyle = "#e3e6e9"; g.strokeStyle = "rgba(40,45,50,0.5)"; g.lineWidth = 0.25; g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = "#3a3f45"; g.beginPath(); g.arc(x, y, 2.75, 0, Math.PI * 2); g.fill();
+  }
+  function rivet(g, x, y) {
+    if (state.view === "print") return;
+    const gr = g.createRadialGradient(x - 0.8, y - 0.8, 0.3, x, y, 2.8); gr.addColorStop(0, "#f2f4f6"); gr.addColorStop(1, "#8d949b");
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, 2.8, 0, Math.PI * 2); g.fill();
+  }
+  const zoomOf = (b, m) => [b[0] - m, b[1] - m, b[2] - b[0] + 2 * m, b[3] - b[1] + 2 * m];
+  const lidHoles = [[11, 149.5], [445, 149.5], [228, 289]];
+  function laptopGhost(g) {
+    if (state.view === "print") return;
+    g.save(); g.strokeStyle = "rgba(40,45,50,0.35)"; g.setLineDash([3, 2]); g.lineWidth = 0.6; g.beginPath(); g.rect(76, 34, 304, 212); g.stroke(); g.restore();
+  }
+
+  // ---------- A: cell monogram (pixel rendered) ----------
+  const MONO = [378, 222, 442, 286];
+  function mono(cv, mode) {
+    const W = 456, H = 300, ctx = setup(cv, W, H, mode === "over" ? [0, 0, W, H] : zoomOf(MONO, 8)), { g, k, x0, y0 } = ctx;
+    if (mode === "over") laptopGhost(g);
+    const [ax, ay, bx, by] = MONO, F = 3, R = 7;
+    seed = 11; const seeds = [];
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) seeds.push([ax + F + (i + 0.2 + 0.6 * rnd()) * (bx - ax - 2 * F) / 4, ay + F + (j + 0.2 + 0.6 * rnd()) * (by - ay - 2 * F) / 4]);
+    const ex = ax + 15, ey = ay + 13, eb = 4.5, eh = 38;
+    const inE = (x, y) => (x >= ex && x <= ex + eb && y >= ey && y <= ey + eh) ||
+      (y >= ey && y <= ey + eb && x >= ex && x <= ex + 26) || (y >= ey + eh / 2 - eb / 2 && y <= ey + eh / 2 + eb / 2 && x >= ex && x <= ex + 20) ||
+      (y >= ey + eh - eb && y <= ey + eh && x >= ex && x <= ex + 26);
+    const inWin = (x, y) => { const X0 = ax + F, Y0 = ay + F, X1 = bx - F, Y1 = by - F; if (x < X0 || x > X1 || y < Y0 || y > Y1) return false;
+      const cx = Math.min(Math.max(x, X0 + R), X1 - R), cy = Math.min(Math.max(y, Y0 + R), Y1 - R); return Math.hypot(x - cx, y - cy) <= R; };
+    const cutAt = (x, y) => {
+      if (!inWin(x, y) || inE(x, y)) return false;
+      let d1 = 1e9, d2 = 1e9, i1 = 0;
+      seeds.forEach((s, i) => { const d = (x - s[0]) ** 2 + (y - s[1]) ** 2; if (d < d1) { d2 = d1; d1 = d; i1 = i; } else if (d < d2) d2 = d; });
+      let best = 1e9; seeds.forEach((s, i) => { if (i === i1) return; const s1 = seeds[i1], L = Math.hypot(s[0] - s1[0], s[1] - s1[1]);
+        const dist = (((x - s[0]) ** 2 + (y - s[1]) ** 2) - ((x - s1[0]) ** 2 + (y - s1[1]) ** 2)) / (2 * L); if (dist < best) best = dist; });
+      return best > 1.0;                            // 2 mm web on the cell borders
+    };
+    if (state.view === "print") { g.fillStyle = `rgb(${BLACK})`; g.beginPath(); g.roundRect(ax - 3, ay - 3, bx - ax + 6, by - ay + 6, 8); g.fill(); }
+    const px0 = Math.floor((ax - x0) * k), py0 = Math.floor((ay - y0) * k), pw = Math.ceil((bx - ax) * k), ph = Math.ceil((by - ay) * k);
+    const img = g.getImageData(px0, py0, pw, ph), d = img.data;
+    for (let j = 0; j < ph; j++) for (let i = 0; i < pw; i++) {
+      const x = (px0 + i) / k + x0, y = (py0 + j) / k + y0, o = (j * pw + i) * 4;
+      const c = cutAt(x, y);
+      if (state.view === "print") { if (!c) { d[o] = 40; d[o + 1] = 42; d[o + 2] = 45; } continue; }   // the steel's footprint shows as a groove in the print
+      if (!c) { if (cutAt(x + 0.3, y + 0.3) || cutAt(x - 0.3, y - 0.3)) { d[o] *= 0.5; d[o + 1] *= 0.5; d[o + 2] *= 0.5; } continue; }
+      const base = state.view === "steel" ? HOLE : BLACK, lines = state.view === "asm" ? 1 + 0.12 * Math.sin((x + y * 0.4) / 0.5 * Math.PI) : 1;
+      d[o] = base[0] * lines; d[o + 1] = base[1] * lines; d[o + 2] = base[2] * lines; d[o + 3] = 255;
+    }
+    g.putImageData(img, px0, py0);
+    lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
+  }
+
+  // ---------- hex helpers ----------
+  let AF = 6, PITCH = 8.5;
+  const hexPts = (cx, cy, af) => { const r = af / Math.sqrt(3), p = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; p.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); } return p; };
+  const pathOf = (g, p) => { g.beginPath(); g.moveTo(p[0][0], p[0][1]); for (let i = 1; i < p.length; i++) g.lineTo(p[i][0], p[i][1]); g.closePath(); };
+  function hexGrid(box) {
+    const [ax, ay, bx, by] = box, out = [], dy = PITCH * Math.sqrt(3) / 2;
+    for (let r = 0, y = ay + 5; y <= by - 5; r++, y += dy)
+      for (let x = ax + 5 + (r % 2 ? PITCH / 2 : 0); x <= bx - 5; x += PITCH) out.push([x, y]);
+    return out;
+  }
+  function hole(g, cx, cy, view) {
+    if (view === "print") return;
+    pathOf(g, hexPts(cx, cy, AF)); g.fillStyle = `rgb(${HOLE})`; g.fill();
+    if (view === "asm" || view === "steel") { g.strokeStyle = "rgba(20,22,26,0.55)"; g.lineWidth = 0.3; g.stroke(); }
+  }
+  // a pin standing h mm proud, drawn in a slight oblique so its height reads from the front
+  function pin(g, cx, cy, h, onBacker) {
+    const ox = 0.55 * h, oy = -0.55 * h, base = hexPts(cx, cy, AF - 0.3), top = base.map(([x, y]) => [x + ox, y + oy]);
+    if (!onBacker) { g.save(); g.fillStyle = "rgba(0,0,0,0.28)"; pathOf(g, base.map(([x, y]) => [x + h * 0.25, y + h * 0.3])); g.fill(); g.restore(); }
+    for (let i = 0; i < 6; i++) {
+      const a = base[i], b = base[(i + 1) % 6], c = top[(i + 1) % 6], dpt = top[i];
+      const nx = (a[1] + b[1]) / 2 - cy, ny = -((a[0] + b[0]) / 2 - cx), lit = ((a[0] + b[0]) / 2 - cx) * -0.5 + ((a[1] + b[1]) / 2 - cy) * -0.85;
+      g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(c[0], c[1]); g.lineTo(dpt[0], dpt[1]); g.closePath();
+      const v = Math.round(14 + Math.max(0, lit) * 16 + Math.max(0, -lit) * 0); g.fillStyle = `rgb(${v},${v + 1},${v + 3})`; g.fill();
+    }
+    pathOf(g, top); g.fillStyle = "rgb(58,61,65)"; g.fill();
+    g.strokeStyle = "rgba(255,255,255,0.28)"; g.lineWidth = 0.3; g.stroke();
+  }
+
+  // ---------- B: hex pins, standing proud ----------
+  const PINS = [352, 86, 432, 162];
+  function pins(cv, mode) {
+    const W = 452, H = 171, ctx = setup(cv, W, H, mode === "over" ? [0, 0, W, H] : zoomOf(PINS, 8)), { g } = ctx;
+    if (state.view !== "print") for (let r = 0; r < 3; r++) for (let i = 0; i < [7, 5, 3][r]; i++) {
+      const x = W / 2 + 185 - i * 34, y = 28 + r * 10; g.save(); g.lineCap = "round"; g.strokeStyle = "#121417"; g.lineWidth = 3.5; g.beginPath(); g.moveTo(x - 12.25, y); g.lineTo(x + 12.25, y); g.stroke(); g.restore();
+    }
+    const cx = (PINS[0] + PINS[2]) / 2, cy = (PINS[1] + PINS[3]) / 2;
+    const cells = hexGrid(PINS).map(([x, y]) => { const r = Math.hypot((x - cx) / 36, (y - cy) / 34);
+      const h = Math.max(0, 7 * Math.cos(Math.min(1, r) * Math.PI / 2) ** 1.3 + 0.8 * Math.sin(x / 6 + y / 9)) * (r < 0.98 ? 1 : 0);
+      return [x, y, h < 0.6 ? 0 : h, r]; });
+    if (state.view === "print") { g.fillStyle = `rgb(${BLACK})`; g.beginPath(); g.roundRect(PINS[0] - 3, PINS[1] - 3, PINS[2] - PINS[0] + 6, PINS[3] - PINS[1] + 6, 6); g.fill(); }
+    cells.forEach(([x, y]) => hole(g, x, y, state.view));
+    if (state.view !== "steel") cells.slice().sort((a, b) => (a[1] - a[0]) - (b[1] - b[0])).forEach(([x, y, h]) => {
+      if (h > 0) pin(g, x, y, h + (state.view === "print" ? 1.2 : 0), state.view === "print");
+      else if (state.view === "print") { /* empty position: a hole through the backer too */ pathOf(g, hexPts(x, y, AF)); g.fillStyle = css("--paper"); g.fill(); }
+    });
+    [[-1, 0.3], [-1, 0.7], [1, 0.3], [1, 0.7]].forEach(([sx, f]) => rivet(g, W / 2 + sx * 217.5, H - H * f));
+  }
+
+  // ---------- C: sunken E ----------
+  const SUNK = [14, 222, 78, 286];
+  function sunk(cv, mode) {
+    const W = 456, H = 300, ctx = setup(cv, W, H, mode === "over" ? [0, 0, W, H] : zoomOf(SUNK, 8)), { g } = ctx;
+    if (mode === "over") laptopGhost(g);
+    const [ax, ay] = SUNK, ex = ax + 15, ey = ay + 10, eb = 8, eh = 44;
+    const inE = (x, y) => (x >= ex && x <= ex + eb && y >= ey && y <= ey + eh) || (y >= ey && y <= ey + eb && x >= ex && x <= ex + 33) ||
+      (y >= ey + eh / 2 - eb / 2 && y <= ey + eh / 2 + eb / 2 && x >= ex && x <= ex + 27) || (y >= ey + eh - eb && y <= ey + eh && x >= ex && x <= ex + 33);
+    AF = 4; PITCH = 5.8;
+    const cells = hexGrid(SUNK).map(([x, y]) => [x, y, inE(x, y) ? 0 : 3]);
+    if (state.view === "print") {
+      g.fillStyle = `rgb(${BLACK})`; g.beginPath(); g.roundRect(SUNK[0] - 3, SUNK[1] - 3, 70, 70, 6); g.fill();
+      cells.slice().sort((a, b) => (a[1] - a[0]) - (b[1] - b[0])).forEach(([x, y, dpt]) => pin(g, x, y, 1.2 + (3 - dpt) * 0.9, true));
+    } else {
+      for (const [x, y, dpt] of cells) {
+        hole(g, x, y, state.view);
+        if (state.view === "steel") continue;
+        // pin top seen down the hole: lit where the steel rim does not shade it
+        g.save(); pathOf(g, hexPts(x, y, AF)); g.clip();
+        g.fillStyle = dpt ? "rgb(5,6,7)" : "rgb(56,59,63)"; g.fill();
+        if (dpt) { pathOf(g, hexPts(x + dpt * 0.75, y + dpt * 0.95, AF)); g.fillStyle = "rgb(20,21,23)"; g.fill(); }
+        else { g.strokeStyle = "rgba(255,255,255,0.22)"; g.lineWidth = 0.3; pathOf(g, hexPts(x, y, AF - 0.4)); g.stroke(); }
+        g.restore();
+      }
+    }
+    AF = 6; PITCH = 8.5;
+    lidHoles.forEach(([x, y]) => lidFixing(g, x, y));
+  }
+
+  const studies = { mono, pins, sunk };
+  function drawAll() { document.querySelectorAll("canvas[data-study]").forEach(cv => studies[cv.dataset.study](cv, cv.dataset.mode)); }
+  document.querySelectorAll("[data-v]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-v]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); state.view = b.dataset.v; drawAll(); }));
+  let tm; window.addEventListener("resize", () => { clearTimeout(tm); tm = setTimeout(drawAll, 120); });
+  try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll); } catch (e) {}
+  new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  drawAll();
+})();
+</script>
+
+</body></html>
