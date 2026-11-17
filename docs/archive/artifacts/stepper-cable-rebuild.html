@@ -1,0 +1,428 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Stepper Cable Rebuild — Bench Reference</title>
+<style>
+  :root {
+    --ground: #eef1f3;
+    --surface: #ffffff;
+    --surface-2: #f6f8f9;
+    --ink: #1a2027;
+    --muted: #5b6771;
+    --hairline: #d6dce0;
+    --accent: #b4622e;     /* copper / solder */
+    --accent-soft: #f0e0d3;
+    --coilA: #2f6fb0;      /* coil pair A */
+    --coilB: #268a5e;      /* coil pair B */
+    --danger: #b23b2e;
+    --shadow: 0 1px 2px rgba(20,30,40,.06), 0 8px 24px rgba(20,30,40,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e1318;
+      --surface: #151c23;
+      --surface-2: #1b232b;
+      --ink: #e7ecef;
+      --muted: #94a2ac;
+      --hairline: #2a343d;
+      --accent: #e08a4e;
+      --accent-soft: #33261c;
+      --coilA: #5ea0dd;
+      --coilB: #48c08a;
+      --danger: #e0685a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0e1318;
+    --surface: #151c23;
+    --surface-2: #1b232b;
+    --ink: #e7ecef;
+    --muted: #94a2ac;
+    --hairline: #2a343d;
+    --accent: #e08a4e;
+    --accent-soft: #33261c;
+    --coilA: #5ea0dd;
+    --coilB: #48c08a;
+    --danger: #e0685a;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px 64px;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  header { margin-bottom: 28px; }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 40px);
+    line-height: 1.08;
+    letter-spacing: -.02em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+    font-weight: 700;
+  }
+  .lede {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  section { margin-top: 28px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 22px 22px;
+    box-shadow: var(--shadow);
+  }
+
+  .rule {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 12px 12px 0;
+    padding: 16px 18px;
+  }
+  .rule .k {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+  .rule p { margin: 0; font-size: 15.5px; }
+  .rule strong { font-weight: 700; }
+
+  h2 {
+    font-size: 13px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 600;
+  }
+
+  /* diagram */
+  .diagram { overflow-x: auto; }
+  .diagram svg { display: block; width: 100%; min-width: 520px; height: auto; }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 14px;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
+  .swatch.dash { background-image: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 9px); height: 3px; }
+
+  /* parts */
+  ul.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  ul.parts li {
+    display: flex; gap: 12px; align-items: baseline;
+    padding-bottom: 10px; border-bottom: 1px solid var(--hairline);
+    font-size: 15px;
+  }
+  ul.parts li:last-child { border-bottom: none; padding-bottom: 0; }
+  ul.parts .tag {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11.5px; color: var(--accent);
+    border: 1px solid var(--hairline); border-radius: 5px;
+    padding: 1px 7px; white-space: nowrap;
+  }
+
+  /* steps */
+  ol.steps { counter-reset: s; list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  ol.steps li {
+    counter-increment: s;
+    display: grid; grid-template-columns: 30px 1fr; gap: 14px; align-items: start;
+    font-size: 15px;
+  }
+  ol.steps li::before {
+    content: counter(s);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 14px; font-weight: 600;
+    color: var(--accent);
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    border: 1px solid var(--hairline); border-radius: 8px;
+    background: var(--surface-2);
+  }
+  ol.steps b { font-weight: 650; }
+
+  /* checklist */
+  ul.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  ul.check li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; font-size: 15px; align-items: start; }
+  ul.check li::before {
+    content: "";
+    width: 18px; height: 18px; margin-top: 2px;
+    border: 2px solid var(--coilB); border-radius: 5px;
+    display: block;
+  }
+  .danger-note {
+    margin-top: 16px; font-size: 14px; color: var(--muted);
+    display: flex; gap: 10px; align-items: baseline;
+  }
+  .danger-note .b { color: var(--danger); font-weight: 700; white-space: nowrap; font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: .08em; }
+
+  .final {
+    margin-top: 28px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 14px;
+    background: var(--surface-2);
+    border: 1px dashed var(--hairline);
+    border-radius: 10px;
+    padding: 16px 18px;
+    color: var(--ink);
+  }
+  .final .arrow { color: var(--accent); }
+
+  footer { margin-top: 40px; font-size: 12.5px; color: var(--muted); text-align: center; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Pen Plotter · Bench Reference</p>
+    <h1>Rebuild the long stepper cable</h1>
+    <p class="lede">The 1.75&nbsp;m run was starving one coil — one motor jittered instead of turning. Rebuild it as a single, twisted, correctly-ordered cable and the jitter is gone.</p>
+  </header>
+
+  <section>
+    <div class="rule">
+      <span class="k">Rule&nbsp;#1</span>
+      <p><strong>Copy the working axis exactly.</strong> Wire the new cable's color&nbsp;→&nbsp;pin order identically to the axis that already jogs clean. That single habit removes every coil-pairing mistake that caused the jitter.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Wiring map</h2>
+    <div class="diagram">
+      <svg viewBox="0 0 680 250" role="img" aria-label="Motor JST-XH four-pin connector wired through a twisted-pair cable to a Dupont four-pin connector on the CNC shield, coil pairs kept together and pin order identical at both ends.">
+        <!-- pair grouping backgrounds -->
+        <rect x="150" y="40" width="380" height="60" rx="8" fill="var(--coilA)" opacity="0.08"/>
+        <rect x="150" y="118" width="380" height="60" rx="8" fill="var(--coilB)" opacity="0.10"/>
+
+        <!-- motor -->
+        <rect x="8" y="46" width="120" height="128" rx="10" fill="var(--surface-2)" stroke="var(--hairline)" stroke-width="1.5"/>
+        <text x="68" y="104" text-anchor="middle" fill="var(--ink)" font-family="ui-monospace, Menlo, monospace" font-size="15" font-weight="600">NEMA 17</text>
+        <text x="68" y="124" text-anchor="middle" fill="var(--muted)" font-family="ui-monospace, Menlo, monospace" font-size="11">motor</text>
+
+        <!-- JST connector -->
+        <rect x="128" y="54" width="24" height="112" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="140" y="196" text-anchor="middle" fill="var(--muted)" font-family="ui-monospace, Menlo, monospace" font-size="11">JST-XH</text>
+
+        <!-- Dupont connector -->
+        <rect x="528" y="54" width="24" height="112" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="540" y="196" text-anchor="middle" fill="var(--muted)" font-family="ui-monospace, Menlo, monospace" font-size="11">Dupont</text>
+
+        <!-- shield -->
+        <rect x="552" y="46" width="120" height="128" rx="10" fill="var(--surface-2)" stroke="var(--hairline)" stroke-width="1.5"/>
+        <text x="612" y="104" text-anchor="middle" fill="var(--ink)" font-family="ui-monospace, Menlo, monospace" font-size="14" font-weight="600">CNC shield</text>
+        <text x="612" y="124" text-anchor="middle" fill="var(--muted)" font-family="ui-monospace, Menlo, monospace" font-size="11">A4988</text>
+
+        <!-- wires: A1 solid, A2 dashed, B1 solid, B2 dashed -->
+        <line x1="152" y1="58" x2="528" y2="58" stroke="var(--coilA)" stroke-width="3"/>
+        <line x1="152" y1="82" x2="528" y2="82" stroke="var(--coilA)" stroke-width="3" stroke-dasharray="6 5"/>
+        <line x1="152" y1="136" x2="528" y2="136" stroke="var(--coilB)" stroke-width="3"/>
+        <line x1="152" y1="160" x2="528" y2="160" stroke="var(--coilB)" stroke-width="3" stroke-dasharray="6 5"/>
+
+        <!-- pin dots -->
+        <g fill="var(--coilA)">
+          <circle cx="152" cy="58" r="4"/><circle cx="528" cy="58" r="4"/>
+          <circle cx="152" cy="82" r="4"/><circle cx="528" cy="82" r="4"/>
+        </g>
+        <g fill="var(--coilB)">
+          <circle cx="152" cy="136" r="4"/><circle cx="528" cy="136" r="4"/>
+          <circle cx="152" cy="160" r="4"/><circle cx="528" cy="160" r="4"/>
+        </g>
+
+        <!-- pin labels both ends, identical order -->
+        <g font-family="ui-monospace, Menlo, monospace" font-size="12" font-weight="600">
+          <text x="170" y="62" fill="var(--coilA)">A1</text>
+          <text x="170" y="86" fill="var(--coilA)">A2</text>
+          <text x="170" y="140" fill="var(--coilB)">B1</text>
+          <text x="170" y="164" fill="var(--coilB)">B2</text>
+          <text x="510" y="62" fill="var(--coilA)" text-anchor="end">A1</text>
+          <text x="510" y="86" fill="var(--coilA)" text-anchor="end">A2</text>
+          <text x="510" y="140" fill="var(--coilB)" text-anchor="end">B1</text>
+          <text x="510" y="164" fill="var(--coilB)" text-anchor="end">B2</text>
+        </g>
+
+        <!-- twist labels -->
+        <text x="340" y="34" text-anchor="middle" fill="var(--coilA)" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1">COIL A — TWIST PAIR</text>
+        <text x="340" y="200" text-anchor="middle" fill="var(--coilB)" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1">COIL B — TWIST PAIR</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span style="color:var(--coilA)"><i class="swatch" style="background:var(--coilA)"></i> Coil A leads (A1 / A2)</span>
+      <span style="color:var(--coilB)"><i class="swatch" style="background:var(--coilB)"></i> Coil B leads (B1 / B2)</span>
+      <span><i class="swatch dash" style="color:var(--muted)"></i> two leads of one coil</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Parts to buy</h2>
+    <ul class="parts">
+      <li><span class="tag">cable</span> 4-conductor 22&nbsp;AWG, shielded if available — cut to the true length you need, shorter than 1.75&nbsp;m if routing allows.</li>
+      <li><span class="tag">motor end</span> JST-XH 2.5&nbsp;mm 4-pin pigtail (pre-crimped). Confirm your NEMA plug is XH 4-pin before ordering.</li>
+      <li><span class="tag">shield end</span> Dupont 2.54&nbsp;mm 4-pin pigtail (pre-crimped).</li>
+      <li><span class="tag">consumables</span> Solder + heatshrink (per-joint and one bundle sleeve).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Build it</h2>
+    <ol class="steps">
+      <li><b>Match the working axis.</b> Note its color&nbsp;→&nbsp;pin order and wire the new cable identically.</li>
+      <li><b>Solder cable to pigtails</b> — keep each coil's two leads together, one clean unbroken conductor per wire.</li>
+      <li><b>Twist each pair</b> (A1+A2, B1+B2) along the whole run to reject noise.</li>
+      <li><b>Heatshrink every joint,</b> then sleeve the bundle. No loose twists.</li>
+      <li><b>Strain-relief both ends</b> — anchor or cable chain so gantry motion never flexes a solder joint.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Verify before power</h2>
+    <ul class="check">
+      <li>Each motor-end pin runs <b>straight through</b> to the same shield-end pin — probe pin-to-pin, confirm nothing is crossed.</li>
+      <li>Each <b>coil pair reads ~2–4&nbsp;Ω</b>; a lead from coil A to coil B reads <b>open</b>.</li>
+      <li>If shielded: tie the shield to <b>GND at the shield end only</b> (leave motor end floating).</li>
+    </ul>
+    <p class="danger-note"><span class="b">Don't</span> chain Dupont jumper wires for the run — that is the exact thing that caused the jitter.</p>
+  </section>
+
+  <section class="card">
+    <h2>Alt fix — drive Y with the TB6600</h2>
+    <p style="margin:0 0 16px;color:var(--muted);font-size:15px;max-width:62ch;">
+      Its opto-isolated inputs and current headroom shrug off a long, noisy cable — often killing the jitter on their own. Keep <b style="color:var(--ink)">X on the shield</b>; route only <b style="color:var(--ink)">Y</b> to the TB6600. Pull the Y A4988 out (GRBL still outputs Y step/dir on D3/D6).
+    </p>
+    <div class="diagram">
+      <svg viewBox="0 0 700 360" role="img" aria-label="Wiring the Y axis to a TB6600: shield STEP D3 to PUL+, DIR D6 to DIR+, shield GND to PUL minus and DIR minus, TB6600 A and B terminals to the Y motor coils, VCC and GND to the SMPS, and a common ground tying signal ground to power ground.">
+        <!-- shield -->
+        <rect x="10" y="60" width="150" height="150" rx="10" fill="var(--surface-2)" stroke="var(--hairline)" stroke-width="1.5"/>
+        <text x="85" y="118" text-anchor="middle" fill="var(--ink)" font-family="ui-monospace,Menlo,monospace" font-size="13" font-weight="600">Arduino +</text>
+        <text x="85" y="136" text-anchor="middle" fill="var(--ink)" font-family="ui-monospace,Menlo,monospace" font-size="13" font-weight="600">CNC shield</text>
+        <text x="85" y="192" text-anchor="middle" fill="var(--muted)" font-family="ui-monospace,Menlo,monospace" font-size="10.5">X driver stays</text>
+
+        <!-- shield pins -->
+        <g font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">
+          <circle cx="160" cy="88" r="4" fill="var(--accent)"/><text x="152" y="92" text-anchor="end" fill="var(--accent)">STEP D3</text>
+          <circle cx="160" cy="122" r="4" fill="var(--accent)"/><text x="152" y="126" text-anchor="end" fill="var(--accent)">DIR D6</text>
+          <circle cx="160" cy="172" r="4" fill="var(--ink)"/><text x="152" y="176" text-anchor="end" fill="var(--ink)">GND</text>
+        </g>
+
+        <!-- TB6600 -->
+        <rect x="300" y="52" width="180" height="200" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="390" y="44" text-anchor="middle" fill="var(--ink)" font-family="ui-monospace,Menlo,monospace" font-size="14" font-weight="700">TB6600</text>
+
+        <!-- TB6600 signal terminals (left) -->
+        <g font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">
+          <circle cx="300" cy="90" r="4" fill="var(--accent)"/><text x="310" y="94" fill="var(--accent)">PUL+</text>
+          <circle cx="300" cy="118" r="4" fill="var(--ink)"/><text x="310" y="122" fill="var(--ink)">PUL−</text>
+          <circle cx="300" cy="146" r="4" fill="var(--accent)"/><text x="310" y="150" fill="var(--accent)">DIR+</text>
+          <circle cx="300" cy="174" r="4" fill="var(--ink)"/><text x="310" y="178" fill="var(--ink)">DIR−</text>
+          <text x="310" y="212" fill="var(--muted)">ENA± — n/c</text>
+        </g>
+        <!-- TB6600 motor terminals (right) -->
+        <g font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600" text-anchor="end">
+          <circle cx="480" cy="95" r="4" fill="var(--coilA)"/><text x="470" y="99" fill="var(--coilA)">A+</text>
+          <circle cx="480" cy="123" r="4" fill="var(--coilA)"/><text x="470" y="127" fill="var(--coilA)">A−</text>
+          <circle cx="480" cy="160" r="4" fill="var(--coilB)"/><text x="470" y="164" fill="var(--coilB)">B+</text>
+          <circle cx="480" cy="188" r="4" fill="var(--coilB)"/><text x="470" y="192" fill="var(--coilB)">B−</text>
+        </g>
+        <!-- TB6600 power terminals (bottom) -->
+        <g font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600" text-anchor="middle">
+          <circle cx="350" cy="252" r="4" fill="var(--danger)"/><text x="350" y="240" fill="var(--danger)">VCC</text>
+          <circle cx="410" cy="252" r="4" fill="var(--ink)"/><text x="415" y="240" fill="var(--ink)" text-anchor="start">GND</text>
+        </g>
+
+        <!-- motor -->
+        <circle cx="615" cy="140" r="42" fill="var(--surface-2)" stroke="var(--hairline)" stroke-width="1.5"/>
+        <text x="615" y="138" text-anchor="middle" fill="var(--ink)" font-family="ui-monospace,Menlo,monospace" font-size="12" font-weight="600">Y</text>
+        <text x="615" y="153" text-anchor="middle" fill="var(--muted)" font-family="ui-monospace,Menlo,monospace" font-size="10">motor</text>
+
+        <!-- signal wires -->
+        <polyline points="160,88 250,88 300,90" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+        <polyline points="160,122 250,122 300,146" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+
+        <!-- ground: shield GND -> PUL- and DIR- -->
+        <polyline points="160,172 250,172 250,118 300,118" fill="none" stroke="var(--ink)" stroke-width="2.2"/>
+        <polyline points="250,172 250,174 300,174" fill="none" stroke="var(--ink)" stroke-width="2.2"/>
+
+        <!-- motor coil wires -->
+        <polyline points="480,95 545,95 545,120 573,120" fill="none" stroke="var(--coilA)" stroke-width="2.2"/>
+        <polyline points="480,123 552,123 552,132 573,132" fill="none" stroke="var(--coilA)" stroke-width="2.2"/>
+        <polyline points="480,160 552,160 552,150 573,150" fill="none" stroke="var(--coilB)" stroke-width="2.2"/>
+        <polyline points="480,188 545,188 545,162 573,162" fill="none" stroke="var(--coilB)" stroke-width="2.2"/>
+
+        <!-- SMPS -->
+        <rect x="300" y="300" width="170" height="46" rx="8" fill="var(--surface-2)" stroke="var(--hairline)" stroke-width="1.5"/>
+        <text x="385" y="328" text-anchor="middle" fill="var(--ink)" font-family="ui-monospace,Menlo,monospace" font-size="12" font-weight="600">SMPS 12–24V</text>
+        <circle cx="350" cy="300" r="4" fill="var(--danger)"/>
+        <circle cx="410" cy="300" r="4" fill="var(--ink)"/>
+
+        <!-- power wires -->
+        <polyline points="350,252 350,300" fill="none" stroke="var(--danger)" stroke-width="2.2"/>
+        <polyline points="410,252 410,300" fill="none" stroke="var(--ink)" stroke-width="2.2"/>
+
+        <!-- COMMON GROUND link: signal gnd vertical (x=250) tied to power gnd (x=410) -->
+        <polyline points="250,174 250,282 410,282" fill="none" stroke="var(--ink)" stroke-width="3.4"/>
+        <text x="250" y="300" text-anchor="middle" fill="var(--accent)" font-family="ui-monospace,Menlo,monospace" font-size="10.5" font-weight="700" letter-spacing="0.5">COMMON GROUND</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span style="color:var(--accent)"><i class="swatch" style="background:var(--accent)"></i> Step / Dir signal</span>
+      <span style="color:var(--ink)"><i class="swatch" style="background:var(--ink)"></i> Ground (all tied)</span>
+      <span style="color:var(--danger)"><i class="swatch" style="background:var(--danger)"></i> Motor power +</span>
+      <span style="color:var(--coilA)"><i class="swatch" style="background:var(--coilA)"></i> Coil A</span>
+      <span style="color:var(--coilB)"><i class="swatch" style="background:var(--coilB)"></i> Coil B</span>
+    </div>
+
+    <div class="rule" style="margin-top:18px;">
+      <span class="k">Ground</span>
+      <p><strong>Tie all grounds together.</strong> Shield GND, TB6600 <span class="mono">PUL−/DIR−</span>, TB6600 power <span class="mono">GND</span>, and the SMPS negative must be one common ground — that's the thick line. Skip it and the opto inputs float and won't step. This is the #1 mixed-driver mistake.</p>
+    </div>
+
+    <ul class="check" style="margin-top:18px;">
+      <li><b>DIP switches:</b> current ≈ <b>0.8&nbsp;A</b> (Ender motors are 0.84&nbsp;A rated — don't exceed); microstep <b>1/8 or 1/16</b>.</li>
+      <li><b>ENA</b> left unconnected = driver always enabled. Fine to start.</li>
+      <li>Now X and Y have different microstepping → <b>recalibrate <span class="mono">$100</span> / <span class="mono">$101</span> separately</b> (jog 100&nbsp;mm, measure, correct).</li>
+    </ul>
+  </section>
+
+  <div class="final">
+    Then: power <b>OFF</b> <span class="arrow">→</span> plug in <span class="arrow">→</span> power <b>ON</b> <span class="arrow">→</span> jog at 100&nbsp;mm/min. It should move clean.
+  </div>
+
+  <footer>Pen plotter build · cable rebuild reference</footer>
+</div>
+
+</body></html>

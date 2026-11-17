@@ -1,0 +1,960 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Nineteen-Wire Control Box</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  :root{
+    --ground:#EFF2F1; --surface:#FFFFFF; --surface-2:#E3E8E6; --sunk:#DCE2E0;
+    --ink:#151918; --ink-2:#4C5654; --ink-3:#727E7B;
+    --rule:#C5CDCA; --rule-soft:#D8DEDC;
+    --mains:#A8641A; --rail:#BC3227; --zero:#1F6B66; --earth:#6C8A14;
+    --mains-wash:#F6EADB; --rail-wash:#F8E4E1; --zero-wash:#DFEEEC;
+    --display:"Archivo",-apple-system,"Segoe UI",sans-serif;
+    --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#121615; --surface:#1A1F1E; --surface-2:#232A28; --sunk:#0D110F;
+      --ink:#E9EDEB; --ink-2:#9DA9A6; --ink-3:#7C8885;
+      --rule:#333B39; --rule-soft:#272E2C;
+      --mains:#E19A42; --rail:#F26E5F; --zero:#4FC3B8; --earth:#AECB44;
+      --mains-wash:#2A2116; --rail-wash:#2C1A18; --zero-wash:#122624;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#121615; --surface:#1A1F1E; --surface-2:#232A28; --sunk:#0D110F;
+    --ink:#E9EDEB; --ink-2:#9DA9A6; --ink-3:#7C8885;
+    --rule:#333B39; --rule-soft:#272E2C;
+    --mains:#E19A42; --rail:#F26E5F; --zero:#4FC3B8; --earth:#AECB44;
+    --mains-wash:#2A2116; --rail-wash:#2C1A18; --zero-wash:#122624;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:var(--body); font-size:17px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1140px; margin:0 auto; padding:0 26px 96px}
+  .col{max-width:68ch}
+  p{margin:0 0 1.05em}
+  a{color:var(--zero)}
+  strong{font-weight:600}
+  h2,h3{font-family:var(--display); text-wrap:balance; margin:0}
+  h2{font-size:clamp(1.5rem,2.6vw,2rem); font-weight:700; letter-spacing:-.015em; line-height:1.15}
+  h3{font-size:1.06rem; font-weight:600; letter-spacing:-.005em; margin:2.2em 0 .5em}
+  .eyebrow{
+    font-family:var(--mono); font-size:.7rem; font-weight:500;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3);
+    margin:0 0 .5em;
+  }
+
+  /* ---- title block ---- */
+  .titleblock{border:1.5px solid var(--ink); background:var(--surface); margin:44px 0 8px}
+  .tb-main{padding:26px 28px 22px; border-bottom:1.5px solid var(--ink)}
+  .tb-main h1{
+    font-family:var(--display); font-weight:700; letter-spacing:-.028em;
+    font-size:clamp(2rem,5.2vw,3.15rem); line-height:1.02; margin:0 0 .3em;
+  }
+  .tb-main .sub{font-size:1.05rem; color:var(--ink-2); margin:0; max-width:60ch}
+  .tb-grid{display:grid; grid-template-columns:repeat(4,1fr)}
+  .tb-cell{padding:12px 16px; border-right:1px solid var(--rule)}
+  .tb-cell:last-child{border-right:0}
+  .tb-cell dt{
+    font-family:var(--mono); font-size:.66rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-3); margin:0 0 3px;
+  }
+  .tb-cell dd{font-family:var(--display); font-weight:600; font-size:.95rem; margin:0}
+  @media (max-width:640px){ .tb-grid{grid-template-columns:repeat(2,1fr)}
+    .tb-cell:nth-child(2){border-right:0} .tb-cell:nth-child(1),.tb-cell:nth-child(2){border-bottom:1px solid var(--rule)} }
+
+  section{margin-top:64px}
+  .rule-top{border-top:1.5px solid var(--ink); padding-top:14px}
+
+  /* ---- figures ---- */
+  figure{margin:30px 0 0; background:var(--surface); border:1px solid var(--rule); padding:22px 22px 6px}
+  .figscroll{overflow-x:auto}
+  figure svg{display:block; width:100%; min-width:560px; height:auto}
+  figcaption{
+    font-family:var(--mono); font-size:.76rem; line-height:1.55; color:var(--ink-2);
+    border-top:1px solid var(--rule-soft); margin-top:16px; padding:12px 0 14px;
+  }
+  figcaption b{color:var(--ink); font-weight:500}
+
+  .legend{display:flex; flex-wrap:wrap; gap:6px 20px; margin:0 0 4px; padding:0; list-style:none}
+  .legend li{font-family:var(--mono); font-size:.72rem; color:var(--ink-2); display:flex; align-items:center; gap:7px}
+  .swatch{width:16px; height:4px; border-radius:2px; flex:none}
+
+  /* ---- tables ---- */
+  .tscroll{overflow-x:auto; margin:22px 0 0; border:1px solid var(--rule); background:var(--surface)}
+  table{border-collapse:collapse; width:100%; min-width:520px; font-size:.86rem}
+  caption{
+    text-align:left; font-family:var(--mono); font-size:.7rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-3); padding:12px 16px 0;
+  }
+  th,td{text-align:left; padding:9px 16px; border-bottom:1px solid var(--rule-soft); vertical-align:top}
+  thead th{
+    font-family:var(--mono); font-weight:500; font-size:.7rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-3); border-bottom:1px solid var(--rule);
+  }
+  tbody tr:last-child td{border-bottom:0}
+  td.pin,td.mono,th.mono{font-family:var(--mono); font-size:.8rem; font-variant-numeric:tabular-nums; white-space:nowrap}
+  td.pin{color:var(--ink-2); width:1%}
+
+  /* ---- callouts ---- */
+  .note{
+    border-left:3px solid var(--zero); background:var(--surface); padding:16px 20px;
+    margin:24px 0; max-width:70ch;
+  }
+  .note.hazard{border-left-color:var(--rail)}
+  .note p:last-child{margin-bottom:0}
+  .note .lab{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-3); display:block; margin-bottom:5px;
+  }
+  .note.hazard .lab{color:var(--rail)}
+
+  /* ---- build order ---- */
+  ol.steps{list-style:none; counter-reset:s; margin:26px 0 0; padding:0; max-width:74ch}
+  ol.steps li{
+    counter-increment:s; position:relative; padding:0 0 22px 58px;
+    border-bottom:1px solid var(--rule-soft); margin-bottom:22px;
+  }
+  ol.steps li:last-child{border-bottom:0}
+  ol.steps li::before{
+    content:counter(s,decimal-leading-zero); position:absolute; left:0; top:1px;
+    font-family:var(--mono); font-size:.82rem; color:var(--zero);
+    border:1px solid var(--rule); padding:2px 8px;
+  }
+  ol.steps h3{margin:0 0 .3em; font-size:1rem}
+  ol.steps p{margin:0 0 .5em}
+  .check{font-family:var(--mono); font-size:.78rem; color:var(--ink-2); display:block}
+  .check b{color:var(--ink); font-weight:500}
+
+  ul.plain{padding-left:1.15em; max-width:68ch}
+  ul.plain li{margin-bottom:.42em}
+  code{font-family:var(--mono); font-size:.86em; background:var(--surface-2); padding:1px 5px; border-radius:2px}
+
+  footer{margin-top:72px; padding-top:16px; border-top:1.5px solid var(--ink);
+    font-family:var(--mono); font-size:.74rem; color:var(--ink-3)}
+  :focus-visible{outline:2px solid var(--zero); outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <marker id="ar-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker>
+      <marker id="ar-mains" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--mains)"/></marker>
+      <marker id="ar-rail" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--rail)"/></marker>
+      <marker id="ar-zero" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--zero)"/></marker>
+    </defs>
+  </svg>
+
+  <div class="titleblock">
+    <div class="tb-main">
+      <h1>Nineteen-Wire Control Box</h1>
+      <p class="sub">One mains inlet, one DC rail, one star ground — and every wire the plotter needs landing on a keyed panel connector.</p>
+    </div>
+    <dl class="tb-grid">
+      <div class="tb-cell"><dt>Machine</dt><dd>Uno + CNC Shield V3</dd></div>
+      <div class="tb-cell"><dt>Rails</dt><dd>24 V only</dd></div>
+      <div class="tb-cell"><dt>Interface</dt><dd>19 conductors · 6 ports</dd></div>
+      <div class="tb-cell"><dt>Folded steel</dt><dd>265 × 200 × 75 mm</dd></div>
+    </dl>
+  </div>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">The design in one paragraph</p>
+      <h2>Three supplies collapse into one</h2>
+    </div>
+    <div class="col">
+      <p>The box you sketched had three PSUs. It needs one. The Arduino runs on USB and must keep its USB data link to the Mac regardless, so a second 5 V source only fights its regulator. The endstops are bare switches to ground — GRBL's internal pull-ups power them, so they need no supply at all. And the servo's 6 V has to come from a DC-DC converter in any case, because nobody makes a 6 V mains PSU.</p>
+      <p>So: <strong>one 24 V brick, one fused distribution block, one 0 V star point.</strong> Common grounds stop being something you wire and become something the topology guarantees. The only judgement call left is <em>where</em> the servo's step-down lives — and moving it out of the box to the carriage is the single most useful thing in this whole design.</p>
+    </div>
+
+    <figure>
+      <div class="figscroll">
+      <svg viewBox="0 0 900 452" role="img" aria-label="Power schematic: mains enters a fused switched IEC inlet, feeds a 24 volt supply, which feeds a plus 24 volt bus split by three fuses to the CNC shield, the pen port and the fan; all returns land on a single 0 volt star bar, which is deliberately not bonded to protective earth.">
+        <g fill="none" stroke="currentColor" stroke-width="1.4">
+
+          <!-- mains chain -->
+          <rect x="30" y="40" width="170" height="66" fill="var(--mains-wash)" stroke="var(--mains)" stroke-width="1.6"/>
+          <rect x="235" y="40" width="175" height="66" fill="var(--surface-2)" stroke="currentColor"/>
+          <line x1="200" y1="73" x2="228" y2="73" stroke="var(--mains)" stroke-width="2.2" marker-end="url(#ar-mains)"/>
+
+          <!-- +24V feed and bus -->
+          <path d="M410 60 H468 V150" stroke="var(--rail)" stroke-width="2.6"/>
+          <line x1="468" y1="150" x2="866" y2="150" stroke="var(--rail)" stroke-width="3.4"/>
+
+          <!-- drops through fuses -->
+          <line x1="530" y1="150" x2="530" y2="176" stroke="var(--rail)" stroke-width="2.2"/>
+          <line x1="670" y1="150" x2="670" y2="176" stroke="var(--rail)" stroke-width="2.2"/>
+          <line x1="806" y1="150" x2="806" y2="176" stroke="var(--rail)" stroke-width="2.2"/>
+          <rect x="516" y="176" width="28" height="15" fill="var(--surface)" stroke="var(--rail)" stroke-width="1.6"/>
+          <rect x="656" y="176" width="28" height="15" fill="var(--surface)" stroke="var(--rail)" stroke-width="1.6"/>
+          <rect x="792" y="176" width="28" height="15" fill="var(--surface)" stroke="var(--rail)" stroke-width="1.6"/>
+          <line x1="530" y1="191" x2="530" y2="216" stroke="var(--rail)" stroke-width="2.2"/>
+          <line x1="670" y1="191" x2="670" y2="216" stroke="var(--rail)" stroke-width="2.2"/>
+          <line x1="806" y1="191" x2="806" y2="216" stroke="var(--rail)" stroke-width="2.2"/>
+
+          <!-- loads -->
+          <rect x="459" y="216" width="142" height="76" fill="var(--surface-2)" stroke="currentColor"/>
+          <rect x="609" y="216" width="124" height="76" fill="var(--surface-2)" stroke="currentColor"/>
+          <rect x="749" y="216" width="114" height="76" fill="var(--surface-2)" stroke="currentColor"/>
+
+          <!-- returns to star -->
+          <line x1="530" y1="292" x2="530" y2="360" stroke="var(--zero)" stroke-width="2.2"/>
+          <line x1="670" y1="292" x2="670" y2="360" stroke="var(--zero)" stroke-width="2.2"/>
+          <line x1="806" y1="292" x2="806" y2="360" stroke="var(--zero)" stroke-width="2.2"/>
+          <!-- PSU -V down to star -->
+          <path d="M322 106 V360" stroke="var(--zero)" stroke-width="2.6"/>
+          <!-- star bar -->
+          <line x1="250" y1="360" x2="866" y2="360" stroke="var(--zero)" stroke-width="4"/>
+
+          <!-- PE branch -->
+          <path d="M92 106 V330" stroke="var(--earth)" stroke-width="2.2"/>
+          <rect x="30" y="330" width="150" height="56" fill="var(--surface)" stroke="var(--earth)" stroke-width="1.6"/>
+          <line x1="180" y1="358" x2="248" y2="358" stroke="var(--earth)" stroke-width="1.6" stroke-dasharray="5 5"/>
+          <line x1="206" y1="348" x2="222" y2="368" stroke="var(--rail)" stroke-width="2.2"/>
+          <line x1="222" y1="348" x2="206" y2="368" stroke="var(--rail)" stroke-width="2.2"/>
+
+          <!-- USB in -->
+          <line x1="372" y1="252" x2="455" y2="252" stroke="var(--zero)" stroke-width="1.8" marker-end="url(#ar-zero)"/>
+        </g>
+
+        <g font-family="IBM Plex Mono, monospace" fill="currentColor">
+          <text x="115" y="66" font-size="12.5" text-anchor="middle" fill="var(--mains)">IEC C14 INLET</text>
+          <text x="115" y="84" font-size="11" text-anchor="middle" fill="var(--ink-2)">fused T2 A · switched</text>
+          <text x="115" y="99" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">= the emergency stop</text>
+
+          <text x="322" y="66" font-size="12.5" text-anchor="middle">LRS-100-24</text>
+          <text x="322" y="84" font-size="11" text-anchor="middle" fill="var(--ink-2)">24 V · 4.5 A</text>
+          <text x="322" y="99" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">load ≈ 2.0 A · 2.2× margin</text>
+
+          <text x="476" y="140" font-size="12" fill="var(--rail)">+24 V BUS</text>
+          <text x="551" y="188" font-size="10.5" fill="var(--rail)">F1 · 3 A</text>
+          <text x="691" y="188" font-size="10.5" fill="var(--rail)">F2 · 1.5 A</text>
+          <text x="827" y="188" font-size="10.5" fill="var(--rail)">F3 · 0.5 A</text>
+
+          <text x="530" y="243" font-size="12" text-anchor="middle">CNC SHIELD</text>
+          <text x="530" y="261" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">3 × A4988 @ 0.84 A</text>
+          <text x="530" y="277" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">220 µF at its terminals</text>
+
+          <text x="671" y="243" font-size="12" text-anchor="middle">PEN PORT</text>
+          <text x="671" y="261" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">24 V to carriage</text>
+          <text x="671" y="277" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">≈ 0.7 A</text>
+
+          <text x="806" y="243" font-size="12" text-anchor="middle">FAN</text>
+          <text x="806" y="261" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">60 mm · 24 V</text>
+          <text x="806" y="277" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">over the drivers</text>
+
+          <text x="105" y="356" font-size="12" fill="var(--earth)">PE · BOX METAL</text>
+          <text x="105" y="373" font-size="10.5" fill="var(--ink-2)">inlet earth + chassis</text>
+
+          <text x="256" y="382" font-size="12.5" fill="var(--zero)">0 V — STAR POINT</text>
+          <text x="256" y="399" font-size="10.5" fill="var(--ink-2)">one block; every return lands here, none daisy-chained</text>
+
+          <text x="214" y="410" font-size="10.5" text-anchor="middle" fill="var(--rail)">no bond</text>
+          <text x="214" y="424" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">(deliberate)</text>
+
+          <text x="372" y="248" font-size="10.5" text-anchor="end" fill="var(--zero)">USB from Mac</text>
+          <text x="372" y="263" font-size="10.5" text-anchor="end" fill="var(--ink-3)">data + Uno 5 V</text>
+        </g>
+      </svg>
+      </div>
+      <ul class="legend">
+        <li><span class="swatch" style="background:var(--mains)"></span>230 V mains</li>
+        <li><span class="swatch" style="background:var(--rail)"></span>+24 V</li>
+        <li><span class="swatch" style="background:var(--zero)"></span>0 V return</li>
+        <li><span class="swatch" style="background:var(--earth)"></span>protective earth</li>
+      </ul>
+      <figcaption><b>Figure 1 — power topology.</b> One rail, three fused branches, one star bar. The dashed crossed-out link is the connection you must <em>not</em> make: the Mac's USB cable already ties 0 V to the building's earth through the laptop, so bonding 0 V to PE inside the box creates a second path and a ground loop around the serial line.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">Panel</p>
+      <h2>Where the 19 wires land</h2>
+    </div>
+    <div class="col">
+      <p>Six ports carry everything. Steppers get GX16 shells (16 mm hole), endstops and pen get GX12 (12 mm) — <strong>different shell diameters, so a stepper lead physically cannot be pushed into the pen port.</strong> That matters more than a label, because the pen port carries 24 V on pin 1 and a servo plugged into it dies instantly.</p>
+    </div>
+
+    <figure>
+      <div class="figscroll">
+      <svg viewBox="0 0 900 470" role="img" aria-label="Two panel elevations. The 265 millimetre front face carries three 16-millimetre GX16 sockets for the X, A and Y steppers and two 12-millimetre GX12 sockets for the limit switches and the pen. The 200 millimetre right end face carries the 60 millimetre fan and the panel USB-B, which moves here because six ports will not fit the shorter front face without the USB cutout fouling the corner tab.">
+        <g fill="none" stroke="currentColor">
+          <rect x="140" y="50" width="580" height="164" fill="var(--surface-2)" stroke-width="1.6"/>
+          <circle cx="238.5" cy="132" r="17.5" fill="var(--surface)" stroke-width="1.8"/>
+          <circle cx="337.0" cy="132" r="17.5" fill="var(--surface)" stroke-width="1.8"/>
+          <circle cx="435.5" cy="132" r="17.5" fill="var(--surface)" stroke-width="1.8"/>
+          <circle cx="545.0" cy="132" r="13.1" fill="var(--surface)" stroke-width="1.8"/>
+          <circle cx="632.5" cy="132" r="13.1" fill="var(--surface)" stroke="var(--rail)" stroke-width="2"/>
+          <rect x="140" y="250" width="438" height="164" fill="var(--surface-2)" stroke-width="1.6"/>
+          <circle cx="271" cy="332" r="62" fill="var(--surface)" stroke-width="1.8"/>
+          <rect x="416" y="315" width="60" height="34" fill="var(--surface)" stroke-width="1.8"/>
+          <g fill="currentColor" stroke="none">
+            <circle cx="412" cy="332" r="2.6"/><circle cx="480" cy="332" r="2.6"/>
+          </g>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" fill="currentColor">
+          <text x="140" y="36" font-size="11" fill="var(--ink-3)">FRONT FACE · 265 mm</text>
+          <text x="238.5" y="88" font-size="12" text-anchor="middle">X</text>
+          <text x="238.5" y="188" font-size="10" text-anchor="middle" fill="var(--ink-3)">GX16-4</text>
+          <text x="337.0" y="88" font-size="12" text-anchor="middle">A</text>
+          <text x="337.0" y="188" font-size="10" text-anchor="middle" fill="var(--ink-3)">GX16-4</text>
+          <text x="435.5" y="88" font-size="12" text-anchor="middle">Y</text>
+          <text x="435.5" y="188" font-size="10" text-anchor="middle" fill="var(--ink-3)">GX16-4</text>
+          <text x="545.0" y="88" font-size="12" text-anchor="middle">LIM</text>
+          <text x="545.0" y="188" font-size="10" text-anchor="middle" fill="var(--ink-3)">GX12-4</text>
+          <text x="632.5" y="88" font-size="12" text-anchor="middle" fill="var(--rail)">PEN 24 V</text>
+          <text x="632.5" y="188" font-size="10" text-anchor="middle" fill="var(--ink-3)">GX12-3</text>
+          <text x="140" y="236" font-size="11" fill="var(--ink-3)">RIGHT END FACE · 200 mm</text>
+          <text x="271" y="410" font-size="11" text-anchor="middle">FAN Ø57</text>
+          <text x="446" y="298" font-size="12" text-anchor="middle">USB</text>
+          <text x="446" y="374" font-size="10" text-anchor="middle" fill="var(--ink-3)">beside the Uno</text>
+          <text x="620" y="332" font-size="10.5" fill="var(--ink-3)">mains is on the</text>
+          <text x="620" y="348" font-size="10.5" fill="var(--ink-3)">opposite end face</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption><b>Figure 2 — the two faces that carry connectors, viewed from outside.</b> Front port centres at u = 45, 90, 135, 185 and 225 mm. The USB is on the end face because the tool’s fit check refuses it on the front: six flanges on a 265 mm face overlap the corner tab by 2 mm. It is a better place for it anyway — the Uno is right there.</figcaption>
+    </figure>
+
+    <div class="tscroll">
+      <table>
+        <caption>Pin schedule — 12 + 4 + 3 = 19 conductors</caption>
+        <thead><tr><th>Port</th><th class="mono">Pin</th><th>Signal</th><th>Goes to</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="4"><strong>X / A / Y</strong><br><span class="check">GX16-4 ×3</span></td><td class="pin">1</td><td class="mono">A+</td><td rowspan="4">Driver motor header on the shield, in the socket's own order. Identify coil pairs with a meter — continuity means same coil. Ender colour codes vary batch to batch.</td></tr>
+          <tr><td class="pin">2</td><td class="mono">A−</td></tr>
+          <tr><td class="pin">3</td><td class="mono">B+</td></tr>
+          <tr><td class="pin">4</td><td class="mono">B−</td></tr>
+
+          <tr><td rowspan="4"><strong>LIM</strong><br><span class="check">GX12-4</span></td><td class="pin">1</td><td class="mono">X SIG</td><td>X endstop header signal (D9)</td></tr>
+          <tr><td class="pin">2</td><td class="mono">X RTN</td><td>Shield GND <em>pin</em>, not the star block</td></tr>
+          <tr><td class="pin">3</td><td class="mono">Y SIG</td><td>Y endstop header signal (D10)</td></tr>
+          <tr><td class="pin">4</td><td class="mono">Y RTN</td><td>Shield GND pin. NC switches — polarity irrelevant.</td></tr>
+
+          <tr><td rowspan="3"><strong>PEN</strong><br><span class="check">GX12-3</span></td><td class="pin">1</td><td class="mono">+24 V</td><td>F2, fused 1.5 A</td></tr>
+          <tr><td class="pin">2</td><td class="mono">0 V</td><td>Star block</td></tr>
+          <tr><td class="pin">3</td><td class="mono">SIG</td><td>D11 — the header silkscreened <code>Z+/Z−</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note hazard">
+      <span class="lab">Do not cross these</span>
+      <p>PEN pin 1 is 24 V, not servo power. The servo's own 6 V is made at the carriage. Nothing with a 3-pin servo header should ever reach this socket — which is exactly why it is a GX12 and not a 0.1″ header.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">Interior</p>
+      <h2>What sits where</h2>
+    </div>
+
+    <figure>
+      <div class="figscroll">
+      <svg viewBox="0 0 700 540" role="img" aria-label="Plan view at 265 by 200 millimetres: a mains zone behind a barrier on the left with the IEC inlet on the end wall, the LRS-100-24 along the back, a DIN rail at the back right, the Arduino and shield in the front right, and the fan plus the USB coupler on the right end wall.">
+        <g fill="none" stroke="currentColor">
+          <rect x="50" y="40" width="600" height="440" fill="var(--surface-2)" stroke-width="1.8"/>
+          <rect x="50" y="40" width="57" height="290" fill="var(--mains-wash)" stroke="none"/>
+          <line x1="107" y1="40" x2="107" y2="330" stroke="var(--mains)" stroke-width="2.4"/>
+          <rect x="36" y="140" width="14" height="106" fill="var(--surface)" stroke="var(--mains)" stroke-width="1.8"/>
+          <rect x="107" y="45" width="292" height="220" fill="var(--surface)" stroke-width="1.6"/>
+          <rect x="437" y="45" width="204" height="140" fill="var(--surface)" stroke-width="1.6"/>
+          <line x1="437" y1="77" x2="641" y2="77" stroke="var(--rule)" stroke-width="1"/>
+          <g stroke="var(--rule)" stroke-width="1">
+            <line x1="478" y1="77" x2="478" y2="185"/><line x1="519" y1="77" x2="519" y2="185"/>
+            <line x1="560" y1="77" x2="560" y2="185"/><line x1="601" y1="77" x2="601" y2="185"/>
+          </g>
+          <rect x="437" y="77" width="41" height="108" fill="none" stroke="var(--earth)" stroke-width="2"/>
+          <rect x="601" y="77" width="40" height="108" fill="none" stroke="var(--zero)" stroke-width="2"/>
+          <rect x="330" y="340" width="155" height="121" fill="var(--surface)" stroke-width="1.6"/>
+          <g fill="var(--ink-3)" stroke="none">
+            <rect x="346" y="360" width="27" height="34" rx="2"/><rect x="384" y="360" width="27" height="34" rx="2"/>
+            <rect x="422" y="360" width="27" height="34" rx="2"/>
+          </g>
+          <rect x="652" y="200" width="14" height="130" fill="var(--surface)" stroke-width="1.6"/>
+          <rect x="652" y="360" width="14" height="60" fill="var(--surface)" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M646 265 H160" stroke="var(--zero)" stroke-width="1.6" stroke-dasharray="7 6" marker-end="url(#ar-zero)"/>
+          <path d="M250 300 V72" stroke="var(--zero)" stroke-width="1.4" stroke-dasharray="7 6" marker-end="url(#ar-zero)"/>
+          <g stroke-width="1.4" fill="var(--surface)">
+            <circle cx="152" cy="480" r="11"/>
+            <circle cx="254" cy="480" r="11"/>
+            <circle cx="356" cy="480" r="11"/>
+            <circle cx="469" cy="480" r="11"/>
+            <circle cx="559" cy="480" r="11"/>
+          </g>
+          <g fill="var(--ink-3)" stroke="none"><circle cx="110" cy="46" r="2.4"/><circle cx="124" cy="46" r="2.4"/><circle cx="138" cy="46" r="2.4"/><circle cx="152" cy="46" r="2.4"/><circle cx="166" cy="46" r="2.4"/><circle cx="180" cy="46" r="2.4"/><circle cx="194" cy="46" r="2.4"/><circle cx="208" cy="46" r="2.4"/><circle cx="222" cy="46" r="2.4"/><circle cx="236" cy="46" r="2.4"/><circle cx="250" cy="46" r="2.4"/><circle cx="264" cy="46" r="2.4"/><circle cx="278" cy="46" r="2.4"/><circle cx="292" cy="46" r="2.4"/><circle cx="306" cy="46" r="2.4"/><circle cx="320" cy="46" r="2.4"/><circle cx="334" cy="46" r="2.4"/><circle cx="348" cy="46" r="2.4"/><circle cx="362" cy="46" r="2.4"/><circle cx="376" cy="46" r="2.4"/><circle cx="390" cy="46" r="2.4"/><circle cx="404" cy="46" r="2.4"/><circle cx="418" cy="46" r="2.4"/><circle cx="432" cy="46" r="2.4"/><circle cx="446" cy="46" r="2.4"/><circle cx="460" cy="46" r="2.4"/><circle cx="474" cy="46" r="2.4"/><circle cx="488" cy="46" r="2.4"/><circle cx="502" cy="46" r="2.4"/><circle cx="516" cy="46" r="2.4"/><circle cx="530" cy="46" r="2.4"/><circle cx="544" cy="46" r="2.4"/><circle cx="558" cy="46" r="2.4"/><circle cx="572" cy="46" r="2.4"/><circle cx="586" cy="46" r="2.4"/></g>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" fill="currentColor">
+          <text x="78" y="352" font-size="10" text-anchor="middle" fill="var(--mains)">MAINS</text>
+          <text x="43" y="193" font-size="9" text-anchor="middle" fill="var(--mains)" transform="rotate(-90 43 193)">IEC C14</text>
+          <text x="253" y="148" font-size="14" text-anchor="middle">LRS-100-24</text>
+          <text x="253" y="168" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">24 V · 4.5 A</text>
+          <text x="253" y="185" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">129 × 97 × 30 mm</text>
+          <text x="539" y="66" font-size="11" text-anchor="middle">DIN RAIL · 90 mm</text>
+          <text x="457" y="202" font-size="9" text-anchor="middle" fill="var(--earth)">PE</text>
+          <text x="498" y="202" font-size="9" text-anchor="middle" fill="var(--rail)">F1</text>
+          <text x="539" y="202" font-size="9" text-anchor="middle" fill="var(--rail)">F2</text>
+          <text x="580" y="202" font-size="9" text-anchor="middle" fill="var(--rail)">+24</text>
+          <text x="621" y="202" font-size="9" text-anchor="middle" fill="var(--zero)">0 V ★</text>
+          <text x="407" y="412" font-size="12" text-anchor="middle">UNO + SHIELD</text>
+          <text x="407" y="429" font-size="10" text-anchor="middle" fill="var(--ink-2)">drivers up, heatsinks on</text>
+          <text x="672" y="270" font-size="9.5" text-anchor="middle" fill="var(--ink-3)" transform="rotate(90 672 270)">FAN</text>
+          <text x="672" y="392" font-size="9.5" text-anchor="middle" fill="var(--ink-3)" transform="rotate(90 672 392)">USB</text>
+          <text x="400" y="30" font-size="10" text-anchor="middle" fill="var(--ink-3)">rear wall · 92 vent holes</text>
+          <text x="400" y="255" font-size="10" text-anchor="middle" fill="var(--zero)">airflow across the drivers, out at the back</text>
+          <text x="152" y="510" font-size="10" text-anchor="middle" fill="var(--ink-3)">X</text>
+          <text x="254" y="510" font-size="10" text-anchor="middle" fill="var(--ink-3)">A</text>
+          <text x="356" y="510" font-size="10" text-anchor="middle" fill="var(--ink-3)">Y</text>
+          <text x="469" y="510" font-size="10" text-anchor="middle" fill="var(--ink-3)">LIM</text>
+          <text x="559" y="510" font-size="10" text-anchor="middle" fill="var(--ink-3)">PEN</text>
+          <text x="350" y="534" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">← front panel (Figure 2) —   265 × 200 mm interior</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption><b>Figure 3 — plan view, lid off, front face at the bottom.</b> Along the back: 25 mm of mains zone, the 129 mm PSU, then a 90 mm DIN rail — 219 of the 265 mm available. Across: 97 mm of PSU and 53 mm of board in 200 mm. The arrangement is identical for the larger LRS-350 box; only the dimensions change.</figcaption>
+    </figure>
+
+    <h3>Why the PSU sits at the back</h3>
+    <div class="col">
+      <p>It frees the whole front face for connectors. Put the supply along the left end instead and six ports have to crowd into what is left, which is under 30 mm centres — closer than a GX16 backshell will allow you to tighten.</p>
+      <p>Two supplies work, and the box follows whichever you pick. The tool takes <code>--psu lrs100</code> or <code>--psu lrs350</code> and re-lays the whole thing.</p>
+      <div class="tscroll"><table>
+        <thead><tr><th>Supply</th><th class="mono">Rating</th><th class="mono">Case</th><th class="mono">Box interior</th><th>Trade</th></tr></thead>
+        <tbody>
+          <tr><td><strong>LRS-100-24</strong> — bought new</td><td class="mono">24 V 4.5 A</td><td class="mono">129 × 97 × 30</td><td class="mono">265 × 200 × 75</td><td>2.2× margin on a 2.0 A load. You know exactly which part you have.</td></tr>
+          <tr><td>LRS-350-24 — the Ender’s</td><td class="mono">24 V 14.6 A</td><td class="mono">215 × 115 × 30</td><td class="mono">350 × 220 × 75</td><td>Free, 7× oversized, and a box 85 mm longer. Read the label first — the 2018 Ender-3 shipped more than one part.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Not LRS-50-24: at 2.2 A against a 2.0 A load there is no margin at all. Not LRS-75-24 either — 3.2 A is enough, but the case is only 30 mm shorter than the LRS-100 and the box it produces crowds the port row for nothing.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">The one non-obvious move</p>
+      <h2>Regulate at the servo, not in the box</h2>
+    </div>
+    <div class="col">
+      <p>Your open fault is a controller reset when the servo actuates after a move, and the standing suspect is 1.5 m of thin wire between the buck and an MG996R. Centralising power in an enclosure makes that run <em>longer</em>. So don't send 6 V up the umbilical — send 24 V, and put the step-down on the carriage.</p>
+    </div>
+
+    <figure>
+      <div class="figscroll">
+      <svg viewBox="0 0 880 300" role="img" aria-label="Comparison: currently a buck converter in the box sends 6 volts up 1.5 metres of thin wire to the servo, carrying a 2.5 amp transient. In the new design the box sends 24 volts up the same run at about 0.7 amps and a UBEC on the carriage makes 6 volts locally, with the bulk capacitor beside the servo.">
+        <g fill="none" stroke="currentColor" stroke-width="1.5">
+          <!-- row A -->
+          <rect x="30" y="52" width="170" height="62" fill="var(--surface-2)"/>
+          <line x1="200" y1="83" x2="600" y2="83" stroke="var(--rail)" stroke-width="3.2" marker-end="url(#ar-rail)"/>
+          <rect x="612" y="52" width="150" height="62" fill="var(--surface-2)"/>
+          <!-- row B -->
+          <rect x="30" y="196" width="170" height="62" fill="var(--surface-2)"/>
+          <line x1="200" y1="227" x2="452" y2="227" stroke="var(--zero)" stroke-width="2" marker-end="url(#ar-zero)"/>
+          <rect x="462" y="196" width="150" height="62" fill="var(--surface)" stroke="var(--zero)" stroke-width="2.2"/>
+          <line x1="612" y1="227" x2="700" y2="227" stroke="var(--rail)" stroke-width="3.2" marker-end="url(#ar-rail)"/>
+          <rect x="712" y="196" width="140" height="62" fill="var(--surface-2)"/>
+          <!-- carriage bracket -->
+          <path d="M452 274 H860" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="4 4"/>
+          <path d="M452 274 V264 M860 274 V264" stroke="var(--ink-3)" stroke-width="1"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" fill="currentColor">
+          <text x="30" y="38" font-size="11" fill="var(--ink-3)">AS BUILT NOW</text>
+          <text x="115" y="79" font-size="12" text-anchor="middle">LM2596 in box</text>
+          <text x="115" y="97" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">set to 6 V</text>
+          <text x="400" y="72" font-size="11" text-anchor="middle" fill="var(--rail)">1.5 m thin pair · 2.5 A step</text>
+          <text x="400" y="106" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">6 V at the buck ≠ 6 V at the servo</text>
+          <text x="687" y="79" font-size="12" text-anchor="middle">MG996R</text>
+          <text x="687" y="97" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">resets the Uno</text>
+
+          <text x="30" y="182" font-size="11" fill="var(--ink-3)">AS DESIGNED HERE</text>
+          <text x="115" y="223" font-size="12" text-anchor="middle">PEN port · F2</text>
+          <text x="115" y="241" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">24 V + 0 V + SIG</text>
+          <text x="326" y="216" font-size="11" text-anchor="middle" fill="var(--zero)">1.5 m · ≈ 0.7 A steady</text>
+          <text x="537" y="219" font-size="12" text-anchor="middle" fill="var(--zero)">UBEC → 6.0 V</text>
+          <text x="537" y="237" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">2200 µF beside it</text>
+          <text x="656" y="216" font-size="10.5" text-anchor="middle" fill="var(--rail)">80 mm</text>
+          <text x="782" y="223" font-size="12" text-anchor="middle">MG996R</text>
+          <text x="782" y="241" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">2.5 A stays local</text>
+          <text x="656" y="292" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">on the carriage</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption><b>Figure 4 — the same three wires, one box moved.</b> The 2.5 A transient shrinks from a 1.5 m loop to an 80 mm one, and the umbilical carries a smooth 0.7 A that the UBEC's input capacitance has already softened. Pin 2 doubles as the servo's signal return, which makes the ground wire FINDINGS §2 warns you never to remove structurally impossible to omit.</figcaption>
+    </figure>
+
+    <div class="note">
+      <span class="lab">Still 3 wires</span>
+      <p>If you later want the last few dB, run a 4-core and give the PWM its own return straight to a shield GND pin. At 0.7 A the shared-return offset is tens of millivolts against a 5 V logic threshold, so 3 cores is genuinely fine — it was the 2.5 A version of that same wire that was killing you.</p>
+      <p><b>5 V or 6 V?</b> Either, and a fixed 5 V 3 A module is arguably the better pick. Stall current scales with supply voltage over winding resistance, so the MG996R's ~2.5 A at 6 V becomes roughly <b>2.1 A at 5 V</b> — a smaller transient in exactly the wire that has been resetting the board. The cost is torque, about 9.4 kg·cm instead of 11, against a requirement of 1.2 for a 30 mm crank or 0.10 for the 2.5 mm cam. Order of magnitude in hand either way. The 2200 µF still goes at the servo with any regulator: it is the cap, not the converter, that supplies the lift.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">Grounding</p>
+      <h2>What lands on the star block, and what doesn't</h2>
+    </div>
+    <div class="tscroll">
+      <table>
+        <thead><tr><th>Node</th><th>Lands on</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">PSU −V</td><td class="mono">0 V star block</td><td>The source of the node.</td></tr>
+          <tr><td class="mono">Shield GND</td><td class="mono">0 V star block</td><td>One 0.75 mm² wire. Stepper return current flows here.</td></tr>
+          <tr><td class="mono">PEN pin 2</td><td class="mono">0 V star block</td><td>Servo supply return + signal reference.</td></tr>
+          <tr><td class="mono">Fan −</td><td class="mono">0 V star block</td><td>—</td></tr>
+          <tr><td class="mono">LIM pins 2, 4</td><td class="mono">Shield GND pins</td><td><strong>Not</strong> the star block. Keeps the switch reference off the stepper return path.</td></tr>
+          <tr><td class="mono">Cable screen</td><td class="mono">Shield GND, box end only</td><td>Grounded at both ends it becomes a loop antenna.</td></tr>
+          <tr><td class="mono">D12</td><td class="mono">Any shield GND pin</td><td>The mandatory jumper. Without it <code>$5=1</code> inverts a floating pin into a permanent <code>Pn:Z</code>.</td></tr>
+          <tr><td class="mono">PE / chassis</td><td class="mono">Earth block only</td><td>Never bonded to 0 V — see Figure 1.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">Assembly</p>
+      <h2>Build order, each step ending in a check</h2>
+    </div>
+    <ol class="steps">
+      <li>
+        <h3>Drill and dry-fit, no wire</h3>
+        <p>Every hole: 16 mm × 3, 12 mm × 2, the USB cutout, the IEC module's rectangle, the 60 mm fan and its four M4s on 50 mm centres. Drop all six connectors in loose.</p>
+        <span class="check"><b>Check:</b> every backshell tightens without fouling its neighbour, and the lid still closes over the driver heatsinks.</span>
+      </li>
+      <li>
+        <h3>Mains, complete and covered, before any DC</h3>
+        <p>0.75 mm² with ferrules on every conductor. Inlet L/N to the PSU input, inlet earth to the PE block, PE block to the PSU earth terminal and to the box metalwork. Shroud the inlet and PSU input terminals.</p>
+        <span class="check"><b>Check:</b> plug in, switch on, meter 24 V at the PSU output, switch off. Nothing else is connected yet.</span>
+      </li>
+      <li>
+        <h3>DC distribution and the star point</h3>
+        <p>+V to the +24 block, −V to the 0 V block, F1 and F2 in their branches. Land every return on the block itself — no daisy chains between loads.</p>
+        <span class="check"><b>Check:</b> continuity from each 0 V landing to the block; <b>no</b> continuity from 0 V to PE.</span>
+      </li>
+      <li>
+        <h3>Board in, bulk cap at its terminals</h3>
+        <p>Shield V+ and GND on 0.75 mm², with the 220–470 µF 50 V electrolytic soldered or clamped right at the screw terminals. Short USB-B lead from the Uno to the panel socket. Re-fit the D12 jumper.</p>
+        <span class="check"><b>Check:</b> USB only, 24 V still off — <code>$I</code> returns <code>[VER:1.1h.plotter-servo-1:]</code>.</span>
+      </li>
+      <li>
+        <h3>Endstops</h3>
+        <p>Two-pair screened cable into LIM, drain to shield GND at the box end alone.</p>
+        <span class="check"><b>Check:</b> <code>?</code> with nothing pressed shows no <code>Pn:</code> field at all. Press each switch by hand — <code>Pn:X</code>, then <code>Pn:Y</code>, each clearing on release. Do this before homing.</span>
+      </li>
+      <li>
+        <h3>Pen port and the carriage pod</h3>
+        <p>Build the pod first: UBEC, 2200 µF 16 V with its striped leg to 0 V, legs trimmed short, anchored so it cannot flap. Set the UBEC to 6.0 V <em>with the servo disconnected</em>, meter on the output.</p>
+        <span class="check"><b>Check:</b> T0 — five clean up/down cycles, no buzzing at either end, no reset.</span>
+      </li>
+      <li>
+        <h3>Motors last</h3>
+        <p>Switch off at the panel for every single plug and unplug. A panel connector makes hot-plugging easy, and hot-plugging a stepper is still the fastest way to kill an A4988.</p>
+        <span class="check"><b>Check:</b> both X motors turn together on T1. If they fight, swap one coil pair on <em>one</em> motor — not <code>$3</code>, which flips the whole axis.</span>
+      </li>
+      <li>
+        <h3>Fan, lid, and back to the ladder</h3>
+        <p>Fan blowing in across the drivers, exhausting through the vents at the PSU end.</p>
+        <span class="check"><b>Check:</b> T1 through T6 pass as before, and the drivers are warm rather than hot after a long plot.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">Fabrication</p>
+      <h2>One blank folds into the box</h2>
+    </div>
+    <div class="col">
+      <p>Floor and all four walls come off one piece of 1.5 mm steel. The lid is a second, shallower pan that telescopes over it. <strong>The base carries no component-specific mounting holes at all</strong> — just a field of Ø3.5 on a 25 mm grid, which is the pitch of DIN rail's own slots.</p>
+      <p>That grid is what makes the dimensions you don't have yet survivable. Anything whose hole pattern doesn't land on it — the Uno's four holes never will, they aren't on any grid and none of the spacings is round — gets a small flat adapter plate cut from the offcut. Being wrong about a component costs you a plate, not a box.</p>
+    </div>
+
+    <figure>
+      <div class="figscroll">
+      <svg viewBox="0 0 880 760" role="img" aria-label="The base blank for the 265 by 200 millimetre box: a central floor panel with a 70-hole grid, four wall panels folding up from it, a full-height tab at each corner of the end walls, and circular reliefs where the bend lines cross.">
+<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+  <line x1="177.8" y1="682.3" x2="671.4" y2="682.3"/>
+  <line x1="177.8" y1="30.0" x2="671.4" y2="30.0"/>
+  <line x1="38.0" y1="542.5" x2="38.0" y2="169.8"/>
+  <line x1="811.2" y1="542.5" x2="811.2" y2="169.8"/>
+  <line x1="38.0" y1="542.5" x2="47.3" y2="542.5"/>
+  <line x1="47.3" y1="542.5" x2="47.3" y2="579.7"/>
+  <line x1="47.3" y1="579.7" x2="177.8" y2="579.7"/>
+  <line x1="177.8" y1="579.7" x2="177.8" y2="682.3"/>
+  <circle cx="177.8" cy="542.5" r="2.79"/>
+  <circle cx="79.9" cy="561.1" r="3.16"/>
+  <circle cx="145.2" cy="561.1" r="3.16"/>
+  <line x1="811.2" y1="542.5" x2="801.9" y2="542.5"/>
+  <line x1="801.9" y1="542.5" x2="801.9" y2="579.7"/>
+  <line x1="801.9" y1="579.7" x2="671.4" y2="579.7"/>
+  <line x1="671.4" y1="579.7" x2="671.4" y2="682.3"/>
+  <circle cx="671.4" cy="542.5" r="2.79"/>
+  <circle cx="769.3" cy="561.1" r="3.16"/>
+  <circle cx="704.0" cy="561.1" r="3.16"/>
+  <line x1="38.0" y1="169.8" x2="47.3" y2="169.8"/>
+  <line x1="47.3" y1="169.8" x2="47.3" y2="132.6"/>
+  <line x1="47.3" y1="132.6" x2="177.8" y2="132.6"/>
+  <line x1="177.8" y1="132.6" x2="177.8" y2="30.0"/>
+  <circle cx="177.8" cy="169.8" r="2.79"/>
+  <circle cx="79.9" cy="151.2" r="3.16"/>
+  <circle cx="145.2" cy="151.2" r="3.16"/>
+  <line x1="811.2" y1="169.8" x2="801.9" y2="169.8"/>
+  <line x1="801.9" y1="169.8" x2="801.9" y2="132.6"/>
+  <line x1="801.9" y1="132.6" x2="671.4" y2="132.6"/>
+  <line x1="671.4" y1="132.6" x2="671.4" y2="30.0"/>
+  <circle cx="671.4" cy="169.8" r="2.79"/>
+  <circle cx="769.3" cy="151.2" r="3.16"/>
+  <circle cx="704.0" cy="151.2" r="3.16"/>
+  <circle cx="261.5" cy="612.5" r="14.88"/>
+  <circle cx="345.2" cy="612.5" r="14.88"/>
+  <circle cx="428.9" cy="612.5" r="14.88"/>
+  <circle cx="521.9" cy="612.5" r="11.16"/>
+  <circle cx="596.3" cy="612.5" r="11.16"/>
+  <line x1="727.0" y1="455.8" x2="755.9" y2="455.8"/>
+  <line x1="755.9" y1="455.8" x2="755.9" y2="404.6"/>
+  <line x1="755.9" y1="404.6" x2="727.0" y2="404.6"/>
+  <line x1="727.0" y1="404.6" x2="727.0" y2="455.8"/>
+  <circle cx="741.4" cy="402.3" r="3.16"/>
+  <circle cx="741.4" cy="458.1" r="3.16"/>
+  <line x1="82.6" y1="344.4" x2="132.9" y2="344.4"/>
+  <line x1="132.9" y1="344.4" x2="132.9" y2="257.0"/>
+  <line x1="132.9" y1="257.0" x2="82.6" y2="257.0"/>
+  <line x1="82.6" y1="257.0" x2="82.6" y2="344.4"/>
+  <circle cx="741.4" cy="281.4" r="53.01"/>
+  <circle cx="694.9" cy="234.9" r="4.19"/>
+  <circle cx="787.9" cy="234.9" r="4.19"/>
+  <circle cx="694.9" cy="327.9" r="4.19"/>
+  <circle cx="787.9" cy="327.9" r="4.19"/>
+  <circle cx="629.5" cy="127.7" r="4.65"/>
+  <circle cx="620.2" cy="109.0" r="4.65"/>
+  <circle cx="629.5" cy="90.5" r="4.65"/>
+  <circle cx="620.2" cy="71.8" r="4.65"/>
+  <circle cx="610.9" cy="127.7" r="4.65"/>
+  <circle cx="601.6" cy="109.0" r="4.65"/>
+  <circle cx="610.9" cy="90.5" r="4.65"/>
+  <circle cx="601.6" cy="71.8" r="4.65"/>
+  <circle cx="592.3" cy="127.7" r="4.65"/>
+  <circle cx="583.0" cy="109.0" r="4.65"/>
+  <circle cx="592.3" cy="90.5" r="4.65"/>
+  <circle cx="583.0" cy="71.8" r="4.65"/>
+  <circle cx="573.7" cy="127.7" r="4.65"/>
+  <circle cx="564.4" cy="109.0" r="4.65"/>
+  <circle cx="573.7" cy="90.5" r="4.65"/>
+  <circle cx="564.4" cy="71.8" r="4.65"/>
+  <circle cx="555.1" cy="127.7" r="4.65"/>
+  <circle cx="545.8" cy="109.0" r="4.65"/>
+  <circle cx="555.1" cy="90.5" r="4.65"/>
+  <circle cx="545.8" cy="71.8" r="4.65"/>
+  <circle cx="536.5" cy="127.7" r="4.65"/>
+  <circle cx="527.2" cy="109.0" r="4.65"/>
+  <circle cx="536.5" cy="90.5" r="4.65"/>
+  <circle cx="527.2" cy="71.8" r="4.65"/>
+  <circle cx="517.9" cy="127.7" r="4.65"/>
+  <circle cx="508.6" cy="109.0" r="4.65"/>
+  <circle cx="517.9" cy="90.5" r="4.65"/>
+  <circle cx="508.6" cy="71.8" r="4.65"/>
+  <circle cx="499.3" cy="127.7" r="4.65"/>
+  <circle cx="490.0" cy="109.0" r="4.65"/>
+  <circle cx="499.3" cy="90.5" r="4.65"/>
+  <circle cx="490.0" cy="71.8" r="4.65"/>
+  <circle cx="480.7" cy="127.7" r="4.65"/>
+  <circle cx="471.4" cy="109.0" r="4.65"/>
+  <circle cx="480.7" cy="90.5" r="4.65"/>
+  <circle cx="471.4" cy="71.8" r="4.65"/>
+  <circle cx="462.1" cy="127.7" r="4.65"/>
+  <circle cx="452.8" cy="109.0" r="4.65"/>
+  <circle cx="462.1" cy="90.5" r="4.65"/>
+  <circle cx="452.8" cy="71.8" r="4.65"/>
+  <circle cx="443.5" cy="127.7" r="4.65"/>
+  <circle cx="434.2" cy="109.0" r="4.65"/>
+  <circle cx="443.5" cy="90.5" r="4.65"/>
+  <circle cx="434.2" cy="71.8" r="4.65"/>
+  <circle cx="424.9" cy="127.7" r="4.65"/>
+  <circle cx="415.6" cy="109.0" r="4.65"/>
+  <circle cx="424.9" cy="90.5" r="4.65"/>
+  <circle cx="415.6" cy="71.8" r="4.65"/>
+  <circle cx="406.3" cy="127.7" r="4.65"/>
+  <circle cx="397.0" cy="109.0" r="4.65"/>
+  <circle cx="406.3" cy="90.5" r="4.65"/>
+  <circle cx="397.0" cy="71.8" r="4.65"/>
+  <circle cx="387.7" cy="127.7" r="4.65"/>
+  <circle cx="378.4" cy="109.0" r="4.65"/>
+  <circle cx="387.7" cy="90.5" r="4.65"/>
+  <circle cx="378.4" cy="71.8" r="4.65"/>
+  <circle cx="369.1" cy="127.7" r="4.65"/>
+  <circle cx="359.8" cy="109.0" r="4.65"/>
+  <circle cx="369.1" cy="90.5" r="4.65"/>
+  <circle cx="359.8" cy="71.8" r="4.65"/>
+  <circle cx="350.5" cy="127.7" r="4.65"/>
+  <circle cx="341.2" cy="109.0" r="4.65"/>
+  <circle cx="350.5" cy="90.5" r="4.65"/>
+  <circle cx="341.2" cy="71.8" r="4.65"/>
+  <circle cx="331.9" cy="127.7" r="4.65"/>
+  <circle cx="322.6" cy="109.0" r="4.65"/>
+  <circle cx="331.9" cy="90.5" r="4.65"/>
+  <circle cx="322.6" cy="71.8" r="4.65"/>
+  <circle cx="313.3" cy="127.7" r="4.65"/>
+  <circle cx="304.0" cy="109.0" r="4.65"/>
+  <circle cx="313.3" cy="90.5" r="4.65"/>
+  <circle cx="304.0" cy="71.8" r="4.65"/>
+  <circle cx="294.7" cy="127.7" r="4.65"/>
+  <circle cx="285.4" cy="109.0" r="4.65"/>
+  <circle cx="294.7" cy="90.5" r="4.65"/>
+  <circle cx="285.4" cy="71.8" r="4.65"/>
+  <circle cx="276.1" cy="127.7" r="4.65"/>
+  <circle cx="266.8" cy="109.0" r="4.65"/>
+  <circle cx="276.1" cy="90.5" r="4.65"/>
+  <circle cx="266.8" cy="71.8" r="4.65"/>
+  <circle cx="257.5" cy="127.7" r="4.65"/>
+  <circle cx="248.2" cy="109.0" r="4.65"/>
+  <circle cx="257.5" cy="90.5" r="4.65"/>
+  <circle cx="248.2" cy="71.8" r="4.65"/>
+  <circle cx="238.9" cy="127.7" r="4.65"/>
+  <circle cx="229.6" cy="109.0" r="4.65"/>
+  <circle cx="238.9" cy="90.5" r="4.65"/>
+  <circle cx="229.6" cy="71.8" r="4.65"/>
+  <circle cx="220.3" cy="127.7" r="4.65"/>
+  <circle cx="211.0" cy="109.0" r="4.65"/>
+  <circle cx="220.3" cy="90.5" r="4.65"/>
+  <circle cx="211.0" cy="71.8" r="4.65"/>
+  <circle cx="342.1" cy="668.3" r="3.16"/>
+  <circle cx="507.1" cy="44.0" r="3.16"/>
+  <circle cx="506.4" cy="668.3" r="3.16"/>
+  <circle cx="342.8" cy="44.0" r="3.16"/>
+  <circle cx="51.9" cy="356.5" r="3.16"/>
+  <circle cx="797.2" cy="355.8" r="3.16"/>
+  <circle cx="215.0" cy="505.3" r="3.26"/>
+  <circle cx="215.0" cy="458.8" r="3.26"/>
+  <circle cx="215.0" cy="412.3" r="3.26"/>
+  <circle cx="215.0" cy="365.8" r="3.26"/>
+  <circle cx="215.0" cy="319.3" r="3.26"/>
+  <circle cx="215.0" cy="272.8" r="3.26"/>
+  <circle cx="215.0" cy="226.3" r="3.26"/>
+  <circle cx="261.5" cy="505.3" r="3.26"/>
+  <circle cx="261.5" cy="458.8" r="3.26"/>
+  <circle cx="261.5" cy="412.3" r="3.26"/>
+  <circle cx="261.5" cy="365.8" r="3.26"/>
+  <circle cx="261.5" cy="319.3" r="3.26"/>
+  <circle cx="261.5" cy="272.8" r="3.26"/>
+  <circle cx="261.5" cy="226.3" r="3.26"/>
+  <circle cx="308.0" cy="505.3" r="3.26"/>
+  <circle cx="308.0" cy="458.8" r="3.26"/>
+  <circle cx="308.0" cy="412.3" r="3.26"/>
+  <circle cx="308.0" cy="365.8" r="3.26"/>
+  <circle cx="308.0" cy="319.3" r="3.26"/>
+  <circle cx="308.0" cy="272.8" r="3.26"/>
+  <circle cx="308.0" cy="226.3" r="3.26"/>
+  <circle cx="354.5" cy="505.3" r="3.26"/>
+  <circle cx="354.5" cy="458.8" r="3.26"/>
+  <circle cx="354.5" cy="412.3" r="3.26"/>
+  <circle cx="354.5" cy="365.8" r="3.26"/>
+  <circle cx="354.5" cy="319.3" r="3.26"/>
+  <circle cx="354.5" cy="272.8" r="3.26"/>
+  <circle cx="354.5" cy="226.3" r="3.26"/>
+  <circle cx="401.0" cy="505.3" r="3.26"/>
+  <circle cx="401.0" cy="458.8" r="3.26"/>
+  <circle cx="401.0" cy="412.3" r="3.26"/>
+  <circle cx="401.0" cy="365.8" r="3.26"/>
+  <circle cx="401.0" cy="319.3" r="3.26"/>
+  <circle cx="401.0" cy="272.8" r="3.26"/>
+  <circle cx="401.0" cy="226.3" r="3.26"/>
+  <circle cx="447.5" cy="505.3" r="3.26"/>
+  <circle cx="447.5" cy="458.8" r="3.26"/>
+  <circle cx="447.5" cy="412.3" r="3.26"/>
+  <circle cx="447.5" cy="365.8" r="3.26"/>
+  <circle cx="447.5" cy="319.3" r="3.26"/>
+  <circle cx="447.5" cy="272.8" r="3.26"/>
+  <circle cx="447.5" cy="226.3" r="3.26"/>
+  <circle cx="494.0" cy="505.3" r="3.26"/>
+  <circle cx="494.0" cy="458.8" r="3.26"/>
+  <circle cx="494.0" cy="412.3" r="3.26"/>
+  <circle cx="494.0" cy="365.8" r="3.26"/>
+  <circle cx="494.0" cy="319.3" r="3.26"/>
+  <circle cx="494.0" cy="272.8" r="3.26"/>
+  <circle cx="494.0" cy="226.3" r="3.26"/>
+  <circle cx="540.5" cy="505.3" r="3.26"/>
+  <circle cx="540.5" cy="458.8" r="3.26"/>
+  <circle cx="540.5" cy="412.3" r="3.26"/>
+  <circle cx="540.5" cy="365.8" r="3.26"/>
+  <circle cx="540.5" cy="319.3" r="3.26"/>
+  <circle cx="540.5" cy="272.8" r="3.26"/>
+  <circle cx="540.5" cy="226.3" r="3.26"/>
+  <circle cx="587.0" cy="505.3" r="3.26"/>
+  <circle cx="587.0" cy="458.8" r="3.26"/>
+  <circle cx="587.0" cy="412.3" r="3.26"/>
+  <circle cx="587.0" cy="365.8" r="3.26"/>
+  <circle cx="587.0" cy="319.3" r="3.26"/>
+  <circle cx="587.0" cy="272.8" r="3.26"/>
+  <circle cx="587.0" cy="226.3" r="3.26"/>
+  <circle cx="633.5" cy="505.3" r="3.26"/>
+  <circle cx="633.5" cy="458.8" r="3.26"/>
+  <circle cx="633.5" cy="412.3" r="3.26"/>
+  <circle cx="633.5" cy="365.8" r="3.26"/>
+  <circle cx="633.5" cy="319.3" r="3.26"/>
+  <circle cx="633.5" cy="272.8" r="3.26"/>
+  <circle cx="633.5" cy="226.3" r="3.26"/>
+  <circle cx="238.3" cy="277.4" r="6.04"/>
+  <circle cx="238.3" cy="482.0" r="4.19"/>
+  <circle cx="238.3" cy="230.9" r="4.19"/>
+  <circle cx="610.3" cy="482.0" r="4.19"/>
+  <circle cx="610.3" cy="230.9" r="4.19"/>
+</g>
+<g fill="none" stroke="var(--zero)" stroke-width="1.3" stroke-dasharray="6 4">
+  <line x1="47.3" y1="542.5" x2="177.8" y2="542.5"/>
+  <line x1="801.9" y1="542.5" x2="671.4" y2="542.5"/>
+  <line x1="47.3" y1="169.8" x2="177.8" y2="169.8"/>
+  <line x1="801.9" y1="169.8" x2="671.4" y2="169.8"/>
+  <line x1="177.8" y1="542.5" x2="177.8" y2="169.8"/>
+  <line x1="671.4" y1="542.5" x2="671.4" y2="169.8"/>
+  <line x1="177.8" y1="542.5" x2="671.4" y2="542.5"/>
+  <line x1="177.8" y1="169.8" x2="671.4" y2="169.8"/>
+</g>
+        <g font-family="IBM Plex Mono, monospace" fill="currentColor">
+          <text x="440" y="20" font-size="11" text-anchor="middle" fill="var(--ink-3)">REAR WALL — 92 vent holes, Ø5</text>
+          <text x="440" y="700" font-size="11" text-anchor="middle" fill="var(--ink-3)">FRONT WALL — X · A · Y · LIM · PEN</text>
+          <text x="90" y="640" font-size="10.5" text-anchor="middle">TAB, full wall height</text>
+          <text x="90" y="656" font-size="10" text-anchor="middle" fill="var(--ink-3)">laps inside the front wall</text>
+          <text x="790" y="640" font-size="10.5" text-anchor="middle">BASE GRID</text>
+          <text x="790" y="656" font-size="10" text-anchor="middle" fill="var(--ink-3)">70 × Ø3.5 @ 25 mm</text>
+          <text x="90" y="70" font-size="10.5" text-anchor="middle">LEFT END</text>
+          <text x="90" y="86" font-size="10" text-anchor="middle" fill="var(--ink-3)">mains inlet</text>
+          <text x="790" y="70" font-size="10.5" text-anchor="middle">RIGHT END</text>
+          <text x="790" y="86" font-size="10" text-anchor="middle" fill="var(--ink-3)">fan + USB</text>
+          <text x="440" y="734" font-size="10.5" text-anchor="middle" fill="var(--zero)">— — —  bend lines, not cut  ·  blank 415.7 × 350.7 mm</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption><b>Figure 5 — the base blank for the LRS-100 box, drawn from the same model that writes the DXF.</b> The four circular reliefs are not decoration: where two bend lines cross, metal that isn't relieved tears when the second wall goes up. Corner tabs run the full wall height and take two M3 each — drill their mating holes through the wall at assembly, with the corner clamped square, so a bend deduction that differs from ours can't put them out of line.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="figscroll">
+      <svg viewBox="0 0 620 330" role="img" aria-label="Section through the lid and base joint: the lid top panel rests on the top edge of the base wall, its 15 millimetre skirt hangs down outside the base wall with 0.4 millimetres of clearance, and an M3 screw passes through the skirt into a self-clinching nut pressed into the base wall from the inside.">
+        <g fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="180" y="82" width="230" height="9" fill="var(--surface-2)"/>
+          <rect x="180" y="91" width="9" height="90" fill="var(--surface-2)"/>
+          <rect x="193" y="91" width="9" height="210" fill="var(--sunk)"/>
+          <rect x="202" y="124" width="15" height="26" fill="var(--surface-2)"/>
+          <line x1="150" y1="130" x2="150" y2="144" stroke-width="3"/>
+          <line x1="150" y1="137" x2="216" y2="137" stroke-width="3"/>
+          <line x1="189" y1="200" x2="189" y2="230" stroke="var(--rail)" stroke-width="1"/>
+          <line x1="202" y1="200" x2="202" y2="230" stroke="var(--rail)" stroke-width="1"/>
+          <line x1="175" y1="222" x2="189" y2="222" stroke="var(--rail)" stroke-width="1" marker-end="url(#ar-rail)"/>
+          <line x1="216" y1="222" x2="202" y2="222" stroke="var(--rail)" stroke-width="1" marker-end="url(#ar-rail)"/>
+          <line x1="168" y1="91" x2="168" y2="181" stroke="var(--ink-3)" stroke-width="1" marker-start="url(#ar-ink)" marker-end="url(#ar-ink)"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" fill="currentColor">
+          <text x="420" y="80" font-size="11">lid top panel</text>
+          <text x="120" y="74" font-size="11" text-anchor="middle">lid skirt</text>
+          <text x="120" y="90" font-size="10" text-anchor="middle" fill="var(--ink-3)">15 mm</text>
+          <text x="420" y="200" font-size="11">base wall, 1.5 mm</text>
+          <text x="228" y="132" font-size="11">self-clinching nut</text>
+          <text x="228" y="148" font-size="10" fill="var(--ink-3)">PEM S-M3, pressed from inside</text>
+          <text x="228" y="164" font-size="10" fill="var(--ink-3)">1.5 mm sheet is too thin to tap</text>
+          <text x="130" y="160" font-size="11" text-anchor="middle">M3</text>
+          <text x="196" y="248" font-size="10" text-anchor="middle" fill="var(--rail)">0.4 mm</text>
+          <text x="196" y="263" font-size="10" text-anchor="middle" fill="var(--rail)">per side</text>
+          <text x="310" y="316" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">the lid gets open butt corners — a tab there would foul the base wall</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption><b>Figure 6 — how the lid lands.</b> The skirt goes outside, so the base needs no top flange and the joint stays square without welding. This is also why the lid has no corner tabs: at 0.4 mm clearance there is no room for another 1.5 mm of metal in the corner.</figcaption>
+    </figure>
+
+    <h3>What is known, and what you must measure</h3>
+    <div class="tscroll">
+      <table>
+        <thead><tr><th>Component</th><th>Figure</th><th>Where it comes from</th></tr></thead>
+        <tbody>
+          <tr><td>Mean Well LRS-100-24</td><td class="mono">129 × 97 × 30</td><td>Datasheet, Mean Well case 238A. Buying it new is what makes the number safe — not that the datasheet is better, but that you know which part you have.</td></tr>
+          <tr><td>Mean Well LRS-350-24</td><td class="mono">215 × 115 × 30</td><td>Same datasheet confidence, but <strong>read your label</strong> — the 2018 Ender-3 had variants, so which part is in your printer is the open question.</td></tr>
+          <tr><td>Arduino Uno R3 outline</td><td class="mono">68.6 × 53.4</td><td>Published, reliable.</td></tr>
+          <tr><td>Uno mounting holes</td><td class="mono">Ø3.2 × 4</td><td><strong>Trace them off your board.</strong> The four holes are not on any grid, the two left ones are offset from each other in X, and none of the spacings is round.</td></tr>
+          <tr><td>Uno + shield stack height</td><td class="mono">~50</td><td><strong>Measure.</strong> Depends on your standoffs, drivers and heatsinks.</td></tr>
+          <tr><td>GX16 / GX12 panel hole</td><td class="mono">Ø16 / Ø12</td><td>The number in the name.</td></tr>
+          <tr><td>TS35 DIN rail</td><td class="mono">35 wide, 25 pitch</td><td>Standard — and the reason the base grid is 25 mm.</td></tr>
+          <tr><td>60 mm fan</td><td class="mono">Ø57, 4 × M4 @ 50</td><td>Standard.</td></tr>
+          <tr><td>IEC fused/switched inlet</td><td class="mono">~47 × 27</td><td><strong>Measure.</strong> Snap-in power entry modules vary between vendors selling the same description.</td></tr>
+          <tr><td>USB-B panel coupler</td><td class="mono">27.5 × 15.5</td><td><strong>Measure.</strong> Also sold as a D-hole part with a different cutout entirely.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Flat pattern, and whose numbers win</h3>
+    <div class="tscroll">
+      <table>
+        <thead><tr><th></th><th class="mono">--psu lrs100</th><th class="mono">--psu lrs350</th></tr></thead>
+        <tbody>
+          <tr><td>Folded interior</td><td class="mono">265 × 200 × 75 mm</td><td class="mono">350 × 220 × 75 mm</td></tr>
+          <tr><td>Folded exterior</td><td class="mono">268.0 × 203.0 × 76.5 mm</td><td class="mono">353.0 × 223.0 × 76.5 mm</td></tr>
+          <tr><td>Base blank</td><td class="mono">415.69 × 350.69 mm</td><td class="mono">500.69 × 370.69 mm</td></tr>
+          <tr><td>Lid blank</td><td class="mono">299.49 × 234.49 mm</td><td class="mono">384.49 × 254.49 mm</td></tr>
+          <tr><td>Bend deduction</td><td class="mono">2.654 mm per 90° bend</td><td class="mono">same</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note hazard">
+      <span class="lab">The shop's bend deduction wins</span>
+      <p>2.654 mm falls out of R = 1.5, t = 1.5, K = 0.42 — and K belongs to whoever owns the press brake. Every hole in a wall shifts in the flat if their number differs from ours. Hand them the <em>folded</em> dimensions and let them do their own unfold; use the DXFs for cutouts and hole positions, or as a cross-check. If they want the flat as-is, tell them what deduction it assumes.</p>
+    </div>
+
+    <div class="col">
+      <p><code>tools/enclosure_dxf.py</code> writes both blanks, the adapter plates and an SVG preview, with every dimension at the top of the file. It self-checks each run — no two holes leaving under 1.5 mm of web, nothing within 3 mm of a bend line — so when you replace a MEASURE figure with a real one, the run tells you whether it still fits.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">Before you order anything</p>
+      <h2>Two things this box does not do</h2>
+    </div>
+    <div class="col">
+      <p><strong>It does not fix the servo reset.</strong> Do the cap at the servo, the twisted pairs and the shortened arm on the machine as it stands, and confirm the fault is gone. Building an enclosure around an unsolved fault means debugging it through a lid.</p>
+      <p><strong>It does not change the power-up order — and doesn't need to.</strong> The panel switch cuts 24 V only; USB arrives separately from the Mac. Plug USB first so GRBL boots and drives the enable line and D11 to a known state, then flip the switch. Down in reverse. That rocker is also your emergency stop, and it is the only one that works when the terminal has stopped listening.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="rule-top col">
+      <p class="eyebrow">Shopping list</p>
+      <h2>Parts</h2>
+    </div>
+    <div class="tscroll">
+      <table>
+        <thead><tr><th>Qty</th><th>Part</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="pin">1</td><td>Folded 1.5 mm steel enclosure, 265 × 200 × 75 internal</td><td>Cut from <code>tools/enclosure_dxf.py --psu lrs100</code>. Bond it to PE.</td></tr>
+          <tr><td class="pin">1</td><td>IEC C14 inlet, fused + switched</td><td>T2 A slow-blow. UK kettle lead plugs straight in.</td></tr>
+          <tr><td class="pin">1</td><td>Mean Well LRS-100-24</td><td>24 V 4.5 A, 129 × 97 × 30. Or reuse the Ender's LRS-350-24 and build the larger box.</td></tr>
+          <tr><td class="pin">3</td><td>GX16-4 panel socket + plug</td><td>~5 A/pin, far above the 0.84 A the motors draw.</td></tr>
+          <tr><td class="pin">1</td><td>GX12-4 panel socket + plug</td><td>Endstops.</td></tr>
+          <tr><td class="pin">1</td><td>GX12-3 panel socket + plug</td><td>Pen. Different shell size on purpose.</td></tr>
+          <tr><td class="pin">1</td><td>Panel USB-B to USB-B pass-through</td><td>So the lid never has to come off to re-flash.</td></tr>
+          <tr><td class="pin">1</td><td>5 V or 6 V DC-DC, ≥ 3 A</td><td>Lives on the carriage. Replaces the LM2596, a ~2 A part being asked for 2.5 A. A fixed 5 V 3 A module is fine.</td></tr>
+          <tr><td class="pin">1</td><td>2200 µF 16 V electrolytic</td><td>At the servo.</td></tr>
+          <tr><td class="pin">1</td><td>220–470 µF 50 V electrolytic</td><td>At the shield's 24 V terminals.</td></tr>
+          <tr><td class="pin">1</td><td>60 mm 24 V fan + finger guard</td><td>Blowing in over the drivers.</td></tr>
+          <tr><td class="pin">~200 mm</td><td>DIN rail + PE block, 2 fuse carriers, 2 distribution blocks</td><td>5 × 20 mm carriers; F1 3 A, F2 1.5 A.</td></tr>
+          <tr><td class="pin">—</td><td>0.75 mm² wire, ferrules, 3-core 0.5 mm² umbilical, 2-pair screened</td><td>The 0.5 mm² umbilical is what replaces the thin servo wire.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Cross-references are to docs/SETUP.md phases 0, 3 and 6, docs/HANDOFF.md §7, and docs/FINDINGS.md §2 in the pen-plotter repo.
+  </footer>
+</div>
+
+</body></html>

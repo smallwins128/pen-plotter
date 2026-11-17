@@ -1,0 +1,786 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>LINNMON Plotter Bring-Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;700&display=swap">
+
+<style>
+:root{
+  --ground:#F4F6F9;
+  --surface:#FFFFFF;
+  --sunk:#EDF0F5;
+  --ink:#131A26;
+  --muted:#5A6779;
+  --line:#DCE2EB;
+  --line-strong:#C3CCDA;
+  --accent:#2743C9;
+  --accent-soft:#E6EAFA;
+  --ok:#12775A;
+  --ok-soft:#E1F1EB;
+  --warn:#B23A20;
+  --warn-soft:#FBE8E2;
+  --caution:#8A6512;
+  --caution-soft:#F8EFDC;
+  --shadow:0 1px 2px rgba(19,26,38,.05), 0 8px 24px -16px rgba(19,26,38,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1218;
+    --surface:#161C25;
+    --sunk:#111721;
+    --ink:#E4E9F1;
+    --muted:#94A1B4;
+    --line:#242D3A;
+    --line-strong:#33404F;
+    --accent:#7C93FF;
+    --accent-soft:#1B2440;
+    --ok:#4BC395;
+    --ok-soft:#12261F;
+    --warn:#FF8467;
+    --warn-soft:#2A1712;
+    --caution:#D8A93F;
+    --caution-soft:#241D0F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1218;
+  --surface:#161C25;
+  --sunk:#111721;
+  --ink:#E4E9F1;
+  --muted:#94A1B4;
+  --line:#242D3A;
+  --line-strong:#33404F;
+  --accent:#7C93FF;
+  --accent-soft:#1B2440;
+  --ok:#4BC395;
+  --ok-soft:#12261F;
+  --warn:#FF8467;
+  --warn-soft:#2A1712;
+  --caution:#D8A93F;
+  --caution-soft:#241D0F;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  font-size:17px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+code,kbd,.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+h1,h2,h3,h4,.ui{font-family:Archivo,"Helvetica Neue",Arial,sans-serif}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.col{max-width:68ch}
+.wide{max-width:100%}
+
+/* ---------- masthead ---------- */
+.masthead{border-bottom:1px solid var(--line);background:var(--surface)}
+.masthead .wrap{padding-top:52px;padding-bottom:34px}
+.eyebrow{
+  font-family:Archivo,sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 14px;
+}
+h1{
+  font-size:clamp(34px,5.4vw,52px);line-height:1.04;font-weight:700;letter-spacing:-.022em;
+  margin:0 0 16px;text-wrap:balance;
+}
+.standfirst{font-size:20px;color:var(--muted);margin:0;max-width:60ch}
+.stamp{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;
+  font-family:"JetBrains Mono",monospace;font-size:12px;
+}
+.stamp span{
+  border:1px solid var(--line-strong);border-radius:999px;padding:5px 11px;color:var(--muted);
+}
+.stamp span.lit{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+
+/* ---------- phase nav ---------- */
+.phasenav{
+  position:sticky;top:0;z-index:20;background:var(--surface);
+  border-bottom:1px solid var(--line);
+}
+.phasenav .wrap{display:flex;gap:0;overflow-x:auto;padding:0 24px;scrollbar-width:thin}
+.phasenav a{
+  font-family:Archivo,sans-serif;font-size:13px;font-weight:600;color:var(--muted);
+  text-decoration:none;white-space:nowrap;padding:13px 14px;border-bottom:2px solid transparent;
+}
+.phasenav a:first-child{padding-left:0}
+.phasenav a:hover,.phasenav a:focus-visible{color:var(--accent);border-bottom-color:var(--accent)}
+.phasenav a b{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--line-strong);margin-right:7px}
+.phasenav a:hover b{color:var(--accent)}
+
+/* ---------- sections ---------- */
+main .wrap{padding-top:14px;padding-bottom:14px}
+section{padding:46px 0 8px;border-top:1px solid var(--line)}
+section:first-of-type{border-top:none}
+.phasehead{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
+.phasenum{
+  font-family:"JetBrains Mono",monospace;font-weight:700;font-size:13px;color:var(--accent);
+  border:1px solid var(--accent);border-radius:4px;padding:2px 8px;flex:none;
+}
+h2{font-size:clamp(24px,3vw,31px);line-height:1.14;font-weight:700;letter-spacing:-.018em;margin:0;text-wrap:balance}
+h3{font-size:19px;font-weight:600;letter-spacing:-.008em;margin:34px 0 10px}
+h4{font-size:15px;font-weight:600;margin:24px 0 8px;color:var(--muted);
+   text-transform:uppercase;letter-spacing:.07em}
+p{margin:0 0 16px}
+ul,ol{margin:0 0 16px;padding-left:22px}
+li{margin-bottom:8px}
+li::marker{color:var(--muted)}
+a{color:var(--accent)}
+strong{font-weight:600}
+hr{border:none;border-top:1px solid var(--line);margin:34px 0}
+
+code{
+  font-size:.87em;background:var(--sunk);border:1px solid var(--line);
+  border-radius:4px;padding:1px 5px;white-space:nowrap;
+}
+pre{
+  background:var(--sunk);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;margin:0 0 20px;line-height:1.55;
+}
+pre code{background:none;border:none;padding:0;font-size:13px;white-space:pre}
+
+/* ---------- callouts ---------- */
+.note{
+  border:1px solid var(--line);border-left:3px solid var(--line-strong);
+  background:var(--surface);border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 20px;
+}
+.note > :last-child{margin-bottom:0}
+.note .tag{
+  display:block;font-family:Archivo,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;color:var(--muted);
+}
+.note.fix{border-left-color:var(--warn);background:var(--warn-soft)}
+.note.fix .tag{color:var(--warn)}
+.note.good{border-left-color:var(--ok);background:var(--ok-soft)}
+.note.good .tag{color:var(--ok)}
+.note.care{border-left-color:var(--caution);background:var(--caution-soft)}
+.note.care .tag{color:var(--caution)}
+
+.gate{
+  display:flex;gap:14px;align-items:flex-start;margin:26px 0 4px;padding:14px 18px;
+  background:var(--accent-soft);border-radius:8px;border:1px solid var(--line);
+}
+.gate .tag{
+  font-family:Archivo,sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent);flex:none;padding-top:3px;
+}
+.gate p{margin:0;font-size:16px}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;margin:0 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{
+  font-family:Archivo,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);background:var(--sunk);white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num,.tnum{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hot td{background:var(--accent-soft)}
+tr.hot td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+
+/* ---------- header map cards ---------- */
+.headers{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:0 0 24px;
+}
+.hcard{
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;
+  box-shadow:var(--shadow);
+}
+.hcard.swap{border-color:var(--accent);border-width:1.5px}
+.silk{
+  font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted);
+  letter-spacing:.04em;margin-bottom:10px;
+}
+.pins{display:flex;gap:5px;margin-bottom:12px}
+.pins i{width:11px;height:11px;border-radius:2px;background:var(--line-strong);display:block}
+.hcard.swap .pins i{background:var(--accent)}
+.pinname{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:20px;letter-spacing:-.02em}
+.hcard.swap .pinname{color:var(--accent)}
+.hrole{font-size:14.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+
+/* ---------- corrections list ---------- */
+.corr{list-style:none;padding:0;margin:0;counter-reset:c}
+.corr > li{
+  counter-increment:c;position:relative;padding:0 0 22px 46px;margin:0 0 22px;
+  border-bottom:1px solid var(--line);
+}
+.corr > li:last-child{border-bottom:none;margin-bottom:0}
+.corr > li::before{
+  content:counter(c,decimal-leading-zero);position:absolute;left:0;top:2px;
+  font-family:"JetBrains Mono",monospace;font-weight:700;font-size:13px;color:var(--warn);
+}
+.corr h3{margin:0 0 8px;font-size:18px}
+.corr p{margin:0 0 10px;font-size:16px}
+.corr p:last-child{margin-bottom:0}
+.said{
+  border-left:2px solid var(--line-strong);padding-left:14px;color:var(--muted);
+  font-style:italic;margin:0 0 12px;
+}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);margin-top:56px;background:var(--surface)}
+footer .wrap{padding-top:30px;padding-bottom:44px}
+footer p{font-size:14px;color:var(--muted);margin:0 0 8px}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:640px){
+  body{font-size:16px}
+  .masthead .wrap{padding-top:36px}
+  section{padding-top:36px}
+}
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Uno · CNC Shield V3 · GRBL 1.1h · servo pen lift</p>
+    <h1>LINNMON Plotter Bring-Up</h1>
+    <p class="standfirst">Eight phases, in order, each ending in something you can see or measure. Plus the eight places the existing notes are wrong — starting with the one that has been stopping the pen lift all along.</p>
+    <div class="stamp">
+      <span class="lit">checked against gnea/grbl v1.1h source</span>
+      <span>dual-X belt gantry</span>
+      <span>~150 × 150 mm</span>
+    </div>
+  </div>
+</header>
+
+<nav class="phasenav" aria-label="Phases">
+  <div class="wrap">
+    <a href="#lede"><b>!</b>The one bug</a>
+    <a href="#corrections"><b>×</b>Corrections</a>
+    <a href="#p0"><b>0</b>Safety</a>
+    <a href="#p1"><b>1</b>Firmware</a>
+    <a href="#p2"><b>2</b>Pin map</a>
+    <a href="#p3"><b>3</b>Wiring</a>
+    <a href="#p4"><b>4</b>Drivers</a>
+    <a href="#p5"><b>5</b>Settings</a>
+    <a href="#p6"><b>6</b>Test ladder</a>
+    <a href="#p7"><b>7</b>Running</a>
+    <a href="#ref"><b>§</b>Reference</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="lede">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">!</span><h2>Why the pen lift never worked</h2></div>
+    <p>Stock GRBL 1.1 <em>does</em> put a PWM signal on D11. It is the wrong PWM, and no wiring change and no G-code sender can make it right. From <code>grbl/cpu_map.h</code>:</p>
+  </div>
+  <pre><code>// Prescaled, 8-bit Fast PWM mode.
+// #define SPINDLE_TCCRB_INIT_MASK   (1&lt;&lt;CS20)               // no prescaler -&gt; 62.5 kHz
+// #define SPINDLE_TCCRB_INIT_MASK   (1&lt;&lt;CS21)               // 1/8   -&gt; 7.8 kHz  (v0.9)
+// #define SPINDLE_TCCRB_INIT_MASK   ((1&lt;&lt;CS21) | (1&lt;&lt;CS20)) // 1/32  -&gt; 1.96 kHz
+#define SPINDLE_TCCRB_INIT_MASK      (1&lt;&lt;CS22)               // 1/64  -&gt; 0.98 kHz  &lt;-- DEFAULT</code></pre>
+  <div class="col">
+    <p><strong>980 Hz.</strong> That is a 1.02 ms frame. An RC servo needs a <strong>50–60 Hz frame with a 1–2 ms pulse inside it</strong> — the whole frame is shorter than the pulse the servo is looking for. It never sees a decodable command, so it sits at an endpoint, buzzes, or twitches. There is no S value that fixes this.</p>
+    <p>The timer prescaler is set in firmware, which is why the fix has to be a re-flash. One line changes the frame to 61 Hz; two more map the S range onto 0.5–2.5 ms. After that, everything else is tuning.</p>
+  </div>
+</section>
+
+<section id="corrections">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">×</span><h2>Corrections to the notes</h2></div>
+    <p>Both documents — the handoff and the research summary — are mostly right. These eight points are not, and most of them cost hardware or hours.</p>
+  </div>
+
+  <ol class="corr col">
+    <li>
+      <h3>A sender cannot substitute for the firmware change</h3>
+      <p class="said">“Setup methods: custom firmware… <em>or</em> G-code senders: use GRBL-Plotter, which automatically converts Z moves into the spindle speed commands the servo requires.”</p>
+      <p>These are not alternatives. GRBL-Plotter converts <code>Z</code> moves into <code>M3 S</code> commands, which is genuinely useful — but the pulse train those commands produce is still 980 Hz. The firmware edit is mandatory; the sender choice is a convenience on top of it.</p>
+      <p>The one real no-reflash path is external hardware: a small MCU or servo driver board that reads D11's duty cycle and re-emits proper servo pulses. More parts, more wires, worse than four lines of C.</p>
+    </li>
+    <li>
+      <h3>D11 and D12 are two different pins with two different jobs</h3>
+      <p class="said">“Connect the servo's control wire to the PWM pin, commonly found on the Z-Endstop <em>or</em> Spindle (SpnEn) pin header.”</p>
+      <p>On GRBL 1.1 with <code>VARIABLE_SPINDLE</code> — the default — these are swapped relative to the shield silkscreen. The servo signal goes on the header marked <strong>Z endstop (D11)</strong>. The header marked <strong>SpnEn (D12)</strong> is what GRBL reads as the <strong>Z limit switch</strong>. Guessing between them means driving a servo signal into a limit input, or shorting an output to ground. Full map in <a href="#p2">phase 2</a>.</p>
+    </li>
+    <li>
+      <h3><code>M5</code> is not “pen up”</h3>
+      <p class="said">“Software interprets spindle speed commands (M3 / M5) to position the servo horn up or down.”</p>
+      <p><code>M5</code> and <code>S0</code> both call <code>spindle_stop()</code>, which clears <code>COM2A1</code> and <em>disconnects the pin entirely</em>. The servo stops receiving pulses, goes slack, and the pen drops. <code>M5</code> is not a position — it is an absence of signal.</p>
+      <p>Use <code>M3 S&lt;up&gt;</code> for up and <code>M3 S&lt;down&gt;</code> for down. Never <code>M5</code> mid-job.</p>
+    </li>
+    <li>
+      <h3>The S range is <code>$30</code>, not a universal 0–1000</h3>
+      <p class="said">“…the correct spindle speed commands (S0–S1000) required by the servo.”</p>
+      <p>S0–S1000 is one common setup, not a rule. Here <code>$30=180</code>, so the range is S0–S180 and S reads roughly as degrees. What the endpoints of that range <em>mean</em> in microseconds is set by <code>SPINDLE_PWM_MIN_VALUE</code> / <code>MAX_VALUE</code> in firmware — the pair only makes sense together.</p>
+    </li>
+    <li>
+      <h3>6 V is too much for a 9 g servo</h3>
+      <p class="said">Handoff: “buck set to ~6 V”.</p>
+      <p>SG90 and MG90S class servos are 4.8–6 V parts and run hot and jittery at the top of that. Set the buck to <strong>5.0–5.5 V</strong>. 6.0 V is only appropriate for an MG996R-class servo rated 4.8–7.2 V. Set it with the servo disconnected and a meter on the output, before it ever sees the load.</p>
+    </li>
+    <li>
+      <h3>Homing cannot work until <code>config.h</code> changes</h3>
+      <p>The handoff has homing off and treats it as an option for later. It is not optional and it will not work as shipped: GRBL's default homing cycle homes <strong>Z first</strong>, and this machine has no Z switch — so <code>$H</code> can only ever end in <code>ALARM:9</code>. This is a one-line edit (<a href="#p1">phase 1</a>), and homing is what makes work zero survive a reset (<a href="#p7">phase 7</a>), which solves the “opening the port resets the Arduino” problem outright.</p>
+    </li>
+    <li>
+      <h3><code>M2</code> is not dangerous — it resets your modal state</h3>
+      <p class="said">Handoff: “Avoid <code>M2</code> at end of file — it triggered a controller reset in testing.”</p>
+      <p>Right conclusion, wrong reason. Program end runs <code>spindle_set_state(SPINDLE_DISABLE, 0)</code> — the pen drops — and then resets the modal state: back to <code>G90</code>, back to <code>G54</code>, plane to <code>G17</code>, and <strong>feed rate to 0</strong>. Anything streamed afterwards throws <code>error:22</code>. It looks like a reset because everything you set up is gone. Still: end the file after the last move.</p>
+    </li>
+    <li>
+      <h3><code>$1=25</code> lets the gantry drift; <code>$10=10</code> is a 0.9-ism</h3>
+      <p><code>$1=25</code> de-energises the steppers 25 ms after motion stops — which is every pen-change dwell — and belt tension can then drag the gantry. Use <strong><code>$1=255</code></strong> (never disable). The motors will run warm; that is correct.</p>
+      <p><code>$10</code> in GRBL 1.1 has only two meaningful bits: 1 = machine position, 2 = buffer state. <code>$10=10</code> is a leftover from 0.9 and sets a bit that no longer exists. Use <strong><code>$10=3</code></strong>.</p>
+    </li>
+  </ol>
+
+  <div class="note good col">
+    <span class="tag">Right in the notes, worth keeping</span>
+    <p>The <code>$100=80</code> derivation (200 × 16 ÷ 40); <code>$3=1</code> as the <em>only</em> place mirroring gets fixed; <code>$5=1</code> because the switches are NC; grounding D12; refusing hard limits; the two-pass homing behaviour being normal; the negative machine coordinates being normal; and not powering the servo from the Arduino's 5 V rail. All correct, all load-bearing.</p>
+  </div>
+</section>
+
+<section id="p0">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">0</span><h2>Safety and power-up order</h2></div>
+    <ul>
+      <li><strong>Never plug or unplug a stepper while the shield is powered.</strong> The single most common way to kill an A4988.</li>
+      <li><strong>USB first, then the 24 V PSU.</strong> GRBL boots and drives the enable line and D11 to a known state before the drivers and servo are energised. Power down in reverse.</li>
+      <li><strong>The servo twitches on every Arduino reset</strong> — and opening the serial port <em>is</em> a reset. Make sure the carriage cannot jam or stab the bed at either servo extreme.</li>
+      <li>The LRS-350 has mains on its input terminals. Cover them.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="p1">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">1</span><h2>Firmware: four edits</h2></div>
+    <p>Use <strong>gnea/grbl v1.1h</strong>. Not <code>bdring/Grbl_Pen_Servo</code> — that is a fork of GRBL 0.9, and it costs you <code>$J=</code> jogging, real-time feed and rapid overrides, the 1.1 status format, and the error/alarm tables every modern sender and troubleshooting page assumes.</p>
+    <p>Install by copying the <strong>inner</strong> <code>grbl/</code> folder — the one containing <code>grbl.h</code> — to <code>~/Documents/Arduino/libraries/grbl/</code>. <code>grbl.h: No such file or directory</code> always means it is nested one level too deep.</p>
+
+    <h3>Edit 1 — servo frame rate <span class="mono" style="font-size:13px;color:var(--muted)">cpu_map.h</span></h3>
+  </div>
+  <pre><code>// 1/1024 prescaler -&gt; 61.0 Hz frame, 64 us per PWM count. RC servo compatible.
+#define SPINDLE_TCCRB_INIT_MASK   ((1&lt;&lt;CS22) | (1&lt;&lt;CS21) | (1&lt;&lt;CS20))</code></pre>
+  <div class="col">
+    <p>16 MHz ÷ 1024 ÷ 256 = <strong>61.04 Hz</strong>, a 16.4 ms frame, and one OCR count = <strong>64 µs</strong>.</p>
+
+    <h3>Edit 2 — map S onto 0.5–2.5 ms <span class="mono" style="font-size:13px;color:var(--muted)">cpu_map.h</span></h3>
+  </div>
+  <pre><code>#define SPINDLE_PWM_MAX_VALUE     39   // 39 * 64us = 2496 us   (was 255)
+#ifndef SPINDLE_PWM_MIN_VALUE
+  #define SPINDLE_PWM_MIN_VALUE   8    //  8 * 64us =  512 us   (was 1)
+#endif</code></pre>
+  <div class="col">
+    <p><code>SPINDLE_PWM_MAX_VALUE</code> has no <code>#ifndef</code> guard, so it must be edited here — setting it in <code>config.h</code> silently does nothing. Its “Don't change” comment refers to the timer TOP value; lowering the <em>mapping</em> ceiling is exactly what we want.</p>
+
+    <h3>Edit 3 — homing cycle without a Z switch <span class="mono" style="font-size:13px;color:var(--muted)">config.h</span></h3>
+  </div>
+  <pre><code>// was: HOMING_CYCLE_0 (1&lt;&lt;Z_AXIS) / HOMING_CYCLE_1 ((1&lt;&lt;X_AXIS)|(1&lt;&lt;Y_AXIS))
+#define HOMING_CYCLE_0 (1&lt;&lt;X_AXIS)
+#define HOMING_CYCLE_1 (1&lt;&lt;Y_AXIS)
+// #define HOMING_CYCLE_2</code></pre>
+  <div class="col">
+    <p>Sequential rather than simultaneous, so during bring-up you can watch one axis at a time.</p>
+
+    <h3>Edit 4 — single-axis homing <span class="mono" style="font-size:13px;color:var(--muted)">config.h</span></h3>
+  </div>
+  <pre><code>#define HOMING_SINGLE_AXIS_COMMANDS // Default disabled. Uncomment to enable.</code></pre>
+  <div class="col">
+    <p>Gives you <code>$HX</code> and <code>$HY</code>. A switch wired backwards then drives one motor into a stop instead of two.</p>
+    <p><strong>Optional but worth it:</strong> set <code>GRBL_VERSION_BUILD "20260823-servo"</code> in <code>grbl.h</code>, so <code>$I</code> tells you definitively which firmware is on the board instead of you inferring it from servo behaviour.</p>
+
+    <div class="note care">
+      <span class="tag">Before you upload</span>
+      <p><strong>Physically remove the CNC shield.</strong> D0/D1 are the serial lines, and you do not want the steppers live while the board resets. <strong>Flashing wipes EEPROM</strong> — settings <em>and</em> your <code>G10 L20</code> work zero. Restore both after.</p>
+    </div>
+
+    <h3>Verify the flash</h3>
+    <p>Send <code>$I</code>. Expect:</p>
+  </div>
+  <pre><code>[VER:1.1h.20260823-servo:]
+[OPT:VH,15,128]</code></pre>
+  <div class="col">
+    <p><strong><code>V</code></strong> means <code>VARIABLE_SPINDLE</code> is compiled in. Without it, D11 is not a PWM pin at all and the Z limit moves back onto D11 — stop and fix that before wiring anything. <strong><code>H</code></strong> confirms edit 4. The build string confirms edits 1–3 are in this binary; <code>OPT</code> does not report the timer change, which is why the version stamp earns its keep.</p>
+  </div>
+  <div class="gate col"><span class="tag">Gate</span><p><code>$I</code> returns <code>V</code> and <code>H</code> in the OPT string, and your own build stamp in the version.</p></div>
+</section>
+
+<section id="p2">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">2</span><h2>The pin map</h2></div>
+    <p>This is where the confusion lives. Compiling with <code>VARIABLE_SPINDLE</code> swaps the Z-limit and spindle pins so GRBL can reach the hardware PWM on D11:</p>
+  </div>
+  <pre><code>#ifdef VARIABLE_SPINDLE // Z Limit pin and spindle enabled swapped to access hardware PWM on Pin 11.
+  #define Z_LIMIT_BIT   4 // Uno Digital Pin 12
+#else
+  #define Z_LIMIT_BIT   3 // Uno Digital Pin 11
+#endif</code></pre>
+  <div class="col"><p>Which makes the four headers along that edge of the shield read like this — the two highlighted ones do <em>not</em> do what the silkscreen says:</p></div>
+
+  <div class="headers">
+    <div class="hcard">
+      <p class="silk">silkscreen · X+ X−</p>
+      <div class="pins"><i></i><i></i><i></i></div>
+      <p class="pinname">D9</p>
+      <p class="hrole">X limit input. X endstop switch lands here.</p>
+    </div>
+    <div class="hcard">
+      <p class="silk">silkscreen · Y+ Y−</p>
+      <div class="pins"><i></i><i></i><i></i></div>
+      <p class="pinname">D10</p>
+      <p class="hrole">Y limit input. Y endstop switch lands here.</p>
+    </div>
+    <div class="hcard swap">
+      <p class="silk">silkscreen · Z+ Z−</p>
+      <div class="pins"><i></i><i></i><i></i></div>
+      <p class="pinname">D11</p>
+      <p class="hrole"><strong>Servo signal.</strong> This is the spindle PWM pin, not a limit input.</p>
+    </div>
+    <div class="hcard swap">
+      <p class="silk">silkscreen · SpnEn</p>
+      <div class="pins"><i></i></div>
+      <p class="pinname">D12</p>
+      <p class="hrole"><strong>Z limit input.</strong> Jumper it to GND — see phase 3.</p>
+    </div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th class="num">Uno</th><th>Silkscreen</th><th>What GRBL 1.1 does with it here</th></tr></thead>
+      <tbody>
+        <tr><td class="num">D2 / D5</td><td>X step / dir</td><td>X axis, plus the A-slot clone for the second X motor</td></tr>
+        <tr><td class="num">D3 / D6</td><td>Y step / dir</td><td>Y axis</td></tr>
+        <tr><td class="num">D4 / D7</td><td>Z step / dir</td><td>Unused — there is no Z motor</td></tr>
+        <tr><td class="num">D8</td><td>EN</td><td>Stepper enable, active low</td></tr>
+        <tr><td class="num">D9</td><td>X+ / X−</td><td>X limit input</td></tr>
+        <tr><td class="num">D10</td><td>Y+ / Y−</td><td>Y limit input</td></tr>
+        <tr class="hot"><td class="num">D11</td><td>Z+ / Z−</td><td><strong>Servo signal</strong> (spindle PWM)</td></tr>
+        <tr class="hot"><td class="num">D12</td><td>SpnEn</td><td><strong>Z limit input</strong></td></tr>
+        <tr><td class="num">D13</td><td>SpnDir</td><td>Spindle direction — unused</td></tr>
+        <tr><td class="num">A0 / A1 / A2</td><td>Abort / Hold / Resume</td><td>Reset, feed hold, cycle start</td></tr>
+        <tr><td class="num">A3</td><td>CoolEn</td><td>Flood coolant — unused</td></tr>
+        <tr><td class="num">A5</td><td>—</td><td>Probe input — unused</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="gate col"><span class="tag">Gate</span><p>You can say out loud what D9, D10, D11 and D12 each do, without looking at the shield.</p></div>
+</section>
+
+<section id="p3">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">3</span><h2>Wiring</h2></div>
+
+    <h3>Endstops</h3>
+    <p>Both harvested Ender switches are <strong>NC — normally closed</strong>: closed at rest, open when pressed. Two wires each, signal and GND, polarity irrelevant. X to D9, Y to D10.</p>
+    <p>GRBL enables an internal pull-up on every limit pin. With <code>$5=0</code> a LOW pin reads as triggered — which for an NC switch is its <em>resting</em> state, so GRBL would believe both switches are permanently pressed. <strong><code>$5=1</code> inverts that</strong> and is required. Route the switch wiring away from the stepper cables; NC's one genuine virtue is that a broken wire looks like a pressed switch, so it fails loud.</p>
+
+    <h3>D12 — the pin that must be grounded</h3>
+    <p><code>$5=1</code> inverts <em>all</em> limit pins, Z included. D12 has nothing on it, the pull-up holds it HIGH, and HIGH-when-inverted means triggered — that is the phantom <code>Pn:Z</code> that sits in the status report forever.</p>
+  </div>
+  <pre><code>D12 (SpnEn header)  ──►  any shield GND pin</code></pre>
+  <div class="col">
+    <p>One jumper wire. Required before hard limits are even thinkable, harmless otherwise. If you would rather not have the wire, compiling <code>#define INVERT_LIMIT_PIN_MASK (1&lt;&lt;Z_LIMIT_BIT)</code> inverts Z alone — but the wire is simpler.</p>
+
+    <h3>Servo</h3>
+  </div>
+  <pre><code>SIGNAL (yellow/orange, outer)  ──►  D11 = "Z endstop" header signal pin
+V+     (red, MIDDLE wire)      ──►  buck VOUT+   (5.0–5.5 V)
+GND    (brown/black, outer)    ──►  buck VOUT−  AND a shield GND pin</code></pre>
+  <div class="col">
+    <ul>
+      <li>The <strong>middle wire is always power</strong>. Get it wrong and the servo dies instantly.</li>
+      <li><strong>Set the buck voltage with the servo disconnected</strong>, meter on the output.</li>
+      <li><strong>470–1000 µF electrolytic across V+ and GND, physically at the servo.</strong> Not optional in practice — the lift current spike is what causes the random resets.</li>
+      <li>Never power the servo from the Arduino or shield 5 V rail. A stalled 9 g servo pulls ~700 mA and the regulator browns out mid-plot.</li>
+      <li>The common ground is real via the shared PSU, but keep the explicit brown-to-shield-GND link anyway — it is the signal return path, and without it the servo jitters.</li>
+      <li>Still jittering? Check whether your shield has a filter capacitor fitted across that endstop pin — some V3.51 clones do, and it rounds off the servo pulse. Remove it.</li>
+    </ul>
+
+    <h3>Power chain</h3>
+  </div>
+  <pre><code>Mean Well LRS-350-24  (24 V, 14.6 A)
+  ├─► CNC Shield V+ / GND          (steppers)
+  └─► LM2596 buck @ 5.0–5.5 V  ──► servo  (+ bulk cap at the servo)</code></pre>
+  <div class="col">
+    <p>24 V is inside the A4988's 35 V ceiling and gives the Ender motors good top speed, but <strong>A4988s at 24 V run hot</strong>. Heatsinks on all three, and a fan if the electronics are enclosed. Random mid-plot stalls that are not mechanical are thermal shutdown until proven otherwise.</p>
+
+    <div class="note">
+      <span class="tag">Optional, cheap, worth it</span>
+      <p>An <strong>abort button on A0</strong> to GND, so <kbd>Ctrl-X</kbd> over serial is not your only emergency stop. And <strong>10 µF between RESET and GND</strong> suppresses the DTR auto-reset so opening the port stops resetting the controller — remove it to flash. Phase 7 explains why this matters much less once homing is on.</p>
+    </div>
+  </div>
+  <div class="gate col"><span class="tag">Gate</span><p><code>?</code> at rest shows no <code>Pn:</code> field at all. Pressing X by hand makes <code>Pn:X</code> appear and releasing makes it vanish; same for Y.</p></div>
+</section>
+
+<section id="p4">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">4</span><h2>Drivers and mechanics</h2></div>
+
+    <h3>A4988 current</h3>
+    <p>The Ender 42-34s are ~0.84 A/phase. Set each driver's Vref with a meter on the pot, motor connected, board powered, motor idle:</p>
+  </div>
+  <pre><code>Vref = I_target × 8 × R_sense
+
+R_sense = 0.100 Ω  →  0.84 A ≈ 0.67 V
+R_sense = 0.050 Ω  →  0.84 A ≈ 1.34 V</code></pre>
+  <div class="col">
+    <p><strong>Check which sense resistors your boards actually have</strong> — marked R100 or R050 beside the chip. Getting it backwards is a factor-of-two current error. Start at ~80 % of those figures. A plotter needs very little torque, and running cool is worth more than headroom.</p>
+
+    <h3>Microstepping</h3>
+    <p>1/16 on the V3 shield = <strong>all three jumpers fitted</strong> under each driver. All three drivers identical, or the two X motors fight each other. <code>$100 = 200 × 16 ÷ (20 × 2) = 80</code> steps/mm — confirmed by test T3.</p>
+
+    <h3>Squaring the dual-X gantry</h3>
+    <p>Two motors, one axis, <strong>one</strong> limit switch. Homing finds one end; it cannot square the beam. If the gantry is racked, it stays racked.</p>
+    <p>Before each session: power off so both motors are de-energised, push the gantry gently against a hard mechanical reference at both ends until it seats square, then power up. With <code>$1=255</code> the motors stay energised from then on and it holds.</p>
+    <p>If racking becomes a recurring annoyance, the real fix is a second X switch and a controller that can auto-square — which the Uno cannot do while also driving the servo. That is an ESP32/FluidNC upgrade, not a GRBL-on-Uno one.</p>
+
+    <h3>Pen holder — the biggest determinant of line quality</h3>
+    <ul>
+      <li>The pen should be <strong>spring-loaded or gravity-floating</strong>, with the servo only lifting it.</li>
+      <li>Tune pen-down so the arm travels slightly <em>past</em> the touch point, so the pen floats on its spring. A servo pressing the pen into the paper stalls, buzzes, draws current, and gives you line weight that varies with how flat the bed is.</li>
+      <li>Aim for <strong>25–40° of servo travel</strong> between up and down. Much less and the coarse S resolution becomes visible; much more and the lift is slow.</li>
+      <li>Set the horn on the spline at mid-travel before tightening, so <code>S90</code> is roughly centre.</li>
+    </ul>
+  </div>
+  <div class="gate col"><span class="tag">Gate</span><p>Gantry seats square by hand, drivers warm rather than hot after a few minutes enabled, pen holder floats on its spring.</p></div>
+</section>
+
+<section id="p5">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">5</span><h2>Settings</h2></div>
+    <p>Target values, once bring-up is complete. One <code>$n=v</code> per line, and <strong>no comments</strong> — GRBL's <code>$</code> parser does not strip them, so <code>$0=10 ; foo</code> returns <code>error:3</code>.</p>
+  </div>
+  <pre><code>$0=10     $1=255    $2=0      $3=1      $4=0      $5=1      $6=0
+$10=3     $11=0.020 $12=0.002 $13=0
+$20=1     $21=0     $22=1     $23=2
+$24=25    $25=500   $26=250   $27=3.000
+$30=180   $31=0     $32=0
+$100=80.000   $101=80.000   $102=80.000
+$110=2000.000 $111=2000.000 $112=500.000
+$120=200.000  $121=200.000  $122=200.000
+$130=&lt;measured&gt; $131=&lt;measured&gt; $132=200.000</code></pre>
+
+  <div class="col"><h4>Changed from the last known-good block</h4></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th class="num">Setting</th><th class="num">Was</th><th class="num">Now</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="num">$1</td><td class="num">25</td><td class="num">255</td><td>Never disable the steppers. At 25 ms they de-energise during every pen-change dwell and belt tension drags the gantry. Motors run warm — correct.</td></tr>
+        <tr><td class="num">$10</td><td class="num">10</td><td class="num">3</td><td>0.9-era value. In 1.1 only bit 0 (MPos) and bit 1 (buffer) exist. <code>3</code> gives both, which is what you want while debugging.</td></tr>
+        <tr><td class="num">$11</td><td class="num">0.010</td><td class="num">0.020</td><td>Junction deviation. The CNC default makes GRBL crawl through the many short segments a plot is made of.</td></tr>
+        <tr><td class="num">$20</td><td class="num">0</td><td class="num">1</td><td>Soft limits, once homing works. They act on the planned target before motion starts and cannot false-trip on wire noise.</td></tr>
+        <tr><td class="num">$22</td><td class="num">0</td><td class="num">1</td><td>Homing on. This is what makes work zero survive a reset.</td></tr>
+        <tr><td class="num">$27</td><td class="num">1.0</td><td class="num">3.0</td><td>Pull-off. 1 mm is marginal for reclaiming an NC switch; 3 mm guarantees release and costs nothing.</td></tr>
+        <tr><td class="num">$120 / $121</td><td class="num">50</td><td class="num">200</td><td>50 mm/s² takes 0.66 s and 11 mm to reach 2000 mm/min, so nearly every segment in a real plot is acceleration-limited. Tune up per test T5.</td></tr>
+        <tr><td class="num">$130 / $131</td><td class="num">200</td><td class="num">measure</td><td>Set to the travel you actually have. Soft limits protect nothing if the number is invented.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <h4>Leave exactly as they are</h4>
+    <ul>
+      <li><strong><code>$3=1</code></strong> — inverts X. Mirroring is fixed here and <em>never</em> by flipping G-code files.</li>
+      <li><strong><code>$5=1</code></strong> — required by the NC switches.</li>
+      <li><strong><code>$21=0</code></strong> — hard limits stay off, permanently. NC switches on unshielded wire beside stepper cables, plus a pin-change interrupt, equals <code>ALARM:1</code> at random. Homing plus soft limits gives the same protection without the false trips.</li>
+      <li><strong><code>$23=2</code></strong> — Y homes negative, X positive: home corner front-right, <code>$H</code> drives +X and −Y.</li>
+      <li><strong><code>$30=180</code>, <code>$31=0</code></strong> — maps S linearly across the servo's pulse range. Never change one without the other.</li>
+      <li><strong><code>$32=0</code></strong> — laser mode off, and it must stay off. Laser mode applies S changes <em>during</em> motion without draining the planner, so the pen would lift somewhere in the middle of a line instead of at its end.</li>
+    </ul>
+
+    <h3>Why machine coordinates go negative — and why that is right</h3>
+    <p>X homes positive, so it ends at ≈ −3 mm with travel running to −<code>$130</code>. Y homes negative, so it ends at ≈ −(<code>$131</code>−3) with travel running up to 0. The workspace is therefore the box <strong>X ∈ [−$130, 0], Y ∈ [−$131, 0]</strong> — all negative, which is exactly what GRBL's soft-limit checker requires (“assumes the workspace volume is in all negative space”, <code>limits.c</code>).</p>
+    <p>A drawing authored in Quadrant I from a work zero at the paper's bottom-left runs toward (0, 0) — inside the box the whole way.</p>
+
+    <div class="note fix">
+      <span class="tag">Rule this imposes on generated G-code</span>
+      <p><strong>No Z words. At all.</strong> Soft limits check every axis including the unhomed Z, so a single <code>G0 Z5</code> throws <code>ALARM:2</code> and aborts the job. The pen is <code>M3 S&lt;n&gt;</code>; there is no Z axis on this machine.</p>
+    </div>
+  </div>
+  <div class="gate col"><span class="tag">Gate</span><p><code>$$</code> matches the block above, with <code>$20</code> and <code>$22</code> still 0 until the test ladder is done.</p></div>
+</section>
+
+<section id="p6">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">6</span><h2>The test ladder</h2></div>
+    <p>Run T0 through T6 in order. Each only means something if the previous passed.</p>
+
+    <h3>Before any G-code — read the pins</h3>
+    <p>Send <code>?</code>. At rest, with nothing pressed, <code>Pn:</code> should be <strong>absent entirely</strong>.</p>
+    <ul>
+      <li><code>Pn:Z</code> present → D12 is not grounded.</li>
+      <li><code>Pn:XY</code> present → <code>$5</code> is wrong for NC switches, or the switches are on the wrong pins.</li>
+      <li>Press each switch by hand and confirm the flag appears and clears. <strong>Do this before homing</strong> — a switch that does not toggle here will drive the gantry into the frame at 500 mm/min.</li>
+    </ul>
+
+    <h3>T0 — servo only, no motion</h3>
+    <p>Run <code>tools/servo_sweep.py</code>: <kbd>u</kbd>/<kbd>d</kbd> nudge by one PWM count, a number jumps, <kbd>q</kbd> parks and quits. Find pen-up (clears the paper by 3–5 mm, no more) and pen-down (touching, holder's spring taking the pressure, servo <em>not</em> straining). Buzzing means you have gone past the servo's mechanical stop or you are pressing into the bed — back off.</p>
+    <p>Then run <code>T0_servo_only.gcode</code>: five clean cycles, no motor motion, no buzzing, no board resets.</p>
+    <p><strong>If the servo does not move at all, or slams to one end and stays: the timer edit did not take.</strong> Back to phase 1.</p>
+
+    <h4>S value → pulse width, at <code>$30=180</code></h4>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th class="num">S</th><th class="num">PWM</th><th class="num">Pulse</th><th class="num">S</th><th class="num">PWM</th><th class="num">Pulse</th></tr></thead>
+      <tbody>
+        <tr class="hot"><td class="num">0</td><td class="num">off</td><td class="num">no signal — servo limp</td><td class="num">100</td><td class="num">25</td><td class="num">1600 µs</td></tr>
+        <tr><td class="num">20</td><td class="num">11</td><td class="num">704 µs</td><td class="num">110</td><td class="num">26</td><td class="num">1664 µs</td></tr>
+        <tr><td class="num">40</td><td class="num">14</td><td class="num">896 µs</td><td class="num">120</td><td class="num">28</td><td class="num">1792 µs</td></tr>
+        <tr><td class="num">60</td><td class="num">18</td><td class="num">1152 µs</td><td class="num">140</td><td class="num">32</td><td class="num">2048 µs</td></tr>
+        <tr><td class="num">70</td><td class="num">20</td><td class="num">1280 µs</td><td class="num">160</td><td class="num">35</td><td class="num">2240 µs</td></tr>
+        <tr><td class="num">90</td><td class="num">23</td><td class="num">1472 µs</td><td class="num">180</td><td class="num">39</td><td class="num">2496 µs</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <p><code>pwm = floor(S × 31 / 180) + 8</code>, pulse = pwm × 64 µs. <strong>One PWM count is about 6 units of S</strong> — <code>S70</code> and <code>S73</code> are the same pulse. Step S by 6 or more; anything finer is noise, and fine pen-height adjustment belongs in the holder, not the S value.</p>
+
+    <h3>T1 — motion, pen up</h3>
+    <p>Four laps of a 50 mm square in the air, returning to work zero. Both X motors turning together, no buzzing, no missed corners. Mark the start point and confirm it lands back on it.</p>
+
+    <h3>T2 — first line on paper</h3>
+    <p>One 50 mm square, pen down. Corners square, line closes cleanly on itself.</p>
+
+    <h3>T3 — calibrate steps/mm</h3>
+    <p>A 100 mm line along each axis. Measure with calipers:</p>
+  </div>
+  <pre><code>$100_new = $100_old × (100 / measured_X)
+$101_new = $101_old × (100 / measured_Y)</code></pre>
+  <div class="col">
+    <p>More than ~2 % off means a 16-tooth pulley, a missing microstep jumper, or belt slip. Find the cause rather than fudging the number.</p>
+
+    <h3>T4 — pen lift reliability</h3>
+    <p>Eight 10 mm dashes with a lift between each. <strong>The test that matters most.</strong> Every dash the same length and weight, gaps genuinely blank. Tails or dots in the gaps mean the dwell is too short — raise <code>G4 P0.20</code> to <code>P0.30</code>.</p>
+
+    <h3>T5 — acceleration tuning</h3>
+    <p>A fast zigzag returning to origin. Raise <code>$120</code>/<code>$121</code> together — 200 → 300 → 400 — re-running after each. The first value that loses position is your ceiling; <strong>back off 30 %</strong>. Then do the same for <code>$110</code>/<code>$111</code> if you want more speed: the Uno can push far more step rate than this machine needs, so mechanics will be the limit, not GRBL.</p>
+
+    <h3>T6 — squareness</h3>
+    <p>A 100 mm square with both diagonals. Measure them — equal (141.4 mm) means the gantry is square. Unequal means the beam is racked; back to phase 4.</p>
+
+    <h3>Homing, last</h3>
+    <p>Only after T0–T6 pass, and with a hand on the USB cable: <code>$HX</code>, watch it. Then <code>$HY</code>. Then <code>$H</code>. Each axis moves <strong>twice</strong> — fast seek, pull off, slow locate, pull off. That is <code>N_HOMING_LOCATE_CYCLE</code> doing its job, not a bug.</p>
+    <p>Then set <code>$130</code>/<code>$131</code> to the travel you measured, and only then <code>$20=1</code>.</p>
+  </div>
+  <div class="gate col"><span class="tag">Gate</span><p>T0–T6 all pass, homing repeats to the same spot, <code>$20=1</code> and <code>$22=1</code> are on.</p></div>
+</section>
+
+<section id="p7">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">7</span><h2>Running plots</h2></div>
+
+    <h3>Set work zero once — it lives in EEPROM</h3>
+    <p><code>G10 L20 P1</code> writes the G54 offset to EEPROM, so it <strong>survives resets, power cycles and serial reconnects</strong>. Homing gives it a repeatable machine origin to be measured from. Together they retire the “opening the port resets the Arduino and I lose my position” problem entirely.</p>
+    <p><strong>First time on a new paper position:</strong></p>
+  </div>
+  <pre><code>python3 plot.py --port &lt;port&gt; --send '$H'                 # establish machine origin
+python3 plot.py --port &lt;port&gt; --jog X-40                  # jog to the paper's bottom-left
+python3 plot.py --port &lt;port&gt; --send 'G10 L20 P1 X0 Y0'   # store work zero</code></pre>
+  <div class="col"><p><strong>Every session after that:</strong></p></div>
+  <pre><code>python3 plot.py --port &lt;port&gt; --send '$H'      # that's the whole ritual
+python3 plot.py --port &lt;port&gt; --send '$#'      # optional: confirm G54 is still there
+python3 plot.py --port &lt;port&gt; plot.gcode</code></pre>
+  <div class="col">
+    <p>For jogging, prefer GRBL 1.1's jog command over <code>G0</code>: <code>$J=G91 G21 X10 F1000</code>. It leaves modal state alone, respects soft limits, and is cancellable mid-move.</p>
+
+    <h3>File conventions</h3>
+  </div>
+  <pre><code>G21          ; mm                    | G-code preamble
+G90          ; absolute
+G94          ; units per minute
+M3 S160      ; pen up
+G4 P0.30     ; let it get there
+...
+M3 S160      ; pen up                 | postamble
+G4 P0.30
+G0 X0 Y0     ; back to work zero</code></pre>
+  <div class="col">
+    <ul>
+      <li><strong>No <code>M2</code> / <code>M30</code></strong> — it drops the pen and resets feed rate to 0, so everything after throws <code>error:22</code>. Just end after the last move.</li>
+      <li><strong>No mid-file <code>M5</code></strong> — it disconnects the PWM pin and the servo goes slack.</li>
+      <li><strong>No Z words</strong> — soft limits will abort the job.</li>
+      <li>Feeds at <code>F2000</code> or below while <code>$110</code>/<code>$111</code> are 2000; anything higher is silently clamped, so time estimates must assume 2000 mm/min.</li>
+      <li>Prefer <code>G90</code> absolute for long plots — a dead stream can be resumed from a line number. <code>G91</code> cannot.</li>
+    </ul>
+
+    <h3>Streaming</h3>
+    <p>Use <code>plot.py</code> over UGS. The UGS failures here were real: desyncs, silent mid-job cancels, and — the nasty one — iCloud placeholder files that had not downloaded, which UGS streams as a truncated file and then reports “done”.</p>
+    <ul>
+      <li><strong>Close UGS first.</strong> One program per serial port.</li>
+      <li><code>ok</code> means <strong>accepted into the planner buffer</strong>, not executed. Motion can be in flight for seconds after the last <code>ok</code>. Wait for <code>Idle</code> before concluding anything.</li>
+      <li>Check status <em>inside</em> the same connection — a separate invocation resets the board.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="ref">
+  <div class="col">
+    <div class="phasehead"><span class="phasenum">§</span><h2>Reference</h2></div>
+    <h3>Reading the status line</h3>
+  </div>
+  <pre><code>&lt;Idle|MPos:-3.000,-197.000,0.000|Bf:15,128|FS:0,0|WCO:-40.000,-150.000,0.000&gt;</code></pre>
+  <div class="col">
+    <ul>
+      <li>State: <code>Idle</code> / <code>Run</code> / <code>Jog</code> / <code>Hold</code> / <code>Alarm</code> / <code>Home</code> / <code>Door</code> / <code>Check</code>.</li>
+      <li><code>WCO</code> is the G54 offset, emitted periodically so a sender can convert between machine and work position.</li>
+      <li><code>Bf:15,128</code> — planner blocks free, RX bytes free. If the first number sits at 15 while streaming, the sender is not keeping the buffer fed and the machine is stopping between segments.</li>
+      <li><code>Pn:</code> appears <strong>only</strong> when something is triggered. Absent is what you want.</li>
+    </ul>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th class="num">Alarm</th><th>Meaning</th><th>Usual cause here</th></tr></thead>
+      <tbody>
+        <tr><td class="num">ALARM:1</td><td>Hard limit triggered</td><td>Why <code>$21</code> stays 0</td></tr>
+        <tr><td class="num">ALARM:2</td><td>Target exceeds machine travel</td><td>Work zero too close to an edge, or a stray Z word</td></tr>
+        <tr><td class="num">ALARM:3</td><td>Reset while in motion</td><td>Position lost — home before continuing</td></tr>
+        <tr><td class="num">ALARM:8</td><td>Homing failed to clear the switch</td><td><code>$27</code> pull-off too small, or a stuck switch</td></tr>
+        <tr><td class="num">ALARM:9</td><td>Switch not found within the search distance</td><td>Switch unwired, <code>$5</code> wrong, <code>$23</code> sending the axis the wrong way, or <code>$13x</code> too small</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col"><p><code>$X</code> unlocks but does <strong>not</strong> restore position. After <code>ALARM:1</code> or <code>:3</code>, home before drawing.</p></div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th class="num">Error</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td class="num">error:2</td><td>Bad number format</td></tr>
+        <tr><td class="num">error:3</td><td>Invalid <code>$</code> statement — often a comment on a settings line</td></tr>
+        <tr><td class="num">error:8</td><td><code>$</code> command only valid when idle</td></tr>
+        <tr><td class="num">error:9</td><td>G-code locked out during alarm — it wants a <code>$H</code> or <code>$X</code></td></tr>
+        <tr><td class="num">error:20</td><td>Unsupported command</td></tr>
+        <tr><td class="num">error:22</td><td>Feed rate undefined — almost always an <code>M2</code> earlier in the file</td></tr>
+        <tr><td class="num">error:24</td><td>Two G-codes needing axis words on one line</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <h4>Real-time bytes — immediate, no newline, no <code>ok</code></h4>
+    <p><code>?</code> status · <code>~</code> cycle start/resume · <code>!</code> feed hold · <kbd>Ctrl-X</kbd> (0x18) soft reset · <code>0x85</code> jog cancel</p>
+
+    <h4>Gotchas worth keeping in your head</h4>
+    <ul>
+      <li><code>$22=1</code> makes GRBL <strong>boot into Alarm</strong> and refuse everything including jogging until <code>$H</code> or <code>$X</code>. By design, and thoroughly confusing if you forget.</li>
+      <li>Re-flashing wipes EEPROM — settings <em>and</em> your work zero.</li>
+      <li>With a working pen lift, multi-stroke art no longer needs single-stroke chaining. Plot the original file; the visible connectors go away.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Firmware quotes and pin behaviour verified against <span class="mono">gnea/grbl</span> v1.1h — <span class="mono">cpu_map.h</span>, <span class="mono">config.h</span>, <span class="mono">spindle_control.c</span>, <span class="mono">limits.c</span>, <span class="mono">report.c</span>.</p>
+    <p>Companion files live in the repo: <span class="mono">docs/SETUP.md</span>, <span class="mono">docs/FIRMWARE_SERVO.md</span>, <span class="mono">settings/plotter.grbl.txt</span>, <span class="mono">gcode/tests/</span>, <span class="mono">tools/servo_sweep.py</span>.</p>
+  </div>
+</footer>
+
+</body></html>
