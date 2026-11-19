@@ -1,0 +1,142 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0}</style></head><body>
+<!-- Room R05 Harbor (Copilot harness). WHAT-IF: tool layout on the SKÅDIS on the ply board. Not built. Room Now: https://claude.ai/artifact/A8852JLLGWK2Gi8ZHWE37N -->
+<title>SKÅDIS Layout</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one column; what-if stamp, front view of the 76 x 56 SKÅDIS with every tool to scale, then the parts list */
+:root{--bg:#f2f3f1;--ink:#1d2124;--mute:#62696e;--line:#a3aaae;--card:#ffffff;--board:#1f1f1f;--skadis:#f4f4f2;--slot:#c9ccc9;
+--part:#2a2a2a;--tool:#e9e4da;--a:#2f7d5b;--b:#3a6ea5;--c:#8a8f93;--grab:rgba(47,125,91,.10);--warn:#c0612a;
+--f-disp:"Barlow Condensed",system-ui,sans-serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141719;--ink:#e4e7e8;--mute:#98a1a6;--line:#525a5f;--card:#1b1f22;
+--skadis:#d9dad6;--slot:#a9ada9;--a:#5fbf94;--b:#78a6d8;--c:#98a1a6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141719;--ink:#e4e7e8;--mute:#98a1a6;--line:#525a5f;--card:#1b1f22;
+--skadis:#d9dad6;--slot:#a9ada9;--a:#5fbf94;--b:#78a6d8;--c:#98a1a6;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+main{max-width:1000px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:26px}
+h1{font-family:var(--f-disp);font-weight:800;font-size:2.1rem;margin:0;text-transform:uppercase}
+h2{font-family:var(--f-disp);font-weight:800;font-size:1.35rem;margin:0 0 6px;text-transform:uppercase;letter-spacing:.02em}
+p{margin:0;max-width:70ch}.sub{color:var(--mute)}
+.stamp{font-family:var(--f-mono);font-size:.8rem;border:1px solid var(--warn);color:var(--warn);border-radius:3px;padding:2px 10px;justify-self:start}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:600px}
+svg text{font-family:var(--f-mono)}
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--f-mono);font-size:.78rem;color:var(--mute);margin-top:8px}
+.key i{display:inline-block;width:12px;height:12px;border:2px solid;border-radius:2px;vertical-align:-2px;margin-right:6px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}.two>div{min-width:0}
+ul{margin:0;padding-left:1.15em;display:grid;gap:5px;max-width:70ch}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+td,th{border-bottom:1px solid var(--line);padding:6px 12px 6px 0;text-align:left;vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);font-weight:500}
+td.t{font-family:var(--f-mono);font-weight:500}
+.tw{overflow-x:auto} a{color:inherit}
+</style>
+<main>
+<p style="margin:0;font:500 .85rem 'IBM Plex Mono',ui-monospace,monospace"><a href="./" style="color:inherit">← Harbor Plans</a></p>
+
+<header style="display:grid;gap:10px">
+<span class="stamp">WHAT-IF · not built · 2026-10-30</span>
+<h1>SKÅDIS layout</h1>
+<p class="sub">The white SKÅDIS (76 × 56) at the left end of the black board, its only panel; the spare by the door is not used. Pliers, cutters, strippers and the crimper live in the cupboard. Most-used tools sit low and to the right, nearest where you sit at the bench. Tool sizes are estimated from the 2026-10-30 desk photo (±1 cm), with the ruler as the scale; we measure each one with the caliper before designing its holder.</p>
+</header>
+
+<section>
+<h2>Front view</h2>
+<div class="fig"><svg id="front" viewBox="-20 -40 960 650" role="img" aria-label="Front view of the 76 by 56 SKÅDIS: ruler across the top, scissors, a screwdriver and hex key strip and the caliper in the middle, and in the bottom grab zone the remote, spanner, travel adapter, tape measure, utility knife and pens, with an open slot at bottom right"></svg></div>
+<div class="key"><span><i style="border-color:var(--a)"></i>A · every session</span><span><i style="border-color:var(--b)"></i>B · weekly</span><span><i style="border-color:var(--c)"></i>C · rarely</span><span><i style="border-color:var(--part);background:var(--part)"></i>printed holder (black PLA)</span><span><i style="border-color:var(--ink);border-style:dashed"></i>optional / open</span></div>
+</section>
+
+<section class="two">
+<div>
+<h2>Why it sits where it does</h2>
+<ul>
+<li><b>Grab zone, bottom band:</b> what you pick up seated, mid-job: knife, tape, pens. The caliper hangs just above them on the right, because every print and every cut starts with a measurement.</li>
+<li><b>Driver strip, middle:</b> one printed bar holds all the drivers and both hex keys, ordered from least used (tester, far left) to most used (precision driver, right).</li>
+<li><b>Top:</b> the ruler lies flat across the top on two cradles. It is long, used less, and lifts straight off.</li>
+<li><b>Rarely used, bottom left:</b> spanner and travel adapter sit farthest from your hand.</li>
+<li><b>Open slot, bottom right:</b> the best spot on the panel is left free on purpose.</li>
+</ul>
+</div>
+<div>
+<h2>Open questions</h2>
+<ul>
+<li>Flush cutter and wire stripper: wiring for Etch is daily work. Do they stay in the cupboard, or take the open slot?</li>
+<li>Remote: which light does it switch? If it is the bench light, it moves to the open slot.</li>
+<li>Toy car: does it go on the wall, as the shelf drawn top right, or not at all?</li>
+<li>The SKÅDIS's height above the bench is from the 3D model, not measured.</li>
+</ul>
+</div>
+</section>
+
+<section>
+<h2>Parts for one print job</h2>
+<p class="sub" style="margin-bottom:8px">We design these ourselves, all from one family: the same two-peg SKÅDIS hook (it locks with a quarter turn, so nothing lifts off when you grab), 2.4 mm walls and black PLA to match the board. Thirteen parts, one Bambu A1 plate (256 × 256), if the plate fits; otherwise two plates.</p>
+<div class="tw"><table>
+<tr><th>Tier</th><th>Tool</th><th>Size (photo est.)</th><th>Holder</th></tr>
+<tr><td class="t" style="color:var(--a)">A</td><td>Neiko digital caliper</td><td>≈ 240 × 75</td><td>Jaw slot, hangs upright</td></tr>
+<tr><td class="t" style="color:var(--a)">A</td><td>Utility knife</td><td>≈ 150 × 30</td><td>Open-top pocket</td></tr>
+<tr><td class="t" style="color:var(--a)">A</td><td>Stanley 3 m tape</td><td>≈ 60 × 65</td><td>Cradle, open front</td></tr>
+<tr><td class="t" style="color:var(--a)">A</td><td>3 markers / pens</td><td>≈ 145 × 14 each</td><td>Cup, 3–5 holes, tilted forward</td></tr>
+<tr><td class="t" style="color:var(--a)">A</td><td>Precision driver (yellow), 2 hex keys</td><td>≈ 115, 140, 80</td><td rowspan="2">One driver strip, 6 holes</td></tr>
+<tr><td class="t" style="color:var(--b)">B</td><td>Red driver, green flat driver, line tester</td><td>≈ 115, 240, 145</td></tr>
+<tr><td class="t" style="color:var(--b)">B</td><td>Scissors</td><td>≈ 220 × 80</td><td>Blade slot</td></tr>
+<tr><td class="t" style="color:var(--b)">B</td><td>Twist'n Flex ruler</td><td>≈ 320 × 35</td><td>Two cradles</td></tr>
+<tr><td class="t" style="color:var(--b)">B</td><td>Amazon Basics remote</td><td>≈ 165 × 55</td><td>Pocket</td></tr>
+<tr><td class="t" style="color:var(--c)">C</td><td>Small spanner</td><td>≈ 75 × 22</td><td>Peg</td></tr>
+<tr><td class="t" style="color:var(--c)">C</td><td>Orange travel adapter</td><td>≈ 60 × 70, depth unknown</td><td>Cup</td></tr>
+<tr><td class="t" style="color:var(--c)">C</td><td>Toy car (optional)</td><td>≈ 70 × 30</td><td>Small shelf</td></tr>
+</table></div>
+</section>
+</main>
+<script>
+(()=>{
+const NS="http://www.w3.org/2000/svg",c=n=>"var(--"+n+")",svg=document.getElementById("front");
+const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e};
+const W=760,H=560,T={A:c("a"),B:c("b"),C:c("c")};
+// board, grab zone, slots (staggered pitch: 20 between columns, 40 within a column; unverified against the real panel)
+el("rect",{x:0,y:0,width:W,height:H,rx:6,fill:c("skadis"),stroke:c("line")});
+el("rect",{x:0,y:385,width:W,height:H-385,fill:c("grab")});
+for(let i=0,x=20;x<W;i++,x+=20)for(let y=(i%2?40:20);y<H-10;y+=40)el("rect",{x:x-2.5,y:y-7.5,width:5,height:15,rx:2.5,fill:c("slot")});
+const part=(x,y,w,h)=>el("rect",{x,y,width:w,height:h,rx:3,fill:c("part")});
+const box=(x,y,w,h,t,o={})=>el("rect",Object.assign({x,y,width:w,height:h,rx:o.rx??4,fill:c("tool"),stroke:T[t],"stroke-width":2.5},o.dash?{"stroke-dasharray":"6 4"}:{}));
+const lab=(x,y,s,o={})=>el("text",Object.assign({x,y,"font-size":13,fill:c("ink"),"text-anchor":"middle"},o),s);
+// vertical tool: handle on top, shaft below, centred on cx
+const tool=(cx,top,hw,hh,sw,sh,t)=>{box(cx-hw/2,top,hw,hh,t,{rx:6});box(cx-sw/2,top+hh,sw,sh,t,{rx:2})};
+
+// top: ruler on two cradles, optional car shelf
+box(40,40,320,35,"B",{rx:3});lab(200,63,"ruler 32 cm");part(70,75,30,12);part(300,75,30,12);
+box(625,48,70,30,"C",{dash:1});part(610,78,100,10);lab(660,108,"car (optional)",{fill:c("mute")});
+
+// middle: scissors, driver strip, caliper
+tool(80,130,80,80,22,140,"B");part(60,212,40,14);lab(80,372,"scissors");
+part(170,230,360,16);
+tool(200,170,26,60,8,85,"B");tool(260,135,30,95,8,145,"B");tool(320,170,24,60,6,55,"B");
+box(370,226,22,5,"A",{rx:2});box(370,226,5,80,"A",{rx:2});
+box(410,220,26,5,"A",{rx:2});box(410,220,5,140,"A",{rx:2});
+tool(475,165,20,65,5,50,"A");
+lab(200,330,"tester",{"font-size":11});lab(262,392,"flat",{"font-size":11});lab(320,300,"red",{"font-size":11});
+lab(380,322,"hex",{"font-size":11});lab(475,300,"precision",{"font-size":11});lab(350,128,"driver strip",{fill:c("mute")});
+box(645,130,75,70,"A",{rx:4});box(668,200,26,170,"A",{rx:2});part(640,200,80,14);lab(682,165,"caliper");
+
+// bottom grab zone
+box(40,388,55,165,"B",{rx:10});part(34,460,67,92);lab(68,440,"remote",{"font-size":11,transform:"rotate(-90 68 440)"});
+box(125,420,22,75,"C",{rx:6});part(122,428,28,12);lab(136,512,"spanner",{"font-size":11});
+box(175,450,60,70,"C",{rx:6});part(169,485,72,52);lab(205,470,"adapter",{"font-size":11});
+box(275,445,60,65,"A",{rx:14});part(269,488,72,34);lab(305,475,"tape");
+box(380,390,30,150,"A",{rx:5});part(375,452,40,92);lab(395,420,"knife",{"font-size":11,transform:"rotate(-90 395 420)"});
+for(const dx of [0,20,40])box(452+dx,395,14,145,"A",{rx:7});part(440,465,72,80);lab(476,388,"pens",{"font-size":11});
+el("rect",{x:560,y:398,width:180,height:145,rx:6,fill:"none",stroke:c("ink"),"stroke-dasharray":"6 4"});
+lab(650,462,"open",{"font-size":14});lab(650,482,"cutter + stripper?",{"font-size":11,fill:c("mute")});
+
+// annotations
+lab(W/2,-14,"SKÅDIS 760 × 560 · front view · 1 unit = 1 mm",{fill:c("mute")});
+el("text",{x:-8,y:478,"font-size":12,fill:c("a"),"text-anchor":"middle",transform:"rotate(-90 -8 478)"},"grab zone");
+el("path",{d:"M"+(W+18)+" 470 h70",stroke:c("ink"),"stroke-width":2,fill:"none","marker-end":"url(#ar)"});
+const m=el("marker",{id:"ar",markerWidth:10,markerHeight:10,refX:8,refY:5,orient:"auto"});
+const mp=document.createElementNS(NS,"path");mp.setAttribute("d","M0 0 L10 5 L0 10z");mp.setAttribute("fill",c("ink"));m.appendChild(mp);
+lab(W+55,455,"you sit",{"font-size":12});lab(W+55,500,"(bench)",{"font-size":12,fill:c("mute")});
+lab(W/2,H+30,"bottom ≈ 1.2 m from the floor (3D model estimate) · tool sizes from the photo, ±1 cm",{"font-size":12,fill:c("mute")});
+})();
+</script>
+
+</body></html>
